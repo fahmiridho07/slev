@@ -1,19 +1,36 @@
 # Slev
 
-Phase three of the Automated Financial Tracker PRD.
+Slev is a calm spending memory.
 
-Slev is a privacy-first passive expense tracker for Android. The name comes from "sleeve", a small place to tuck money safely. This build proves the core loop: a financial notification becomes a structured local transaction draft.
+It is not an accounting app, budgeting dashboard, finance optimizer, or notification-parsing pipeline. The current pivot focuses on a lighter loop: save a spending moment in seconds, then let Slev surface what has been repeating, standing out, or quietly adding up.
 
 ## Current Build Includes
 
-- Expo + React Native + TypeScript app scaffold.
-- Rule-based parser for Indonesian banking and e-wallet notifications.
-- Local draft transaction list with confirm, ignore, and category edit actions.
-- Manual notification text tester for development and parser QA.
-- Android notification listener native module scaffold for development builds.
-- Privacy-first settings and source toggles.
-- Google Sheets sync settings and Apps Script template.
-- Analytics tab, weekly insights, and sync health states.
+- Expo + React Native + TypeScript app.
+- Local-only spending moments stored with AsyncStorage.
+- One-time migration from confirmed legacy transactions into spending memory.
+- Capture-first Home screen with amount-only required input.
+- Repeat chips for common spends and a last-saved undo/edit flow.
+- Practical context tags: Meal, Coffee, Transport, Groceries, Bills, Treat, Home, Other.
+- Memory timeline with recall grouping, search, compact edit, and delete actions.
+- Low-density Patterns screen with rule-based change and repeat awareness.
+- Optional weekly recap responses: Keep, Less often, Not sure.
+- Privacy-first Settings with no notification access or sync required in the MVP.
+
+## Product Direction
+
+The sticky behavior is:
+
+> I can quickly remember where my money has been going without maintaining a finance system.
+
+Slev should stay:
+
+- Calm.
+- Local-first.
+- Permission-light.
+- Low-friction.
+- Useful without complete tracking.
+- Free of shame, guilt, streaks, or productivity pressure.
 
 ## Run Locally
 
@@ -35,31 +52,27 @@ Run on Android:
 npm run android
 ```
 
-Run parser smoke tests:
+Run validation:
 
 ```bash
+npm run typecheck
 npm run parser:smoke
 ```
 
-## Android Notification Listener Note
+If `npm` is not available in the shell but dependencies are installed, the same checks can be run with:
 
-Android does not allow Expo Go to read notifications from other apps. Slev ships a local native module under `modules/slev-notification-listener` plus a manual raw-notification tester. Use an Android development build, not Expo Go, to exercise the real listener.
-
-The parser intentionally rejects OTP, balance, account-number, and verification-style messages before anything is stored.
-
-## Google Sheets Sync
-
-Apps Script template:
-
-```txt
-google-apps-script/Code.gs
+```powershell
+.\node_modules\.bin\tsc.cmd --noEmit
+node scripts\parser-smoke-test.mjs
 ```
 
-Deploy it as a Google Apps Script Web App, then paste the `/exec` URL into Slev Settings.
+## Legacy Systems
 
-## Readiness
+The repository still contains the old notification listener, parser, and Google Sheets sync code so the project remains buildable while the pivot is evaluated. These systems are no longer part of the visible MVP experience.
 
-See `docs/mvp-readiness-audit.md` for the current PRD coverage and known boundaries.
+Before reintroducing any passive capture or sync feature, it should pass this product test:
+
+> Does this reduce cognitive load without making Slev feel like a finance system to maintain?
 
 ## Documentation
 
@@ -68,19 +81,3 @@ Start here:
 ```txt
 docs/project-specification.md
 ```
-
-Supporting docs:
-
-- `docs/mvp-readiness-audit.md` for PRD coverage and current boundaries.
-- `docs/android-notification-listener.md` for native listener details.
-- `docs/phase-one.md` for capture/parser build notes.
-- `docs/phase-two.md` for Google Sheets sync notes.
-- `docs/phase-three.md` for analytics and insight notes.
-
-## Next Phase
-
-Next should add:
-
-- Hardening and device testing for the Android listener bridge.
-- Merchant learning for categorization.
-- Offline sync retry with backoff.

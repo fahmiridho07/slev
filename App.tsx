@@ -1,65 +1,51 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  Image,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   View
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { BRAND } from "./src/data/brand";
-import { CATEGORIES, DEFAULT_SOURCES, MANUAL_METHODS, SAMPLE_NOTIFICATIONS } from "./src/data/catalog";
+import { CONTEXT_HINTS, SPENDING_CONTEXTS } from "./src/data/spendingMemory";
 import {
-  FinanceSource,
-  NotificationPayload,
-  SyncSettings,
-  TransactionCategory,
-  TransactionDraft,
-  TransactionMethod
-} from "./src/features/transactions.types";
+  PatternFeedback,
+  PatternFeedbackResponse,
+  SpendingContext,
+  SpendingMoment,
+  SpendingPattern
+} from "./src/features/spendingMemory.types";
 import {
-  CategoryTotal,
-  SpendingInsight,
-  TrendPoint,
-  buildDailyTrend,
   formatCompactRupiah,
-  generateWeeklyInsights,
-  getCategoryTotals
-} from "./src/lib/spendingAnalytics";
-import { formatRupiah, parseFinancialNotification } from "./src/lib/transactionParser";
-import { hasSyncEndpoint, syncTransactionToSheets } from "./src/services/googleSheetsSync";
-import { notificationCaptureService } from "./src/services/notificationCaptureService";
+  formatRupiah,
+  generateSpendingPatterns,
+  getHomeObservation
+} from "./src/lib/spendingMemoryPatterns";
 import {
-  clearTransactions,
-  loadCategories,
-  listTransactions,
-  loadSources,
-  loadSyncSettings,
-  saveCategories,
-  saveSources,
-  saveSyncSettings,
-  saveParsedTransaction,
-  updateTransactionCategory,
-  updateTransactionSyncState,
-  updateTransactionStatus
-} from "./src/services/transactionRepository";
+  clearSpendingMemory,
+  deleteSpendingMoment,
+  listPatternFeedback,
+  listSpendingMoments,
+  savePatternFeedback,
+  saveSpendingMoment,
+  updateSpendingMoment
+} from "./src/services/spendingMemoryRepository";
 import { colors, shadows } from "./src/theme/colors";
 
-type TabKey = "home" | "inbox" | "analytics" | "capture" | "settings";
+type TabKey = "home" | "memory" | "patterns" | "settings";
 
 const tabs: { key: TabKey; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { key: "home", label: "Home", icon: "grid-outline" },
-  { key: "inbox", label: "Inbox", icon: "file-tray-outline" },
-  { key: "analytics", label: "Trends", icon: "bar-chart-outline" },
-  { key: "capture", label: "Capture", icon: "scan-outline" },
+  { key: "home", label: "Home", icon: "add-circle-outline" },
+  { key: "memory", label: "Memory", icon: "albums-outline" },
+  { key: "patterns", label: "Patterns", icon: "sparkles-outline" },
   { key: "settings", label: "Settings", icon: "shield-checkmark-outline" }
 ];
 
@@ -67,334 +53,141 @@ const SLEV_MARK = require("./assets/brand/slev-mark-transparent.png");
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabKey>("home");
-  const [transactions, setTransactions] = useState<TransactionDraft[]>([]);
-  const [sources, setSources] = useState<FinanceSource[]>(DEFAULT_SOURCES);
-  const [categories, setCategories] = useState<TransactionCategory[]>(CATEGORIES);
-  const [syncSettings, setSyncSettings] = useState<SyncSettings>({ endpointUrl: "", sheetUrl: "" });
-  const [rawNotification, setRawNotification] = useState(SAMPLE_NOTIFICATIONS[0]);
-  const [lastParseMessage, setLastParseMessage] = useState("Ready to parse a finance notification.");
-  const [listenerAvailable, setListenerAvailable] = useState(false);
-  const [listenerGranted, setListenerGranted] = useState(false);
-  const [syncQueueActive, setSyncQueueActive] = useState(false);
-  const sourcesRef = useRef<FinanceSource[]>(DEFAULT_SOURCES);
-  const syncSettingsRef = useRef<SyncSettings>({ endpointUrl: "", sheetUrl: "" });
+  const [moments, setMoments] = useState<SpendingMoment[]>([]);
+  const [feedback, setFeedback] = useState<PatternFeedback[]>([]);
+  const [amountText, setAmountText] = useState("");
+  const [label, setLabel] = useState("");
+  const [context, setContext] = useState<SpendingContext>("Other");
+  const [note, setNote] = useState("");
+  const [editingMomentId, setEditingMomentId] = useState<string | null>(null);
+  const [message, setMessage] = useState("A spending memory can be as small as an amount.");
 
-  const reloadTransactions = useCallback(async () => {
-    const next = await listTransactions();
-    setTransactions(next);
+  const reload = async () => {
+    const [storedMoments, storedFeedback] = await Promise.all([
+      listSpendingMoments(),
+      listPatternFeedback()
+    ]);
+    setMoments(storedMoments);
+    setFeedback(storedFeedback);
+    if (storedMoments[0]) {
+      setContext(storedMoments[0].context);
+    }
+  };
+
+  useEffect(() => {
+    reload();
   }, []);
 
-  useEffect(() => {
-    reloadTransactions();
-    loadSources(DEFAULT_SOURCES).then((storedSources) => {
-      sourcesRef.current = storedSources;
-      setSources(storedSources);
-    });
-    loadCategories(CATEGORIES).then(setCategories);
-    loadSyncSettings().then((storedSettings) => {
-      syncSettingsRef.current = storedSettings;
-      setSyncSettings(storedSettings);
-    });
-
-    notificationCaptureService.isAvailable().then(setListenerAvailable);
-    notificationCaptureService.isPermissionGranted().then(setListenerGranted);
-
-    const subscription = notificationCaptureService.subscribe((payload) => {
-      handleIncomingNotification(payload);
-    });
-
-    return () => subscription.remove();
-  }, [reloadTransactions]);
-
-  useEffect(() => {
-    sourcesRef.current = sources;
-  }, [sources]);
-
-  useEffect(() => {
-    syncSettingsRef.current = syncSettings;
-  }, [syncSettings]);
-
-  const draftTransactions = useMemo(
-    () => transactions.filter((transaction) => transaction.status === "draft"),
-    [transactions]
+  const patterns = useMemo(() => generateSpendingPatterns(moments), [moments]);
+  const homeObservation = useMemo(() => getHomeObservation(moments), [moments]);
+  const repeatSuggestions = useMemo(() => getRepeatSuggestions(moments), [moments]);
+  const feedbackByPattern = useMemo(
+    () => new Map(feedback.map((item) => [item.patternId, item.response])),
+    [feedback]
   );
 
-  const confirmedTransactions = useMemo(
-    () => transactions.filter((transaction) => transaction.status === "confirmed"),
-    [transactions]
-  );
-
-  const unsyncedTransactions = useMemo(
-    () => confirmedTransactions.filter((transaction) => transaction.syncStatus !== "synced"),
-    [confirmedTransactions]
-  );
-
-  const todayTotal = useMemo(() => {
-    const today = new Date().toDateString();
-    return confirmedTransactions
-      .filter((transaction) => new Date(transaction.timestamp).toDateString() === today)
-      .reduce((sum, transaction) => sum + transaction.amount, 0);
-  }, [confirmedTransactions]);
-
-  const weekTotal = useMemo(() => {
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    return confirmedTransactions
-      .filter((transaction) => Date.parse(transaction.timestamp) >= weekAgo)
-      .reduce((sum, transaction) => sum + transaction.amount, 0);
-  }, [confirmedTransactions]);
-
-  const biggestCategory = useMemo(() => {
-    const totals = confirmedTransactions.reduce<Record<string, number>>((acc, transaction) => {
-      acc[transaction.category] = (acc[transaction.category] ?? 0) + transaction.amount;
-      return acc;
-    }, {});
-
-    const [category] = Object.entries(totals).sort((a, b) => b[1] - a[1])[0] ?? ["None"];
-    return category;
-  }, [confirmedTransactions]);
-
-  const dailyTrend = useMemo(() => buildDailyTrend(confirmedTransactions), [confirmedTransactions]);
-  const categoryTotals = useMemo(() => getCategoryTotals(confirmedTransactions), [confirmedTransactions]);
-  const weeklyInsights = useMemo(() => generateWeeklyInsights(confirmedTransactions), [confirmedTransactions]);
-
-  async function handleIncomingNotification(payload: NotificationPayload) {
-    const result = parseFinancialNotification(payload, { sources: sourcesRef.current });
-
-    if (!result.ok) {
-      setLastParseMessage(result.reason);
+  async function saveCurrentMoment() {
+    const amount = parseAmountInput(amountText);
+    if (!amount) {
+      setMessage("Enter an amount to save this memory.");
       return;
     }
 
-    const matchedSource = sourcesRef.current.find((source) => source.id === result.transaction.source);
-    if (matchedSource && !matchedSource.enabled && result.transaction.source !== "unknown") {
-      setLastParseMessage(`${result.transaction.sourceLabel} is disabled in Settings.`);
-      return;
+    if (editingMomentId) {
+      const updated = await updateSpendingMoment(editingMomentId, {
+        amount,
+        label,
+        context,
+        note
+      });
+      setMoments(updated);
+      setEditingMomentId(null);
+      setMessage("Memory updated.");
+    } else {
+      const saved = await saveSpendingMoment({
+        amount,
+        label,
+        context,
+        note
+      });
+      setMoments(await listSpendingMoments());
+      setContext(saved.context);
+      setMessage(`${formatRupiah(saved.amount)} saved${saved.label ? ` for ${saved.label}` : ""}.`);
     }
 
-    await saveParsedTransaction(result.transaction);
-    await reloadTransactions();
-    setLastParseMessage(`Captured ${formatRupiah(result.transaction.amount)} at ${result.transaction.merchant}.`);
+    setAmountText("");
+    setLabel("");
+    setNote("");
   }
 
-  async function parseManualNotification(text = rawNotification) {
-    await handleIncomingNotification({
-      body: text,
-      receivedAt: new Date().toISOString()
-    });
+  async function removeMoment(id: string) {
+    const updated = await deleteSpendingMoment(id);
+    setMoments(updated);
+    setMessage("Memory removed.");
   }
 
-  async function quickAddTransaction(input: {
+  async function updateMoment(id: string, input: {
     amountText: string;
-    category: TransactionCategory;
-    merchant: string;
-    method: TransactionMethod;
+    label: string;
+    context: SpendingContext;
+    note: string;
   }) {
     const amount = parseAmountInput(input.amountText);
-    const merchant = input.merchant.trim() || "Manual entry";
-
     if (!amount) {
-      setLastParseMessage("Enter a valid amount before saving a manual transaction.");
+      setMessage("Enter an amount before saving changes.");
       return;
     }
 
-    const saved = await saveParsedTransaction({
+    const updated = await updateSpendingMoment(id, {
       amount,
-      merchant,
-      category: input.category,
-      method: input.method,
-      source: "manual",
-      sourceLabel: "Manual",
-      transactionType: "expense",
-      timestamp: new Date().toISOString(),
-      confidence: 1
+      label: input.label,
+      context: input.context,
+      note: input.note
     });
-
-    const settings = syncSettingsRef.current;
-    const updated = await updateTransactionStatus(
-      saved.id,
-      "confirmed",
-      hasSyncEndpoint(settings) ? "pending" : "not_configured"
-    );
-    setTransactions(updated);
-
-    const confirmed = updated.find((transaction) => transaction.id === saved.id);
-    if (confirmed && hasSyncEndpoint(settings)) {
-      await syncSingleTransaction(confirmed, settings);
-      return;
-    }
-
-    setLastParseMessage(`Saved ${formatRupiah(amount)} at ${merchant}.`);
+    setMoments(updated);
+    setMessage("Memory updated.");
   }
 
-  async function updateStatus(id: string, status: TransactionDraft["status"]) {
-    const updated = await updateTransactionStatus(id, status);
-    setTransactions(updated);
+  async function undoLastMoment(moment: SpendingMoment) {
+    const updated = await deleteSpendingMoment(moment.id);
+    setMoments(updated);
+    setEditingMomentId(null);
+    setMessage("Last memory undone.");
   }
 
-  async function confirmTransaction(id: string) {
-    const settings = syncSettingsRef.current;
-    const initialSyncStatus = hasSyncEndpoint(settings) ? "pending" : "not_configured";
-    const updated = await updateTransactionStatus(id, "confirmed", initialSyncStatus);
-    setTransactions(updated);
-
-    const transaction = updated.find((item) => item.id === id);
-    if (!transaction) return;
-
-    if (!hasSyncEndpoint(settings)) {
-      setLastParseMessage("Confirmed locally. Add a Google Apps Script endpoint to sync it.");
-      return;
-    }
-
-    await syncSingleTransaction(transaction, settings);
+  function editLastMoment(moment: SpendingMoment) {
+    setEditingMomentId(moment.id);
+    setAmountText(String(moment.amount));
+    setLabel(moment.label ?? "");
+    setContext(moment.context);
+    setNote(moment.note ?? "");
+    setMessage("Editing the last saved memory.");
   }
 
-  async function syncSingleTransaction(transaction: TransactionDraft, settings = syncSettingsRef.current) {
-    if (!hasSyncEndpoint(settings)) {
-      const updated = await updateTransactionSyncState(transaction.id, {
-        syncStatus: "not_configured",
-        syncError: "Missing Google Apps Script endpoint."
-      });
-      setTransactions(updated);
-      return;
-    }
-
-    setTransactions(
-      await updateTransactionSyncState(transaction.id, {
-        syncStatus: "syncing",
-        syncError: undefined
-      })
-    );
-
-    try {
-      await syncTransactionToSheets(transaction, settings);
-      const updated = await updateTransactionSyncState(transaction.id, {
-        syncStatus: "synced",
-        syncError: undefined,
-        syncedAt: new Date().toISOString()
-      });
-      setTransactions(updated);
-      setLastParseMessage(`Synced ${transaction.merchant} to Google Sheets.`);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Sync failed.";
-      const updated = await updateTransactionSyncState(transaction.id, {
-        syncStatus: "failed",
-        syncError: message
-      });
-      setTransactions(updated);
-      setLastParseMessage(message);
+  function useRepeatSuggestion(suggestion: RepeatSuggestion) {
+    setLabel(suggestion.label);
+    setContext(suggestion.context);
+    if (!amountText.trim()) {
+      setAmountText(String(suggestion.amount));
     }
   }
 
-  async function syncPendingTransactions() {
-    const settings = syncSettingsRef.current;
-    if (syncQueueActive) return;
-
-    if (!hasSyncEndpoint(settings)) {
-      setLastParseMessage("Add a valid Google Apps Script Web App URL before syncing.");
-      return;
-    }
-
-    const pending = (await listTransactions()).filter(
-      (transaction) => transaction.status === "confirmed" && transaction.syncStatus !== "synced"
-    );
-
-    if (pending.length === 0) {
-      setLastParseMessage("Everything confirmed is already synced.");
-      return;
-    }
-
-    setSyncQueueActive(true);
-    setLastParseMessage(`Syncing ${pending.length} transaction${pending.length === 1 ? "" : "s"} to Google Sheets.`);
-
-    try {
-      for (const transaction of pending) {
-        await syncSingleTransaction(transaction, settings);
-      }
-    } finally {
-      setSyncQueueActive(false);
-    }
+  async function answerPattern(patternId: string, response: PatternFeedbackResponse) {
+    const updated = await savePatternFeedback(patternId, response);
+    setFeedback(updated);
   }
 
-  async function updateCategory(id: string, category: TransactionCategory) {
-    const updated = await updateTransactionCategory(id, category);
-    setTransactions(updated);
-  }
-
-  async function addCategory(label: string) {
-    const trimmed = label.trim();
-    if (!trimmed) return;
-
-    if (categories.some((category) => category.toLowerCase() === trimmed.toLowerCase())) {
-      setLastParseMessage(`${trimmed} is already in your categories.`);
-      return;
-    }
-
-    const next = [...categories, trimmed];
-    setCategories(next);
-    await saveCategories(next);
-    setLastParseMessage(`${trimmed} added as a category.`);
-  }
-
-  async function toggleSource(sourceId: string) {
-    const next = sources.map((source) =>
-      source.id === sourceId
-        ? {
-            ...source,
-            enabled: !source.enabled
-          }
-        : source
-    );
-
-    setSources(next);
-    await saveSources(next);
-  }
-
-  async function addSource(label: string) {
-    const trimmed = label.trim();
-    if (!trimmed) return;
-
-    const id = createSourceId(trimmed);
-    if (sources.some((source) => source.id === id)) {
-      setLastParseMessage(`${trimmed} is already in your sources.`);
-      return;
-    }
-
-    const next = [
-      ...sources,
-      {
-        id,
-        label: trimmed,
-        keywords: createSourceKeywords(trimmed),
-        enabled: true,
-        builtIn: false
-      }
-    ];
-
-    setSources(next);
-    await saveSources(next);
-    setLastParseMessage(`${trimmed} added as a notification source.`);
-  }
-
-  async function updateSyncSettings(settings: SyncSettings) {
-    const next = {
-      endpointUrl: settings.endpointUrl.trim(),
-      sheetUrl: settings.sheetUrl.trim()
-    };
-    syncSettingsRef.current = next;
-    setSyncSettings(next);
-    await saveSyncSettings(next);
-    setLastParseMessage("Google Sheets sync settings saved.");
-  }
-
-  async function clearLocalData() {
-    Alert.alert("Clear local data?", "This removes drafts and confirmed local records from this device.", [
+  async function clearAll() {
+    Alert.alert("Clear spending memory?", "This removes local spending moments and pattern responses from this device.", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Clear",
         style: "destructive",
         onPress: async () => {
-          await clearTransactions();
-          setTransactions([]);
+          await clearSpendingMemory();
+          setMoments([]);
+          setFeedback([]);
+          setMessage("Local spending memory cleared.");
         }
       }
     ]);
@@ -402,26 +195,69 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
-        <StatusBar style="dark" />
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.app}>
+      <StatusBar style="dark" />
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.appShell}
+        >
           <View style={styles.header}>
-            <View style={styles.brandLockup}>
-              <View style={styles.logoTile}>
-                <Image accessibilityIgnoresInvertColors source={SLEV_MARK} style={styles.logoImage} />
-              </View>
-              <View style={styles.brandTextBlock}>
-                <Text style={styles.brand}>{BRAND.name}</Text>
-                <Text style={styles.subtitle}>{BRAND.shortTagline}</Text>
+            <View style={styles.brandRow}>
+              <Image source={SLEV_MARK} style={styles.brandMark} />
+              <View>
+                <Text style={styles.brandName}>{BRAND.name}</Text>
+                <Text style={styles.brandLine}>Spending memory</Text>
               </View>
             </View>
-            <View style={styles.badge}>
-              <Ionicons name="lock-closed-outline" size={14} color={colors.greenDark} />
-              <Text style={styles.badgeText}>Private</Text>
-            </View>
+            <Text style={styles.headerMessage}>{message}</Text>
           </View>
 
-          <View style={styles.tabs}>
+          <View style={styles.content}>
+            {activeTab === "home" && (
+              <HomeScreen
+                amountText={amountText}
+                context={context}
+                homeObservation={homeObservation}
+                isEditing={Boolean(editingMomentId)}
+                label={label}
+                lastSavedMoment={moments[0]}
+                note={note}
+                recentMoments={moments.slice(0, 5)}
+                repeatSuggestions={repeatSuggestions}
+                onChangeAmount={setAmountText}
+                onChangeContext={setContext}
+                onChangeLabel={setLabel}
+                onChangeNote={setNote}
+                onEditLast={editLastMoment}
+                onSave={saveCurrentMoment}
+                onUndoLast={undoLastMoment}
+                onUseRepeat={useRepeatSuggestion}
+              />
+            )}
+            {activeTab === "memory" && (
+              <MemoryScreen
+                moments={moments}
+                onDelete={removeMoment}
+                onUpdate={updateMoment}
+              />
+            )}
+            {activeTab === "patterns" && (
+              <PatternsScreen
+                feedbackByPattern={feedbackByPattern}
+                moments={moments}
+                patterns={patterns}
+                onAnswer={answerPattern}
+              />
+            )}
+            {activeTab === "settings" && (
+              <SettingsScreen
+                momentCount={moments.length}
+                onClear={clearAll}
+              />
+            )}
+          </View>
+
+          <View style={styles.tabBar}>
             {tabs.map((tab) => {
               const isActive = activeTab === tab.key;
               return (
@@ -429,87 +265,18 @@ export default function App() {
                   accessibilityRole="button"
                   key={tab.key}
                   onPress={() => setActiveTab(tab.key)}
-                  style={[styles.tab, isActive && styles.tabActive]}
+                  style={[styles.tabItem, isActive && styles.tabItemActive]}
                 >
-                  <Ionicons name={tab.icon} size={20} color={isActive ? colors.greenDark : colors.muted} />
-                  <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{tab.label}</Text>
+                  <Ionicons
+                    name={tab.icon}
+                    size={20}
+                    color={isActive ? colors.greenDark : colors.muted}
+                  />
+                  <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>{tab.label}</Text>
                 </Pressable>
               );
             })}
           </View>
-
-          <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-            {activeTab === "home" && (
-              <HomeScreen
-                biggestCategory={biggestCategory}
-                confirmedTransactions={confirmedTransactions}
-                draftCount={draftTransactions.length}
-                syncConfigured={hasSyncEndpoint(syncSettings)}
-                syncQueueActive={syncQueueActive}
-                todayTotal={todayTotal}
-                unsyncedCount={unsyncedTransactions.length}
-                weeklyInsights={weeklyInsights}
-                weekTotal={weekTotal}
-                onSyncPending={syncPendingTransactions}
-              />
-            )}
-
-            {activeTab === "inbox" && (
-              <InboxScreen
-                categories={categories}
-                transactions={draftTransactions}
-                onConfirm={confirmTransaction}
-                onIgnore={(id) => updateStatus(id, "ignored")}
-                onUpdateCategory={updateCategory}
-              />
-            )}
-
-            {activeTab === "analytics" && (
-              <AnalyticsScreen
-                categoryTotals={categoryTotals}
-                confirmedTransactions={confirmedTransactions}
-                dailyTrend={dailyTrend}
-                insights={weeklyInsights}
-              />
-            )}
-
-          {activeTab === "capture" && (
-            <CaptureScreen
-              categories={categories}
-              lastParseMessage={lastParseMessage}
-              rawNotification={rawNotification}
-              onChangeRawNotification={setRawNotification}
-              onManualAdd={quickAddTransaction}
-              onParse={() => parseManualNotification()}
-              onUseSample={(sample) => {
-                  setRawNotification(sample);
-                  parseManualNotification(sample);
-                }}
-              />
-            )}
-
-            {activeTab === "settings" && (
-              <SettingsScreen
-                listenerAvailable={listenerAvailable}
-                listenerGranted={listenerGranted}
-                categories={categories}
-                sources={sources}
-                syncSettings={syncSettings}
-                syncQueueActive={syncQueueActive}
-                unsyncedCount={unsyncedTransactions.length}
-                onAddCategory={addCategory}
-                onAddSource={addSource}
-                onClearLocalData={clearLocalData}
-                onOpenPermissionSettings={async () => {
-                  await notificationCaptureService.openPermissionSettings();
-                  setListenerGranted(await notificationCaptureService.isPermissionGranted());
-                }}
-                onSaveSyncSettings={updateSyncSettings}
-                onSyncPending={syncPendingTransactions}
-                onToggleSource={toggleSource}
-              />
-            )}
-          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </SafeAreaProvider>
@@ -517,656 +284,480 @@ export default function App() {
 }
 
 function HomeScreen({
-  biggestCategory,
-  confirmedTransactions,
-  draftCount,
-  syncConfigured,
-  syncQueueActive,
-  todayTotal,
-  unsyncedCount,
-  weeklyInsights,
-  weekTotal,
-  onSyncPending
+  amountText,
+  context,
+  homeObservation,
+  isEditing,
+  label,
+  lastSavedMoment,
+  note,
+  recentMoments,
+  repeatSuggestions,
+  onChangeAmount,
+  onChangeContext,
+  onChangeLabel,
+  onChangeNote,
+  onEditLast,
+  onSave,
+  onUndoLast,
+  onUseRepeat
 }: {
-  biggestCategory: string;
-  confirmedTransactions: TransactionDraft[];
-  draftCount: number;
-  syncConfigured: boolean;
-  syncQueueActive: boolean;
-  todayTotal: number;
-  unsyncedCount: number;
-  weeklyInsights: SpendingInsight[];
-  weekTotal: number;
-  onSyncPending: () => void;
+  amountText: string;
+  context: SpendingContext;
+  homeObservation: SpendingPattern;
+  isEditing: boolean;
+  label: string;
+  lastSavedMoment?: SpendingMoment;
+  note: string;
+  recentMoments: SpendingMoment[];
+  repeatSuggestions: RepeatSuggestion[];
+  onChangeAmount: (value: string) => void;
+  onChangeContext: (value: SpendingContext) => void;
+  onChangeLabel: (value: string) => void;
+  onChangeNote: (value: string) => void;
+  onEditLast: (moment: SpendingMoment) => void;
+  onSave: () => void;
+  onUndoLast: (moment: SpendingMoment) => void;
+  onUseRepeat: (suggestion: RepeatSuggestion) => void;
 }) {
+  const [noteOpen, setNoteOpen] = useState(Boolean(note));
+
   return (
-    <View style={styles.screen}>
-      <View style={styles.heroPanel}>
-        <Text style={styles.kicker}>Spending awareness</Text>
-        <Text style={styles.heroTitle}>{BRAND.name} keeps spending tucked into view.</Text>
-        <Text style={styles.heroCopy}>
-          Confirm drafts, sync structured records, and let weekly patterns surface naturally.
-        </Text>
-      </View>
-
-      <View style={styles.statsGrid}>
-        <MetricCard label="Today" value={formatRupiah(todayTotal)} icon="today-outline" />
-        <MetricCard label="This week" value={formatRupiah(weekTotal)} icon="calendar-outline" />
-        <MetricCard label="Drafts" value={`${draftCount}`} icon="file-tray-outline" />
-        <MetricCard label="Synced" value={`${confirmedTransactions.filter((item) => item.syncStatus === "synced").length}`} icon="cloud-done-outline" />
-      </View>
-
-      <View style={styles.syncPanel}>
-        <View style={styles.syncPanelText}>
-          <Text style={styles.panelTitle}>{syncConfigured ? "Sheets sync ready" : "Sheets sync not connected"}</Text>
-          <Text style={styles.panelCopy}>
-            {syncConfigured
-              ? `${unsyncedCount} confirmed transaction${unsyncedCount === 1 ? "" : "s"} waiting. Top category: ${biggestCategory}.`
-              : "Add your Apps Script Web App URL in Settings before confirmed records can sync."}
-          </Text>
+    <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <View style={styles.capturePanel}>
+        <Text style={styles.kicker}>{isEditing ? "Edit memory" : "Quick capture"}</Text>
+        <View style={styles.amountRow}>
+          <Text style={styles.currencyPrefix}>Rp</Text>
+          <TextInput
+            keyboardType="number-pad"
+            onChangeText={onChangeAmount}
+            placeholder="0"
+            placeholderTextColor={colors.muted}
+            style={styles.amountInput}
+            value={amountText}
+          />
         </View>
-        <Pressable
-          accessibilityRole="button"
-          disabled={syncQueueActive}
-          onPress={onSyncPending}
-          style={[styles.iconButton, syncQueueActive && styles.iconButtonDisabled]}
-        >
-          <Ionicons name={syncQueueActive ? "hourglass-outline" : "sync-outline"} size={20} color={colors.surface} />
-        </Pressable>
-      </View>
 
-      <SectionHeader title="Weekly insight" />
-      <InsightList insights={weeklyInsights.slice(0, 2)} />
+        <TextInput
+          onChangeText={onChangeLabel}
+          placeholder="Label, optional"
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={label}
+        />
 
-      <SectionHeader title="Recent confirmed" />
-      {confirmedTransactions.length === 0 ? (
-        <EmptyState text="Confirmed transactions will appear here after you review drafts." />
-      ) : (
-        confirmedTransactions.slice(0, 5).map((transaction) => (
-          <TransactionRow key={transaction.id} transaction={transaction} compact />
-        ))
-      )}
-    </View>
-  );
-}
-
-function createSourceId(label: string): string {
-  const normalized = label
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-
-  return normalized || `source-${Date.now()}`;
-}
-
-function createSourceKeywords(label: string): string[] {
-  const normalized = label.trim().toLowerCase();
-  const compact = normalized.replace(/\s+/g, "");
-
-  return Array.from(new Set([normalized, compact].filter(Boolean)));
-}
-
-function parseAmountInput(value: string): number | null {
-  const amount = Number.parseInt(value.replace(/[^\d]/g, ""), 10);
-  return Number.isFinite(amount) && amount > 0 ? amount : null;
-}
-
-function InboxScreen({
-  categories,
-  transactions,
-  onConfirm,
-  onIgnore,
-  onUpdateCategory
-}: {
-  categories: TransactionCategory[];
-  transactions: TransactionDraft[];
-  onConfirm: (id: string) => void;
-  onIgnore: (id: string) => void;
-  onUpdateCategory: (id: string, category: TransactionCategory) => void;
-}) {
-  return (
-    <View style={styles.screen}>
-      <SectionHeader title="Review inbox" />
-      {transactions.length === 0 ? (
-        <EmptyState text="No drafts yet. Try the Capture tab with a sample notification." />
-      ) : (
-        transactions.map((transaction) => (
-          <View key={transaction.id} style={styles.transactionCard}>
-            <TransactionRow transaction={transaction} />
-            <View style={styles.categoryWrap}>
-              {categories.map((category) => (
-                <Pressable
-                  accessibilityRole="button"
-                  key={category}
-                  onPress={() => onUpdateCategory(transaction.id, category)}
-                  style={[styles.categoryChip, transaction.category === category && styles.categoryChipActive]}
-                >
-                  <Text
-                    style={[
-                      styles.categoryChipText,
-                      transaction.category === category && styles.categoryChipTextActive
-                    ]}
-                  >
-                    {category}
-                  </Text>
+        {repeatSuggestions.length > 0 && (
+          <View style={styles.repeatBlock}>
+            <Text style={styles.microLabel}>Repeat faster</Text>
+            <View style={styles.suggestionRow}>
+              {repeatSuggestions.map((item) => (
+                <Pressable key={`${item.label}-${item.context}`} onPress={() => onUseRepeat(item)} style={styles.repeatChip}>
+                  <Text style={styles.repeatText}>{item.label}</Text>
+                  <Text style={styles.repeatAmount}>{formatCompactRupiah(item.amount)}</Text>
                 </Pressable>
               ))}
             </View>
-            <View style={styles.actions}>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => onIgnore(transaction.id)}
-                style={[styles.actionButton, styles.ghostButton]}
-              >
-                <Ionicons name="close-outline" size={18} color={colors.muted} />
-                <Text style={styles.ghostButtonText}>Ignore</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => onConfirm(transaction.id)}
-                style={[styles.actionButton, styles.primaryButton]}
-              >
-                <Ionicons name="checkmark-outline" size={18} color={colors.surface} />
-                <Text style={styles.primaryButtonText}>Confirm</Text>
-              </Pressable>
+          </View>
+        )}
+
+        <View style={styles.contextHeaderRow}>
+          <Text style={styles.microLabel}>Context</Text>
+          <Text style={styles.contextDefault}>Defaults to last used</Text>
+        </View>
+        <ContextPicker selected={context} onSelect={onChangeContext} />
+
+        {noteOpen ? (
+          <TextInput
+            multiline
+            onChangeText={onChangeNote}
+            placeholder="Tiny note, optional"
+            placeholderTextColor={colors.muted}
+            style={[styles.input, styles.noteInput]}
+            value={note}
+          />
+        ) : (
+          <Pressable accessibilityRole="button" onPress={() => setNoteOpen(true)} style={styles.addNoteButton}>
+            <Ionicons name="create-outline" size={16} color={colors.muted} />
+            <Text style={styles.addNoteText}>Add note only if it helps recall</Text>
+          </Pressable>
+        )}
+
+        <Pressable accessibilityRole="button" onPress={onSave} style={styles.primaryButton}>
+          <Ionicons name="checkmark-circle-outline" size={20} color={colors.surface} />
+          <Text style={styles.primaryButtonText}>{isEditing ? "Update memory" : "Save memory"}</Text>
+        </Pressable>
+      </View>
+
+      {lastSavedMoment && !isEditing && (
+        <View style={styles.lastSavedPanel}>
+          <View style={styles.lastSavedText}>
+            <Text style={styles.microLabel}>Last saved</Text>
+            <Text style={styles.lastSavedTitle}>
+              {formatCompactRupiah(lastSavedMoment.amount)} - {lastSavedMoment.label || lastSavedMoment.context}
+            </Text>
+          </View>
+          <View style={styles.lastSavedActions}>
+            <Pressable onPress={() => onEditLast(lastSavedMoment)} style={styles.textButton}>
+              <Ionicons name="create-outline" size={16} color={colors.greenDark} />
+              <Text style={styles.textButtonLabel}>Edit</Text>
+            </Pressable>
+            <Pressable onPress={() => onUndoLast(lastSavedMoment)} style={styles.textButton}>
+              <Ionicons name="arrow-undo-outline" size={16} color={colors.coral} />
+              <Text style={[styles.textButtonLabel, styles.deleteText]}>Undo</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+
+      <ObservationPanel pattern={homeObservation} />
+
+      <SectionHeader title="Recent memory" />
+      {recentMoments.length === 0 ? (
+        <EmptyState text="Saved moments will collect here quietly." />
+      ) : (
+        <View style={styles.listPanel}>
+          {recentMoments.slice(0, 3).map((moment) => (
+            <MomentRow
+              key={moment.id}
+              moment={moment}
+              repeatHint={getRepeatHint(moment, recentMoments)}
+              compact
+            />
+          ))}
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+function MemoryScreen({
+  moments,
+  onDelete,
+  onUpdate
+}: {
+  moments: SpendingMoment[];
+  onDelete: (id: string) => void;
+  onUpdate: (
+    id: string,
+    input: { amountText: string; label: string; context: SpendingContext; note: string }
+  ) => void;
+}) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editLabel, setEditLabel] = useState("");
+  const [editContext, setEditContext] = useState<SpendingContext>("Other");
+  const [editNote, setEditNote] = useState("");
+  const [query, setQuery] = useState("");
+  const filteredMoments = useMemo(() => filterMoments(moments, query), [moments, query]);
+  const grouped = useMemo(() => groupMomentsByRecallRange(filteredMoments), [filteredMoments]);
+
+  function startEditing(moment: SpendingMoment) {
+    setEditingId(moment.id);
+    setEditAmount(String(moment.amount));
+    setEditLabel(moment.label ?? "");
+    setEditContext(moment.context);
+    setEditNote(moment.note ?? "");
+  }
+
+  function confirmDelete(moment: SpendingMoment) {
+    Alert.alert("Delete this memory?", moment.label ?? formatRupiah(moment.amount), [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: () => onDelete(moment.id) }
+    ]);
+  }
+
+  return (
+    <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <View style={styles.heroPanel}>
+        <Text style={styles.kickerDark}>Memory</Text>
+        <Text style={styles.heroTitle}>A quiet list of where money went.</Text>
+      </View>
+
+      {moments.length > 0 && (
+        <TextInput
+          onChangeText={setQuery}
+          placeholder="Search label, context, or amount"
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={query}
+        />
+      )}
+
+      {moments.length === 0 ? (
+        <EmptyState text="No saved spending memory yet." />
+      ) : filteredMoments.length === 0 ? (
+        <EmptyState text="No memory matches that search." />
+      ) : (
+        grouped.map((group) => (
+          <View key={group.key} style={styles.memoryGroup}>
+            <Text style={styles.groupTitle}>{group.label}</Text>
+            <View style={styles.listPanel}>
+              {group.items.map((moment) => (
+                <View key={moment.id}>
+                  <MomentRow moment={moment} repeatHint={getRepeatHint(moment, moments)} />
+                  <View style={styles.rowActions}>
+                    <Pressable onPress={() => startEditing(moment)} style={styles.textButton}>
+                      <Ionicons name="create-outline" size={16} color={colors.greenDark} />
+                      <Text style={styles.textButtonLabel}>Edit</Text>
+                    </Pressable>
+                    <Pressable onPress={() => confirmDelete(moment)} style={styles.textButton}>
+                      <Ionicons name="trash-outline" size={16} color={colors.coral} />
+                      <Text style={[styles.textButtonLabel, styles.deleteText]}>Delete</Text>
+                    </Pressable>
+                  </View>
+
+                  {editingId === moment.id && (
+                    <View style={styles.editPanel}>
+                      <TextInput
+                        keyboardType="number-pad"
+                        onChangeText={setEditAmount}
+                        placeholder="Amount"
+                        placeholderTextColor={colors.muted}
+                        style={styles.input}
+                        value={editAmount}
+                      />
+                      <TextInput
+                        onChangeText={setEditLabel}
+                        placeholder="Label"
+                        placeholderTextColor={colors.muted}
+                        style={styles.input}
+                        value={editLabel}
+                      />
+                      <ContextPicker selected={editContext} onSelect={setEditContext} compact />
+                      <TextInput
+                        multiline
+                        onChangeText={setEditNote}
+                        placeholder="Note"
+                        placeholderTextColor={colors.muted}
+                        style={[styles.input, styles.noteInput]}
+                        value={editNote}
+                      />
+                      <View style={styles.editActions}>
+                        <Pressable onPress={() => setEditingId(null)} style={styles.secondaryButton}>
+                          <Text style={styles.secondaryButtonText}>Cancel</Text>
+                        </Pressable>
+                        <Pressable
+                          onPress={() => {
+                            onUpdate(moment.id, {
+                              amountText: editAmount,
+                              label: editLabel,
+                              context: editContext,
+                              note: editNote
+                            });
+                            setEditingId(null);
+                          }}
+                          style={styles.smallPrimaryButton}
+                        >
+                          <Text style={styles.primaryButtonText}>Save</Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              ))}
             </View>
           </View>
         ))
       )}
-    </View>
+    </ScrollView>
   );
 }
 
-function AnalyticsScreen({
-  categoryTotals,
-  confirmedTransactions,
-  dailyTrend,
-  insights
+function PatternsScreen({
+  feedbackByPattern,
+  moments,
+  patterns,
+  onAnswer
 }: {
-  categoryTotals: CategoryTotal[];
-  confirmedTransactions: TransactionDraft[];
-  dailyTrend: TrendPoint[];
-  insights: SpendingInsight[];
+  feedbackByPattern: Map<string, PatternFeedbackResponse>;
+  moments: SpendingMoment[];
+  patterns: SpendingPattern[];
+  onAnswer: (patternId: string, response: PatternFeedbackResponse) => void;
 }) {
-  const total = confirmedTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-  const trendTotal = dailyTrend.reduce((sum, point) => sum + point.amount, 0);
-  const average = dailyTrend.length > 0 ? trendTotal / dailyTrend.length : 0;
-  const maxTrendAmount = Math.max(...dailyTrend.map((point) => point.amount), 1);
+  const enoughForRecap = moments.filter((moment) => Date.parse(moment.occurredAt) >= Date.now() - 14 * 24 * 60 * 60 * 1000).length >= 6;
+  const groups = useMemo(() => groupPatterns(patterns), [patterns]);
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.analyticsHeader}>
-        <View>
-          <Text style={styles.kickerDark}>Simple trends</Text>
-          <Text style={styles.analyticsTitle}>{formatCompactRupiah(total)} tracked</Text>
-          <Text style={styles.panelCopy}>Daily average: {formatCompactRupiah(Math.round(average))}</Text>
-        </View>
-        <View style={styles.analyticsIcon}>
-          <Ionicons name="trending-up-outline" size={22} color={colors.greenDark} />
-        </View>
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.heroPanel}>
+        <Text style={styles.kickerDark}>Patterns</Text>
+        <Text style={styles.heroTitle}>What has been repeating, standing out, or quietly adding up.</Text>
       </View>
 
-      <SectionHeader title="7-day trend" />
-      <View style={styles.chartPanel}>
-        {dailyTrend.map((point) => (
-          <View key={point.key} style={styles.barColumn}>
-            <View style={styles.barTrack}>
-              <View
-                style={[
-                  styles.barFill,
-                  {
-                    height: `${Math.max((point.amount / maxTrendAmount) * 100, point.amount > 0 ? 8 : 0)}%`
-                  }
-                ]}
-              />
-            </View>
-            <Text style={styles.barLabel}>{point.label}</Text>
-          </View>
-        ))}
-      </View>
-
-      <SectionHeader title="Top categories" />
-      {categoryTotals.length === 0 ? (
-        <EmptyState text="Confirm transactions to see category patterns." />
+      {patterns.length === 0 ? (
+        <EmptyState text="Patterns appear after a few saved moments." />
       ) : (
-        <View style={styles.categoryPanel}>
-          {categoryTotals.slice(0, 5).map((item) => (
-            <View key={item.category} style={styles.categoryTotalRow}>
-              <View style={styles.categoryTotalText}>
-                <Text style={styles.settingTitle}>{item.category}</Text>
-                <Text style={styles.settingCopy}>
-                  {item.count} transaction{item.count === 1 ? "" : "s"}
-                </Text>
-              </View>
-              <View style={styles.categoryBarOuter}>
-                <View style={[styles.categoryBarInner, { width: `${Math.max(item.share * 100, 4)}%` }]} />
-              </View>
-              <Text style={styles.categoryAmount}>{formatCompactRupiah(item.amount)}</Text>
-            </View>
-          ))}
-        </View>
-      )}
+        groups.map((group) => (
+          <View key={group.title} style={styles.patternGroup}>
+            <SectionHeader title={group.title} />
+            {group.items.map((pattern) => (
+              <View key={pattern.id} style={[styles.patternCard, patternStyle(pattern.tone)]}>
+                <View style={styles.patternTitleRow}>
+                  <Ionicons name={patternIcon(pattern.tone)} size={18} color={patternColor(pattern.tone)} />
+                  <Text style={styles.patternTitle}>{pattern.title}</Text>
+                </View>
+                <Text style={styles.patternDetail}>{pattern.detail}</Text>
 
-      <SectionHeader title="Weekly insights" />
-      <InsightList insights={insights} />
-    </View>
-  );
-}
-
-function InsightList({ insights }: { insights: SpendingInsight[] }) {
-  return (
-    <View style={styles.insightList}>
-      {insights.map((insight) => (
-        <View key={insight.id} style={[styles.insightCard, insightStyle(insight.tone)]}>
-          <Ionicons name={insightIcon(insight.tone)} size={18} color={insightColor(insight.tone)} />
-          <View style={styles.insightText}>
-            <Text style={styles.insightTitle}>{insight.title}</Text>
-            <Text style={styles.insightDetail}>{insight.detail}</Text>
+                {enoughForRecap && pattern.recapQuestion && (
+                  <View style={styles.recapBlock}>
+                    <Text style={styles.recapQuestion}>{pattern.recapQuestion}</Text>
+                    <View style={styles.feedbackRow}>
+                      <FeedbackButton
+                        active={feedbackByPattern.get(pattern.id) === "keep"}
+                        label="Keep"
+                        onPress={() => onAnswer(pattern.id, "keep")}
+                      />
+                      <FeedbackButton
+                        active={feedbackByPattern.get(pattern.id) === "less_often"}
+                        label="Less often"
+                        onPress={() => onAnswer(pattern.id, "less_often")}
+                      />
+                      <FeedbackButton
+                        active={feedbackByPattern.get(pattern.id) === "not_sure"}
+                        label="Not sure"
+                        onPress={() => onAnswer(pattern.id, "not_sure")}
+                      />
+                    </View>
+                  </View>
+                )}
+              </View>
+            ))}
           </View>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function insightIcon(tone: SpendingInsight["tone"]): keyof typeof Ionicons.glyphMap {
-  if (tone === "good") return "checkmark-circle-outline";
-  if (tone === "notice") return "pulse-outline";
-  return "sparkles-outline";
-}
-
-function insightColor(tone: SpendingInsight["tone"]): string {
-  if (tone === "good") return colors.green;
-  if (tone === "notice") return colors.amber;
-  return colors.blue;
-}
-
-function insightStyle(tone: SpendingInsight["tone"]) {
-  if (tone === "good") return styles.insightGood;
-  if (tone === "notice") return styles.insightNotice;
-  return styles.insightCalm;
-}
-
-function CaptureScreen({
-  categories,
-  lastParseMessage,
-  rawNotification,
-  onChangeRawNotification,
-  onManualAdd,
-  onParse,
-  onUseSample
-}: {
-  categories: TransactionCategory[];
-  lastParseMessage: string;
-  rawNotification: string;
-  onChangeRawNotification: (value: string) => void;
-  onManualAdd: (input: {
-    amountText: string;
-    category: TransactionCategory;
-    merchant: string;
-    method: TransactionMethod;
-  }) => void;
-  onParse: () => void;
-  onUseSample: (sample: string) => void;
-}) {
-  const [manualAmount, setManualAmount] = useState("");
-  const [manualMerchant, setManualMerchant] = useState("");
-  const [manualCategory, setManualCategory] = useState(categories[0] ?? "Other");
-  const [manualMethod, setManualMethod] = useState<TransactionMethod>("QRIS");
-
-  useEffect(() => {
-    if (!categories.includes(manualCategory)) {
-      setManualCategory(categories[0] ?? "Other");
-    }
-  }, [categories, manualCategory]);
-
-  function submitManualEntry() {
-    onManualAdd({
-      amountText: manualAmount,
-      category: manualCategory,
-      merchant: manualMerchant,
-      method: manualMethod
-    });
-    setManualAmount("");
-    setManualMerchant("");
-  }
-
-  return (
-    <View style={styles.screen}>
-      <SectionHeader title="Quick add" />
-      <View style={styles.inputPanel}>
-        <TextInput
-          keyboardType="number-pad"
-          onChangeText={setManualAmount}
-          placeholder="Amount, e.g. 18000"
-          placeholderTextColor={colors.muted}
-          style={styles.singleLineInput}
-          value={manualAmount}
-        />
-        <TextInput
-          onChangeText={setManualMerchant}
-          placeholder="Merchant, e.g. Warung Nasi"
-          placeholderTextColor={colors.muted}
-          style={styles.singleLineInput}
-          value={manualMerchant}
-        />
-        <View style={styles.categoryWrapTight}>
-          {MANUAL_METHODS.map((method) => (
-            <Pressable
-              accessibilityRole="button"
-              key={method}
-              onPress={() => setManualMethod(method)}
-              style={[styles.categoryChip, manualMethod === method && styles.categoryChipActive]}
-            >
-              <Text style={[styles.categoryChipText, manualMethod === method && styles.categoryChipTextActive]}>
-                {method}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-        <View style={styles.categoryWrapTight}>
-          {categories.map((category) => (
-            <Pressable
-              accessibilityRole="button"
-              key={category}
-              onPress={() => setManualCategory(category)}
-              style={[styles.categoryChip, manualCategory === category && styles.categoryChipActive]}
-            >
-              <Text style={[styles.categoryChipText, manualCategory === category && styles.categoryChipTextActive]}>
-                {category}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-        <Pressable accessibilityRole="button" onPress={submitManualEntry} style={styles.primaryButtonWide}>
-          <Ionicons name="add-circle-outline" size={18} color={colors.surface} />
-          <Text style={styles.primaryButtonText}>Save manual transaction</Text>
-        </Pressable>
-      </View>
-
-      <SectionHeader title="Manual capture tester" />
-      <View style={styles.inputPanel}>
-        <TextInput
-          multiline
-          onChangeText={onChangeRawNotification}
-          placeholder="Paste a finance notification here"
-          placeholderTextColor={colors.muted}
-          style={styles.textArea}
-          value={rawNotification}
-        />
-        <Pressable accessibilityRole="button" onPress={onParse} style={styles.primaryButtonWide}>
-          <Ionicons name="scan-outline" size={18} color={colors.surface} />
-          <Text style={styles.primaryButtonText}>Parse into draft</Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.statusPanel}>
-        <Ionicons name="sparkles-outline" size={18} color={colors.greenDark} />
-        <Text style={styles.statusText}>{lastParseMessage}</Text>
-      </View>
-
-      <SectionHeader title="Samples" />
-      {SAMPLE_NOTIFICATIONS.map((sample) => (
-        <Pressable
-          accessibilityRole="button"
-          key={sample}
-          onPress={() => onUseSample(sample)}
-          style={styles.sampleRow}
-        >
-          <Text style={styles.sampleText}>{sample}</Text>
-          <Ionicons name="chevron-forward-outline" size={18} color={colors.muted} />
-        </Pressable>
-      ))}
-    </View>
+        ))
+      )}
+    </ScrollView>
   );
 }
 
 function SettingsScreen({
-  listenerAvailable,
-  listenerGranted,
-  categories,
-  sources,
-  syncSettings,
-  syncQueueActive,
-  unsyncedCount,
-  onAddCategory,
-  onAddSource,
-  onClearLocalData,
-  onOpenPermissionSettings,
-  onSaveSyncSettings,
-  onSyncPending,
-  onToggleSource
+  momentCount,
+  onClear
 }: {
-  listenerAvailable: boolean;
-  listenerGranted: boolean;
-  categories: TransactionCategory[];
-  sources: FinanceSource[];
-  syncSettings: SyncSettings;
-  syncQueueActive: boolean;
-  unsyncedCount: number;
-  onAddCategory: (label: string) => void;
-  onAddSource: (label: string) => void;
-  onClearLocalData: () => void;
-  onOpenPermissionSettings: () => void;
-  onSaveSyncSettings: (settings: SyncSettings) => void;
-  onSyncPending: () => void;
-  onToggleSource: (sourceId: string) => void;
+  momentCount: number;
+  onClear: () => void;
 }) {
-  const [newSourceLabel, setNewSourceLabel] = useState("");
-  const [newCategoryLabel, setNewCategoryLabel] = useState("");
-  const [endpointUrl, setEndpointUrl] = useState(syncSettings.endpointUrl);
-  const [sheetUrl, setSheetUrl] = useState(syncSettings.sheetUrl);
-
-  useEffect(() => {
-    setEndpointUrl(syncSettings.endpointUrl);
-    setSheetUrl(syncSettings.sheetUrl);
-  }, [syncSettings.endpointUrl, syncSettings.sheetUrl]);
-
-  function submitSource() {
-    onAddSource(newSourceLabel);
-    setNewSourceLabel("");
-  }
-
-  function submitCategory() {
-    onAddCategory(newCategoryLabel);
-    setNewCategoryLabel("");
-  }
-
   return (
-    <View style={styles.screen}>
-      <View style={styles.privacyPanel}>
-        <Ionicons name="shield-checkmark-outline" size={26} color={colors.greenDark} />
-        <View style={styles.privacyTextBlock}>
-          <Text style={styles.panelTitle}>Privacy-first by default</Text>
-          <Text style={styles.panelCopy}>
-            Raw notification text is parsed locally and discarded. OTP, balance, account, token, and verification
-            messages are skipped.
-          </Text>
-        </View>
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.heroPanel}>
+        <Text style={styles.kickerDark}>Settings</Text>
+        <Text style={styles.heroTitle}>Local, quiet, and permission-light.</Text>
       </View>
 
-      <SectionHeader title="Notification listener" />
-      <View style={styles.settingRow}>
-        <View>
-          <Text style={styles.settingTitle}>Native listener bridge</Text>
-          <Text style={styles.settingCopy}>
-            {listenerAvailable ? "Available in this build" : "Needs Android development build"}
-          </Text>
-        </View>
-        <View style={[styles.smallBadge, listenerAvailable && styles.smallBadgeGood]}>
-          <Text style={[styles.smallBadgeText, listenerAvailable && styles.smallBadgeTextGood]}>
-            {listenerAvailable ? "Ready" : "Expo Go"}
-          </Text>
-        </View>
-      </View>
-      <Pressable accessibilityRole="button" onPress={onOpenPermissionSettings} style={styles.secondaryButtonWide}>
-        <Ionicons name="settings-outline" size={18} color={colors.greenDark} />
-        <Text style={styles.secondaryButtonText}>
-          {listenerGranted ? "Notification access enabled" : "Open notification access"}
-        </Text>
-      </Pressable>
-
-      <SectionHeader title="Google Sheets sync" />
-      <View style={styles.inputPanel}>
-        <View style={styles.syncHealthRow}>
-          <View style={styles.syncHealthText}>
-            <Text style={styles.settingTitle}>{hasSyncEndpoint(syncSettings) ? "Endpoint connected" : "Endpoint missing"}</Text>
-            <Text style={styles.settingCopy}>
-              {hasSyncEndpoint(syncSettings)
-                ? `${unsyncedCount} confirmed transaction${unsyncedCount === 1 ? "" : "s"} not synced yet.`
-                : "Paste a deployed Apps Script /exec URL to enable automatic sync."}
-            </Text>
-          </View>
-          <View style={[styles.smallBadge, hasSyncEndpoint(syncSettings) && styles.smallBadgeGood]}>
-            <Text style={[styles.smallBadgeText, hasSyncEndpoint(syncSettings) && styles.smallBadgeTextGood]}>
-              {hasSyncEndpoint(syncSettings) ? "Ready" : "Local"}
-            </Text>
+      <View style={styles.settingsPanel}>
+        <View style={styles.settingRow}>
+          <Ionicons name="phone-portrait-outline" size={20} color={colors.greenDark} />
+          <View style={styles.settingText}>
+            <Text style={styles.settingTitle}>Stored on this device</Text>
+            <Text style={styles.settingCopy}>{momentCount} spending memor{momentCount === 1 ? "y" : "ies"} saved locally.</Text>
           </View>
         </View>
-        <TextInput
-          autoCapitalize="none"
-          onChangeText={setEndpointUrl}
-          placeholder="Apps Script Web App URL"
-          placeholderTextColor={colors.muted}
-          style={styles.singleLineInput}
-          value={endpointUrl}
-        />
-        <TextInput
-          autoCapitalize="none"
-          onChangeText={setSheetUrl}
-          placeholder="Google Sheet link"
-          placeholderTextColor={colors.muted}
-          style={styles.singleLineInput}
-          value={sheetUrl}
-        />
-        <View style={styles.actions}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => onSaveSyncSettings({ endpointUrl, sheetUrl })}
-            style={[styles.actionButton, styles.primaryButton]}
-          >
-            <Ionicons name="save-outline" size={18} color={colors.surface} />
-            <Text style={styles.primaryButtonText}>Save</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            disabled={syncQueueActive}
-            onPress={onSyncPending}
-            style={[styles.actionButton, styles.ghostButton, syncQueueActive && styles.disabledButton]}
-          >
-            <Ionicons name="sync-outline" size={18} color={colors.muted} />
-            <Text style={styles.ghostButtonText}>{syncQueueActive ? "Syncing" : `Sync ${unsyncedCount}`}</Text>
-          </Pressable>
+        <View style={styles.settingRow}>
+          <Ionicons name="notifications-off-outline" size={20} color={colors.greenDark} />
+          <View style={styles.settingText}>
+            <Text style={styles.settingTitle}>No notification access required</Text>
+            <Text style={styles.settingCopy}>The MVP does not read bank or wallet notifications.</Text>
+          </View>
+        </View>
+        <View style={styles.settingRow}>
+          <Ionicons name="cloud-offline-outline" size={20} color={colors.greenDark} />
+          <View style={styles.settingText}>
+            <Text style={styles.settingTitle}>No sync connected</Text>
+            <Text style={styles.settingCopy}>Export can return later as an optional tool.</Text>
+          </View>
         </View>
       </View>
 
-      <SectionHeader title="Enabled sources" />
-      {sources.map((source) => (
-        <View key={source.id} style={styles.settingRow}>
-          <View>
-            <Text style={styles.settingTitle}>{source.label}</Text>
-            <Text style={styles.settingCopy}>Parse expense notifications from this app.</Text>
-          </View>
-          <Switch
-            onValueChange={() => onToggleSource(source.id)}
-            thumbColor={colors.surface}
-            trackColor={{ false: colors.line, true: colors.green }}
-            value={source.enabled}
-          />
-        </View>
-      ))}
-
-      <View style={styles.addSourcePanel}>
-        <TextInput
-          onChangeText={setNewSourceLabel}
-          placeholder="Add source, e.g. Jago"
-          placeholderTextColor={colors.muted}
-          style={styles.sourceInput}
-          value={newSourceLabel}
-        />
-        <Pressable accessibilityRole="button" onPress={submitSource} style={styles.addSourceButton}>
-          <Ionicons name="add-outline" size={20} color={colors.surface} />
-        </Pressable>
-      </View>
-
-      <SectionHeader title="Categories" />
-      <View style={styles.categoryWrap}>
-        {categories.map((category) => (
-          <View key={category} style={styles.categoryChip}>
-            <Text style={styles.categoryChipText}>{category}</Text>
-          </View>
-        ))}
-      </View>
-      <View style={styles.addSourcePanel}>
-        <TextInput
-          onChangeText={setNewCategoryLabel}
-          placeholder="Add category, e.g. Laundry"
-          placeholderTextColor={colors.muted}
-          style={styles.sourceInput}
-          value={newCategoryLabel}
-        />
-        <Pressable accessibilityRole="button" onPress={submitCategory} style={styles.addSourceButton}>
-          <Ionicons name="add-outline" size={20} color={colors.surface} />
-        </Pressable>
-      </View>
-
-      <SectionHeader title="Local data" />
-      <Pressable accessibilityRole="button" onPress={onClearLocalData} style={styles.dangerButton}>
+      <Pressable accessibilityRole="button" onPress={onClear} style={styles.dangerButton}>
         <Ionicons name="trash-outline" size={18} color={colors.coral} />
-        <Text style={styles.dangerButtonText}>Clear local transactions</Text>
+        <Text style={styles.dangerButtonText}>Clear local memory</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
-function MetricCard({
-  icon,
-  label,
-  value
+function ContextPicker({
+  compact = false,
+  selected,
+  onSelect
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  value: string;
+  compact?: boolean;
+  selected: SpendingContext;
+  onSelect: (context: SpendingContext) => void;
 }) {
   return (
-    <View style={styles.metricCard}>
-      <Ionicons name={icon} size={20} color={colors.greenDark} />
-      <Text style={styles.metricLabel}>{label}</Text>
-      <Text numberOfLines={2} style={styles.metricValue}>
-        {value}
-      </Text>
+    <View style={compact ? styles.contextWrapCompact : styles.contextWrap}>
+      {SPENDING_CONTEXTS.map((item) => (
+        <Pressable
+          accessibilityRole="button"
+          key={item}
+          onPress={() => onSelect(item)}
+          style={[styles.contextChip, selected === item && styles.contextChipActive]}
+        >
+          <Text style={[styles.contextChipText, selected === item && styles.contextChipTextActive]}>
+            {item}
+          </Text>
+          {!compact && selected === item && (
+            <Text style={styles.contextHint}>{CONTEXT_HINTS[item]}</Text>
+          )}
+        </Pressable>
+      ))}
     </View>
   );
 }
 
-function TransactionRow({ compact = false, transaction }: { compact?: boolean; transaction: TransactionDraft }) {
+function ObservationPanel({ pattern }: { pattern: SpendingPattern }) {
   return (
-    <View style={[styles.transactionRow, compact && styles.transactionRowCompact]}>
-      <View style={styles.transactionIcon}>
-        <Ionicons name="receipt-outline" size={18} color={colors.greenDark} />
+    <View style={[styles.observationPanel, patternStyle(pattern.tone)]}>
+      <View style={styles.patternTitleRow}>
+        <Ionicons name={patternIcon(pattern.tone)} size={18} color={patternColor(pattern.tone)} />
+        <Text style={styles.patternTitle}>{pattern.title}</Text>
       </View>
-      <View style={styles.transactionBody}>
-        <Text style={styles.transactionMerchant}>{transaction.merchant}</Text>
-        <Text style={styles.transactionMeta}>
-          {transaction.category} - {transaction.method} - {transaction.sourceLabel}
-        </Text>
-      </View>
-      <View style={styles.transactionAmountBlock}>
-        <Text style={styles.transactionAmount}>{formatRupiah(transaction.amount)}</Text>
-        <Text style={styles.confidenceText}>
-          {transaction.status === "confirmed" ? syncStatusLabel(transaction) : `${Math.round(transaction.confidence * 100)}%`}
-        </Text>
-      </View>
+      <Text style={styles.patternDetail}>{pattern.detail}</Text>
     </View>
   );
 }
 
-function syncStatusLabel(transaction: TransactionDraft): string {
-  if (transaction.syncStatus === "synced") return "Synced";
-  if (transaction.syncStatus === "syncing") return "Syncing";
-  if (transaction.syncStatus === "failed") return "Failed";
-  if (transaction.syncStatus === "not_configured") return "Local";
-  return "Pending";
+function FeedbackButton({
+  active,
+  label,
+  onPress
+}: {
+  active: boolean;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable onPress={onPress} style={[styles.feedbackButton, active && styles.feedbackButtonActive]}>
+      <Text style={[styles.feedbackText, active && styles.feedbackTextActive]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function MomentRow({
+  compact = false,
+  moment,
+  repeatHint
+}: {
+  compact?: boolean;
+  moment: SpendingMoment;
+  repeatHint?: string;
+}) {
+  return (
+    <View style={[styles.momentRow, compact && styles.momentRowCompact]}>
+      <View style={styles.momentIcon}>
+        <Ionicons name={contextIcon(moment.context)} size={18} color={colors.greenDark} />
+      </View>
+      <View style={styles.momentText}>
+        <Text style={styles.momentTitle}>{moment.label || moment.context}</Text>
+        <Text style={styles.momentMeta}>
+          {moment.context} - {formatTime(moment.occurredAt)}
+          {moment.note ? ` - ${moment.note}` : ""}
+        </Text>
+        {repeatHint && <Text style={styles.repeatHint}>{repeatHint}</Text>}
+      </View>
+      <Text style={styles.momentAmount}>{formatCompactRupiah(moment.amount)}</Text>
+    </View>
+  );
 }
 
 function SectionHeader({ title }: { title: string }) {
@@ -1182,325 +773,685 @@ function EmptyState({ text }: { text: string }) {
   );
 }
 
+function parseAmountInput(value: string): number | null {
+  const amount = Number.parseInt(value.replace(/[^\d]/g, ""), 10);
+  return Number.isFinite(amount) && amount > 0 ? amount : null;
+}
+
+type RepeatSuggestion = {
+  amount: number;
+  context: SpendingContext;
+  label: string;
+};
+
+function getRepeatSuggestions(moments: SpendingMoment[]): RepeatSuggestion[] {
+  const seen = new Set<string>();
+  const suggestions: RepeatSuggestion[] = [];
+
+  for (const moment of moments) {
+    const label = moment.label || moment.context;
+    const key = `${label.toLowerCase()}-${moment.context}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    suggestions.push({
+      amount: moment.amount,
+      context: moment.context,
+      label
+    });
+    if (suggestions.length >= 4) break;
+  }
+
+  return suggestions;
+}
+
+function filterMoments(moments: SpendingMoment[], query: string): SpendingMoment[] {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return moments;
+
+  return moments.filter((moment) => {
+    const haystack = [
+      moment.label,
+      moment.context,
+      moment.note,
+      String(moment.amount),
+      formatCompactRupiah(moment.amount)
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(normalized);
+  });
+}
+
+function getRepeatHint(moment: SpendingMoment, moments: SpendingMoment[]): string | undefined {
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const count = moments.filter(
+    (item) => item.context === moment.context && Date.parse(item.occurredAt) >= weekAgo
+  ).length;
+  return count >= 3 ? `${count} this week` : undefined;
+}
+
+function groupMomentsByRecallRange(moments: SpendingMoment[]) {
+  const now = new Date();
+  const todayKey = dateKey(now);
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const yesterdayKey = dateKey(yesterday);
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const groups = [
+    { key: "today", label: "Today", items: [] as SpendingMoment[] },
+    { key: "yesterday", label: "Yesterday", items: [] as SpendingMoment[] },
+    { key: "this-week", label: "This week", items: [] as SpendingMoment[] },
+    { key: "earlier", label: "Earlier", items: [] as SpendingMoment[] }
+  ];
+
+  moments.forEach((moment) => {
+    const key = dateKey(new Date(moment.occurredAt));
+    const time = Date.parse(moment.occurredAt);
+    if (key === todayKey) {
+      groups[0].items.push(moment);
+    } else if (key === yesterdayKey) {
+      groups[1].items.push(moment);
+    } else if (time >= weekAgo) {
+      groups[2].items.push(moment);
+    } else {
+      groups[3].items.push(moment);
+    }
+  });
+
+  return groups.filter((group) => group.items.length > 0);
+}
+
+function groupPatterns(patterns: SpendingPattern[]) {
+  const byGroup = patterns.reduce<Record<string, SpendingPattern[]>>((acc, pattern) => {
+    acc[pattern.group] = [...(acc[pattern.group] ?? []), pattern];
+    return acc;
+  }, {});
+
+  return Object.entries(byGroup).map(([title, items]) => ({ title, items }));
+}
+
+function formatDate(key: string): string {
+  return new Date(`${key}T00:00:00`).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric"
+  });
+}
+
+function dateKey(date: Date): string {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString().slice(0, 10);
+}
+
+function formatTime(value: string): string {
+  return new Date(value).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function contextIcon(context: SpendingContext): keyof typeof Ionicons.glyphMap {
+  if (context === "Meal") return "restaurant-outline";
+  if (context === "Coffee") return "cafe-outline";
+  if (context === "Transport") return "car-outline";
+  if (context === "Groceries") return "basket-outline";
+  if (context === "Bills") return "receipt-outline";
+  if (context === "Treat") return "sparkles-outline";
+  if (context === "Home") return "home-outline";
+  return "ellipse-outline";
+}
+
+function patternIcon(tone: SpendingPattern["tone"]): keyof typeof Ionicons.glyphMap {
+  if (tone === "notice") return "radio-button-on-outline";
+  if (tone === "warm") return "sunny-outline";
+  return "leaf-outline";
+}
+
+function patternColor(tone: SpendingPattern["tone"]): string {
+  if (tone === "notice") return colors.blue;
+  if (tone === "warm") return colors.amber;
+  return colors.greenDark;
+}
+
+function patternStyle(tone: SpendingPattern["tone"]) {
+  if (tone === "notice") return styles.patternNotice;
+  if (tone === "warm") return styles.patternWarm;
+  return styles.patternCalm;
+}
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.canvas
   },
-  app: {
+  appShell: {
     flex: 1
   },
   header: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12
+    paddingTop: 12,
+    paddingBottom: 12,
+    gap: 12
   },
-  brandLockup: {
+  brandRow: {
     alignItems: "center",
     flexDirection: "row",
-    flexShrink: 1,
     gap: 10
   },
-  brandTextBlock: {
-    flexShrink: 1
+  brandMark: {
+    height: 42,
+    width: 42
   },
-  logoTile: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    height: 46,
-    justifyContent: "center",
-    width: 46,
-    ...shadows.soft
-  },
-  logoImage: {
-    height: 32,
-    resizeMode: "contain",
-    width: 32
-  },
-  brand: {
+  brandName: {
     color: colors.ink,
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: "800",
     letterSpacing: 0
   },
-  subtitle: {
+  brandLine: {
     color: colors.muted,
     fontSize: 13,
-    marginTop: 2
+    letterSpacing: 0
   },
-  badge: {
-    alignItems: "center",
-    backgroundColor: colors.mint,
-    borderRadius: 999,
-    flexDirection: "row",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6
-  },
-  badgeText: {
-    color: colors.greenDark,
-    fontSize: 12,
-    fontWeight: "700"
-  },
-  tabs: {
-    flexDirection: "row",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingBottom: 8
-  },
-  tab: {
-    alignItems: "center",
-    borderRadius: 8,
-    flex: 1,
-    gap: 2,
-    minHeight: 56,
-    justifyContent: "center"
-  },
-  tabActive: {
-    backgroundColor: colors.surface,
-    ...shadows.soft
-  },
-  tabText: {
+  headerMessage: {
     color: colors.muted,
-    fontSize: 11,
-    fontWeight: "700"
-  },
-  tabTextActive: {
-    color: colors.greenDark
+    fontSize: 13,
+    lineHeight: 18
   },
   content: {
-    padding: 16,
-    paddingBottom: 40
+    flex: 1
   },
-  screen: {
-    gap: 14
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 112,
+    gap: 18
   },
-  heroPanel: {
-    backgroundColor: colors.greenDark,
-    borderRadius: 8,
-    padding: 20
-  },
-  kicker: {
-    color: colors.mint,
-    fontSize: 12,
-    fontWeight: "800",
-    marginBottom: 8,
-    textTransform: "uppercase"
-  },
-  heroTitle: {
-    color: colors.surface,
-    fontSize: 25,
-    fontWeight: "800",
-    letterSpacing: 0,
-    lineHeight: 31
-  },
-  heroCopy: {
-    color: colors.mint,
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 10
-  },
-  statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10
-  },
-  analyticsHeader: {
-    alignItems: "center",
+  capturePanel: {
     backgroundColor: colors.surface,
     borderColor: colors.line,
     borderRadius: 8,
     borderWidth: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 16
+    padding: 18,
+    gap: 14,
+    ...shadows.soft
+  },
+  kicker: {
+    color: colors.greenDark,
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0,
+    textTransform: "uppercase"
   },
   kickerDark: {
     color: colors.greenDark,
     fontSize: 12,
     fontWeight: "800",
-    marginBottom: 6,
+    letterSpacing: 0,
     textTransform: "uppercase"
   },
-  analyticsTitle: {
-    color: colors.ink,
+  amountRow: {
+    alignItems: "center",
+    borderBottomColor: colors.line,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    minHeight: 70
+  },
+  currencyPrefix: {
+    color: colors.greenDark,
     fontSize: 26,
     fontWeight: "800",
     letterSpacing: 0
   },
-  analyticsIcon: {
-    alignItems: "center",
-    backgroundColor: colors.mint,
-    borderRadius: 8,
-    height: 46,
-    justifyContent: "center",
-    width: 46
-  },
-  chartPanel: {
-    alignItems: "flex-end",
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 8,
-    height: 170,
-    padding: 12
-  },
-  barColumn: {
-    alignItems: "center",
-    flex: 1,
-    gap: 8,
-    height: "100%"
-  },
-  barTrack: {
-    backgroundColor: colors.faint,
-    borderRadius: 8,
-    flex: 1,
-    justifyContent: "flex-end",
-    overflow: "hidden",
-    width: "100%"
-  },
-  barFill: {
-    backgroundColor: colors.green,
-    borderRadius: 8,
-    minHeight: 0,
-    width: "100%"
-  },
-  barLabel: {
-    color: colors.muted,
-    fontSize: 11,
-    fontWeight: "700"
-  },
-  categoryPanel: {
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 12,
-    padding: 12
-  },
-  categoryTotalRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 10
-  },
-  categoryTotalText: {
-    width: 96
-  },
-  categoryBarOuter: {
-    backgroundColor: colors.faint,
-    borderRadius: 999,
-    flex: 1,
-    height: 9,
-    overflow: "hidden"
-  },
-  categoryBarInner: {
-    backgroundColor: colors.green,
-    borderRadius: 999,
-    height: "100%"
-  },
-  categoryAmount: {
+  amountInput: {
     color: colors.ink,
+    flex: 1,
+    fontSize: 42,
+    fontWeight: "800",
+    letterSpacing: 0,
+    paddingVertical: 8
+  },
+  input: {
+    backgroundColor: colors.faint,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    color: colors.ink,
+    fontSize: 15,
+    letterSpacing: 0,
+    minHeight: 48,
+    paddingHorizontal: 14,
+    paddingVertical: 10
+  },
+  noteInput: {
+    minHeight: 64,
+    textAlignVertical: "top"
+  },
+  suggestionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  repeatBlock: {
+    gap: 8
+  },
+  microLabel: {
+    color: colors.muted,
     fontSize: 12,
     fontWeight: "800",
-    textAlign: "right",
-    width: 58
+    letterSpacing: 0,
+    textTransform: "uppercase"
   },
-  insightList: {
-    gap: 10
-  },
-  insightCard: {
-    alignItems: "flex-start",
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 10,
-    padding: 12
-  },
-  insightCalm: {
-    backgroundColor: "#eef5f7",
-    borderColor: "#d7e6eb"
-  },
-  insightNotice: {
-    backgroundColor: "#fff6df",
-    borderColor: "#f1dda6"
-  },
-  insightGood: {
+  repeatChip: {
     backgroundColor: colors.mint,
-    borderColor: "#b8e2c4"
+    borderColor: "#c3e3cc",
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 2,
+    minHeight: 48,
+    paddingHorizontal: 12,
+    paddingVertical: 8
   },
-  insightText: {
-    flex: 1
-  },
-  insightTitle: {
-    color: colors.ink,
+  repeatText: {
+    color: colors.greenDark,
     fontSize: 14,
-    fontWeight: "800"
+    fontWeight: "900",
+    letterSpacing: 0
   },
-  insightDetail: {
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 3
-  },
-  syncPanel: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 12,
-    padding: 14
-  },
-  syncPanelText: {
-    flex: 1
-  },
-  iconButton: {
-    alignItems: "center",
-    backgroundColor: colors.green,
-    borderRadius: 8,
-    height: 44,
-    justifyContent: "center",
-    width: 44
-  },
-  iconButtonDisabled: {
-    opacity: 0.55
-  },
-  metricCard: {
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    minHeight: 112,
-    padding: 14,
-    width: "48%"
-  },
-  metricLabel: {
+  repeatAmount: {
     color: colors.muted,
     fontSize: 12,
     fontWeight: "700",
-    marginTop: 8
+    letterSpacing: 0
   },
-  metricValue: {
+  suggestionChip: {
+    backgroundColor: colors.canvas,
+    borderColor: colors.line,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
+  suggestionText: {
+    color: colors.greenDark,
+    fontSize: 13,
+    fontWeight: "700"
+  },
+  contextWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  contextWrapCompact: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6
+  },
+  contextHeaderRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10
+  },
+  contextDefault: {
+    color: colors.muted,
+    flexShrink: 1,
+    fontSize: 12,
+    fontWeight: "700",
+    textAlign: "right"
+  },
+  contextChip: {
+    backgroundColor: colors.canvas,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    minHeight: 42,
+    minWidth: "30%",
+    paddingHorizontal: 12,
+    paddingVertical: 9
+  },
+  contextChipActive: {
+    backgroundColor: colors.mint,
+    borderColor: colors.green
+  },
+  contextChipText: {
     color: colors.ink,
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "800",
-    lineHeight: 23,
-    marginTop: 4
+    letterSpacing: 0
+  },
+  contextChipTextActive: {
+    color: colors.greenDark
+  },
+  contextHint: {
+    color: colors.muted,
+    fontSize: 11,
+    marginTop: 2
+  },
+  addNoteButton: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    gap: 6,
+    minHeight: 36,
+    paddingHorizontal: 2
+  },
+  addNoteText: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: "700"
+  },
+  primaryButton: {
+    alignItems: "center",
+    backgroundColor: colors.greenDark,
+    borderRadius: 8,
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "center",
+    minHeight: 52,
+    paddingHorizontal: 16
+  },
+  smallPrimaryButton: {
+    alignItems: "center",
+    backgroundColor: colors.greenDark,
+    borderRadius: 8,
+    justifyContent: "center",
+    minHeight: 44,
+    paddingHorizontal: 18
+  },
+  primaryButtonText: {
+    color: colors.surface,
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  secondaryButton: {
+    alignItems: "center",
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: "center",
+    minHeight: 44,
+    paddingHorizontal: 18
+  },
+  secondaryButtonText: {
+    color: colors.greenDark,
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  lastSavedPanel: {
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "space-between",
+    padding: 14
+  },
+  lastSavedText: {
+    flex: 1,
+    gap: 3
+  },
+  lastSavedTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "900",
+    letterSpacing: 0
+  },
+  lastSavedActions: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10
+  },
+  observationPanel: {
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 16,
+    gap: 8
+  },
+  heroPanel: {
+    backgroundColor: colors.mint,
+    borderColor: "#c3e3cc",
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 18,
+    gap: 8
+  },
+  heroTitle: {
+    color: colors.ink,
+    fontSize: 23,
+    fontWeight: "800",
+    letterSpacing: 0,
+    lineHeight: 30
   },
   sectionTitle: {
     color: colors.ink,
+    fontSize: 17,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  listPanel: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: "hidden"
+  },
+  momentRow: {
+    alignItems: "center",
+    borderBottomColor: colors.faint,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 12,
+    minHeight: 68,
+    padding: 14
+  },
+  momentRowCompact: {
+    minHeight: 62
+  },
+  momentIcon: {
+    alignItems: "center",
+    backgroundColor: colors.mint,
+    borderRadius: 8,
+    height: 38,
+    justifyContent: "center",
+    width: 38
+  },
+  momentText: {
+    flex: 1,
+    gap: 3
+  },
+  momentTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  momentMeta: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 16
+  },
+  repeatHint: {
+    color: colors.blue,
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 16
+  },
+  momentAmount: {
+    color: colors.greenDark,
+    fontSize: 15,
+    fontWeight: "900",
+    letterSpacing: 0
+  },
+  memoryGroup: {
+    gap: 8
+  },
+  groupTitle: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 0,
+    textTransform: "uppercase"
+  },
+  rowActions: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "flex-end",
+    paddingBottom: 12,
+    paddingHorizontal: 14
+  },
+  textButton: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 5,
+    minHeight: 32
+  },
+  textButtonLabel: {
+    color: colors.greenDark,
+    fontSize: 13,
+    fontWeight: "800"
+  },
+  deleteText: {
+    color: colors.coral
+  },
+  editPanel: {
+    backgroundColor: colors.canvas,
+    borderTopColor: colors.line,
+    borderTopWidth: 1,
+    gap: 10,
+    padding: 14
+  },
+  editActions: {
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "flex-end"
+  },
+  patternGroup: {
+    gap: 10
+  },
+  patternCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+    padding: 16
+  },
+  patternCalm: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line
+  },
+  patternNotice: {
+    backgroundColor: "#eef6fa",
+    borderColor: "#cfe3ed"
+  },
+  patternWarm: {
+    backgroundColor: "#fff8e8",
+    borderColor: "#f3dfad"
+  },
+  patternTitleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8
+  },
+  patternTitle: {
+    color: colors.ink,
+    flex: 1,
     fontSize: 16,
     fontWeight: "800",
-    marginTop: 4
+    letterSpacing: 0,
+    lineHeight: 22
+  },
+  patternDetail: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20
+  },
+  recapBlock: {
+    borderTopColor: "rgba(24,32,28,0.08)",
+    borderTopWidth: 1,
+    gap: 10,
+    marginTop: 4,
+    paddingTop: 12
+  },
+  recapQuestion: {
+    color: colors.ink,
+    fontSize: 14,
+    fontWeight: "800",
+    lineHeight: 19
+  },
+  feedbackRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  feedbackButton: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
+  feedbackButtonActive: {
+    backgroundColor: colors.greenDark,
+    borderColor: colors.greenDark
+  },
+  feedbackText: {
+    color: colors.greenDark,
+    fontSize: 13,
+    fontWeight: "800"
+  },
+  feedbackTextActive: {
+    color: colors.surface
+  },
+  settingsPanel: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: "hidden"
+  },
+  settingRow: {
+    alignItems: "flex-start",
+    borderBottomColor: colors.faint,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 12,
+    padding: 16
+  },
+  settingText: {
+    flex: 1,
+    gap: 4
+  },
+  settingTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  settingCopy: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18
+  },
+  dangerButton: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    borderColor: "#f3c8c0",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    minHeight: 46,
+    paddingHorizontal: 14
+  },
+  dangerButtonText: {
+    color: colors.coral,
+    fontSize: 14,
+    fontWeight: "800"
   },
   emptyState: {
     alignItems: "center",
@@ -1509,6 +1460,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     gap: 8,
+    justifyContent: "center",
+    minHeight: 112,
     padding: 18
   },
   emptyText: {
@@ -1517,317 +1470,38 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     textAlign: "center"
   },
-  transactionCard: {
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    padding: 12
-  },
-  transactionRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 10
-  },
-  transactionRowCompact: {
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    padding: 12
-  },
-  transactionIcon: {
-    alignItems: "center",
-    backgroundColor: colors.mint,
-    borderRadius: 8,
-    height: 38,
-    justifyContent: "center",
-    width: 38
-  },
-  transactionBody: {
-    flex: 1
-  },
-  transactionMerchant: {
-    color: colors.ink,
-    fontSize: 15,
-    fontWeight: "800"
-  },
-  transactionMeta: {
-    color: colors.muted,
-    fontSize: 12,
-    marginTop: 3
-  },
-  transactionAmountBlock: {
-    alignItems: "flex-end",
-    maxWidth: 120
-  },
-  transactionAmount: {
-    color: colors.ink,
-    fontSize: 14,
-    fontWeight: "800",
-    textAlign: "right"
-  },
-  confidenceText: {
-    color: colors.blue,
-    fontSize: 11,
-    fontWeight: "700",
-    marginTop: 3
-  },
-  categoryWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 7,
-    marginTop: 14
-  },
-  categoryWrapTight: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 7
-  },
-  categoryChip: {
-    borderColor: colors.line,
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 7
-  },
-  categoryChipActive: {
-    backgroundColor: colors.mint,
-    borderColor: colors.green
-  },
-  categoryChipText: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: "700"
-  },
-  categoryChipTextActive: {
-    color: colors.greenDark
-  },
-  actions: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 14
-  },
-  actionButton: {
-    alignItems: "center",
-    borderRadius: 8,
-    flex: 1,
+  tabBar: {
+    backgroundColor: "rgba(247, 248, 244, 0.96)",
+    borderTopColor: colors.line,
+    borderTopWidth: 1,
+    bottom: 0,
     flexDirection: "row",
     gap: 6,
-    justifyContent: "center",
-    minHeight: 44
+    left: 0,
+    paddingBottom: 10,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    position: "absolute",
+    right: 0
   },
-  primaryButton: {
-    backgroundColor: colors.green
-  },
-  primaryButtonWide: {
+  tabItem: {
     alignItems: "center",
-    backgroundColor: colors.green,
     borderRadius: 8,
-    flexDirection: "row",
-    gap: 8,
-    justifyContent: "center",
-    minHeight: 48
-  },
-  primaryButtonText: {
-    color: colors.surface,
-    fontSize: 14,
-    fontWeight: "800"
-  },
-  ghostButton: {
-    backgroundColor: colors.faint
-  },
-  disabledButton: {
-    opacity: 0.55
-  },
-  ghostButtonText: {
-    color: colors.muted,
-    fontSize: 14,
-    fontWeight: "800"
-  },
-  inputPanel: {
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 12,
-    padding: 12
-  },
-  textArea: {
-    color: colors.ink,
-    fontSize: 15,
-    lineHeight: 22,
-    minHeight: 120,
-    textAlignVertical: "top"
-  },
-  singleLineInput: {
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    color: colors.ink,
-    fontSize: 14,
-    minHeight: 46,
-    paddingHorizontal: 12
-  },
-  addSourcePanel: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 10,
-    padding: 10
-  },
-  sourceInput: {
-    color: colors.ink,
     flex: 1,
-    fontSize: 14,
-    minHeight: 42
-  },
-  addSourceButton: {
-    alignItems: "center",
-    backgroundColor: colors.green,
-    borderRadius: 8,
-    height: 42,
+    gap: 3,
     justifyContent: "center",
-    width: 42
+    minHeight: 54
   },
-  statusPanel: {
-    alignItems: "center",
-    backgroundColor: colors.mint,
-    borderRadius: 8,
-    flexDirection: "row",
-    gap: 8,
-    padding: 12
-  },
-  statusText: {
-    color: colors.greenDark,
-    flex: 1,
-    fontSize: 13,
-    fontWeight: "700",
-    lineHeight: 18
-  },
-  sampleRow: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 10,
-    padding: 12
-  },
-  sampleText: {
-    color: colors.ink,
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 19
-  },
-  privacyPanel: {
-    alignItems: "flex-start",
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 12,
-    padding: 14
-  },
-  privacyTextBlock: {
-    flex: 1
-  },
-  panelTitle: {
-    color: colors.ink,
-    fontSize: 16,
-    fontWeight: "800"
-  },
-  panelCopy: {
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 19,
-    marginTop: 5
-  },
-  settingRow: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-    padding: 12
-  },
-  syncHealthRow: {
-    alignItems: "center",
-    backgroundColor: colors.faint,
-    borderRadius: 8,
-    flexDirection: "row",
-    gap: 12,
-    justifyContent: "space-between",
-    padding: 12
-  },
-  syncHealthText: {
-    flex: 1
-  },
-  settingTitle: {
-    color: colors.ink,
-    fontSize: 14,
-    fontWeight: "800"
-  },
-  settingCopy: {
-    color: colors.muted,
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: 3,
-    maxWidth: 230
-  },
-  smallBadge: {
-    backgroundColor: colors.faint,
-    borderRadius: 999,
-    paddingHorizontal: 9,
-    paddingVertical: 5
-  },
-  smallBadgeGood: {
+  tabItemActive: {
     backgroundColor: colors.mint
   },
-  smallBadgeText: {
+  tabLabel: {
     color: colors.muted,
     fontSize: 11,
-    fontWeight: "800"
+    fontWeight: "800",
+    letterSpacing: 0
   },
-  smallBadgeTextGood: {
+  tabLabelActive: {
     color: colors.greenDark
-  },
-  secondaryButtonWide: {
-    alignItems: "center",
-    backgroundColor: colors.mint,
-    borderRadius: 8,
-    flexDirection: "row",
-    gap: 8,
-    justifyContent: "center",
-    minHeight: 48
-  },
-  secondaryButtonText: {
-    color: colors.greenDark,
-    fontSize: 14,
-    fontWeight: "800"
-  },
-  dangerButton: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.coral,
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 8,
-    justifyContent: "center",
-    minHeight: 48
-  },
-  dangerButtonText: {
-    color: colors.coral,
-    fontSize: 14,
-    fontWeight: "800"
   }
 });
