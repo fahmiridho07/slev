@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Slev",
+    "slug": "slev",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/brand/slev-icon.png",
+    "scheme": "slev",
+    "splash": {
+      "image": "./assets/brand/slev-splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f7f8f4"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "com.slev.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/brand/slev-adaptive-foreground.png",
+        "backgroundColor": "#f7f8f4"
+      },
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
+    },
+    "extra": {
+      "privacy": {
+        "storesRawNotifications": false,
+        "requiresBankCredentials": false
+      }
+    }
+  }
+}

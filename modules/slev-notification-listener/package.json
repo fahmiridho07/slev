@@ -1,0 +1,12 @@
+{
+  "name": "slev-notification-listener",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
+  "react-native": "index.js",
+  "files": [
+    "android",
+    "index.js",
+    "react-native.config.js"
+  ]
+}
