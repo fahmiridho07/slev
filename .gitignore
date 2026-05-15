@@ -1,9 +1,25 @@
+# Native module build outputs
+modules/**/android/.gradle/
+modules/**/android/build/
+modules/**/build/
+
+# Android build outputs
+android/.gradle/
+android/local.properties
+android/app/build/
+android/build/
+android/app/debug.keystore
+
+# Expo / Node
 node_modules/
 .expo/
 dist/
 web-build/
-android/
-ios/
-*.log
+
+# Env / secrets
 .env
 .env.*
+
+# Build artifacts
+*.apk
+*.aab
