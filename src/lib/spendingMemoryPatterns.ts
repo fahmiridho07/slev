@@ -3,9 +3,10 @@ import { SpendingPattern, SpendingMoment } from "../features/spendingMemory.type
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function generateSpendingPatterns(moments: SpendingMoment[]): SpendingPattern[] {
-  const thisWeek = withinDays(moments, 7);
-  const previousWeek = previousDays(moments, 7, 14);
-  const recent = withinDays(moments, 14);
+  const expenses = moments.filter((moment) => moment.type !== "income");
+  const thisWeek = withinDays(expenses, 7);
+  const previousWeek = previousDays(expenses, 7, 14);
+  const recent = withinDays(expenses, 14);
   const patterns: SpendingPattern[] = [
     ...buildContextChangePatterns(thisWeek, previousWeek),
     ...buildNewRepeatPatterns(thisWeek, previousWeek),
@@ -23,7 +24,7 @@ export function generateSpendingPatterns(moments: SpendingMoment[]): SpendingPat
     return buildGentleFallback(recent);
   }
 
-  if (moments.length > 0) {
+  if (expenses.length > 0) {
     return [
       {
         id: "quiet-start",
@@ -39,7 +40,8 @@ export function generateSpendingPatterns(moments: SpendingMoment[]): SpendingPat
 }
 
 export function getHomeObservation(moments: SpendingMoment[]): SpendingPattern {
-  const patterns = generateSpendingPatterns(moments);
+  const expenses = moments.filter((moment) => moment.type !== "income");
+  const patterns = generateSpendingPatterns(expenses);
   if (patterns.length > 0) return patterns[0];
 
   return {
@@ -52,17 +54,13 @@ export function getHomeObservation(moments: SpendingMoment[]): SpendingPattern {
 }
 
 export function formatRupiah(amount: number): string {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
+  return `Rp ${new Intl.NumberFormat("id-ID", {
     maximumFractionDigits: 0
-  }).format(amount);
+  }).format(Math.round(amount))}`;
 }
 
 export function formatCompactRupiah(amount: number): string {
-  if (amount >= 1_000_000) return `Rp${(amount / 1_000_000).toFixed(1)}m`;
-  if (amount >= 1_000) return `Rp${Math.round(amount / 1_000)}k`;
-  return `Rp${amount}`;
+  return formatRupiah(amount);
 }
 
 function buildContextChangePatterns(

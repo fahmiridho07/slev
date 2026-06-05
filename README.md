@@ -1,27 +1,30 @@
 # Slev
 
-Slev is a calm spending memory.
+Slev is a calm manual finance companion.
 
-It is not an accounting app, budgeting dashboard, finance optimizer, or notification-parsing pipeline. The current pivot focuses on a lighter loop: save a spending moment in seconds, then let Slev surface what has been repeating, standing out, or quietly adding up.
+It is not an accounting app, bank-sync product, or notification-parsing pipeline. The current loop is intentionally manual: save money moments quickly, plan the month lightly, and review patterns without handing the app sensitive phone permissions.
 
 ## Current Build Includes
 
 - Expo + React Native + TypeScript app.
-- Local-only spending moments stored with AsyncStorage.
+- Local-only finance memory stored with AsyncStorage.
 - One-time migration from confirmed legacy transactions into spending memory.
-- Capture-first Home screen with amount-only required input.
-- Repeat chips for common spends and a last-saved undo/edit flow.
-- Practical context tags: Meal, Coffee, Transport, Groceries, Bills, Treat, Home, Other.
+- Capture-first Home screen with expense, income, and transfer entry; amount-only required input.
+- Expense and income entries can be tied to a local account or wallet for pocket-level analysis.
+- Brand-style account badges for common banks and wallets without bundling trademarked logo files.
+- Manual shortcuts for recurring entries and a last-saved undo/edit flow.
+- Practical default context tags plus custom expense categories.
 - Memory timeline with recall grouping, search, compact edit, and delete actions.
-- Low-density Patterns screen with rule-based change and repeat awareness.
+- Money plan area with monthly allocation, soft limits, fixed/flexible category modes, monthly plan, savings goals, account balance snapshots, and monthly closing.
+- Low-density Analysis screen with rule-based recap, breakdown, cashflow, account distribution, account reconciliation, transfer flow, burn-rate, and trend views.
 - Optional weekly recap responses: Keep, Less often, Not sure.
-- Privacy-first Settings with no notification access or sync required in the MVP.
+- Privacy-first Settings with local category CRUD, no notification listener, no bank access, and no sync required.
 
 ## Product Direction
 
 The sticky behavior is:
 
-> I can quickly remember where my money has been going without maintaining a finance system.
+> I can manually understand and adjust my money without maintaining a heavy finance system.
 
 Slev should stay:
 
@@ -29,8 +32,8 @@ Slev should stay:
 - Local-first.
 - Permission-light.
 - Low-friction.
-- Useful without complete tracking.
-- Free of shame, guilt, streaks, or productivity pressure.
+- Useful without complete tracking or passive capture.
+- Free of shame, guilt, scoring, or productivity pressure.
 
 ## Run Locally
 
@@ -56,19 +59,20 @@ Run validation:
 
 ```bash
 npm run typecheck
-npm run parser:smoke
+npm run test:finance
 ```
 
 If `npm` is not available in the shell but dependencies are installed, the same checks can be run with:
 
 ```powershell
 .\node_modules\.bin\tsc.cmd --noEmit
-node scripts\parser-smoke-test.mjs
+.\node_modules\.bin\tsc.cmd -p tsconfig.test.json
+node .tmp-tests\tests\financeEngine.test.js
 ```
 
-## Legacy Systems
+## Manual-Only Direction
 
-The repository still contains the old notification listener, parser, and Google Sheets sync code so the project remains buildable while the pivot is evaluated. These systems are no longer part of the visible MVP experience.
+The native notification listener module has been removed from the build and from the repository. Slev should stay manual-first unless a future feature can prove it reduces cognitive load without asking for sensitive phone access.
 
 Before reintroducing any passive capture or sync feature, it should pass this product test:
 

@@ -1,14 +1,14 @@
 # Slev Project Specification
 
-Slev is a lightweight spending memory for noticing where money quietly goes.
+Slev is a lightweight manual finance companion for noticing where money quietly goes.
 
-It helps a person save small spending moments quickly and later see what has been repeating, standing out, or quietly adding up. The product is intentionally not a budgeting app, accounting system, fintech dashboard, AI financial assistant, or journaling app.
+It helps a person save money moments quickly, plan the month lightly, and later see what has been repeating, standing out, or quietly adding up. The product is intentionally not an accounting system, bank-sync product, passive notification pipeline, dense fintech dashboard, or journaling app.
 
 ## 1. Product Positioning
 
 Core promise:
 
-> Save a spending moment in seconds. Later, Slev helps you remember the shape of your spending.
+> Save a money moment in seconds. Later, Slev helps you remember, plan, and adjust without sensitive phone access.
 
 The product should feel:
 
@@ -24,11 +24,11 @@ The product should avoid:
 - Complete accounting.
 - Daily reflection pressure.
 - Shame-coded labels.
-- Streaks.
+- Productivity pressure, scoring, or gamified progress loops.
 - Finance dashboard density.
 - Spreadsheet aesthetics.
 - Mandatory categorization.
-- Passive capture as a default onboarding step.
+- Passive capture or notification access.
 
 ## 2. Current MVP
 
@@ -36,9 +36,11 @@ The product should avoid:
 
 - Capture-first screen.
 - Amount is the only required field.
+- Expense, income, and transfer entries are supported.
 - Label and note are optional.
 - Context is practical, not emotional, and defaults to the last used context.
-- Recent repeat chips are suggested to reduce repeat typing and speed up common spends.
+- Transfers record money movement between local accounts or wallets and do not count as income or spending.
+- Recent repeat chips and manual shortcuts reduce repeat typing and speed up common entries.
 - Notes are visually secondary and should appear only when useful for recall.
 - The last saved memory can be edited or undone from Home.
 - Recent spending memories are visible without becoming a dashboard.
@@ -53,7 +55,7 @@ The product should avoid:
 - Edit and delete are available.
 - The screen is a memory list, not a journal.
 
-### Patterns
+### Analysis
 
 - Rule-based, plain-language observations that favor change and contrast over static summaries.
 - Pattern groups:
@@ -65,13 +67,24 @@ The product should avoid:
   - Keep.
   - Less often.
   - Not sure.
+- Breakdown, cashflow, account distribution, transfer flow, burn-rate, and trend views use plain React Native views.
+- Account reconciliation compares the two latest balance snapshots for an account against logged income, expenses, and transfers between those snapshots.
+
+### Money Plan
+
+- Soft category limits per week or month.
+- Monthly allocation view for expected income, fixed costs, flexible spending, savings target, daily flexible room, and pocket top-up needs.
+- Fixed/flexible category modes for separating recurring costs from controllable spending.
+- Monthly spending plan with expected income, fixed costs, flexible spending, and savings target.
+- Savings goals with target and saved-so-far amounts.
+- Manual account/wallet balance snapshots.
+- Local account list for income hub and daily spending pockets.
+- Monthly closing ritual with one next-month adjustment.
 
 ### Settings
 
-- Shows local-first privacy posture.
-- No notification access required.
-- No sync connected.
-- Clear local memory action.
+- Custom expense category add, edit, and delete.
+- Clear local finance memory action.
 
 ## 3. Technology Stack
 
@@ -93,6 +106,45 @@ type SpendingMoment = {
   label?: string;
   context: string;
   note?: string;
+  type: "expense" | "income";
+  source?: string;
+  accountLabel?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+```
+
+Transfer and account records:
+
+```ts
+type MoneyAccount = {
+  id: string;
+  label: string;
+  kind: "bank" | "wallet" | "cash" | "other";
+  isIncomeHub: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type MoneyTransfer = {
+  id: string;
+  amount: number;
+  fromAccount: string;
+  toAccount: string;
+  occurredAt: string;
+  note?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+```
+
+Custom categories:
+
+```ts
+type ExpenseCategory = {
+  id: string;
+  label: string;
+  isDefault: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -131,35 +183,54 @@ src/features/spendingMemory.types.ts
 src/data/spendingMemory.ts
   Default context tags and context normalization.
 
+src/data/accountBrands.ts
+  Brand-style badge metadata for account and wallet labels without bundling trademarked logo files.
+
 src/services/spendingMemoryRepository.ts
   AsyncStorage persistence, legacy migration, update, delete, clear, and pattern feedback helpers.
 
+src/services/manualFinanceRepository.ts
+  Monthly plans, manual templates, category modes, savings goals, balance snapshots, and monthly closings.
+
+src/services/budgetRepository.ts
+  Soft budget limits per category.
+
+src/services/accountRepository.ts
+  Local account list and manual transfer ledger.
+
+src/services/categoryRepository.ts
+  Default and custom expense categories.
+
 src/lib/spendingMemoryPatterns.ts
   Rule-based spending memory pattern generation and Rupiah formatting.
+
+src/lib/financeEngine.ts
+  Pure monthly allocation and balance reconciliation calculations.
 
 src/theme/colors.ts
   Color and shadow tokens.
 ```
 
-Legacy files still present but no longer visible in the MVP path:
-
-```txt
-src/lib/transactionParser.ts
-src/lib/spendingAnalytics.ts
-src/services/googleSheetsSync.ts
-src/services/notificationCaptureService.ts
-modules/slev-notification-listener/
-google-apps-script/Code.gs
-```
+Legacy notification, parser, transaction sync, and Google Sheets artifacts have been removed from the build path and repository.
 
 ## 6. Local Storage
 
 Current keys:
 
 ```txt
-slev.spendingMoments.v1
-slev.patternFeedback.v1
-slev.migrated.flowtrackTransactions.v1
+slev_entries
+slev_pattern_feedback
+slev_migrated_v2
+slev_budget_limits
+slev_monthly_plans
+slev_manual_templates
+slev_category_modes
+slev_savings_goals
+slev_balance_snapshots
+slev_monthly_closings
+slev_accounts
+slev_transfers
+slev_expense_categories
 ```
 
 Legacy migration reads confirmed records from:
@@ -211,12 +282,13 @@ Must:
 - Store spending memory locally by default.
 - Avoid bank credentials.
 - Avoid raw notification persistence.
+- Avoid notification listener access entirely.
 - Avoid cloud sync in the MVP.
 - Make data clearing obvious.
 
 Must not:
 
-- Require Notification Access during onboarding.
+- Require Notification Access during onboarding or later use.
 - Upload spending data by default.
 - Use shame, guilt, or scoring language.
 - Require complete spending capture.
@@ -227,10 +299,10 @@ Run:
 
 ```bash
 npm run typecheck
-npm run parser:smoke
+npm run test:finance
 ```
 
-The parser smoke test remains while legacy parser code is still present. Once the legacy parser is removed, replace it with spending-memory repository and pattern tests.
+Finance engine tests cover monthly summary, allocation, balance reconciliation, latest snapshots, and category modes. Replace future parser-era checks with spending-memory and manual-finance repository tests.
 
 ## 10. Next Decisions
 
@@ -238,12 +310,10 @@ Before adding more capability, evaluate whether it improves the core loop:
 
 1. Save a spending moment quickly.
 2. Recall where money went.
-3. Notice repeats without maintaining a finance system.
+3. Notice repeats and adjust the next month without maintaining a heavy finance system.
 
 Candidate next work:
 
 - Home screen widget or Android shortcut.
 - CSV export as a local, optional action.
-- Search/filter in Memory.
-- Tests for migration and pattern generation.
-- Removal of legacy notification/sync modules after the pivot is validated.
+- Tests for migration, manual finance repositories, finance engine, and pattern generation.

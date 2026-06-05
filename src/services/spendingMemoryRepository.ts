@@ -1,14 +1,17 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
+  EntryType,
   PatternFeedback,
   PatternFeedbackResponse,
   SpendingMoment
 } from "../features/spendingMemory.types";
 import { normalizeSpendingContext } from "../data/spendingMemory";
 
-const MOMENTS_KEY = "slev.spendingMoments.v1";
-const FEEDBACK_KEY = "slev.patternFeedback.v1";
-const MIGRATION_KEY = "slev.migrated.flowtrackTransactions.v1";
+const MOMENTS_KEY = "slev_entries";
+const LEGACY_MOMENTS_KEY = "slev.spendingMoments.v1";
+const FEEDBACK_KEY = "slev_pattern_feedback";
+const LEGACY_FEEDBACK_KEY = "slev.patternFeedback.v1";
+const V2_MIGRATION_KEY = "slev_migrated_v2";
 const LEGACY_TRANSACTIONS_KEY = "flowtrack.transactions.v1";
 
 type MomentInput = {
@@ -17,6 +20,9 @@ type MomentInput = {
   label?: string;
   context?: string;
   note?: string;
+  type?: EntryType;
+  source?: string;
+  accountLabel?: string;
 };
 
 type LegacyTransaction = {
@@ -31,20 +37,9 @@ type LegacyTransaction = {
 };
 
 export async function listSpendingMoments(): Promise<SpendingMoment[]> {
-  const migrated = await AsyncStorage.getItem(MIGRATION_KEY);
-  const raw = await AsyncStorage.getItem(MOMENTS_KEY);
-
-  if (!raw && migrated !== "true") {
-    const migratedMoments = await migrateConfirmedTransactions();
-    await AsyncStorage.setItem(MIGRATION_KEY, "true");
-    if (migratedMoments.length > 0) {
-      await persistSpendingMoments(migratedMoments);
-      return sortMoments(migratedMoments);
-    }
-  }
-
+  await migrateSpendingMemoryV2();
+  const raw = await readStorage(MOMENTS_KEY);
   if (!raw) return [];
-
   try {
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
@@ -97,21 +92,25 @@ export async function deleteSpendingMoment(id: string): Promise<SpendingMoment[]
 }
 
 export async function clearSpendingMemory(): Promise<void> {
-  await AsyncStorage.multiRemove([MOMENTS_KEY, FEEDBACK_KEY]);
-  await AsyncStorage.setItem(MIGRATION_KEY, "true");
+  try {
+    await AsyncStorage.multiRemove([MOMENTS_KEY, LEGACY_MOMENTS_KEY, FEEDBACK_KEY, LEGACY_FEEDBACK_KEY]);
+    await AsyncStorage.setItem(V2_MIGRATION_KEY, "true");
+  } catch {
+    return;
+  }
 }
 
 export async function listPatternFeedback(): Promise<PatternFeedback[]> {
-  const raw = await AsyncStorage.getItem(FEEDBACK_KEY);
-  if (!raw) return [];
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(normalizePatternFeedback).filter(Boolean) as PatternFeedback[];
-  } catch {
-    return [];
+  const raw = await readStorage(FEEDBACK_KEY);
+  if (!raw) {
+    const legacyRaw = await readStorage(LEGACY_FEEDBACK_KEY);
+    if (!legacyRaw) return [];
+    const migrated = parsePatternFeedbackList(legacyRaw);
+    await persistPatternFeedback(migrated);
+    return migrated;
   }
+
+  return parsePatternFeedbackList(raw);
 }
 
 export async function savePatternFeedback(
@@ -125,12 +124,61 @@ export async function savePatternFeedback(
     createdAt: new Date().toISOString()
   };
   const updated = [next, ...current.filter((item) => item.patternId !== patternId)].slice(0, 100);
-  await AsyncStorage.setItem(FEEDBACK_KEY, JSON.stringify(updated));
+  await persistPatternFeedback(updated);
   return updated;
 }
 
+async function migrateSpendingMemoryV2(): Promise<void> {
+  const alreadyMigrated = await readStorage(V2_MIGRATION_KEY);
+  if (alreadyMigrated === "true") return;
+
+  const raw = await readStorage(MOMENTS_KEY);
+  const legacyMomentsRaw = raw ? null : await readStorage(LEGACY_MOMENTS_KEY);
+  const existingMoments = parseMomentList(raw ?? legacyMomentsRaw);
+  const legacyTransactionMoments = await migrateConfirmedTransactions();
+  const mergedMoments = dedupeMomentsById([...legacyTransactionMoments, ...existingMoments]);
+
+  if (
+    legacyMomentsRaw ||
+    legacyTransactionMoments.length > 0 ||
+    existingMoments.some((moment) => moment.type !== "expense" && moment.type !== "income") ||
+    raw !== JSON.stringify(sortMoments(mergedMoments).map(normalizeMoment))
+  ) {
+    await persistSpendingMoments(mergedMoments);
+  }
+
+  try {
+    await AsyncStorage.setItem(V2_MIGRATION_KEY, "true");
+  } catch {
+    return;
+  }
+}
+
+function parseMomentList(raw: string | null): SpendingMoment[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(normalizeMoment).filter((moment) => moment.amount > 0);
+  } catch {
+    return [];
+  }
+}
+
+function parsePatternFeedbackList(raw: string): PatternFeedback[] {
+  if (!raw) return [];
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(normalizePatternFeedback).filter(Boolean) as PatternFeedback[];
+  } catch {
+    return [];
+  }
+}
+
 async function migrateConfirmedTransactions(): Promise<SpendingMoment[]> {
-  const raw = await AsyncStorage.getItem(LEGACY_TRANSACTIONS_KEY);
+  const raw = await readStorage(LEGACY_TRANSACTIONS_KEY);
   if (!raw) return [];
 
   try {
@@ -147,6 +195,7 @@ async function migrateConfirmedTransactions(): Promise<SpendingMoment[]> {
           occurredAt: item.timestamp ?? item.createdAt ?? new Date().toISOString(),
           label: cleanOptionalText(item.merchant),
           context: normalizeSpendingContext(item.category),
+          type: "expense",
           createdAt: item.createdAt ?? new Date().toISOString(),
           updatedAt: item.updatedAt ?? new Date().toISOString()
         })
@@ -157,19 +206,43 @@ async function migrateConfirmedTransactions(): Promise<SpendingMoment[]> {
 }
 
 async function persistSpendingMoments(moments: SpendingMoment[]): Promise<void> {
-  await AsyncStorage.setItem(MOMENTS_KEY, JSON.stringify(sortMoments(moments).map(normalizeMoment)));
+  try {
+    await AsyncStorage.setItem(MOMENTS_KEY, JSON.stringify(sortMoments(moments).map(normalizeMoment)));
+  } catch {
+    return;
+  }
+}
+
+async function persistPatternFeedback(feedback: PatternFeedback[]): Promise<void> {
+  try {
+    await AsyncStorage.setItem(FEEDBACK_KEY, JSON.stringify(feedback.map(normalizePatternFeedback).filter(Boolean)));
+  } catch {
+    return;
+  }
+}
+
+async function readStorage(key: string): Promise<string | null> {
+  try {
+    return await AsyncStorage.getItem(key);
+  } catch {
+    return null;
+  }
 }
 
 function normalizeMoment(value: unknown): SpendingMoment {
   const source = value as Partial<SpendingMoment>;
   const now = new Date().toISOString();
+  const type: EntryType = source.type === "income" ? "income" : "expense";
   return {
     id: source.id || createId(),
     amount: typeof source.amount === "number" ? Math.max(0, Math.round(source.amount)) : 0,
     occurredAt: source.occurredAt || now,
-    label: cleanOptionalText(source.label),
-    context: normalizeSpendingContext(source.context),
+    label: type === "income" ? cleanOptionalText(source.label) : cleanOptionalText(source.label),
+    context: type === "income" ? "Other" : normalizeSpendingContext(source.context),
     note: cleanOptionalText(source.note),
+    type,
+    source: type === "income" ? cleanOptionalText(source.source ?? source.label) : undefined,
+    accountLabel: cleanOptionalText(source.accountLabel),
     createdAt: source.createdAt || now,
     updatedAt: source.updatedAt || now
   };
@@ -190,6 +263,14 @@ function normalizePatternFeedback(value: unknown): PatternFeedback | null {
 
 function sortMoments(moments: SpendingMoment[]): SpendingMoment[] {
   return [...moments].sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt));
+}
+
+function dedupeMomentsById(moments: SpendingMoment[]): SpendingMoment[] {
+  const byId = new Map<string, SpendingMoment>();
+  moments.forEach((moment) => {
+    byId.set(moment.id, moment);
+  });
+  return sortMoments(Array.from(byId.values()));
 }
 
 function cleanOptionalText(value: string | undefined): string | undefined {

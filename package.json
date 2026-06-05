@@ -9,7 +9,7 @@
     "android": "expo run:android",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "parser:smoke": "node scripts/parser-smoke-test.mjs",
+    "test:finance": "tsc -p tsconfig.test.json && node .tmp-tests/tests/financeEngine.test.js",
     "ios": "expo run:ios"
   },
   "dependencies": {
@@ -17,7 +17,6 @@
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~54.0.25",
     "expo-status-bar": "~3.0.8",
-    "slev-notification-listener": "file:modules/slev-notification-listener",
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-safe-area-context": "~5.6.0"

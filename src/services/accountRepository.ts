@@ -1,0 +1,245 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { MoneyAccount, MoneyTransfer } from "../features/spendingMemory.types";
+
+const ACCOUNTS_KEY = "slev_accounts";
+const TRANSFERS_KEY = "slev_transfers";
+
+type AccountInput = {
+  id?: string;
+  isIncomeHub?: boolean;
+  kind: MoneyAccount["kind"];
+  label: string;
+};
+
+type TransferInput = {
+  amount: number;
+  fromAccount: string;
+  note?: string;
+  occurredAt?: string;
+  toAccount: string;
+};
+
+const DEFAULT_ACCOUNTS: MoneyAccount[] = [
+  createDefaultAccount("default-bri", "BRI", "bank", true),
+  createDefaultAccount("default-jago", "Jago", "bank", false),
+  createDefaultAccount("default-wallet", "E-Wallet", "wallet", false),
+  createDefaultAccount("default-cash", "Cash", "cash", false)
+];
+
+export async function listMoneyAccounts(): Promise<MoneyAccount[]> {
+  const raw = await readStorage(ACCOUNTS_KEY);
+  if (!raw) return DEFAULT_ACCOUNTS;
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return DEFAULT_ACCOUNTS;
+    const accounts = parsed.map(normalizeMoneyAccount).filter(isMoneyAccount);
+    return accounts.length > 0 ? sortAccounts(accounts) : DEFAULT_ACCOUNTS;
+  } catch {
+    return DEFAULT_ACCOUNTS;
+  }
+}
+
+export async function saveMoneyAccount(input: AccountInput): Promise<MoneyAccount[]> {
+  const current = await listMoneyAccounts();
+  const existing = input.id ? current.find((account) => account.id === input.id) : undefined;
+  const now = new Date().toISOString();
+  const account = normalizeMoneyAccount({
+    ...input,
+    id: input.id ?? createId(),
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now
+  });
+  if (!account) return current;
+
+  const updated = sortAccounts([
+    account,
+    ...current.filter((item) => item.id !== account.id && item.label.toLowerCase() !== account.label.toLowerCase())
+  ]);
+  await writeJson(ACCOUNTS_KEY, updated);
+  return updated;
+}
+
+export async function deleteMoneyAccount(id: string): Promise<MoneyAccount[]> {
+  const current = await listMoneyAccounts();
+  const updated = current.filter((account) => account.id !== id);
+  await writeJson(ACCOUNTS_KEY, updated);
+  return updated;
+}
+
+export async function listMoneyTransfers(): Promise<MoneyTransfer[]> {
+  const raw = await readStorage(TRANSFERS_KEY);
+  if (!raw) return [];
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(normalizeMoneyTransfer).filter(isMoneyTransfer).sort(sortTransfers);
+  } catch {
+    return [];
+  }
+}
+
+export async function saveMoneyTransfer(input: TransferInput): Promise<MoneyTransfer[]> {
+  const current = await listMoneyTransfers();
+  const now = new Date().toISOString();
+  const transfer = normalizeMoneyTransfer({
+    ...input,
+    id: createId(),
+    occurredAt: input.occurredAt ?? now,
+    createdAt: now,
+    updatedAt: now
+  });
+  if (!transfer) return current;
+
+  const updated = [transfer, ...current].slice(0, 200).sort(sortTransfers);
+  await writeJson(TRANSFERS_KEY, updated);
+  return updated;
+}
+
+export async function deleteMoneyTransfer(id: string): Promise<MoneyTransfer[]> {
+  const current = await listMoneyTransfers();
+  const updated = current.filter((transfer) => transfer.id !== id);
+  await writeJson(TRANSFERS_KEY, updated);
+  return updated;
+}
+
+export async function clearAccountsAndTransfers(): Promise<void> {
+  try {
+    await AsyncStorage.multiRemove([ACCOUNTS_KEY, TRANSFERS_KEY]);
+  } catch {
+    return;
+  }
+}
+
+async function readStorage(key: string): Promise<string | null> {
+  try {
+    return await AsyncStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+async function writeJson(key: string, value: unknown): Promise<void> {
+  try {
+    await AsyncStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    return;
+  }
+}
+
+function normalizeMoneyAccount(value: unknown): MoneyAccount | null {
+  const record = toRecord(value);
+  if (!record) return null;
+  const label = cleanLabel(readString(record, "label"));
+  if (!label) return null;
+  const now = new Date().toISOString();
+
+  return {
+    id: readString(record, "id") ?? createId(),
+    label,
+    kind: normalizeAccountKind(readString(record, "kind")),
+    isIncomeHub: readBoolean(record, "isIncomeHub") ?? false,
+    createdAt: readString(record, "createdAt") ?? now,
+    updatedAt: readString(record, "updatedAt") ?? now
+  };
+}
+
+function normalizeMoneyTransfer(value: unknown): MoneyTransfer | null {
+  const record = toRecord(value);
+  if (!record) return null;
+  const amount = normalizeAmount(readNumber(record, "amount") ?? 0);
+  const fromAccount = cleanLabel(readString(record, "fromAccount"));
+  const toAccount = cleanLabel(readString(record, "toAccount"));
+  if (amount <= 0 || !fromAccount || !toAccount || fromAccount === toAccount) return null;
+  const now = new Date().toISOString();
+
+  return {
+    id: readString(record, "id") ?? createId(),
+    amount,
+    fromAccount,
+    toAccount,
+    occurredAt: readString(record, "occurredAt") ?? now,
+    note: cleanOptionalText(readString(record, "note")),
+    createdAt: readString(record, "createdAt") ?? now,
+    updatedAt: readString(record, "updatedAt") ?? now
+  };
+}
+
+function createDefaultAccount(
+  id: string,
+  label: string,
+  kind: MoneyAccount["kind"],
+  isIncomeHub: boolean
+): MoneyAccount {
+  const createdAt = "2026-01-01T00:00:00.000Z";
+  return {
+    id,
+    label,
+    kind,
+    isIncomeHub,
+    createdAt,
+    updatedAt: createdAt
+  };
+}
+
+function sortAccounts(accounts: MoneyAccount[]): MoneyAccount[] {
+  return [...accounts].sort((a, b) => {
+    if (a.isIncomeHub !== b.isIncomeHub) return a.isIncomeHub ? -1 : 1;
+    return a.label.localeCompare(b.label);
+  });
+}
+
+function sortTransfers(a: MoneyTransfer, b: MoneyTransfer): number {
+  return Date.parse(b.occurredAt) - Date.parse(a.occurredAt);
+}
+
+function normalizeAccountKind(value: string | undefined): MoneyAccount["kind"] {
+  if (value === "bank" || value === "wallet" || value === "cash") return value;
+  return "other";
+}
+
+function toRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" ? value as Record<string, unknown> : null;
+}
+
+function readString(record: Record<string, unknown>, key: string): string | undefined {
+  const value = record[key];
+  return typeof value === "string" ? value : undefined;
+}
+
+function readNumber(record: Record<string, unknown>, key: string): number | undefined {
+  const value = record[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function readBoolean(record: Record<string, unknown>, key: string): boolean | undefined {
+  const value = record[key];
+  return typeof value === "boolean" ? value : undefined;
+}
+
+function isMoneyAccount(value: MoneyAccount | null): value is MoneyAccount {
+  return value !== null;
+}
+
+function isMoneyTransfer(value: MoneyTransfer | null): value is MoneyTransfer {
+  return value !== null;
+}
+
+function normalizeAmount(value: number): number {
+  return Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
+}
+
+function cleanLabel(value: string | undefined): string | undefined {
+  const cleaned = String(value ?? "").replace(/\s+/g, " ").trim();
+  return cleaned ? cleaned.slice(0, 32) : undefined;
+}
+
+function cleanOptionalText(value: string | undefined): string | undefined {
+  const cleaned = String(value ?? "").replace(/\s+/g, " ").trim();
+  return cleaned ? cleaned.slice(0, 80) : undefined;
+}
+
+function createId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}

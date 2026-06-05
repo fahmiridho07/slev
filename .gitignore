@@ -15,6 +15,7 @@ node_modules/
 .expo/
 dist/
 web-build/
+.tmp-tests/
 
 # Env / secrets
 .env
