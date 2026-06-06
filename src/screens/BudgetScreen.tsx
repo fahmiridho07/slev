@@ -16,7 +16,7 @@ type BudgetScreenProps = {
 
 function BudgetScreenComponent({ onOpenSettings }: BudgetScreenProps) {
   const actions = useActions();
-  const { categoryLabels, monthlyPlan, monthlySummary, projectedBalanceSnapshots } = useDerived();
+  const { categoryLabels, monthlySummary, projectedBalanceSnapshots } = useDerived();
   const {
     accounts,
     balanceSnapshots,
@@ -24,6 +24,7 @@ function BudgetScreenComponent({ onOpenSettings }: BudgetScreenProps) {
     categoryModes,
     expenseCategories,
     moments,
+    monthlyPlan,
     savingsGoals,
     transfers
   } = useFinanceSelector(
@@ -34,6 +35,7 @@ function BudgetScreenComponent({ onOpenSettings }: BudgetScreenProps) {
       categoryModes: state.categoryModes,
       expenseCategories: state.expenseCategories,
       moments: state.moments,
+      monthlyPlan: state.monthlyPlan,
       savingsGoals: state.savingsGoals,
       transfers: state.transfers
     }),
