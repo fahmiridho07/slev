@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from "react";
 import { Text, View } from "react-native";
-import { EmptyState, SegmentedControl } from "../../components";
+import { EmptyState, SectionHeader, SegmentedControl } from "../../components";
 import { getPercentWidthStyle } from "../../lib/analysis";
 import { buildMonthlyBreakdown } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { EntryType, SpendingMoment } from "../spendingMemory.types";
 import { styles } from "../../theme/styles/app";
+import { MonthlySpendingChart } from "./MonthlySpendingChart";
 
 export function BreakdownPanel({ moments }: { moments: SpendingMoment[] }) {
   const [breakdownType, setBreakdownType] = useState<EntryType>("expense");
@@ -25,19 +26,23 @@ export function BreakdownPanel({ moments }: { moments: SpendingMoment[] }) {
       {rows.length === 0 ? (
         <EmptyState text={breakdownType === "income" ? "Income breakdown appears after an income entry." : "Expense breakdown appears after a saved expense."} />
       ) : (
-        <View style={styles.listPanel}>
-          {rows.map((row) => (
-            <View key={row.key} style={styles.analyticsRow}>
-              <View style={styles.analyticsRowHeader}>
-                <Text style={styles.analyticsTitle}>{row.label}</Text>
-                <Text style={styles.analyticsAmount}>{formatCompactRupiah(row.amount)} - {Math.round(row.share * 100)}%</Text>
+        <>
+          {breakdownType === "expense" && <MonthlySpendingChart rows={rows} />}
+          <SectionHeader title={breakdownType === "income" ? "Income by source" : "Spending by category"} />
+          <View style={styles.listPanel}>
+            {rows.map((row) => (
+              <View key={row.key} style={styles.analyticsRow}>
+                <View style={styles.analyticsRowHeader}>
+                  <Text style={styles.analyticsTitle}>{row.label}</Text>
+                  <Text style={styles.analyticsAmount}>{formatCompactRupiah(row.amount)} - {Math.round(row.share * 100)}%</Text>
+                </View>
+                <View style={styles.progressTrack}>
+                  <View style={[styles.breakdownFill, getPercentWidthStyle(row.share)]} />
+                </View>
               </View>
-              <View style={styles.progressTrack}>
-                <View style={[styles.breakdownFill, getPercentWidthStyle(row.share)]} />
-              </View>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        </>
       )}
     </View>
   );

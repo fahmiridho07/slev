@@ -73,6 +73,7 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
         ]}
         selected={form.entryType}
         onSelect={changeEntryType}
+        stretch
       />
       <View style={styles.amountRow}>
         <Text style={styles.currencyPrefix}>Rp</Text>

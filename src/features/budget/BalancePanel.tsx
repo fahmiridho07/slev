@@ -192,6 +192,7 @@ export function BalancePanel({
         </View>
       </View>
 
+      <SectionHeader title="Your accounts" />
       <View style={styles.listPanel}>
         <FlatList
           data={accounts}
@@ -204,15 +205,17 @@ export function BalancePanel({
       {currentBalances.length === 0 ? (
         <EmptyState text="Income, expenses, transfers, or snapshots will build account balances here." />
       ) : (
-        <View style={styles.listPanel}>
+        <>
           <SectionHeader title="Current account balances" />
-          <FlatList
-            data={currentBalances}
-            keyExtractor={balanceKeyExtractor}
-            renderItem={renderBalanceItem}
-            scrollEnabled={false}
-          />
-        </View>
+          <View style={styles.listPanel}>
+            <FlatList
+              data={currentBalances}
+              keyExtractor={balanceKeyExtractor}
+              renderItem={renderBalanceItem}
+              scrollEnabled={false}
+            />
+          </View>
+        </>
       )}
       <DeleteConfirmDialog
         body={

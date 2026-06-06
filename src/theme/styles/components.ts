@@ -236,6 +236,9 @@ export const componentStyles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 0
   },
+  contextPickerBlock: {
+    gap: 8
+  },
   contextWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -247,14 +250,18 @@ export const componentStyles = StyleSheet.create({
     gap: 6
   },
   contextChip: {
+    alignItems: "center",
     backgroundColor: colors.canvas,
     borderColor: colors.line,
     borderRadius: 8,
     borderWidth: 1,
+    flexBasis: "30%",
+    flexGrow: 1,
+    justifyContent: "center",
+    maxWidth: "32%",
     minHeight: 42,
-    minWidth: "30%",
-    paddingHorizontal: 12,
-    paddingVertical: 9
+    paddingHorizontal: 10,
+    paddingVertical: 10
   },
   contextChipActive: {
     backgroundColor: colors.mint,
@@ -271,8 +278,19 @@ export const componentStyles = StyleSheet.create({
   },
   contextHint: {
     color: colors.muted,
-    fontSize: 11,
-    marginTop: 2
+    fontSize: 12,
+    lineHeight: 17,
+    minHeight: 17
+  },
+  segmentedControlStretch: {
+    width: "100%"
+  },
+  segmentedControlContentStretch: {
+    width: "100%"
+  },
+  segmentButtonStretch: {
+    flex: 1,
+    minWidth: 0
   },
   observationPanel: {
     borderRadius: 8,
@@ -379,6 +397,9 @@ export const componentStyles = StyleSheet.create({
   },
   incomeText: {
     color: colors.blue
+  },
+  sectionHeaderBlock: {
+    paddingHorizontal: 2
   },
   sectionTitle: {
     color: colors.ink,

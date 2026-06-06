@@ -950,6 +950,49 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     height: 10
   },
+  chartStackTrack: {
+    backgroundColor: colors.faint,
+    borderRadius: 8,
+    height: 18,
+    overflow: "hidden"
+  },
+  chartStackRow: {
+    flexDirection: "row",
+    height: "100%",
+    width: "100%"
+  },
+  chartStackSegment: {
+    height: "100%",
+    minWidth: 2
+  },
+  chartLegend: {
+    gap: 10
+  },
+  chartLegendRow: {
+    gap: 4
+  },
+  chartLegendLabelRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8
+  },
+  chartLegendSwatch: {
+    borderRadius: 4,
+    height: 10,
+    width: 10
+  },
+  chartLegendLabel: {
+    color: colors.ink,
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  chartLegendValue: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 17,
+    paddingLeft: 18
+  },
   trendFill: {
     backgroundColor: colors.green,
     borderRadius: 8,

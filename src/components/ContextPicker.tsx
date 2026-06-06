@@ -18,22 +18,26 @@ function ContextPickerComponent({
   onSelect
 }: ContextPickerProps) {
   return (
-    <View style={compact ? componentStyles.contextWrapCompact : componentStyles.contextWrap}>
-      {categories.map((item) => (
-        <Pressable
-          accessibilityRole="button"
-          key={item}
-          onPress={() => onSelect(item)}
-          style={[componentStyles.contextChip, selected === item && componentStyles.contextChipActive]}
-        >
-          <Text style={[componentStyles.contextChipText, selected === item && componentStyles.contextChipTextActive]}>
-            {item}
-          </Text>
-          {!compact && selected === item && (
-            <Text style={componentStyles.contextHint}>{CONTEXT_HINTS[item] ?? "Custom spending category"}</Text>
-          )}
-        </Pressable>
-      ))}
+    <View style={componentStyles.contextPickerBlock}>
+      <View style={compact ? componentStyles.contextWrapCompact : componentStyles.contextWrap}>
+        {categories.map((item) => (
+          <Pressable
+            accessibilityRole="button"
+            key={item}
+            onPress={() => onSelect(item)}
+            style={[componentStyles.contextChip, selected === item && componentStyles.contextChipActive]}
+          >
+            <Text style={[componentStyles.contextChipText, selected === item && componentStyles.contextChipTextActive]}>
+              {item}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      {!compact && (
+        <Text style={componentStyles.contextHint}>
+          {CONTEXT_HINTS[selected] ?? "Custom spending category"}
+        </Text>
+      )}
     </View>
   );
 }

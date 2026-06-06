@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import { componentStyles } from "../theme/styles/components";
 
 type SectionHeaderProps = {
@@ -7,7 +7,11 @@ type SectionHeaderProps = {
 };
 
 function SectionHeaderComponent({ title }: SectionHeaderProps) {
-  return <Text style={componentStyles.sectionTitle}>{title}</Text>;
+  return (
+    <View style={componentStyles.sectionHeaderBlock}>
+      <Text style={componentStyles.sectionTitle}>{title}</Text>
+    </View>
+  );
 }
 
 export const SectionHeader = memo(SectionHeaderComponent);

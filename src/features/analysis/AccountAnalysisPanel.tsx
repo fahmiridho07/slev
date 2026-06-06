@@ -145,39 +145,45 @@ export function AccountAnalysisPanel({
       {balanceSnapshots.length === 0 ? (
         <EmptyState text="Reconciliation starts after the first manual snapshot. Current balance can still be estimated from income and spending." />
       ) : (
-        <View style={styles.listPanel}>
+        <>
           <SectionHeader title="Balance reconciliation" />
-          <FlatList
-            data={reconciliationRows}
-            keyExtractor={reconciliationKeyExtractor}
-            renderItem={renderReconciliationItem}
-            scrollEnabled={false}
-          />
-        </View>
+          <View style={styles.listPanel}>
+            <FlatList
+              data={reconciliationRows}
+              keyExtractor={reconciliationKeyExtractor}
+              renderItem={renderReconciliationItem}
+              scrollEnabled={false}
+            />
+          </View>
+        </>
       )}
 
       {accountActivity.length > 0 && (
-        <View style={styles.listPanel}>
+        <>
           <SectionHeader title="Account movement this month" />
-          <FlatList
-            data={accountActivity}
-            keyExtractor={activityKeyExtractor}
-            renderItem={renderActivityItem}
-            scrollEnabled={false}
-          />
-        </View>
+          <View style={styles.listPanel}>
+            <FlatList
+              data={accountActivity}
+              keyExtractor={activityKeyExtractor}
+              renderItem={renderActivityItem}
+              scrollEnabled={false}
+            />
+          </View>
+        </>
       )}
 
       {recentTransfers.length > 0 && (
-        <View style={styles.listPanel}>
+        <>
           <SectionHeader title="Recent transfers" />
-          <FlatList
-            data={recentTransfers}
-            keyExtractor={transferKeyExtractor}
-            renderItem={renderTransferItem}
-            scrollEnabled={false}
-          />
-        </View>
+          <View style={styles.listPanel}>
+            <FlatList
+              data={recentTransfers}
+              keyExtractor={transferKeyExtractor}
+              renderItem={renderTransferItem}
+              scrollEnabled={false}
+            />
+          </View>
+        </>
       )}
       <DeleteConfirmDialog
         body={
