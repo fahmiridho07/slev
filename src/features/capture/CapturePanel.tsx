@@ -72,16 +72,6 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
           </View>
         </View>
       )}
-      <SegmentedControl
-        options={[
-          { label: "Expense", value: "expense" },
-          { label: "Income", value: "income" },
-          { label: "Transfer", value: "transfer" }
-        ]}
-        selected={form.entryType}
-        onSelect={changeEntryType}
-        stretch
-      />
       <View style={styles.amountRow}>
         <Text style={styles.currencyPrefix}>Rp</Text>
         <TextInput
@@ -91,6 +81,21 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
           placeholderTextColor={colors.muted}
           style={styles.amountInput}
           value={form.amountText}
+        />
+      </View>
+
+      <View style={styles.captureTypeBlock}>
+        <Text style={styles.microLabel}>Entry type</Text>
+        <SegmentedControl
+          compact
+          options={[
+            { label: "Expense", value: "expense" },
+            { label: "Income", value: "income" },
+            { label: "Transfer", value: "transfer" }
+          ]}
+          selected={form.entryType}
+          onSelect={changeEntryType}
+          stretch
         />
       </View>
 

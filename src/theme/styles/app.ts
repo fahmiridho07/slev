@@ -222,11 +222,15 @@ export const styles = StyleSheet.create({
   },
   amountRow: {
     alignItems: "center",
-    borderBottomColor: colors.line,
-    borderBottomWidth: 1,
     flexDirection: "row",
     gap: 8,
     minHeight: 70
+  },
+  captureTypeBlock: {
+    borderBottomColor: colors.line,
+    borderBottomWidth: 1,
+    gap: 8,
+    paddingBottom: 14
   },
   currencyPrefix: {
     color: colors.greenDark,

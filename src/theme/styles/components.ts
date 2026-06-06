@@ -286,14 +286,18 @@ export const componentStyles = StyleSheet.create({
     lineHeight: 17
   },
   segmentedControlStretch: {
+    alignSelf: "stretch",
     width: "100%"
   },
   segmentedControlContentStretch: {
+    alignItems: "stretch",
+    flex: 1,
     width: "100%"
   },
   segmentButtonStretch: {
     flex: 1,
-    minWidth: 0
+    minWidth: 0,
+    paddingHorizontal: 6
   },
   observationPanel: {
     borderRadius: 8,
