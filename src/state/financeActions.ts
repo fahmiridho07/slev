@@ -10,6 +10,11 @@ import {
   SpendingContext
 } from "../features/spendingMemory.types";
 import { getMonthKey } from "../lib/analysis";
+import {
+  deleteRecurringBill,
+  listRecurringBills,
+  saveRecurringBill
+} from "../services/recurringBillsRepository";
 import { parseAmountInput } from "../lib/formatMoney";
 import { formatRupiah } from "../lib/spendingMemoryPatterns";
 import {
@@ -86,6 +91,7 @@ export function createFinanceActions(
       storedMonthlyPlan,
       storedManualTemplates,
       storedSavingsGoals,
+      storedRecurringBills,
       storedBalanceSnapshots,
       storedAccounts,
       storedTransfers,
@@ -98,6 +104,7 @@ export function createFinanceActions(
       getMonthlyPlan(currentMonthKey),
       listManualTemplates(),
       listSavingsGoals(),
+      listRecurringBills(),
       listBalanceSnapshots(),
       listMoneyAccounts(),
       listMoneyTransfers(),
@@ -114,6 +121,7 @@ export function createFinanceActions(
         monthlyPlan: storedMonthlyPlan,
         manualTemplates: storedManualTemplates,
         savingsGoals: storedSavingsGoals,
+        recurringBills: storedRecurringBills,
         balanceSnapshots: storedBalanceSnapshots,
         accounts: storedAccounts,
         transfers: storedTransfers,
@@ -454,6 +462,95 @@ export function createFinanceActions(
     setMessage("Savings goal removed.");
   }
 
+  async function saveRecurringBillAction(input: {
+    id?: string;
+    label: string;
+    amount: string;
+    context: SpendingContext;
+    accountLabel?: string;
+    dayOfMonth: string;
+    active: boolean;
+    lastPaidMonth?: string;
+  }) {
+    const amount = parseAmountInput(input.amount);
+    const dayOfMonth = Number.parseInt(input.dayOfMonth, 10);
+    if (!input.label.trim() || !amount) {
+      setMessage("Add a bill name and amount.");
+      return;
+    }
+    if (!Number.isFinite(dayOfMonth) || dayOfMonth < 1 || dayOfMonth > 31) {
+      setMessage("Choose a day of month between 1 and 31.");
+      return;
+    }
+
+    const { data: updated, persisted } = await saveRecurringBill({
+      id: input.id,
+      label: input.label,
+      amount,
+      context: input.context,
+      accountLabel: input.accountLabel,
+      dayOfMonth,
+      active: input.active,
+      lastPaidMonth: input.lastPaidMonth
+    });
+    if (!persisted) {
+      notifyWriteFailure("this recurring bill", STORAGE_KEYS.recurringBills);
+      return;
+    }
+    dispatch({ type: "set_recurring_bills", recurringBills: updated });
+    setMessage("Recurring bill saved.");
+  }
+
+  async function removeRecurringBill(id: string) {
+    const { data: updated, persisted } = await deleteRecurringBill(id);
+    if (!persisted) {
+      notifyWriteFailure("this recurring bill", STORAGE_KEYS.recurringBills);
+      return;
+    }
+    dispatch({ type: "set_recurring_bills", recurringBills: updated });
+    setMessage("Recurring bill removed.");
+  }
+
+  async function logRecurringBillPayment(billId: string) {
+    const bill = getState().recurringBills.find((item) => item.id === billId);
+    if (!bill) {
+      setMessage("That recurring bill is no longer available.");
+      return;
+    }
+
+    const { data: saved, persisted } = await saveSpendingMoment({
+      amount: bill.amount,
+      label: bill.label,
+      context: bill.context,
+      accountLabel: bill.accountLabel,
+      type: "expense"
+    });
+    if (!persisted) {
+      notifyWriteFailure("this memory", STORAGE_KEYS.moments);
+      return;
+    }
+    dispatch({ type: "prepend_moment", moment: saved });
+
+    const currentMonthKey = getMonthKey(new Date());
+    const { data: updatedBills, persisted: billPersisted } = await saveRecurringBill({
+      id: bill.id,
+      label: bill.label,
+      amount: bill.amount,
+      context: bill.context,
+      accountLabel: bill.accountLabel,
+      dayOfMonth: bill.dayOfMonth,
+      active: bill.active,
+      lastPaidMonth: currentMonthKey
+    });
+    if (!billPersisted) {
+      notifyWriteFailure("this recurring bill", STORAGE_KEYS.recurringBills);
+      setMessage(`${formatRupiah(saved.amount)} logged, but the bill cycle could not be updated.`);
+      return;
+    }
+    dispatch({ type: "set_recurring_bills", recurringBills: updatedBills });
+    setMessage(`${formatRupiah(saved.amount)} logged for ${bill.label}.`);
+  }
+
   async function saveBalance(input: { accountLabel: string; amount: string }) {
     const amount = parseAmountInput(input.amount);
     if (!input.accountLabel.trim() || !amount) {
@@ -564,6 +661,8 @@ export function createFinanceActions(
     removeCategoryBudget,
     removeManualTemplate,
     removeMoment,
+    logRecurringBillPayment,
+    removeRecurringBill,
     removeSavingsGoal,
     removeTransfer,
     saveAccount,
@@ -572,6 +671,7 @@ export function createFinanceActions(
     saveCategory,
     saveCategoryBudget,
     saveGoal,
+    saveRecurringBill: saveRecurringBillAction,
     saveMoment,
     savePlan,
     setClearConfirmVisible,

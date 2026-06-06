@@ -8,6 +8,7 @@ import {
   MoneyTransfer,
   MonthlyPlan,
   PatternFeedback,
+  RecurringBill,
   SavingsGoal,
   SpendingMoment
 } from "../features/spendingMemory.types";
@@ -24,6 +25,7 @@ export type FinanceState = {
   message: string;
   moments: SpendingMoment[];
   monthlyPlan: MonthlyPlan | null;
+  recurringBills: RecurringBill[];
   savingsGoals: SavingsGoal[];
   accounts: MoneyAccount[];
   transfers: MoneyTransfer[];
@@ -41,6 +43,7 @@ export const initialFinanceState: FinanceState = {
   message: "A spending memory can be as small as an amount.",
   moments: [],
   monthlyPlan: null,
+  recurringBills: [],
   savingsGoals: [],
   accounts: [],
   transfers: []
@@ -60,6 +63,7 @@ export type FinanceAction =
   | { type: "set_category_modes"; categoryModes: CategoryMode[] }
   | { type: "set_monthly_plan"; monthlyPlan: MonthlyPlan | null }
   | { type: "set_manual_templates"; manualTemplates: ManualTemplate[] }
+  | { type: "set_recurring_bills"; recurringBills: RecurringBill[] }
   | { type: "set_savings_goals"; savingsGoals: SavingsGoal[] }
   | { type: "set_balance_snapshots"; balanceSnapshots: BalanceSnapshot[] }
   | { type: "set_accounts"; accounts: MoneyAccount[] }
@@ -106,6 +110,8 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       return { ...state, monthlyPlan: action.monthlyPlan };
     case "set_manual_templates":
       return { ...state, manualTemplates: action.manualTemplates };
+    case "set_recurring_bills":
+      return { ...state, recurringBills: action.recurringBills };
     case "set_savings_goals":
       return { ...state, savingsGoals: action.savingsGoals };
     case "set_balance_snapshots":
@@ -127,6 +133,7 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
         manualTemplates: [],
         moments: [],
         monthlyPlan: null,
+        recurringBills: [],
         savingsGoals: [],
         accounts: action.payload.accounts,
         transfers: [],
