@@ -3,19 +3,23 @@ import React, { memo, useCallback, useMemo, useState } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { DeleteConfirmDialog, EmptyState, SwipeActionRow } from "../components";
 import { ExpenseCategory } from "../features/spendingMemory.types";
+import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
 import { getCategoryDeleteBody } from "../lib/analysis";
 import { listCorruptStorageIssues, StorageHealthIssue } from "../services/storageHealth";
-import { shallowEqual, useActions, useFinanceSelector } from "../state/useFinance";
+import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
 import { colors } from "../theme/colors";
 import { styles } from "../theme/styles/app";
 
 function SettingsScreenComponent() {
   const actions = useActions();
-  const { expenseCategories, isReady, moments } = useFinanceSelector(
+  const { categoryLabels } = useDerived();
+  const { accounts, expenseCategories, isReady, moments, recurringBills } = useFinanceSelector(
     (state) => ({
+      accounts: state.accounts,
       expenseCategories: state.expenseCategories,
       isReady: state.isReady,
-      moments: state.moments
+      moments: state.moments,
+      recurringBills: state.recurringBills
     }),
     shallowEqual
   );
@@ -106,6 +110,14 @@ function SettingsScreenComponent() {
           </View>
         )}
 
+        <RecurringBillsPanel
+          accounts={accounts}
+          categoryLabels={categoryLabels}
+          recurringBills={recurringBills}
+          onDeleteBill={(id) => void actions.removeRecurringBill(id)}
+          onSaveBill={(input) => void actions.saveRecurringBill(input)}
+        />
+
         <View style={styles.capturePanel}>
           <Text style={styles.microLabel}>{editingCategoryId ? "Edit category" : "Add expense category"}</Text>
           <TextInput
@@ -134,7 +146,7 @@ function SettingsScreenComponent() {
         </View>
       </>
     );
-  }, [actions, categoryDraft, editingCategoryId, isReady, momentCount]);
+  }, [accounts, actions, categoryDraft, categoryLabels, editingCategoryId, isReady, momentCount, recurringBills]);
 
   const listFooter = useMemo(
     () => (
