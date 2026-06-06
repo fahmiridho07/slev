@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DEFAULT_SPENDING_CONTEXTS, normalizeSpendingContext } from "../data/spendingMemory";
 import {
   BalanceSnapshot,
@@ -9,6 +8,7 @@ import {
   SavingsGoal,
   SpendingContext
 } from "../features/spendingMemory.types";
+import { isKeyCorrupt, readJson, removeKeys, writeJson } from "./storage";
 
 const MONTHLY_PLANS_KEY = "slev_monthly_plans";
 const MANUAL_TEMPLATES_KEY = "slev_manual_templates";
@@ -86,16 +86,9 @@ export async function saveMonthlyPlan(input: MonthlyPlanInput): Promise<MonthlyP
 }
 
 export async function listManualTemplates(): Promise<ManualTemplate[]> {
-  const raw = await readStorage(MANUAL_TEMPLATES_KEY);
-  if (!raw) return [];
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(normalizeManualTemplate).filter(isManualTemplate);
-  } catch {
-    return [];
-  }
+  const result = await readJson<unknown>(MANUAL_TEMPLATES_KEY);
+  if (result.status !== "ok" || !Array.isArray(result.value)) return [];
+  return result.value.map(normalizeManualTemplate).filter(isManualTemplate);
 }
 
 export async function saveManualTemplate(input: ManualTemplateInput): Promise<ManualTemplate[]> {
@@ -123,16 +116,11 @@ export async function deleteManualTemplate(id: string): Promise<ManualTemplate[]
 }
 
 export async function listCategoryModes(): Promise<CategoryMode[]> {
-  const raw = await readStorage(CATEGORY_MODES_KEY);
-  if (!raw) return getDefaultCategoryModes();
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return getDefaultCategoryModes();
-    return mergeCategoryModes(parsed.map(normalizeCategoryMode).filter(isCategoryMode));
-  } catch {
-    return getDefaultCategoryModes();
-  }
+  const result = await readJson<unknown>(CATEGORY_MODES_KEY);
+  if (result.status === "empty") return getDefaultCategoryModes();
+  if (result.status === "corrupt") return getDefaultCategoryModes();
+  if (!Array.isArray(result.value)) return getDefaultCategoryModes();
+  return mergeCategoryModes(result.value.map(normalizeCategoryMode).filter(isCategoryMode));
 }
 
 export async function saveCategoryMode(category: SpendingContext, mode: CategoryModeValue): Promise<CategoryMode[]> {
@@ -153,16 +141,9 @@ export async function deleteCategoryMode(category: SpendingContext): Promise<Cat
 }
 
 export async function listSavingsGoals(): Promise<SavingsGoal[]> {
-  const raw = await readStorage(SAVINGS_GOALS_KEY);
-  if (!raw) return [];
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(normalizeSavingsGoal).filter(isSavingsGoal);
-  } catch {
-    return [];
-  }
+  const result = await readJson<unknown>(SAVINGS_GOALS_KEY);
+  if (result.status !== "ok" || !Array.isArray(result.value)) return [];
+  return result.value.map(normalizeSavingsGoal).filter(isSavingsGoal);
 }
 
 export async function saveSavingsGoal(input: SavingsGoalInput): Promise<SavingsGoal[]> {
@@ -193,19 +174,12 @@ export async function deleteSavingsGoal(id: string): Promise<SavingsGoal[]> {
 }
 
 export async function listBalanceSnapshots(): Promise<BalanceSnapshot[]> {
-  const raw = await readStorage(BALANCE_SNAPSHOTS_KEY);
-  if (!raw) return [];
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .map(normalizeBalanceSnapshot)
-      .filter(isBalanceSnapshot)
-      .sort((a, b) => Date.parse(b.snapshotDate) - Date.parse(a.snapshotDate));
-  } catch {
-    return [];
-  }
+  const result = await readJson<unknown>(BALANCE_SNAPSHOTS_KEY);
+  if (result.status !== "ok" || !Array.isArray(result.value)) return [];
+  return result.value
+    .map(normalizeBalanceSnapshot)
+    .filter(isBalanceSnapshot)
+    .sort((a, b) => Date.parse(b.snapshotDate) - Date.parse(a.snapshotDate));
 }
 
 export async function saveBalanceSnapshot(input: BalanceSnapshotInput): Promise<BalanceSnapshot[]> {
@@ -224,47 +198,30 @@ export async function saveBalanceSnapshot(input: BalanceSnapshotInput): Promise<
   return updated;
 }
 
-export async function clearManualFinance(): Promise<void> {
-  try {
-    await AsyncStorage.multiRemove([
-      MONTHLY_PLANS_KEY,
-      MANUAL_TEMPLATES_KEY,
-      CATEGORY_MODES_KEY,
-      SAVINGS_GOALS_KEY,
-      BALANCE_SNAPSHOTS_KEY
-    ]);
-  } catch {
-    return;
-  }
+export async function clearManualFinance(): Promise<boolean> {
+  return removeKeys([
+    MONTHLY_PLANS_KEY,
+    MANUAL_TEMPLATES_KEY,
+    CATEGORY_MODES_KEY,
+    SAVINGS_GOALS_KEY,
+    BALANCE_SNAPSHOTS_KEY
+  ]);
+}
+
+export function isManualFinanceStorageCorrupt(): boolean {
+  return (
+    isKeyCorrupt(MONTHLY_PLANS_KEY) ||
+    isKeyCorrupt(MANUAL_TEMPLATES_KEY) ||
+    isKeyCorrupt(CATEGORY_MODES_KEY) ||
+    isKeyCorrupt(SAVINGS_GOALS_KEY) ||
+    isKeyCorrupt(BALANCE_SNAPSHOTS_KEY)
+  );
 }
 
 async function listMonthlyPlans(): Promise<MonthlyPlan[]> {
-  const raw = await readStorage(MONTHLY_PLANS_KEY);
-  if (!raw) return [];
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(normalizeMonthlyPlan).filter(isMonthlyPlan);
-  } catch {
-    return [];
-  }
-}
-
-async function readStorage(key: string): Promise<string | null> {
-  try {
-    return await AsyncStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-async function writeJson(key: string, value: unknown): Promise<void> {
-  try {
-    await AsyncStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    return;
-  }
+  const result = await readJson<unknown>(MONTHLY_PLANS_KEY);
+  if (result.status !== "ok" || !Array.isArray(result.value)) return [];
+  return result.value.map(normalizeMonthlyPlan).filter(isMonthlyPlan);
 }
 
 function normalizeMonthlyPlan(value: unknown): MonthlyPlan | null {

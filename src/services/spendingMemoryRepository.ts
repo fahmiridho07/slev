@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   EntryType,
   PatternFeedback,
@@ -6,6 +5,7 @@ import {
   SpendingMoment
 } from "../features/spendingMemory.types";
 import { normalizeSpendingContext } from "../data/spendingMemory";
+import { isKeyCorrupt, readJson, readRaw, removeKeys, writeJson, writeRaw } from "./storage";
 
 const MOMENTS_KEY = "slev_entries";
 const LEGACY_MOMENTS_KEY = "slev.spendingMoments.v1";
@@ -38,15 +38,9 @@ type LegacyTransaction = {
 
 export async function listSpendingMoments(): Promise<SpendingMoment[]> {
   await migrateSpendingMemoryV2();
-  const raw = await readStorage(MOMENTS_KEY);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return sortMoments(parsed.map(normalizeMoment).filter((moment) => moment.amount > 0));
-  } catch {
-    return [];
-  }
+  const result = await readJson<unknown>(MOMENTS_KEY);
+  if (result.status !== "ok" || !Array.isArray(result.value)) return [];
+  return sortMoments(result.value.map(normalizeMoment).filter((moment) => moment.amount > 0));
 }
 
 export async function saveSpendingMoment(input: MomentInput): Promise<SpendingMoment> {
@@ -91,26 +85,27 @@ export async function deleteSpendingMoment(id: string): Promise<SpendingMoment[]
   return updated;
 }
 
-export async function clearSpendingMemory(): Promise<void> {
-  try {
-    await AsyncStorage.multiRemove([MOMENTS_KEY, LEGACY_MOMENTS_KEY, FEEDBACK_KEY, LEGACY_FEEDBACK_KEY]);
-    await AsyncStorage.setItem(V2_MIGRATION_KEY, "true");
-  } catch {
-    return;
-  }
+export async function clearSpendingMemory(): Promise<boolean> {
+  const removed = await removeKeys([MOMENTS_KEY, LEGACY_MOMENTS_KEY, FEEDBACK_KEY, LEGACY_FEEDBACK_KEY]);
+  await writeRaw(V2_MIGRATION_KEY, "true");
+  return removed;
 }
 
 export async function listPatternFeedback(): Promise<PatternFeedback[]> {
-  const raw = await readStorage(FEEDBACK_KEY);
-  if (!raw) {
-    const legacyRaw = await readStorage(LEGACY_FEEDBACK_KEY);
-    if (!legacyRaw) return [];
-    const migrated = parsePatternFeedbackList(legacyRaw);
-    await persistPatternFeedback(migrated);
+  const result = await readJson<unknown>(FEEDBACK_KEY);
+  if (result.status === "corrupt") return [];
+
+  if (result.status === "empty") {
+    const legacyResult = await readJson<unknown>(LEGACY_FEEDBACK_KEY);
+    if (legacyResult.status !== "ok") return [];
+    const migrated = parsePatternFeedbackList(legacyResult.value);
+    if (!isKeyCorrupt(FEEDBACK_KEY)) {
+      await persistPatternFeedback(migrated);
+    }
     return migrated;
   }
 
-  return parsePatternFeedbackList(raw);
+  return parsePatternFeedbackList(result.value);
 }
 
 export async function savePatternFeedback(
@@ -128,36 +123,42 @@ export async function savePatternFeedback(
   return updated;
 }
 
+export function isMomentsStorageCorrupt(): boolean {
+  return isKeyCorrupt(MOMENTS_KEY);
+}
+
+export function isPatternFeedbackStorageCorrupt(): boolean {
+  return isKeyCorrupt(FEEDBACK_KEY);
+}
+
 async function migrateSpendingMemoryV2(): Promise<void> {
-  const alreadyMigrated = await readStorage(V2_MIGRATION_KEY);
+  const alreadyMigrated = await readRaw(V2_MIGRATION_KEY);
   if (alreadyMigrated === "true") return;
 
-  const raw = await readStorage(MOMENTS_KEY);
-  const legacyMomentsRaw = raw ? null : await readStorage(LEGACY_MOMENTS_KEY);
+  const momentsResult = await readJson<unknown>(MOMENTS_KEY);
+  const raw = momentsResult.status === "ok" ? await readRaw(MOMENTS_KEY) : null;
+  const legacyMomentsRaw = raw ? null : await readRaw(LEGACY_MOMENTS_KEY);
   const existingMoments = parseMomentList(raw ?? legacyMomentsRaw);
   const legacyTransactionMoments = await migrateConfirmedTransactions();
   const mergedMoments = dedupeMomentsById([...legacyTransactionMoments, ...existingMoments]);
 
   if (
-    legacyMomentsRaw ||
-    legacyTransactionMoments.length > 0 ||
-    existingMoments.some((moment) => moment.type !== "expense" && moment.type !== "income") ||
-    raw !== JSON.stringify(sortMoments(mergedMoments).map(normalizeMoment))
+    !isKeyCorrupt(MOMENTS_KEY) &&
+    (legacyMomentsRaw ||
+      legacyTransactionMoments.length > 0 ||
+      existingMoments.some((moment) => moment.type !== "expense" && moment.type !== "income") ||
+      raw !== JSON.stringify(sortMoments(mergedMoments).map(normalizeMoment)))
   ) {
     await persistSpendingMoments(mergedMoments);
   }
 
-  try {
-    await AsyncStorage.setItem(V2_MIGRATION_KEY, "true");
-  } catch {
-    return;
-  }
+  await writeRaw(V2_MIGRATION_KEY, "true");
 }
 
-function parseMomentList(raw: string | null): SpendingMoment[] {
+function parseMomentList(raw: unknown | string | null): SpendingMoment[] {
   if (!raw) return [];
   try {
-    const parsed = JSON.parse(raw) as unknown;
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
     if (!Array.isArray(parsed)) return [];
     return parsed.map(normalizeMoment).filter((moment) => moment.amount > 0);
   } catch {
@@ -165,11 +166,11 @@ function parseMomentList(raw: string | null): SpendingMoment[] {
   }
 }
 
-function parsePatternFeedbackList(raw: string): PatternFeedback[] {
+function parsePatternFeedbackList(raw: unknown): PatternFeedback[] {
   if (!raw) return [];
 
   try {
-    const parsed = JSON.parse(raw) as unknown;
+    const parsed = Array.isArray(raw) ? raw : JSON.parse(String(raw));
     if (!Array.isArray(parsed)) return [];
     return parsed.map(normalizePatternFeedback).filter(Boolean) as PatternFeedback[];
   } catch {
@@ -178,55 +179,32 @@ function parsePatternFeedbackList(raw: string): PatternFeedback[] {
 }
 
 async function migrateConfirmedTransactions(): Promise<SpendingMoment[]> {
-  const raw = await readStorage(LEGACY_TRANSACTIONS_KEY);
-  if (!raw) return [];
+  const result = await readJson<unknown>(LEGACY_TRANSACTIONS_KEY);
+  if (result.status !== "ok" || !Array.isArray(result.value)) return [];
 
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed
-      .map((item) => item as LegacyTransaction)
-      .filter((item) => item.status === "confirmed" && typeof item.amount === "number" && item.amount > 0)
-      .map((item) =>
-        normalizeMoment({
-          id: `migrated-${item.id ?? createId()}`,
-          amount: item.amount,
-          occurredAt: item.timestamp ?? item.createdAt ?? new Date().toISOString(),
-          label: cleanOptionalText(item.merchant),
-          context: normalizeSpendingContext(item.category),
-          type: "expense",
-          createdAt: item.createdAt ?? new Date().toISOString(),
-          updatedAt: item.updatedAt ?? new Date().toISOString()
-        })
-      );
-  } catch {
-    return [];
-  }
+  return result.value
+    .map((item) => item as LegacyTransaction)
+    .filter((item) => item.status === "confirmed" && typeof item.amount === "number" && item.amount > 0)
+    .map((item) =>
+      normalizeMoment({
+        id: `migrated-${item.id ?? createId()}`,
+        amount: item.amount,
+        occurredAt: item.timestamp ?? item.createdAt ?? new Date().toISOString(),
+        label: cleanOptionalText(item.merchant),
+        context: normalizeSpendingContext(item.category),
+        type: "expense",
+        createdAt: item.createdAt ?? new Date().toISOString(),
+        updatedAt: item.updatedAt ?? new Date().toISOString()
+      })
+    );
 }
 
-async function persistSpendingMoments(moments: SpendingMoment[]): Promise<void> {
-  try {
-    await AsyncStorage.setItem(MOMENTS_KEY, JSON.stringify(sortMoments(moments).map(normalizeMoment)));
-  } catch {
-    return;
-  }
+async function persistSpendingMoments(moments: SpendingMoment[]): Promise<boolean> {
+  return writeJson(MOMENTS_KEY, sortMoments(moments).map(normalizeMoment));
 }
 
-async function persistPatternFeedback(feedback: PatternFeedback[]): Promise<void> {
-  try {
-    await AsyncStorage.setItem(FEEDBACK_KEY, JSON.stringify(feedback.map(normalizePatternFeedback).filter(Boolean)));
-  } catch {
-    return;
-  }
-}
-
-async function readStorage(key: string): Promise<string | null> {
-  try {
-    return await AsyncStorage.getItem(key);
-  } catch {
-    return null;
-  }
+async function persistPatternFeedback(feedback: PatternFeedback[]): Promise<boolean> {
+  return writeJson(FEEDBACK_KEY, feedback.map(normalizePatternFeedback).filter(Boolean));
 }
 
 function normalizeMoment(value: unknown): SpendingMoment {

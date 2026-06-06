@@ -1,5 +1,5 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MoneyAccount, MoneyTransfer } from "../features/spendingMemory.types";
+import { isKeyCorrupt, readJson, removeKeys, writeJson } from "./storage";
 
 const ACCOUNTS_KEY = "slev_accounts";
 const TRANSFERS_KEY = "slev_transfers";
@@ -27,17 +27,13 @@ const DEFAULT_ACCOUNTS: MoneyAccount[] = [
 ];
 
 export async function listMoneyAccounts(): Promise<MoneyAccount[]> {
-  const raw = await readStorage(ACCOUNTS_KEY);
-  if (!raw) return DEFAULT_ACCOUNTS;
+  const result = await readJson<unknown>(ACCOUNTS_KEY);
+  if (result.status === "empty") return DEFAULT_ACCOUNTS;
+  if (result.status === "corrupt") return DEFAULT_ACCOUNTS;
 
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return DEFAULT_ACCOUNTS;
-    const accounts = parsed.map(normalizeMoneyAccount).filter(isMoneyAccount);
-    return accounts.length > 0 ? sortAccounts(normalizeIncomeHubs(accounts)) : DEFAULT_ACCOUNTS;
-  } catch {
-    return DEFAULT_ACCOUNTS;
-  }
+  if (!Array.isArray(result.value)) return DEFAULT_ACCOUNTS;
+  const accounts = result.value.map(normalizeMoneyAccount).filter(isMoneyAccount);
+  return accounts.length > 0 ? sortAccounts(normalizeIncomeHubs(accounts)) : DEFAULT_ACCOUNTS;
 }
 
 export async function saveMoneyAccount(input: AccountInput): Promise<MoneyAccount[]> {
@@ -70,16 +66,9 @@ export async function deleteMoneyAccount(id: string): Promise<MoneyAccount[]> {
 }
 
 export async function listMoneyTransfers(): Promise<MoneyTransfer[]> {
-  const raw = await readStorage(TRANSFERS_KEY);
-  if (!raw) return [];
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(normalizeMoneyTransfer).filter(isMoneyTransfer).sort(sortTransfers);
-  } catch {
-    return [];
-  }
+  const result = await readJson<unknown>(TRANSFERS_KEY);
+  if (result.status !== "ok" || !Array.isArray(result.value)) return [];
+  return result.value.map(normalizeMoneyTransfer).filter(isMoneyTransfer).sort(sortTransfers);
 }
 
 export async function saveMoneyTransfer(input: TransferInput): Promise<MoneyTransfer[]> {
@@ -106,28 +95,16 @@ export async function deleteMoneyTransfer(id: string): Promise<MoneyTransfer[]> 
   return updated;
 }
 
-export async function clearAccountsAndTransfers(): Promise<void> {
-  try {
-    await AsyncStorage.multiRemove([ACCOUNTS_KEY, TRANSFERS_KEY]);
-  } catch {
-    return;
-  }
+export async function clearAccountsAndTransfers(): Promise<boolean> {
+  return removeKeys([ACCOUNTS_KEY, TRANSFERS_KEY]);
 }
 
-async function readStorage(key: string): Promise<string | null> {
-  try {
-    return await AsyncStorage.getItem(key);
-  } catch {
-    return null;
-  }
+export function isAccountsStorageCorrupt(): boolean {
+  return isKeyCorrupt(ACCOUNTS_KEY);
 }
 
-async function writeJson(key: string, value: unknown): Promise<void> {
-  try {
-    await AsyncStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    return;
-  }
+export function isTransfersStorageCorrupt(): boolean {
+  return isKeyCorrupt(TRANSFERS_KEY);
 }
 
 function normalizeMoneyAccount(value: unknown): MoneyAccount | null {

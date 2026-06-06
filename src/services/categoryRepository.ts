@@ -1,6 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DEFAULT_SPENDING_CONTEXTS, normalizeSpendingContext } from "../data/spendingMemory";
 import { ExpenseCategory, SpendingContext } from "../features/spendingMemory.types";
+import { isKeyCorrupt, readJson, removeKeys, writeJson } from "./storage";
 
 const EXPENSE_CATEGORIES_KEY = "slev_expense_categories";
 
@@ -67,12 +67,12 @@ export async function deleteExpenseCategory(id: string): Promise<ExpenseCategory
   return buildVisibleCategories(updatedStored);
 }
 
-export async function clearExpenseCategories(): Promise<void> {
-  try {
-    await AsyncStorage.removeItem(EXPENSE_CATEGORIES_KEY);
-  } catch {
-    return;
-  }
+export async function clearExpenseCategories(): Promise<boolean> {
+  return removeKeys([EXPENSE_CATEGORIES_KEY]);
+}
+
+export function isExpenseCategoriesStorageCorrupt(): boolean {
+  return isKeyCorrupt(EXPENSE_CATEGORIES_KEY);
 }
 
 export function getCategoryLabels(categories: ExpenseCategory[]): SpendingContext[] {
@@ -80,32 +80,9 @@ export function getCategoryLabels(categories: ExpenseCategory[]): SpendingContex
 }
 
 async function listStoredCategories(): Promise<StoredExpenseCategory[]> {
-  const raw = await readStorage(EXPENSE_CATEGORIES_KEY);
-  if (!raw) return [];
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(normalizeStoredCategory).filter(isStoredExpenseCategory);
-  } catch {
-    return [];
-  }
-}
-
-async function readStorage(key: string): Promise<string | null> {
-  try {
-    return await AsyncStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-async function writeJson(key: string, value: unknown): Promise<void> {
-  try {
-    await AsyncStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    return;
-  }
+  const result = await readJson<unknown>(EXPENSE_CATEGORIES_KEY);
+  if (result.status !== "ok" || !Array.isArray(result.value)) return [];
+  return result.value.map(normalizeStoredCategory).filter(isStoredExpenseCategory);
 }
 
 function buildVisibleCategories(stored: StoredExpenseCategory[]): ExpenseCategory[] {

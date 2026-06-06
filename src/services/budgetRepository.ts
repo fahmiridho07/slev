@@ -1,6 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DEFAULT_SPENDING_CONTEXTS, normalizeSpendingContext } from "../data/spendingMemory";
 import { BudgetLimit, BudgetPeriod, SpendingContext } from "../features/spendingMemory.types";
+import { isKeyCorrupt, readJson, removeKeys, writeJson } from "./storage";
 
 const BUDGET_LIMITS_KEY = "slev_budget_limits";
 
@@ -11,16 +11,9 @@ type BudgetLimitInput = {
 };
 
 export async function listBudgetLimits(): Promise<BudgetLimit[]> {
-  const raw = await readStorage(BUDGET_LIMITS_KEY);
-  if (!raw) return [];
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(normalizeBudgetLimit).filter(Boolean) as BudgetLimit[];
-  } catch {
-    return [];
-  }
+  const result = await readJson<unknown>(BUDGET_LIMITS_KEY);
+  if (result.status !== "ok" || !Array.isArray(result.value)) return [];
+  return result.value.map(normalizeBudgetLimit).filter(Boolean) as BudgetLimit[];
 }
 
 export async function saveBudgetLimit(input: BudgetLimitInput): Promise<BudgetLimit[]> {
@@ -47,28 +40,16 @@ export async function deleteBudgetLimit(category: SpendingContext): Promise<Budg
   return updated;
 }
 
-export async function clearBudgetLimits(): Promise<void> {
-  try {
-    await AsyncStorage.removeItem(BUDGET_LIMITS_KEY);
-  } catch {
-    return;
-  }
+export async function clearBudgetLimits(): Promise<boolean> {
+  return removeKeys([BUDGET_LIMITS_KEY]);
 }
 
-async function persistBudgetLimits(limits: BudgetLimit[]): Promise<void> {
-  try {
-    await AsyncStorage.setItem(BUDGET_LIMITS_KEY, JSON.stringify(limits.map(normalizeBudgetLimit).filter(Boolean)));
-  } catch {
-    return;
-  }
+export function isBudgetLimitsStorageCorrupt(): boolean {
+  return isKeyCorrupt(BUDGET_LIMITS_KEY);
 }
 
-async function readStorage(key: string): Promise<string | null> {
-  try {
-    return await AsyncStorage.getItem(key);
-  } catch {
-    return null;
-  }
+async function persistBudgetLimits(limits: BudgetLimit[]): Promise<boolean> {
+  return writeJson(BUDGET_LIMITS_KEY, limits.map(normalizeBudgetLimit).filter(Boolean));
 }
 
 function normalizeBudgetLimit(value: unknown): BudgetLimit | null {
