@@ -119,6 +119,47 @@ export function buildCurrentMonthSummary(
   };
 }
 
+export function getRunwayMonths({
+  latestBalanceTotal,
+  moments,
+  referenceDate = new Date()
+}: {
+  latestBalanceTotal: number;
+  moments: SpendingMoment[];
+  referenceDate?: Date;
+}): number | null {
+  const monthlyExpenses: number[] = [];
+
+  for (let monthOffset = -1; monthOffset >= -3; monthOffset -= 1) {
+    const range = getMonthRange(referenceDate, monthOffset);
+    const expense = sumMoments(
+      moments.filter(
+        (moment) => moment.type === "expense" && isWithinRange(moment.occurredAt, range.start, range.end)
+      )
+    );
+    if (expense > 0) {
+      monthlyExpenses.push(expense);
+    }
+  }
+
+  if (monthlyExpenses.length === 0 || latestBalanceTotal <= 0) {
+    return null;
+  }
+
+  const averageMonthlyExpense =
+    monthlyExpenses.reduce((sum, expense) => sum + expense, 0) / monthlyExpenses.length;
+  if (averageMonthlyExpense <= 0) {
+    return null;
+  }
+
+  const runway = latestBalanceTotal / averageMonthlyExpense;
+  if (!Number.isFinite(runway) || runway <= 0) {
+    return null;
+  }
+
+  return Math.round(runway * 10) / 10;
+}
+
 export function buildMonthlyBreakdown(
   moments: SpendingMoment[],
   type: EntryType,

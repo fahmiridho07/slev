@@ -7,7 +7,8 @@ import {
   buildCurrentMonthSummary,
   getLatestBalanceSnapshots,
   getLatestBalanceTotal,
-  getProjectedBalanceSnapshots
+  getProjectedBalanceSnapshots,
+  getRunwayMonths
 } from "../lib/financeEngine";
 import { generateSpendingPatterns } from "../lib/spendingMemoryPatterns";
 import { getCategoryLabels } from "../services/categoryRepository";
@@ -21,6 +22,7 @@ export type FinanceDerived = {
   feedbackByPattern: Map<string, PatternFeedbackResponse>;
   hasMonthlyPlan: boolean;
   latestBalanceTotal: number;
+  runwayMonths: number | null;
   monthlySummary: ReturnType<typeof buildCurrentMonthSummary>;
   patterns: ReturnType<typeof generateSpendingPatterns>;
   projectedBalanceSnapshots: ReturnType<typeof getProjectedBalanceSnapshots>;
@@ -85,6 +87,14 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     [state.expenseCategories]
   );
   const hasMonthlyPlan = Boolean(state.monthlyPlan);
+  const runwayMonths = useMemo(
+    () =>
+      getRunwayMonths({
+        latestBalanceTotal,
+        moments: state.moments
+      }),
+    [latestBalanceTotal, state.moments]
+  );
   const allocationPlan = useMemo(
     () => {
       const currentBalances = getLatestBalanceSnapshots(projectedBalanceSnapshots);
@@ -118,6 +128,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       feedbackByPattern,
       hasMonthlyPlan,
       latestBalanceTotal,
+      runwayMonths,
       monthlySummary,
       patterns,
       projectedBalanceSnapshots,
@@ -129,6 +140,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       feedbackByPattern,
       hasMonthlyPlan,
       latestBalanceTotal,
+      runwayMonths,
       monthlySummary,
       patterns,
       projectedBalanceSnapshots,

@@ -14,6 +14,7 @@ type HomeMoneyPulseProps = {
   latestBalanceTotal: number;
   monthlyPlan: MonthlyPlan | null;
   monthlySummary: MonthlySummary;
+  runwayMonths: number | null;
 };
 
 export function HomeMoneyPulse({
@@ -21,7 +22,8 @@ export function HomeMoneyPulse({
   hasMonthlyPlan,
   latestBalanceTotal,
   monthlyPlan,
-  monthlySummary
+  monthlySummary,
+  runwayMonths
 }: HomeMoneyPulseProps) {
   const savingsTarget = monthlyPlan?.savingsTarget ?? 0;
   const estimatedSavings = Math.max(0, monthlySummary.net);
@@ -73,6 +75,11 @@ export function HomeMoneyPulse({
           <Text style={styles.pulseLabel}>Est. balance</Text>
         </View>
         <Text style={[styles.pulseValue, styles.pulseValueBalance]}>{formatCompactRupiah(latestBalanceTotal)}</Text>
+        {runwayMonths !== null ? (
+          <Text style={styles.pulseLabel}>~{runwayMonths} months of runway</Text>
+        ) : (
+          <Text style={styles.pulseLabel}>Add a few expenses to estimate runway</Text>
+        )}
       </View>
       {savingsTarget > 0 && (
         <View style={styles.pulseWideItem}>
