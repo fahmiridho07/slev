@@ -38,8 +38,8 @@ test("set_clear_confirm_visible toggles dialog visibility", () => {
 });
 
 test("prepend_moment adds to the front without replacing other moments", () => {
-  const existing = moment({ amount: 10000, occurredAt: "2026-06-01T01:00:00.000Z" });
-  const saved = moment({ amount: 20000, occurredAt: "2026-06-02T01:00:00.000Z", id: "new-moment" });
+  const existing = buildMoment({ amount: 10000, occurredAt: "2026-06-01T01:00:00.000Z" });
+  const saved = buildMoment({ amount: 20000, occurredAt: "2026-06-02T01:00:00.000Z", id: "new-moment" });
   const state: FinanceState = { ...initialFinanceState, moments: [existing] };
   const next = financeReducer(state, { type: "prepend_moment", moment: saved });
 
@@ -49,8 +49,8 @@ test("prepend_moment adds to the front without replacing other moments", () => {
 });
 
 test("replace_moment updates one row and keeps references for others", () => {
-  const first = moment({ amount: 10000, occurredAt: "2026-06-01T01:00:00.000Z", id: "first" });
-  const second = moment({ amount: 20000, occurredAt: "2026-06-02T01:00:00.000Z", id: "second" });
+  const first = buildMoment({ amount: 10000, occurredAt: "2026-06-01T01:00:00.000Z", id: "first" });
+  const second = buildMoment({ amount: 20000, occurredAt: "2026-06-02T01:00:00.000Z", id: "second" });
   const state: FinanceState = { ...initialFinanceState, moments: [first, second] };
   const updated = { ...second, amount: 25000 };
   const next = financeReducer(state, { type: "replace_moment", moment: updated });
@@ -60,8 +60,8 @@ test("replace_moment updates one row and keeps references for others", () => {
 });
 
 test("remove_moment filters by id", () => {
-  const first = moment({ amount: 10000, occurredAt: "2026-06-01T01:00:00.000Z", id: "keep" });
-  const second = moment({ amount: 20000, occurredAt: "2026-06-02T01:00:00.000Z", id: "drop" });
+  const first = buildMoment({ amount: 10000, occurredAt: "2026-06-01T01:00:00.000Z", id: "keep" });
+  const second = buildMoment({ amount: 20000, occurredAt: "2026-06-02T01:00:00.000Z", id: "drop" });
   const state: FinanceState = { ...initialFinanceState, moments: [first, second] };
   const next = financeReducer(state, { type: "remove_moment", id: "drop" });
 
@@ -69,12 +69,46 @@ test("remove_moment filters by id", () => {
   assertEqual(next.moments[0]?.id, "keep", "remaining moment");
 });
 
+test("hydrate merges stored collections without touching ui flags", () => {
+  const moment = buildMoment({ amount: 10000, occurredAt: "2026-06-01T01:00:00.000Z" });
+  const next = financeReducer(
+    { ...initialFinanceState, isReady: true, message: "Ready", clearConfirmVisible: true },
+    {
+      type: "hydrate",
+      payload: {
+        moments: [moment],
+        feedback: [],
+        budgetLimits: [],
+        categoryModes: [],
+        monthlyPlan: null,
+        manualTemplates: [],
+        savingsGoals: [],
+        balanceSnapshots: [],
+        accounts: [],
+        transfers: [],
+        expenseCategories: []
+      }
+    }
+  );
+
+  assertEqual(next.moments.length, 1, "moments hydrated");
+  assertEqual(next.isReady, true, "isReady preserved");
+  assertEqual(next.message, "Ready", "message preserved");
+  assertEqual(next.clearConfirmVisible, true, "dialog state preserved");
+});
+
+test("set_budget_limits replaces limits array", () => {
+  const limits = [{ category: "Meal" as const, createdAt: "x", id: "l1", limitAmount: 500000, period: "monthly" as const, updatedAt: "x" }];
+  const next = financeReducer(initialFinanceState, { type: "set_budget_limits", budgetLimits: limits });
+  assertEqual(next.budgetLimits, limits, "limits replaced");
+});
+
 test("clear_all resets finance memory but keeps default accounts and categories", () => {
   const state: FinanceState = {
     ...initialFinanceState,
     clearConfirmVisible: true,
     feedback: [{ patternId: "p1", response: "keep", createdAt: "2026-06-01T00:00:00.000Z" }],
-    moments: [moment({ amount: 10000, occurredAt: "2026-06-01T01:00:00.000Z" })],
+    moments: [buildMoment({ amount: 10000, occurredAt: "2026-06-01T01:00:00.000Z" })],
     monthlyPlan: {
       createdAt: "2026-06-01T00:00:00.000Z",
       expectedIncome: 1,
@@ -130,7 +164,7 @@ function assertEqual(actual: unknown, expected: unknown, message: string): void 
   }
 }
 
-function moment(input: {
+function buildMoment(input: {
   amount: number;
   context?: SpendingContext;
   id?: string;
