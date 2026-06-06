@@ -16,6 +16,7 @@
     "src/lib/financeEngine.ts",
     "src/lib/formatMoney.ts",
     "src/lib/spendingMemoryPatterns.ts",
+    "src/state/financeReducer.ts",
     "tests/**/*.ts"
   ]
 }
