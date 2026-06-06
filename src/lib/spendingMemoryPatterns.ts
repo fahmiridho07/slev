@@ -39,20 +39,6 @@ export function generateSpendingPatterns(moments: SpendingMoment[]): SpendingPat
   return [];
 }
 
-export function getHomeObservation(moments: SpendingMoment[]): SpendingPattern {
-  const expenses = moments.filter((moment) => moment.type !== "income");
-  const patterns = generateSpendingPatterns(expenses);
-  if (patterns.length > 0) return patterns[0];
-
-  return {
-    id: "empty-home",
-    group: "Repeated lately",
-    title: "Start with anything worth remembering",
-    detail: "Amount is enough. Context and labels can stay light.",
-    tone: "calm"
-  };
-}
-
 export function formatRupiah(amount: number): string {
   return `Rp ${new Intl.NumberFormat("id-ID", {
     maximumFractionDigits: 0

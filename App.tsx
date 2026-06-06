@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert,
   Animated,
   Image,
   KeyboardAvoidingView,
@@ -43,8 +42,7 @@ import {
 import {
   formatCompactRupiah,
   formatRupiah,
-  generateSpendingPatterns,
-  getHomeObservation
+  generateSpendingPatterns
 } from "./src/lib/spendingMemoryPatterns";
 import {
   AccountReconciliationRow,
@@ -145,7 +143,7 @@ export default function App() {
   const [accountLabel, setAccountLabel] = useState("Jago");
   const [fromAccount, setFromAccount] = useState("BRI");
   const [toAccount, setToAccount] = useState("Jago");
-  const [editingMomentId, setEditingMomentId] = useState<string | null>(null);
+  const [clearConfirmVisible, setClearConfirmVisible] = useState(false);
   const [message, setMessage] = useState("A spending memory can be as small as an amount.");
 
   const reload = useCallback(async () => {
@@ -215,7 +213,6 @@ export default function App() {
   }, [reload]);
 
   const patterns = useMemo(() => generateSpendingPatterns(moments), [moments]);
-  const homeObservation = useMemo(() => getHomeObservation(moments), [moments]);
   const repeatSuggestions = useMemo(() => getRepeatSuggestions(moments), [moments]);
   const monthlySummary = useMemo(
     () => buildCurrentMonthSummary(moments, categoryModes),
@@ -296,39 +293,24 @@ export default function App() {
       return;
     }
 
-    if (editingMomentId) {
-      const updated = await updateSpendingMoment(editingMomentId, {
-        amount,
-        label: entryType === "expense" ? label : undefined,
-        context: entryType === "expense" ? context : "Other",
-        note,
-        type: entryType,
-        source: entryType === "income" ? source : undefined,
-        accountLabel
-      });
-      setMoments(updated);
-      setEditingMomentId(null);
-      setMessage("Memory updated.");
-    } else {
-      const saved = await saveSpendingMoment({
-        amount,
-        label: entryType === "expense" ? label : undefined,
-        context: entryType === "expense" ? context : "Other",
-        note,
-        type: entryType,
-        source: entryType === "income" ? source : undefined,
-        accountLabel
-      });
-      setMoments(await listSpendingMoments());
-      if (saved.type === "expense") {
-        setContext(saved.context);
-      }
-      setMessage(
-        saved.type === "income"
-          ? `${formatRupiah(saved.amount)} income saved${saved.source ? ` from ${saved.source}` : ""}.`
-          : `${formatRupiah(saved.amount)} saved${saved.label ? ` for ${saved.label}` : ""}.`
-      );
+    const saved = await saveSpendingMoment({
+      amount,
+      label: entryType === "expense" ? label : undefined,
+      context: entryType === "expense" ? context : "Other",
+      note,
+      type: entryType,
+      source: entryType === "income" ? source : undefined,
+      accountLabel
+    });
+    setMoments(await listSpendingMoments());
+    if (saved.type === "expense") {
+      setContext(saved.context);
     }
+    setMessage(
+      saved.type === "income"
+        ? `${formatRupiah(saved.amount)} income saved${saved.source ? ` from ${saved.source}` : ""}.`
+        : `${formatRupiah(saved.amount)} saved${saved.label ? ` for ${saved.label}` : ""}.`
+    );
 
     setAmountText("");
     setLabel("");
@@ -370,25 +352,6 @@ export default function App() {
     });
     setMoments(updated);
     setMessage("Memory updated.");
-  }
-
-  async function undoLastMoment(moment: SpendingMoment) {
-    const updated = await deleteSpendingMoment(moment.id);
-    setMoments(updated);
-    setEditingMomentId(null);
-    setMessage("Last memory undone.");
-  }
-
-  function editLastMoment(moment: SpendingMoment) {
-    setEditingMomentId(moment.id);
-    setAmountText(formatAmountInput(String(moment.amount)));
-    setLabel(moment.label ?? "");
-    setContext(moment.context);
-    setNote(moment.note ?? "");
-    setEntryType(moment.type);
-    setSource(moment.source ?? "");
-    setAccountLabel(moment.accountLabel ?? getDefaultMomentAccount(moment.type, accounts));
-    setMessage("Editing the last saved memory.");
   }
 
   function useRepeatSuggestion(suggestion: RepeatSuggestion) {
@@ -594,39 +557,35 @@ export default function App() {
     setFeedback(updated);
   }
 
-  async function clearAll() {
-    Alert.alert("Clear local finance memory?", "This removes entries, plans, goals, balances, limits, accounts, transfers, and categories from this device.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Clear",
-        style: "destructive",
-        onPress: async () => {
-          await Promise.all([
-            clearSpendingMemory(),
-            clearBudgetLimits(),
-            clearManualFinance(),
-            clearAccountsAndTransfers(),
-            clearExpenseCategories()
-          ]);
-          const [resetAccounts, resetCategories] = await Promise.all([
-            listMoneyAccounts(),
-            listExpenseCategories()
-          ]);
-          setMoments([]);
-          setFeedback([]);
-          setBudgetLimits([]);
-          setCategoryModes([]);
-          setMonthlyPlan(null);
-          setManualTemplates([]);
-          setSavingsGoals([]);
-          setBalanceSnapshots([]);
-          setAccounts(resetAccounts);
-          setTransfers([]);
-          setExpenseCategories(resetCategories);
-          setMessage("Local finance memory cleared.");
-        }
-      }
+  function clearAll() {
+    setClearConfirmVisible(true);
+  }
+
+  async function confirmClearAll() {
+    await Promise.all([
+      clearSpendingMemory(),
+      clearBudgetLimits(),
+      clearManualFinance(),
+      clearAccountsAndTransfers(),
+      clearExpenseCategories()
     ]);
+    const [resetAccounts, resetCategories] = await Promise.all([
+      listMoneyAccounts(),
+      listExpenseCategories()
+    ]);
+    setMoments([]);
+    setFeedback([]);
+    setBudgetLimits([]);
+    setCategoryModes([]);
+    setMonthlyPlan(null);
+    setManualTemplates([]);
+    setSavingsGoals([]);
+    setBalanceSnapshots([]);
+    setAccounts(resetAccounts);
+    setTransfers([]);
+    setExpenseCategories(resetCategories);
+    setClearConfirmVisible(false);
+    setMessage("Local finance memory cleared.");
   }
 
   return (
@@ -676,16 +635,12 @@ export default function App() {
                 context={context}
                 entryType={entryType}
                 fromAccount={fromAccount}
-                homeObservation={homeObservation}
-                isEditing={Boolean(editingMomentId)}
                 label={label}
-                lastSavedMoment={moments[0]}
                 latestBalanceTotal={latestBalanceTotal}
                 manualTemplates={manualTemplates}
                 monthlyPlan={monthlyPlan}
                 monthlySummary={monthlySummary}
                 note={note}
-                recentMoments={moments.slice(0, 5)}
                 repeatSuggestions={repeatSuggestions}
                 source={source}
                 toAccount={toAccount}
@@ -698,12 +653,10 @@ export default function App() {
                 onChangeNote={setNote}
                 onChangeSource={setSource}
                 onChangeToAccount={setToAccount}
-                onEditLast={editLastMoment}
                 onDeleteTemplate={removeManualTemplate}
                 onOpenSettings={() => setActiveTab("settings")}
                 onSave={saveCurrentMoment}
                 onSaveTemplate={saveCurrentAsTemplate}
-                onUndoLast={undoLastMoment}
                 onUseTemplate={useManualTemplate}
                 onUseRepeat={useRepeatSuggestion}
               />
@@ -724,13 +677,11 @@ export default function App() {
                 budgetLimits={budgetLimits}
                 categoryLabels={categoryLabels}
                 categoryModes={categoryModes}
-                expenseCategories={expenseCategories}
                 monthlyPlan={monthlyPlan}
                 moments={moments}
                 projectedBalanceSnapshots={projectedBalanceSnapshots}
                 transfers={transfers}
                 onDeleteAccount={removeAccount}
-                onDeleteCategory={removeCategory}
                 onDeleteLimit={removeCategoryBudget}
                 onDeleteGoal={removeSavingsGoal}
                 onOpenSettings={() => setActiveTab("settings")}
@@ -787,6 +738,14 @@ export default function App() {
               );
             })}
           </View>
+          <DeleteConfirmDialog
+            body="This removes entries, plans, goals, balances, limits, accounts, transfers, and categories from this device."
+            confirmLabel="Clear"
+            onCancel={() => setClearConfirmVisible(false)}
+            onConfirm={confirmClearAll}
+            title="Clear local finance memory?"
+            visible={clearConfirmVisible}
+          />
         </KeyboardAvoidingView>
       </SafeAreaView>
     </SafeAreaProvider>
@@ -801,16 +760,12 @@ function HomeScreen({
   context,
   entryType,
   fromAccount,
-  homeObservation,
-  isEditing,
   label,
-  lastSavedMoment,
   latestBalanceTotal,
   manualTemplates,
   monthlyPlan,
   monthlySummary,
   note,
-  recentMoments,
   repeatSuggestions,
   source,
   toAccount,
@@ -824,11 +779,9 @@ function HomeScreen({
   onChangeSource,
   onChangeToAccount,
   onDeleteTemplate,
-  onEditLast,
   onSave,
   onSaveTemplate,
   onOpenSettings,
-  onUndoLast,
   onUseTemplate,
   onUseRepeat
 }: {
@@ -839,16 +792,12 @@ function HomeScreen({
   context: SpendingContext;
   entryType: CaptureType;
   fromAccount: string;
-  homeObservation: SpendingPattern;
-  isEditing: boolean;
   label: string;
-  lastSavedMoment?: SpendingMoment;
   latestBalanceTotal: number;
   manualTemplates: ManualTemplate[];
   monthlyPlan: MonthlyPlan | null;
   monthlySummary: MonthlySummary;
   note: string;
-  recentMoments: SpendingMoment[];
   repeatSuggestions: RepeatSuggestion[];
   source: string;
   toAccount: string;
@@ -862,11 +811,9 @@ function HomeScreen({
   onChangeSource: (value: string) => void;
   onChangeToAccount: (value: string) => void;
   onDeleteTemplate: (id: string) => void;
-  onEditLast: (moment: SpendingMoment) => void;
   onSave: () => void;
   onSaveTemplate: () => void;
   onOpenSettings: () => void;
-  onUndoLast: (moment: SpendingMoment) => void;
   onUseTemplate: (template: ManualTemplate) => void;
   onUseRepeat: (suggestion: RepeatSuggestion) => void;
 }) {
@@ -887,7 +834,7 @@ function HomeScreen({
       />
 
       <View style={styles.capturePanel}>
-        <Text style={styles.kicker}>{isEditing ? "Edit memory" : "Quick capture"}</Text>
+        <Text style={styles.kicker}>Quick capture</Text>
         {manualTemplates.length > 0 && (
           <View style={styles.repeatBlock}>
             <Text style={styles.microLabel}>Manual shortcuts</Text>
@@ -909,18 +856,11 @@ function HomeScreen({
           </View>
         )}
         <SegmentedControl
-          options={
-            isEditing
-              ? [
-                  { label: "Expense", value: "expense" },
-                  { label: "Income", value: "income" }
-                ]
-              : [
-                  { label: "Expense", value: "expense" },
-                  { label: "Income", value: "income" },
-                  { label: "Transfer", value: "transfer" }
-                ]
-          }
+          options={[
+            { label: "Expense", value: "expense" },
+            { label: "Income", value: "income" },
+            { label: "Transfer", value: "transfer" }
+          ]}
           selected={entryType}
           onSelect={onChangeEntryType}
         />
@@ -1029,55 +969,14 @@ function HomeScreen({
         <Pressable accessibilityRole="button" onPress={onSave} style={styles.primaryButton}>
           <Ionicons name="checkmark-circle-outline" size={20} color={colors.surface} />
           <Text style={styles.primaryButtonText}>
-            {isEditing ? "Update memory" : entryType === "income" ? "Save income" : entryType === "transfer" ? "Save transfer" : "Save memory"}
+            {entryType === "income" ? "Save income" : entryType === "transfer" ? "Save transfer" : "Save memory"}
           </Text>
         </Pressable>
-        {!isEditing && (
-          <Pressable accessibilityRole="button" onPress={onSaveTemplate} style={styles.secondaryInlineButton}>
-            <Ionicons name="bookmark-outline" size={16} color={colors.greenDark} />
-            <Text style={styles.textButtonLabel}>Save as shortcut</Text>
-          </Pressable>
-        )}
+        <Pressable accessibilityRole="button" onPress={onSaveTemplate} style={styles.secondaryInlineButton}>
+          <Ionicons name="bookmark-outline" size={16} color={colors.greenDark} />
+          <Text style={styles.textButtonLabel}>Save as shortcut</Text>
+        </Pressable>
       </View>
-
-      {lastSavedMoment && !isEditing && (
-        <View style={styles.lastSavedPanel}>
-          <View style={styles.lastSavedText}>
-            <Text style={styles.microLabel}>Last saved</Text>
-            <Text style={styles.lastSavedTitle}>
-              {formatMomentAmount(lastSavedMoment)} - {getMomentTitle(lastSavedMoment)}
-            </Text>
-          </View>
-          <View style={styles.lastSavedActions}>
-            <Pressable onPress={() => onEditLast(lastSavedMoment)} style={styles.textButton}>
-              <Ionicons name="create-outline" size={16} color={colors.greenDark} />
-              <Text style={styles.textButtonLabel}>Edit</Text>
-            </Pressable>
-            <Pressable onPress={() => onUndoLast(lastSavedMoment)} style={styles.textButton}>
-              <Ionicons name="arrow-undo-outline" size={16} color={colors.coral} />
-              <Text style={[styles.textButtonLabel, styles.deleteText]}>Undo</Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
-
-      <ObservationPanel pattern={homeObservation} />
-
-      <SectionHeader title="Recent memory" />
-      {recentMoments.length === 0 ? (
-        <EmptyState text="Saved moments will collect here quietly." />
-      ) : (
-        <View style={styles.listPanel}>
-          {recentMoments.slice(0, 3).map((moment) => (
-            <MomentRow
-              key={moment.id}
-              moment={moment}
-              repeatHint={getRepeatHint(moment, recentMoments)}
-              compact
-            />
-          ))}
-        </View>
-      )}
     </ScrollView>
   );
 }
@@ -1177,6 +1076,7 @@ function MemoryScreen({
   const [editSource, setEditSource] = useState("");
   const [editAccountLabel, setEditAccountLabel] = useState("");
   const [query, setQuery] = useState("");
+  const [pendingDeleteMoment, setPendingDeleteMoment] = useState<SpendingMoment | null>(null);
   const filteredMoments = useMemo(() => filterMoments(moments, query), [moments, query]);
   const grouped = useMemo(() => groupMomentsByRecallRange(filteredMoments), [filteredMoments]);
 
@@ -1189,13 +1089,6 @@ function MemoryScreen({
     setEditType(moment.type);
     setEditSource(moment.source ?? "");
     setEditAccountLabel(moment.accountLabel ?? getDefaultMomentAccount(moment.type, accounts));
-  }
-
-  function confirmDelete(moment: SpendingMoment) {
-    Alert.alert("Delete this memory?", moment.label ?? formatRupiah(moment.amount), [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => onDelete(moment.id) }
-    ]);
   }
 
   return (
@@ -1232,7 +1125,7 @@ function MemoryScreen({
                       <Ionicons name="create-outline" size={16} color={colors.greenDark} />
                       <Text style={styles.textButtonLabel}>Edit</Text>
                     </Pressable>
-                    <Pressable onPress={() => confirmDelete(moment)} style={styles.textButton}>
+                    <Pressable onPress={() => setPendingDeleteMoment(moment)} style={styles.textButton}>
                       <Ionicons name="trash-outline" size={16} color={colors.coral} />
                       <Text style={[styles.textButtonLabel, styles.deleteText]}>Delete</Text>
                     </Pressable>
@@ -1311,6 +1204,22 @@ function MemoryScreen({
           </View>
         ))
       )}
+      <DeleteConfirmDialog
+        body={
+          pendingDeleteMoment
+            ? `${getMomentTitle(pendingDeleteMoment)} will be removed from Memory. Budget and analysis totals will update automatically.`
+            : ""
+        }
+        onCancel={() => setPendingDeleteMoment(null)}
+        onConfirm={() => {
+          if (pendingDeleteMoment) {
+            onDelete(pendingDeleteMoment.id);
+            setPendingDeleteMoment(null);
+          }
+        }}
+        title="Delete memory?"
+        visible={Boolean(pendingDeleteMoment)}
+      />
     </ScrollView>
   );
 }
@@ -1321,13 +1230,11 @@ function BudgetScreen({
   budgetLimits,
   categoryLabels,
   categoryModes,
-  expenseCategories,
   monthlyPlan,
   moments,
   projectedBalanceSnapshots,
   transfers,
   onDeleteAccount,
-  onDeleteCategory,
   onDeleteLimit,
   onDeleteGoal,
   onOpenSettings,
@@ -1344,13 +1251,11 @@ function BudgetScreen({
   budgetLimits: BudgetLimit[];
   categoryLabels: SpendingContext[];
   categoryModes: CategoryMode[];
-  expenseCategories: ExpenseCategory[];
   monthlyPlan: MonthlyPlan | null;
   moments: SpendingMoment[];
   projectedBalanceSnapshots: BalanceSnapshot[];
   transfers: MoneyTransfer[];
   onDeleteAccount: (id: string) => void;
-  onDeleteCategory: (category: ExpenseCategory) => void;
   onDeleteLimit: (category: SpendingContext) => void;
   onDeleteGoal: (id: string) => void;
   onOpenSettings: () => void;
@@ -1425,9 +1330,7 @@ function BudgetScreen({
           budgetLimits={budgetLimits}
           categoryLabels={categoryLabels}
           categoryModes={categoryModes}
-          expenseCategories={expenseCategories}
           moments={moments}
-          onDeleteCategory={onDeleteCategory}
           onDeleteLimit={onDeleteLimit}
           onOpenSettings={onOpenSettings}
           onSaveCategoryMode={onSaveCategoryMode}
@@ -1459,9 +1362,7 @@ function BudgetLimitsPanel({
   budgetLimits,
   categoryLabels,
   categoryModes,
-  expenseCategories,
   moments,
-  onDeleteCategory,
   onDeleteLimit,
   onOpenSettings,
   onSaveCategoryMode,
@@ -1470,9 +1371,7 @@ function BudgetLimitsPanel({
   budgetLimits: BudgetLimit[];
   categoryLabels: SpendingContext[];
   categoryModes: CategoryMode[];
-  expenseCategories: ExpenseCategory[];
   moments: SpendingMoment[];
-  onDeleteCategory: (category: ExpenseCategory) => void;
   onDeleteLimit: (category: SpendingContext) => void;
   onOpenSettings: () => void;
   onSaveCategoryMode: (category: SpendingContext, mode: CategoryModeValue) => void;
@@ -1481,7 +1380,6 @@ function BudgetLimitsPanel({
   const [editingCategory, setEditingCategory] = useState<SpendingContext | null>(null);
   const [draftAmount, setDraftAmount] = useState("");
   const [draftPeriod, setDraftPeriod] = useState<BudgetPeriod>("weekly");
-  const [pendingDeleteCategory, setPendingDeleteCategory] = useState<ExpenseCategory | null>(null);
   const limitByCategory = useMemo(
     () => new Map(budgetLimits.map((limit) => [limit.category, limit])),
     [budgetLimits]
@@ -1490,13 +1388,11 @@ function BudgetLimitsPanel({
   const rows = useMemo(
     () =>
       categoryLabels.map((category) => {
-        const categoryMeta = expenseCategories.find((item) => item.label === category);
         const limit = limitByCategory.get(category);
         const period = limit?.period ?? "monthly";
         const spent = sumExpenseMoments(getMomentsInPeriod(moments, period).filter((moment) => moment.context === category));
         return {
           category,
-          categoryMeta,
           limit,
           mode: modeByCategory.get(category) ?? "flexible",
           period,
@@ -1504,7 +1400,7 @@ function BudgetLimitsPanel({
           progress: limit ? spent / limit.limitAmount : 0
         };
       }),
-    [categoryLabels, expenseCategories, limitByCategory, modeByCategory, moments]
+    [categoryLabels, limitByCategory, modeByCategory, moments]
   );
 
   function startEditing(category: SpendingContext) {
@@ -1527,115 +1423,86 @@ function BudgetLimitsPanel({
   return (
     <View style={styles.listPanel}>
       {rows.map((row) => (
-        <SwipeActionRow
-          canDelete={Boolean(row.categoryMeta)}
-          key={row.category}
-          onDelete={() => {
-            if (row.categoryMeta) {
-              setPendingDeleteCategory(row.categoryMeta);
-            }
-          }}
-        >
-          <View style={styles.budgetRow}>
-            <View style={styles.budgetHeader}>
-              <View style={styles.budgetTitleBlock}>
-                <Text style={styles.budgetCategory}>{row.category}</Text>
-                <Text style={styles.budgetMeta}>
-                  {row.limit
-                    ? `${formatCompactRupiah(row.spent)} of ${formatCompactRupiah(row.limit.limitAmount)} ${row.period}`
-                    : `No limit set - ${formatCompactRupiah(row.spent)} this month`}
-                </Text>
-              </View>
-              <Pressable onPress={() => startEditing(row.category)} style={styles.textButton}>
-                <Ionicons name={row.limit ? "create-outline" : "add-circle-outline"} size={16} color={colors.greenDark} />
-                <Text style={styles.textButtonLabel}>{row.limit ? "Edit" : "Set"}</Text>
-              </Pressable>
+        <View key={row.category} style={styles.budgetRow}>
+          <View style={styles.budgetHeader}>
+            <View style={styles.budgetTitleBlock}>
+              <Text style={styles.budgetCategory}>{row.category}</Text>
+              <Text style={styles.budgetMeta}>
+                {row.limit
+                  ? `${formatCompactRupiah(row.spent)} of ${formatCompactRupiah(row.limit.limitAmount)} ${row.period}`
+                  : `No limit set - ${formatCompactRupiah(row.spent)} this month`}
+              </Text>
             </View>
+            <Pressable onPress={() => startEditing(row.category)} style={styles.textButton}>
+              <Ionicons name={row.limit ? "create-outline" : "add-circle-outline"} size={16} color={colors.greenDark} />
+              <Text style={styles.textButtonLabel}>{row.limit ? "Edit" : "Set"}</Text>
+            </Pressable>
+          </View>
 
-            <SegmentedControl
-              compact
-              options={[
-                { label: "Fixed", value: "fixed" },
-                { label: "Flexible", value: "flexible" }
-              ]}
-              selected={row.mode}
-              onSelect={(mode) => onSaveCategoryMode(row.category, mode)}
-            />
+          <SegmentedControl
+            compact
+            options={[
+              { label: "Fixed", value: "fixed" },
+              { label: "Flexible", value: "flexible" }
+            ]}
+            selected={row.mode}
+            onSelect={(mode) => onSaveCategoryMode(row.category, mode)}
+          />
 
-            {row.limit && (
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, getProgressFillStyle(row.progress)]} />
-              </View>
-            )}
+          {row.limit && (
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, getProgressFillStyle(row.progress)]} />
+            </View>
+          )}
 
-            {editingCategory === row.category && (
-              <View style={styles.inlineEditor}>
-                <TextInput
-                  keyboardType="number-pad"
-                  onChangeText={(value) => setDraftAmount(formatAmountInput(value))}
-                  placeholder="Limit amount"
-                  placeholderTextColor={colors.muted}
-                  style={styles.input}
-                  value={draftAmount}
-                />
-                <SegmentedControl
-                  compact
-                  options={[
-                    { label: "Weekly", value: "weekly" },
-                    { label: "Monthly", value: "monthly" }
-                  ]}
-                  selected={draftPeriod}
-                  onSelect={setDraftPeriod}
-                />
-                <View style={styles.editActions}>
-                  {row.limit && (
-                    <Pressable
-                      onPress={() => {
-                        onDeleteLimit(row.category);
-                        setEditingCategory(null);
-                      }}
-                      style={styles.secondaryButton}
-                    >
-                      <Text style={styles.deleteText}>Delete limit</Text>
-                    </Pressable>
-                  )}
-                  <Pressable onPress={() => setEditingCategory(null)} style={styles.secondaryButton}>
-                    <Text style={styles.secondaryButtonText}>Cancel</Text>
-                  </Pressable>
+          {editingCategory === row.category && (
+            <View style={styles.inlineEditor}>
+              <TextInput
+                keyboardType="number-pad"
+                onChangeText={(value) => setDraftAmount(formatAmountInput(value))}
+                placeholder="Limit amount"
+                placeholderTextColor={colors.muted}
+                style={styles.input}
+                value={draftAmount}
+              />
+              <SegmentedControl
+                compact
+                options={[
+                  { label: "Weekly", value: "weekly" },
+                  { label: "Monthly", value: "monthly" }
+                ]}
+                selected={draftPeriod}
+                onSelect={setDraftPeriod}
+              />
+              <View style={styles.editActions}>
+                {row.limit && (
                   <Pressable
                     onPress={() => {
-                      onSaveLimit(row.category, draftAmount, draftPeriod);
+                      onDeleteLimit(row.category);
                       setEditingCategory(null);
                     }}
-                    style={styles.smallPrimaryButton}
+                    style={styles.secondaryButton}
                   >
-                    <Text style={styles.primaryButtonText}>Save</Text>
+                    <Text style={styles.deleteText}>Delete limit</Text>
                   </Pressable>
-                </View>
+                )}
+                <Pressable onPress={() => setEditingCategory(null)} style={styles.secondaryButton}>
+                  <Text style={styles.secondaryButtonText}>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    onSaveLimit(row.category, draftAmount, draftPeriod);
+                    setEditingCategory(null);
+                  }}
+                  style={styles.smallPrimaryButton}
+                >
+                  <Text style={styles.primaryButtonText}>Save</Text>
+                </Pressable>
               </View>
-            )}
-          </View>
-        </SwipeActionRow>
+            </View>
+          )}
+        </View>
       ))}
-      <DeleteConfirmDialog
-        body={
-          pendingDeleteCategory
-            ? `${pendingDeleteCategory.label} will disappear from capture and budget limits. Existing memories stay saved.`
-            : ""
-        }
-        onCancel={() => setPendingDeleteCategory(null)}
-        onConfirm={() => {
-          if (pendingDeleteCategory) {
-            onDeleteCategory(pendingDeleteCategory);
-            if (editingCategory === pendingDeleteCategory.label) {
-              setEditingCategory(null);
-            }
-            setPendingDeleteCategory(null);
-          }
-        }}
-        title="Remove category?"
-        visible={Boolean(pendingDeleteCategory)}
-      />
     </View>
   );
 }
@@ -2560,6 +2427,7 @@ function SettingsScreen({
 }) {
   const [editingCategoryId, setEditingCategoryId] = useState<string | undefined>(undefined);
   const [categoryDraft, setCategoryDraft] = useState("");
+  const [pendingDeleteCategory, setPendingDeleteCategory] = useState<ExpenseCategory | null>(null);
 
   function editCategory(category: ExpenseCategory) {
     setEditingCategoryId(category.id);
@@ -2571,24 +2439,10 @@ function SettingsScreen({
     setCategoryDraft("");
   }
 
-  function confirmDeleteCategory(category: ExpenseCategory) {
-    const title = category.isDefault ? "Remove default category?" : "Delete category?";
-    const message = category.isDefault
+  function getCategoryDeleteBody(category: ExpenseCategory) {
+    return category.isDefault
       ? `${category.label} will disappear from capture and budget limits. Existing memories stay saved.`
       : `${category.label} will be removed from capture and budget limits. Existing memories stay saved.`;
-    Alert.alert(title, message, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => {
-          onDeleteCategory(category);
-          if (editingCategoryId === category.id) {
-            resetCategoryDraft();
-          }
-        }
-      }
-    ]);
   }
 
   return (
@@ -2634,7 +2488,7 @@ function SettingsScreen({
             <SwipeActionRow
               canDelete
               key={category.id}
-              onDelete={() => confirmDeleteCategory(category)}
+              onDelete={() => setPendingDeleteCategory(category)}
             >
               <View style={styles.analyticsRow}>
                 <View style={styles.analyticsRowHeader}>
@@ -2659,6 +2513,21 @@ function SettingsScreen({
         <Ionicons name="trash-outline" size={18} color={colors.coral} />
         <Text style={styles.dangerButtonText}>Clear local finance memory</Text>
       </Pressable>
+      <DeleteConfirmDialog
+        body={pendingDeleteCategory ? getCategoryDeleteBody(pendingDeleteCategory) : ""}
+        onCancel={() => setPendingDeleteCategory(null)}
+        onConfirm={() => {
+          if (pendingDeleteCategory) {
+            onDeleteCategory(pendingDeleteCategory);
+            if (editingCategoryId === pendingDeleteCategory.id) {
+              resetCategoryDraft();
+            }
+            setPendingDeleteCategory(null);
+          }
+        }}
+        title={pendingDeleteCategory?.isDefault ? "Remove default category?" : "Delete category?"}
+        visible={Boolean(pendingDeleteCategory)}
+      />
     </ScrollView>
   );
 }
@@ -2783,12 +2652,14 @@ function SwipeActionRow({
 
 function DeleteConfirmDialog({
   body,
+  confirmLabel = "Delete",
   onCancel,
   onConfirm,
   title,
   visible
 }: {
   body: string;
+  confirmLabel?: string;
   onCancel: () => void;
   onConfirm: () => void;
   title: string;
@@ -2813,7 +2684,7 @@ function DeleteConfirmDialog({
               <Text style={styles.secondaryButtonText}>Cancel</Text>
             </Pressable>
             <Pressable accessibilityRole="button" onPress={onConfirm} style={styles.confirmDeleteButton}>
-              <Text style={styles.confirmDeleteText}>Delete</Text>
+              <Text style={styles.confirmDeleteText}>{confirmLabel}</Text>
             </Pressable>
           </View>
         </View>
@@ -2980,19 +2851,11 @@ function FeedbackButton({
   );
 }
 
-function MomentRow({
-  compact = false,
-  moment,
-  repeatHint
-}: {
-  compact?: boolean;
-  moment: SpendingMoment;
-  repeatHint?: string;
-}) {
+function MomentRow({ moment, repeatHint }: { moment: SpendingMoment; repeatHint?: string }) {
   const isIncome = moment.type === "income";
 
   return (
-    <View style={[styles.momentRow, compact && styles.momentRowCompact]}>
+    <View style={styles.momentRow}>
       <View style={[styles.momentIcon, isIncome && styles.incomeMomentIcon]}>
         <Ionicons
           name={isIncome ? "cash-outline" : contextIcon(moment.context)}
@@ -4205,32 +4068,6 @@ const styles = StyleSheet.create({
     minHeight: 36,
     paddingHorizontal: 2
   },
-  lastSavedPanel: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 12,
-    justifyContent: "space-between",
-    padding: 14
-  },
-  lastSavedText: {
-    flex: 1,
-    gap: 3
-  },
-  lastSavedTitle: {
-    color: colors.ink,
-    fontSize: 15,
-    fontWeight: "900",
-    letterSpacing: 0
-  },
-  lastSavedActions: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 10
-  },
   observationPanel: {
     borderRadius: 8,
     borderWidth: 1,
@@ -4273,9 +4110,6 @@ const styles = StyleSheet.create({
     gap: 12,
     minHeight: 68,
     padding: 14
-  },
-  momentRowCompact: {
-    minHeight: 62
   },
   momentIcon: {
     alignItems: "center",
