@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { DeleteConfirmDialog } from "./components";
 import { BRAND } from "./data/brand";
 import { BudgetScreen, HomeScreen, MemoryScreen, PatternsScreen, SettingsScreen } from "./screens";
-import { useFinance } from "./state/useFinance";
+import { useActions, useFinanceState } from "./state/useFinance";
 import { colors } from "./theme/colors";
 import { styles } from "./theme/styles/app";
 
@@ -21,17 +21,23 @@ const tabs: { key: TabKey; label: string; icon: keyof typeof Ionicons.glyphMap }
   { key: "patterns", label: "Analysis", icon: "analytics-outline" }
 ];
 
-export function AppRoot() {
-  const { actions, state } = useFinance();
-  const [activeTab, setActiveTab] = useState<TabKey>("home");
-  const openSettings = () => setActiveTab("settings");
-
+function FinanceInitializer() {
+  const actions = useActions();
   useEffect(() => {
     void actions.boot();
   }, [actions]);
+  return null;
+}
+
+export function AppRoot() {
+  const actions = useActions();
+  const state = useFinanceState();
+  const [activeTab, setActiveTab] = useState<TabKey>("home");
+  const openSettings = () => setActiveTab("settings");
 
   return (
     <>
+      <FinanceInitializer />
       <StatusBar style="dark" />
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView

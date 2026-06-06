@@ -21,13 +21,9 @@ export type FinanceDerived = {
   repeatSuggestions: ReturnType<typeof getRepeatSuggestions>;
 };
 
-export type FinanceContextValue = {
-  actions: FinanceActions;
-  derived: FinanceDerived;
-  state: FinanceState;
-};
-
-export const FinanceContext = createContext<FinanceContextValue | null>(null);
+export const ActionsContext = createContext<FinanceActions | null>(null);
+export const DerivedContext = createContext<FinanceDerived | null>(null);
+export const StateContext = createContext<FinanceState | null>(null);
 
 export function FinanceProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(financeReducer, initialFinanceState);
@@ -39,23 +35,43 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
-  const derived = useMemo<FinanceDerived>(() => {
-    const patterns = generateSpendingPatterns(state.moments);
-    const repeatSuggestions = getRepeatSuggestions(state.moments);
-    const monthlySummary = buildCurrentMonthSummary(state.moments, state.categoryModes);
-    const projectedBalanceSnapshots = getProjectedBalanceSnapshots({
-      accounts: state.accounts,
-      balanceSnapshots: state.balanceSnapshots,
-      moments: state.moments,
-      transfers: state.transfers
-    });
-    const latestBalanceTotal = getLatestBalanceTotal(projectedBalanceSnapshots);
-    const feedbackByPattern = new Map(
-      state.feedback.map((item) => [item.patternId, item.response])
-    );
-    const categoryLabels = getCategoryLabels(state.expenseCategories);
+  const patterns = useMemo(
+    () => generateSpendingPatterns(state.moments),
+    [state.moments]
+  );
+  const repeatSuggestions = useMemo(
+    () => getRepeatSuggestions(state.moments),
+    [state.moments]
+  );
+  const monthlySummary = useMemo(
+    () => buildCurrentMonthSummary(state.moments, state.categoryModes),
+    [state.moments, state.categoryModes]
+  );
+  const projectedBalanceSnapshots = useMemo(
+    () =>
+      getProjectedBalanceSnapshots({
+        accounts: state.accounts,
+        balanceSnapshots: state.balanceSnapshots,
+        moments: state.moments,
+        transfers: state.transfers
+      }),
+    [state.accounts, state.balanceSnapshots, state.moments, state.transfers]
+  );
+  const latestBalanceTotal = useMemo(
+    () => getLatestBalanceTotal(projectedBalanceSnapshots),
+    [projectedBalanceSnapshots]
+  );
+  const feedbackByPattern = useMemo(
+    () => new Map(state.feedback.map((item) => [item.patternId, item.response])),
+    [state.feedback]
+  );
+  const categoryLabels = useMemo(
+    () => getCategoryLabels(state.expenseCategories),
+    [state.expenseCategories]
+  );
 
-    return {
+  const derived = useMemo<FinanceDerived>(
+    () => ({
       categoryLabels,
       feedbackByPattern,
       latestBalanceTotal,
@@ -63,13 +79,23 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       patterns,
       projectedBalanceSnapshots,
       repeatSuggestions
-    };
-  }, [state]);
-
-  const value = useMemo(
-    () => ({ actions, derived, state }),
-    [actions, derived, state]
+    }),
+    [
+      categoryLabels,
+      feedbackByPattern,
+      latestBalanceTotal,
+      monthlySummary,
+      patterns,
+      projectedBalanceSnapshots,
+      repeatSuggestions
+    ]
   );
 
-  return <FinanceContext.Provider value={value}>{children}</FinanceContext.Provider>;
+  return (
+    <StateContext.Provider value={state}>
+      <DerivedContext.Provider value={derived}>
+        <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
+      </DerivedContext.Provider>
+    </StateContext.Provider>
+  );
 }
