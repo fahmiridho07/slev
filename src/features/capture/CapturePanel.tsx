@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useCallback, useEffect, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { AccountPicker, ContextPicker, EmptyState, SegmentedControl } from "../../components";
+import { AccountPicker, ContextPicker, EmptyState } from "../../components";
+import { CaptureTypePicker } from "./CaptureTypePicker";
 import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { getTemplateLabel } from "../../lib/analysis";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
@@ -72,6 +73,8 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
           </View>
         </View>
       )}
+      <CaptureTypePicker onSelect={changeEntryType} selected={form.entryType} />
+
       <View style={styles.amountRow}>
         <Text style={styles.currencyPrefix}>Rp</Text>
         <TextInput
@@ -81,21 +84,6 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
           placeholderTextColor={colors.muted}
           style={styles.amountInput}
           value={form.amountText}
-        />
-      </View>
-
-      <View style={styles.captureTypeBlock}>
-        <Text style={styles.microLabel}>Entry type</Text>
-        <SegmentedControl
-          compact
-          options={[
-            { label: "Expense", value: "expense" },
-            { label: "Income", value: "income" },
-            { label: "Transfer", value: "transfer" }
-          ]}
-          selected={form.entryType}
-          onSelect={changeEntryType}
-          stretch
         />
       </View>
 

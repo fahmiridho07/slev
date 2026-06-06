@@ -222,15 +222,72 @@ export const styles = StyleSheet.create({
   },
   amountRow: {
     alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-    minHeight: 70
-  },
-  captureTypeBlock: {
     borderBottomColor: colors.line,
     borderBottomWidth: 1,
+    flexDirection: "row",
     gap: 8,
-    paddingBottom: 14
+    minHeight: 70,
+    paddingBottom: 4
+  },
+  captureTypeBlock: {
+    gap: 10
+  },
+  captureTypeLead: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  captureTypeCopy: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18
+  },
+  captureTypeGrid: {
+    flexDirection: "row",
+    gap: 8
+  },
+  captureTypeTile: {
+    alignItems: "flex-start",
+    backgroundColor: colors.canvas,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    flex: 1,
+    gap: 6,
+    minHeight: 108,
+    padding: 12
+  },
+  captureTypeTileActive: {
+    backgroundColor: "#f2fbf4",
+    borderColor: "#c3e3cc"
+  },
+  captureTypeIconBadge: {
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    height: 34,
+    justifyContent: "center",
+    width: 34
+  },
+  captureTypeIconBadgeActive: {
+    backgroundColor: colors.mint,
+    borderColor: colors.green
+  },
+  captureTypeLabel: {
+    color: colors.ink,
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  captureTypeLabelActive: {
+    color: colors.greenDark
+  },
+  captureTypeHint: {
+    color: colors.muted,
+    fontSize: 11,
+    lineHeight: 15
   },
   currencyPrefix: {
     color: colors.greenDark,
