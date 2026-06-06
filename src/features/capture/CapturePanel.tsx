@@ -4,7 +4,7 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { AccountPicker, ContextPicker, EmptyState, SegmentedControl } from "../../components";
 import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { getTemplateLabel } from "../../lib/analysis";
-import { useActions, useDerived, useFinanceState } from "../../state/useFinance";
+import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
 import { colors } from "../../theme/colors";
 import { styles } from "../../theme/styles/app";
 import { useCaptureForm } from "./useCaptureForm";
@@ -16,7 +16,13 @@ type CapturePanelProps = {
 function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
   const actions = useActions();
   const { categoryLabels, repeatSuggestions } = useDerived();
-  const { accounts, manualTemplates } = useFinanceState();
+  const { accounts, manualTemplates } = useFinanceSelector(
+    (state) => ({
+      accounts: state.accounts,
+      manualTemplates: state.manualTemplates
+    }),
+    shallowEqual
+  );
   const {
     form,
     patch,

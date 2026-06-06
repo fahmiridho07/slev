@@ -4,13 +4,19 @@ import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { DeleteConfirmDialog, EmptyState, SwipeActionRow } from "../components";
 import { ExpenseCategory } from "../features/spendingMemory.types";
 import { getCategoryDeleteBody } from "../lib/analysis";
-import { useActions, useFinanceState } from "../state/useFinance";
+import { shallowEqual, useActions, useFinanceSelector } from "../state/useFinance";
 import { colors } from "../theme/colors";
 import { styles } from "../theme/styles/app";
 
 function SettingsScreenComponent() {
   const actions = useActions();
-  const { expenseCategories, moments } = useFinanceState();
+  const { expenseCategories, moments } = useFinanceSelector(
+    (state) => ({
+      expenseCategories: state.expenseCategories,
+      moments: state.moments
+    }),
+    shallowEqual
+  );
   const momentCount = moments.length;
 
   const [editingCategoryId, setEditingCategoryId] = useState<string | undefined>(undefined);

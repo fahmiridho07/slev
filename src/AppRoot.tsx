@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { DeleteConfirmDialog } from "./components";
 import { BRAND } from "./data/brand";
 import { BudgetScreen, HomeScreen, MemoryScreen, PatternsScreen, SettingsScreen } from "./screens";
-import { useActions, useFinanceState } from "./state/useFinance";
+import { shallowEqual, useActions, useFinanceSelector } from "./state/useFinance";
 import { colors } from "./theme/colors";
 import { styles } from "./theme/styles/app";
 
@@ -31,7 +31,14 @@ function FinanceInitializer() {
 
 export function AppRoot() {
   const actions = useActions();
-  const state = useFinanceState();
+  const { clearConfirmVisible, isReady, message } = useFinanceSelector(
+    (state) => ({
+      clearConfirmVisible: state.clearConfirmVisible,
+      isReady: state.isReady,
+      message: state.message
+    }),
+    shallowEqual
+  );
   const [activeTab, setActiveTab] = useState<TabKey>("home");
   const openSettings = () => setActiveTab("settings");
 
@@ -65,20 +72,20 @@ export function AppRoot() {
                 />
               </Pressable>
             </View>
-            <Text style={styles.headerMessage}>{state.message}</Text>
+            <Text style={styles.headerMessage}>{message}</Text>
           </View>
 
           <View style={styles.content}>
-            {!state.isReady && (
+            {!isReady && (
               <View style={styles.bootState}>
                 <Text style={styles.bootText}>Preparing local memory...</Text>
               </View>
             )}
-            {state.isReady && activeTab === "home" && <HomeScreen onOpenSettings={openSettings} />}
-            {state.isReady && activeTab === "memory" && <MemoryScreen />}
-            {state.isReady && activeTab === "budget" && <BudgetScreen onOpenSettings={openSettings} />}
-            {state.isReady && activeTab === "patterns" && <PatternsScreen />}
-            {state.isReady && activeTab === "settings" && <SettingsScreen />}
+            {isReady && activeTab === "home" && <HomeScreen onOpenSettings={openSettings} />}
+            {isReady && activeTab === "memory" && <MemoryScreen />}
+            {isReady && activeTab === "budget" && <BudgetScreen onOpenSettings={openSettings} />}
+            {isReady && activeTab === "patterns" && <PatternsScreen />}
+            {isReady && activeTab === "settings" && <SettingsScreen />}
           </View>
 
           <View style={styles.tabBar}>
@@ -107,7 +114,7 @@ export function AppRoot() {
             onCancel={() => actions.setClearConfirmVisible(false)}
             onConfirm={() => void actions.confirmClearAll()}
             title="Clear local finance memory?"
-            visible={state.clearConfirmVisible}
+            visible={clearConfirmVisible}
           />
         </KeyboardAvoidingView>
       </SafeAreaView>

@@ -1,10 +1,10 @@
 import React, { memo, useCallback, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { AccountPicker, ContextPicker, SegmentedControl } from "../../components";
-import { EntryType, SpendingContext, SpendingMoment } from "../spendingMemory.types";
+import { EntryType, MoneyAccount, SpendingContext, SpendingMoment } from "../spendingMemory.types";
 import { getDefaultMomentAccount } from "../../lib/analysis";
 import { formatAmountInput } from "../../lib/formatMoney";
-import { useActions, useDerived, useFinanceState } from "../../state/useFinance";
+import { useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
 import { colors } from "../../theme/colors";
 import { styles } from "../../theme/styles/app";
 
@@ -14,7 +14,7 @@ type MomentEditFormProps = {
   onSaved: () => void;
 };
 
-function buildEditForm(moment: SpendingMoment, accounts: ReturnType<typeof useFinanceState>["accounts"]) {
+function buildEditForm(moment: SpendingMoment, accounts: MoneyAccount[]) {
   return {
     amountText: formatAmountInput(String(moment.amount)),
     label: moment.label ?? "",
@@ -29,7 +29,7 @@ function buildEditForm(moment: SpendingMoment, accounts: ReturnType<typeof useFi
 function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormProps) {
   const actions = useActions();
   const { categoryLabels } = useDerived();
-  const { accounts } = useFinanceState();
+  const accounts = useFinanceSelector((state) => state.accounts);
   const initial = buildEditForm(moment, accounts);
 
   const [amountText, setAmountText] = useState(initial.amountText);

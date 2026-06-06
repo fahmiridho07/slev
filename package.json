@@ -9,7 +9,7 @@
     "android": "expo run:android",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test:finance": "tsc -p tsconfig.test.json && node .tmp-tests/tests/financeEngine.test.js && node .tmp-tests/tests/analysis.test.js && node .tmp-tests/tests/formatMoney.test.js && node .tmp-tests/tests/financeReducer.test.js",
+    "test:finance": "tsc -p tsconfig.test.json && node .tmp-tests/tests/financeEngine.test.js && node .tmp-tests/tests/analysis.test.js && node .tmp-tests/tests/formatMoney.test.js && node .tmp-tests/tests/financeReducer.test.js && node .tmp-tests/tests/shallowEqual.test.js",
     "ios": "expo run:ios"
   },
   "dependencies": {

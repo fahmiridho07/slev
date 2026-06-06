@@ -5,7 +5,7 @@ import { DeleteConfirmDialog, EmptyState, MomentRow } from "../components";
 import { MomentEditForm } from "../features/memory/MomentEditForm";
 import { SpendingMoment } from "../features/spendingMemory.types";
 import { buildRepeatHints, filterMoments, getMomentTitle, groupMomentsByRecallRange } from "../lib/analysis";
-import { useActions, useFinanceState } from "../state/useFinance";
+import { useActions, useFinanceSelector } from "../state/useFinance";
 import { colors } from "../theme/colors";
 import { styles } from "../theme/styles/app";
 
@@ -55,7 +55,7 @@ type MemorySection = {
 
 function MemoryScreenComponent() {
   const actions = useActions();
-  const { moments } = useFinanceState();
+  const moments = useFinanceSelector((state) => state.moments);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [query, setQuery] = useState("");

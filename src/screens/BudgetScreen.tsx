@@ -7,7 +7,7 @@ import { BudgetLimitsPanel } from "../features/budget/BudgetLimitsPanel";
 import { MonthlyPlanPanel } from "../features/budget/MonthlyPlanPanel";
 import { SavingsGoalsPanel } from "../features/budget/SavingsGoalsPanel";
 import { BudgetTabKey } from "../features/app.types";
-import { useActions, useDerived, useFinanceState } from "../state/useFinance";
+import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
 import { styles } from "../theme/styles/app";
 
 type BudgetScreenProps = {
@@ -26,7 +26,19 @@ function BudgetScreenComponent({ onOpenSettings }: BudgetScreenProps) {
     moments,
     savingsGoals,
     transfers
-  } = useFinanceState();
+  } = useFinanceSelector(
+    (state) => ({
+      accounts: state.accounts,
+      balanceSnapshots: state.balanceSnapshots,
+      budgetLimits: state.budgetLimits,
+      categoryModes: state.categoryModes,
+      expenseCategories: state.expenseCategories,
+      moments: state.moments,
+      savingsGoals: state.savingsGoals,
+      transfers: state.transfers
+    }),
+    shallowEqual
+  );
   const [activeBudgetTab, setActiveBudgetTab] = useState<BudgetTabKey>("plan");
 
   return (

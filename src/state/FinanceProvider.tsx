@@ -1,4 +1,4 @@
-import React, { createContext, useMemo, useReducer, useRef } from "react";
+import React, { createContext, useEffect, useMemo, useReducer, useRef } from "react";
 import { MonthlyPlan, PatternFeedbackResponse } from "../features/spendingMemory.types";
 import { getRepeatSuggestions } from "../lib/analysis";
 import {
@@ -10,6 +10,7 @@ import { generateSpendingPatterns } from "../lib/spendingMemoryPatterns";
 import { getCategoryLabels } from "../services/categoryRepository";
 import { createFinanceActions, FinanceActions } from "./financeActions";
 import { financeReducer, FinanceState, initialFinanceState } from "./financeReducer";
+import { createFinanceStore, FinanceStore } from "./financeStore";
 
 export type FinanceDerived = {
   categoryLabels: ReturnType<typeof getCategoryLabels>;
@@ -25,11 +26,21 @@ export type FinanceDerived = {
 export const ActionsContext = createContext<FinanceActions | null>(null);
 export const DerivedContext = createContext<FinanceDerived | null>(null);
 export const StateContext = createContext<FinanceState | null>(null);
+export const FinanceStoreContext = createContext<FinanceStore | null>(null);
 
 export function FinanceProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(financeReducer, initialFinanceState);
   const stateRef = useRef(state);
   stateRef.current = state;
+
+  const store = useMemo(
+    () => createFinanceStore(() => stateRef.current),
+    []
+  );
+
+  useEffect(() => {
+    store.notify();
+  }, [state, store]);
 
   const actions = useMemo(
     () => createFinanceActions(dispatch, () => stateRef.current),
@@ -96,10 +107,12 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <StateContext.Provider value={state}>
-      <DerivedContext.Provider value={derived}>
-        <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
-      </DerivedContext.Provider>
-    </StateContext.Provider>
+    <FinanceStoreContext.Provider value={store}>
+      <StateContext.Provider value={state}>
+        <DerivedContext.Provider value={derived}>
+          <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
+        </DerivedContext.Provider>
+      </StateContext.Provider>
+    </FinanceStoreContext.Provider>
   );
 }

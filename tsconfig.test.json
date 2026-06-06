@@ -17,6 +17,7 @@
     "src/lib/formatMoney.ts",
     "src/lib/spendingMemoryPatterns.ts",
     "src/state/financeReducer.ts",
+    "src/state/shallowEqual.ts",
     "tests/**/*.ts"
   ]
 }
