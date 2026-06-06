@@ -214,7 +214,7 @@ function normalizeMoment(value: unknown): SpendingMoment {
     id: source.id || createId(),
     amount: typeof source.amount === "number" ? Math.max(0, Math.round(source.amount)) : 0,
     occurredAt: source.occurredAt || now,
-    label: type === "income" ? cleanOptionalText(source.label) : cleanOptionalText(source.label),
+    label: cleanOptionalText(source.label),
     context: type === "income" ? "Other" : normalizeSpendingContext(source.context),
     note: cleanOptionalText(source.note),
     type,

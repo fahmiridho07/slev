@@ -86,7 +86,8 @@ export async function runMigrations(): Promise<void> {
     if (version < SCHEMA_VERSION) {
       await setSchemaVersion(SCHEMA_VERSION);
     }
-  } catch {
+  } catch (error) {
+    console.warn("[slev] migration failed", error);
     return;
   }
 }
