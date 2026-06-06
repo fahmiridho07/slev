@@ -460,6 +460,28 @@ export function getRepeatHint(moment: SpendingMoment, moments: SpendingMoment[])
   return count >= 3 ? `${count} this week` : undefined;
 }
 
+export function buildRepeatHints(moments: SpendingMoment[]): Map<string, string> {
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const contextCounts = new Map<SpendingContext, number>();
+
+  for (const item of moments) {
+    if (item.type === "expense" && Date.parse(item.occurredAt) >= weekAgo) {
+      contextCounts.set(item.context, (contextCounts.get(item.context) ?? 0) + 1);
+    }
+  }
+
+  const hints = new Map<string, string>();
+  for (const moment of moments) {
+    if (moment.type === "income") continue;
+    const count = contextCounts.get(moment.context) ?? 0;
+    if (count >= 3) {
+      hints.set(moment.id, `${count} this week`);
+    }
+  }
+
+  return hints;
+}
+
 export function groupMomentsByRecallRange(moments: SpendingMoment[]) {
   const now = new Date();
   const todayKey = dateKey(now);

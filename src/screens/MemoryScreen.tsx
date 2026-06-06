@@ -4,7 +4,7 @@ import { Pressable, SectionList, Text, TextInput, View } from "react-native";
 import { DeleteConfirmDialog, EmptyState, MomentRow } from "../components";
 import { MomentEditForm } from "../features/memory/MomentEditForm";
 import { SpendingMoment } from "../features/spendingMemory.types";
-import { filterMoments, getMomentTitle, groupMomentsByRecallRange } from "../lib/analysis";
+import { buildRepeatHints, filterMoments, getMomentTitle, groupMomentsByRecallRange } from "../lib/analysis";
 import { useActions, useFinanceState } from "../state/useFinance";
 import { colors } from "../theme/colors";
 import { styles } from "../theme/styles/app";
@@ -61,6 +61,7 @@ function MemoryScreenComponent() {
   const [query, setQuery] = useState("");
   const [pendingDeleteMoment, setPendingDeleteMoment] = useState<SpendingMoment | null>(null);
 
+  const repeatHints = useMemo(() => buildRepeatHints(moments), [moments]);
   const filteredMoments = useMemo(() => filterMoments(moments, query), [moments, query]);
   const sections = useMemo<MemorySection[]>(
     () =>
@@ -96,10 +97,11 @@ function MemoryScreenComponent() {
           onDelete={setPendingDeleteMoment}
           onSaved={handleSaved}
           onStartEdit={startEditing}
+          repeatHint={repeatHints.get(item.id)}
         />
       </View>
     ),
-    [cancelEdit, editingId, handleSaved, startEditing]
+    [cancelEdit, editingId, handleSaved, repeatHints, startEditing]
   );
 
   const keyExtractor = useCallback((item: SpendingMoment) => item.id, []);

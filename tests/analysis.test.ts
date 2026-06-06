@@ -1,6 +1,7 @@
 import {
   buildAccountActivity,
   buildCashflowWeeks,
+  buildRepeatHints,
   buildSpendingTrend,
   dateKey,
   filterMoments,
@@ -76,6 +77,26 @@ test("getRepeatHint appears after three same-context expenses in seven days", ()
 
   assertEqual(getRepeatHint(target, moments), "3 this week", "repeat hint");
   assertEqual(getRepeatHint({ ...target, type: "income", source: "Salary" }, moments), undefined, "income skipped");
+});
+
+test("buildRepeatHints matches getRepeatHint for every moment in one pass", () => {
+  const now = Date.now();
+  const recent = new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString();
+  const old = new Date(now - 10 * 24 * 60 * 60 * 1000).toISOString();
+  const moments = [
+    moment({ amount: 10000, context: "Coffee", occurredAt: recent }),
+    moment({ amount: 12000, context: "Coffee", occurredAt: recent }),
+    moment({ amount: 8000, context: "Coffee", occurredAt: recent }),
+    moment({ amount: 500000, type: "income", source: "Salary", occurredAt: recent }),
+    moment({ amount: 15000, context: "Food", occurredAt: old })
+  ];
+  const hints = buildRepeatHints(moments);
+
+  moments.forEach((item) => {
+    assertEqual(hints.get(item.id), getRepeatHint(item, moments), `hint for ${item.id}`);
+  });
+  assertEqual(hints.get(moments[3]!.id), undefined, "income omitted from map");
+  assertEqual(hints.get(moments[4]!.id), undefined, "stale context omitted from map");
 });
 
 test("sumMoments and sumExpenseMoments total amounts by type", () => {
