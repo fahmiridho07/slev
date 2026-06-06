@@ -18,6 +18,7 @@ export const STORAGE_KEYS = {
   manualTemplates: "slev_manual_templates",
   categoryModes: "slev_category_modes",
   savingsGoals: "slev_savings_goals",
+  recurringBills: "slev_recurring_bills",
   balanceSnapshots: "slev_balance_snapshots",
   expenseCategories: "slev_expense_categories"
 } as const;
@@ -32,6 +33,7 @@ export const EXPORTABLE_STORAGE_KEYS = [
   STORAGE_KEYS.manualTemplates,
   STORAGE_KEYS.categoryModes,
   STORAGE_KEYS.savingsGoals,
+  STORAGE_KEYS.recurringBills,
   STORAGE_KEYS.balanceSnapshots,
   STORAGE_KEYS.expenseCategories
 ] as const;

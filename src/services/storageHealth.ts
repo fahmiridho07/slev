@@ -37,6 +37,11 @@ const CORRUPT_STORAGE_CHECKS: Array<{ check: () => boolean; key: string; label: 
     label: "Savings goals"
   },
   {
+    check: () => isKeyCorrupt(STORAGE_KEYS.recurringBills),
+    key: STORAGE_KEYS.recurringBills,
+    label: "Recurring bills"
+  },
+  {
     check: () => isKeyCorrupt(STORAGE_KEYS.balanceSnapshots),
     key: STORAGE_KEYS.balanceSnapshots,
     label: "Balance snapshots"
