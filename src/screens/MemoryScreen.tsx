@@ -1,81 +1,36 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useCallback, useMemo, useState } from "react";
 import { Pressable, SectionList, Text, TextInput, View } from "react-native";
-import { AccountPicker, ContextPicker, DeleteConfirmDialog, EmptyState, MomentRow, SegmentedControl } from "../components";
-import { EntryType, SpendingContext, SpendingMoment } from "../features/spendingMemory.types";
-import { filterMoments, getDefaultMomentAccount, getMomentTitle, getRepeatHint, groupMomentsByRecallRange } from "../lib/analysis";
-import { formatAmountInput } from "../lib/formatMoney";
-import { useFinance } from "../state/useFinance";
+import { DeleteConfirmDialog, EmptyState, MomentRow } from "../components";
+import { MomentEditForm } from "../features/memory/MomentEditForm";
+import { SpendingMoment } from "../features/spendingMemory.types";
+import { filterMoments, getMomentTitle, groupMomentsByRecallRange } from "../lib/analysis";
+import { useActions, useFinanceState } from "../state/useFinance";
 import { colors } from "../theme/colors";
 import { styles } from "../theme/styles/app";
 
 type MemoryMomentItemProps = {
-  accounts: ReturnType<typeof useFinance>["state"]["accounts"];
-  categoryLabels: SpendingContext[];
-  editingId: string | null;
+  isEditing: boolean;
   moment: SpendingMoment;
-  moments: SpendingMoment[];
   onCancelEdit: () => void;
   onDelete: (moment: SpendingMoment) => void;
-  onSaveEdit: (
-    id: string,
-    input: {
-      amountText: string;
-      label: string;
-      context: SpendingContext;
-      note: string;
-      type: EntryType;
-      source: string;
-      accountLabel: string;
-    }
-  ) => void;
+  onSaved: () => void;
   onStartEdit: (moment: SpendingMoment) => void;
-  editAccountLabel: string;
-  editAmount: string;
-  editContext: SpendingContext;
-  editLabel: string;
-  editNote: string;
-  editSource: string;
-  editType: EntryType;
-  setEditAccountLabel: (value: string) => void;
-  setEditAmount: (value: string) => void;
-  setEditContext: (value: SpendingContext) => void;
-  setEditLabel: (value: string) => void;
-  setEditNote: (value: string) => void;
-  setEditSource: (value: string) => void;
-  setEditType: (value: EntryType) => void;
+  repeatHint?: string;
 };
 
 const MemoryMomentItem = memo(function MemoryMomentItem({
-  accounts,
-  categoryLabels,
-  editingId,
+  isEditing,
   moment,
-  moments,
   onCancelEdit,
   onDelete,
-  onSaveEdit,
+  onSaved,
   onStartEdit,
-  editAccountLabel,
-  editAmount,
-  editContext,
-  editLabel,
-  editNote,
-  editSource,
-  editType,
-  setEditAccountLabel,
-  setEditAmount,
-  setEditContext,
-  setEditLabel,
-  setEditNote,
-  setEditSource,
-  setEditType
+  repeatHint
 }: MemoryMomentItemProps) {
-  const isEditing = editingId === moment.id;
-
   return (
     <View>
-      <MomentRow moment={moment} repeatHint={getRepeatHint(moment, moments)} />
+      <MomentRow moment={moment} repeatHint={repeatHint} />
       <View style={styles.rowActions}>
         <Pressable onPress={() => onStartEdit(moment)} style={styles.textButton}>
           <Ionicons name="create-outline" size={16} color={colors.greenDark} />
@@ -87,72 +42,7 @@ const MemoryMomentItem = memo(function MemoryMomentItem({
         </Pressable>
       </View>
 
-      {isEditing && (
-        <View style={styles.editPanel}>
-          <TextInput
-            keyboardType="number-pad"
-            onChangeText={(value) => setEditAmount(formatAmountInput(value))}
-            placeholder="Amount"
-            placeholderTextColor={colors.muted}
-            style={styles.input}
-            value={editAmount}
-          />
-          <TextInput
-            onChangeText={editType === "income" ? setEditSource : setEditLabel}
-            placeholder={editType === "income" ? "Source" : "Label"}
-            placeholderTextColor={colors.muted}
-            style={styles.input}
-            value={editType === "income" ? editSource : editLabel}
-          />
-          <SegmentedControl
-            compact
-            options={[
-              { label: "Expense", value: "expense" },
-              { label: "Income", value: "income" }
-            ]}
-            selected={editType}
-            onSelect={setEditType}
-          />
-          {editType === "expense" && (
-            <ContextPicker categories={categoryLabels} selected={editContext} onSelect={setEditContext} compact />
-          )}
-          <AccountPicker
-            accounts={accounts}
-            label={editType === "income" ? "Received in" : "Paid from"}
-            selected={editAccountLabel}
-            onSelect={setEditAccountLabel}
-          />
-          <TextInput
-            multiline
-            onChangeText={setEditNote}
-            placeholder="Note"
-            placeholderTextColor={colors.muted}
-            style={[styles.input, styles.noteInput]}
-            value={editNote}
-          />
-          <View style={styles.editActions}>
-            <Pressable onPress={onCancelEdit} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Cancel</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                onSaveEdit(moment.id, {
-                  amountText: editAmount,
-                  label: editLabel,
-                  context: editContext,
-                  note: editNote,
-                  type: editType,
-                  source: editSource,
-                  accountLabel: editAccountLabel
-                });
-              }}
-              style={styles.smallPrimaryButton}
-            >
-              <Text style={styles.primaryButtonText}>Save</Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
+      {isEditing && <MomentEditForm moment={moment} onCancel={onCancelEdit} onSaved={onSaved} />}
     </View>
   );
 });
@@ -164,18 +54,10 @@ type MemorySection = {
 };
 
 function MemoryScreenComponent() {
-  const { actions, derived, state } = useFinance();
-  const { accounts, moments } = state;
-  const { categoryLabels } = derived;
+  const actions = useActions();
+  const { moments } = useFinanceState();
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editAmount, setEditAmount] = useState("");
-  const [editLabel, setEditLabel] = useState("");
-  const [editContext, setEditContext] = useState<SpendingContext>("Other");
-  const [editNote, setEditNote] = useState("");
-  const [editType, setEditType] = useState<EntryType>("expense");
-  const [editSource, setEditSource] = useState("");
-  const [editAccountLabel, setEditAccountLabel] = useState("");
   const [query, setQuery] = useState("");
   const [pendingDeleteMoment, setPendingDeleteMoment] = useState<SpendingMoment | null>(null);
 
@@ -190,40 +72,13 @@ function MemoryScreenComponent() {
     [filteredMoments]
   );
 
-  const startEditing = useCallback(
-    (moment: SpendingMoment) => {
-      setEditingId(moment.id);
-      setEditAmount(formatAmountInput(String(moment.amount)));
-      setEditLabel(moment.label ?? "");
-      setEditContext(moment.context);
-      setEditNote(moment.note ?? "");
-      setEditType(moment.type);
-      setEditSource(moment.source ?? "");
-      setEditAccountLabel(moment.accountLabel ?? getDefaultMomentAccount(moment.type, accounts));
-    },
-    [accounts]
-  );
+  const startEditing = useCallback((moment: SpendingMoment) => {
+    setEditingId(moment.id);
+  }, []);
 
   const cancelEdit = useCallback(() => setEditingId(null), []);
 
-  const saveEdit = useCallback(
-    (
-      id: string,
-      input: {
-        amountText: string;
-        label: string;
-        context: SpendingContext;
-        note: string;
-        type: EntryType;
-        source: string;
-        accountLabel: string;
-      }
-    ) => {
-      void actions.updateMoment(id, input);
-      setEditingId(null);
-    },
-    [actions]
-  );
+  const handleSaved = useCallback(() => setEditingId(null), []);
 
   const renderItem = useCallback(
     ({ item, index, section }: { item: SpendingMoment; index: number; section: MemorySection }) => (
@@ -235,48 +90,16 @@ function MemoryScreenComponent() {
         ]}
       >
         <MemoryMomentItem
-          accounts={accounts}
-          categoryLabels={categoryLabels}
-          editingId={editingId}
+          isEditing={editingId === item.id}
           moment={item}
-          moments={moments}
           onCancelEdit={cancelEdit}
           onDelete={setPendingDeleteMoment}
-          onSaveEdit={saveEdit}
+          onSaved={handleSaved}
           onStartEdit={startEditing}
-          editAccountLabel={editAccountLabel}
-          editAmount={editAmount}
-          editContext={editContext}
-          editLabel={editLabel}
-          editNote={editNote}
-          editSource={editSource}
-          editType={editType}
-          setEditAccountLabel={setEditAccountLabel}
-          setEditAmount={setEditAmount}
-          setEditContext={setEditContext}
-          setEditLabel={setEditLabel}
-          setEditNote={setEditNote}
-          setEditSource={setEditSource}
-          setEditType={setEditType}
         />
       </View>
     ),
-    [
-      accounts,
-      cancelEdit,
-      categoryLabels,
-      editAccountLabel,
-      editAmount,
-      editContext,
-      editLabel,
-      editNote,
-      editSource,
-      editType,
-      editingId,
-      moments,
-      saveEdit,
-      startEditing
-    ]
+    [cancelEdit, editingId, handleSaved, startEditing]
   );
 
   const keyExtractor = useCallback((item: SpendingMoment) => item.id, []);
