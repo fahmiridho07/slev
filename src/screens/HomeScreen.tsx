@@ -10,12 +10,14 @@ type HomeScreenProps = {
 };
 
 function HomeScreenComponent({ onOpenSettings }: HomeScreenProps) {
-  const { latestBalanceTotal, monthlySummary } = useDerived();
+  const { allocationPlan, hasMonthlyPlan, latestBalanceTotal, monthlySummary } = useDerived();
   const monthlyPlan = useFinanceSelector((state) => state.monthlyPlan);
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
       <HomeMoneyPulse
+        dailyFlexibleRoom={allocationPlan.dailyFlexibleRoom}
+        hasMonthlyPlan={hasMonthlyPlan}
         latestBalanceTotal={latestBalanceTotal}
         monthlyPlan={monthlyPlan}
         monthlySummary={monthlySummary}

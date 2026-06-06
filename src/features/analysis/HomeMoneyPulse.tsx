@@ -9,12 +9,16 @@ import { colors } from "../../theme/colors";
 import { styles } from "../../theme/styles/app";
 
 type HomeMoneyPulseProps = {
+  dailyFlexibleRoom: number;
+  hasMonthlyPlan: boolean;
   latestBalanceTotal: number;
   monthlyPlan: MonthlyPlan | null;
   monthlySummary: MonthlySummary;
 };
 
 export function HomeMoneyPulse({
+  dailyFlexibleRoom,
+  hasMonthlyPlan,
   latestBalanceTotal,
   monthlyPlan,
   monthlySummary
@@ -22,9 +26,21 @@ export function HomeMoneyPulse({
   const savingsTarget = monthlyPlan?.savingsTarget ?? 0;
   const estimatedSavings = Math.max(0, monthlySummary.net);
   const netIsNegative = monthlySummary.net < 0;
+  const hasFlexibleBudget = (monthlyPlan?.flexibleBudget ?? 0) > 0;
+  const showSafeToSpend = hasMonthlyPlan && hasFlexibleBudget;
 
   return (
     <View style={styles.pulsePanel}>
+      <View style={styles.pulseWideItem}>
+        <View style={[styles.pulseIconBadge, styles.pulseIconSpending]}>
+          <Ionicons name="today-outline" size={17} color={colors.coral} />
+        </View>
+        <Text style={styles.pulseSavingsText}>
+          {showSafeToSpend
+            ? `Safe to spend today: ${formatCompactRupiah(dailyFlexibleRoom)}`
+            : "Set a monthly plan to see today's safe-to-spend"}
+        </Text>
+      </View>
       <View style={[styles.pulseItem, netIsNegative ? styles.pulseItemDanger : styles.pulseItemIncome]}>
         <View style={styles.pulseTopRow}>
           <View style={[styles.pulseIconBadge, netIsNegative ? styles.pulseIconDanger : styles.pulseIconIncome]}>

@@ -2,7 +2,10 @@ import React, { createContext, useEffect, useMemo, useReducer, useRef } from "re
 import { PatternFeedbackResponse } from "../features/spendingMemory.types";
 import { getRepeatSuggestions } from "../lib/analysis";
 import {
+  AllocationPlan,
+  buildAllocationPlan,
   buildCurrentMonthSummary,
+  getLatestBalanceSnapshots,
   getLatestBalanceTotal,
   getProjectedBalanceSnapshots
 } from "../lib/financeEngine";
@@ -13,8 +16,10 @@ import { financeReducer, initialFinanceState } from "./financeReducer";
 import { createFinanceStore, FinanceStore } from "./financeStore";
 
 export type FinanceDerived = {
+  allocationPlan: AllocationPlan;
   categoryLabels: ReturnType<typeof getCategoryLabels>;
   feedbackByPattern: Map<string, PatternFeedbackResponse>;
+  hasMonthlyPlan: boolean;
   latestBalanceTotal: number;
   monthlySummary: ReturnType<typeof buildCurrentMonthSummary>;
   patterns: ReturnType<typeof generateSpendingPatterns>;
@@ -79,10 +84,39 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     () => getCategoryLabels(state.expenseCategories),
     [state.expenseCategories]
   );
+  const hasMonthlyPlan = Boolean(state.monthlyPlan);
+  const allocationPlan = useMemo(
+    () => {
+      const currentBalances = getLatestBalanceSnapshots(projectedBalanceSnapshots);
+      const hasBalanceEvidence =
+        state.balanceSnapshots.length > 0
+        || monthlySummary.income > 0
+        || monthlySummary.expense > 0
+        || state.transfers.length > 0;
+
+      return buildAllocationPlan({
+        accounts: state.accounts,
+        hasBalanceEvidence,
+        latestSnapshots: currentBalances,
+        monthlyPlan: state.monthlyPlan,
+        monthlySummary
+      });
+    },
+    [
+      monthlySummary,
+      projectedBalanceSnapshots,
+      state.accounts,
+      state.balanceSnapshots.length,
+      state.monthlyPlan,
+      state.transfers.length
+    ]
+  );
   const derived = useMemo<FinanceDerived>(
     () => ({
+      allocationPlan,
       categoryLabels,
       feedbackByPattern,
+      hasMonthlyPlan,
       latestBalanceTotal,
       monthlySummary,
       patterns,
@@ -90,8 +124,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       repeatSuggestions
     }),
     [
+      allocationPlan,
       categoryLabels,
       feedbackByPattern,
+      hasMonthlyPlan,
       latestBalanceTotal,
       monthlySummary,
       patterns,
