@@ -48,6 +48,7 @@ import {
   saveMonthlyPlan,
   saveSavingsGoal
 } from "../services/manualFinanceRepository";
+import { runMigrations } from "../services/storageSchema";
 import {
   clearSpendingMemory,
   deleteSpendingMoment,
@@ -114,6 +115,7 @@ export function createFinanceActions(
   }
 
   async function boot() {
+    await runMigrations();
     await reload();
     dispatch({ type: "set_ready", ready: true });
   }

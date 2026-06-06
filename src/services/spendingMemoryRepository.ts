@@ -37,7 +37,6 @@ type LegacyTransaction = {
 };
 
 export async function listSpendingMoments(): Promise<SpendingMoment[]> {
-  await migrateSpendingMemoryV2();
   const result = await readJson<unknown>(MOMENTS_KEY);
   if (result.status !== "ok" || !Array.isArray(result.value)) return [];
   return sortMoments(result.value.map(normalizeMoment).filter((moment) => moment.amount > 0));
@@ -131,7 +130,7 @@ export function isPatternFeedbackStorageCorrupt(): boolean {
   return isKeyCorrupt(FEEDBACK_KEY);
 }
 
-async function migrateSpendingMemoryV2(): Promise<void> {
+export async function runSpendingMemoryV2Migration(): Promise<void> {
   const alreadyMigrated = await readRaw(V2_MIGRATION_KEY);
   if (alreadyMigrated === "true") return;
 
