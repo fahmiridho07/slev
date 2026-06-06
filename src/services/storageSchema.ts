@@ -41,10 +41,21 @@ type MigrationStep = {
   run: () => Promise<void>;
 };
 
+let simulateMigrationFailure = false;
+
+export function setSimulateMigrationFailure(enabled: boolean): void {
+  simulateMigrationFailure = enabled;
+}
+
 const MIGRATIONS: MigrationStep[] = [
   {
     toVersion: 2,
-    run: runSpendingMemoryV2Migration
+    run: async () => {
+      if (simulateMigrationFailure) {
+        throw new Error("simulated migration failure");
+      }
+      await runSpendingMemoryV2Migration();
+    }
   }
 ];
 

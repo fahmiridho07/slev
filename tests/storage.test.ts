@@ -1,6 +1,7 @@
 import { listSpendingMoments, saveSpendingMoment } from "../src/services/spendingMemoryRepository";
-import { exportAllData, importAllData } from "../src/services/storageBackup";
+import { exportAllData, exportAllDataWithReport, importAllData } from "../src/services/storageBackup";
 import {
+  corruptBackupKeyPrefix,
   isKeyCorrupt,
   readJson,
   resetStorageDriver,
@@ -9,8 +10,13 @@ import {
   writeJson,
   writeRaw
 } from "../src/services/storage";
-import { listCorruptStorageIssues } from "../src/services/storageHealth";
-import { getSchemaVersion, runMigrations, STORAGE_KEYS } from "../src/services/storageSchema";
+import { listCorruptStorageIssues, resetStorageKey } from "../src/services/storageHealth";
+import {
+  getSchemaVersion,
+  runMigrations,
+  setSimulateMigrationFailure,
+  STORAGE_KEYS
+} from "../src/services/storageSchema";
 
 declare const process: {
   exitCode?: number;
@@ -128,6 +134,92 @@ test("listCorruptStorageIssues surfaces damaged collections", async () => {
 
   const issues = listCorruptStorageIssues();
   assertEqual(issues.some((issue) => issue.key === STORAGE_KEYS.budgetLimits), true, "budget issue listed");
+});
+
+test("exportAllDataWithReport skips corrupt collections but keeps healthy exports", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await driver.setItem(STORAGE_KEYS.moments, "{bad-json");
+  await readJson(STORAGE_KEYS.moments);
+  await driver.setItem(
+    STORAGE_KEYS.accounts,
+    JSON.stringify([
+      {
+        id: "acct-1",
+        label: "Cash",
+        kind: "cash",
+        isIncomeHub: true,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z"
+      }
+    ])
+  );
+
+  const report = await exportAllDataWithReport();
+  assertEqual(report.skipped.includes(STORAGE_KEYS.moments), true, "corrupt moments skipped");
+  assertEqual(Array.isArray(report.backup.data[STORAGE_KEYS.accounts]), true, "healthy accounts exported");
+  assertEqual(report.backup.data[STORAGE_KEYS.moments], undefined, "corrupt moments omitted from JSON");
+});
+
+test("resetStorageKey clears only the targeted collection", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await driver.setItem(STORAGE_KEYS.moments, "{bad-json");
+  await readJson(STORAGE_KEYS.moments);
+  await driver.setItem(STORAGE_KEYS.accounts, "[]");
+
+  const reset = await resetStorageKey(STORAGE_KEYS.moments);
+  assertEqual(reset, true, "reset succeeds");
+  assertEqual(isKeyCorrupt(STORAGE_KEYS.moments), false, "corrupt flag cleared");
+  assertEqual(driver.store.has(STORAGE_KEYS.moments), false, "damaged moments key removed");
+  assertEqual(driver.store.has(STORAGE_KEYS.accounts), true, "sibling key preserved");
+
+  const written = await writeJson(STORAGE_KEYS.moments, []);
+  assertEqual(written, true, "writes succeed after reset");
+});
+
+test("corrupt backup pruning keeps at most three snapshots per source key", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  const prefix = corruptBackupKeyPrefix(STORAGE_KEYS.budgetLimits);
+  for (let index = 0; index < 5; index += 1) {
+    await driver.setItem(`${prefix}${1_000 + index}`, "{bad-json");
+  }
+
+  await driver.setItem(STORAGE_KEYS.budgetLimits, "{bad-json");
+  await readJson(STORAGE_KEYS.budgetLimits);
+
+  const backupKeys = [...driver.store.keys()].filter((key) => key.startsWith(prefix));
+  assertEqual(backupKeys.length <= 3, true, "at most three backups retained");
+});
+
+test("runMigrations warns and continues when a migration step throws", async () => {
+  const warnings: unknown[] = [];
+  const originalWarn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    warnings.push(args);
+  };
+
+  try {
+    setSimulateMigrationFailure(true);
+    const driver = createMemoryDriver();
+    setStorageDriver(driver);
+
+    await runMigrations();
+
+    assertEqual(
+      warnings.some((entry) => JSON.stringify(entry).includes("migration failed")),
+      true,
+      "migration failure logged"
+    );
+    assertEqual(await getSchemaVersion(), 0, "schema version not advanced after failure");
+  } finally {
+    setSimulateMigrationFailure(false);
+    console.warn = originalWarn;
+  }
 });
 
 test("exportAllData and importAllData round-trip finance collections", async () => {
