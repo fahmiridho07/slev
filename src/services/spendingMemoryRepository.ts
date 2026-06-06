@@ -5,7 +5,7 @@ import {
   SpendingMoment
 } from "../features/spendingMemory.types";
 import { normalizeSpendingContext } from "../data/spendingMemory";
-import { isKeyCorrupt, readJson, readRaw, removeKeys, writeJson, writeRaw } from "./storage";
+import { isKeyCorrupt, readJson, readRaw, removeKeys, WriteResult, writeJson, writeRaw } from "./storage";
 
 const MOMENTS_KEY = "slev_entries";
 const LEGACY_MOMENTS_KEY = "slev.spendingMoments.v1";
@@ -42,7 +42,7 @@ export async function listSpendingMoments(): Promise<SpendingMoment[]> {
   return sortMoments(result.value.map(normalizeMoment).filter((moment) => moment.amount > 0));
 }
 
-export async function saveSpendingMoment(input: MomentInput): Promise<SpendingMoment> {
+export async function saveSpendingMoment(input: MomentInput): Promise<WriteResult<SpendingMoment>> {
   const now = new Date().toISOString();
   const moment = normalizeMoment({
     ...input,
@@ -53,14 +53,14 @@ export async function saveSpendingMoment(input: MomentInput): Promise<SpendingMo
   });
 
   const moments = await listSpendingMoments();
-  await persistSpendingMoments([moment, ...moments]);
-  return moment;
+  const persisted = await persistSpendingMoments([moment, ...moments]);
+  return { data: moment, persisted };
 }
 
 export async function updateSpendingMoment(
   id: string,
   input: MomentInput
-): Promise<SpendingMoment[]> {
+): Promise<WriteResult<SpendingMoment[]>> {
   const moments = await listSpendingMoments();
   const updated = moments.map((moment) =>
     moment.id === id
@@ -73,15 +73,15 @@ export async function updateSpendingMoment(
       : moment
   );
 
-  await persistSpendingMoments(updated);
-  return sortMoments(updated);
+  const persisted = await persistSpendingMoments(updated);
+  return { data: sortMoments(updated), persisted };
 }
 
-export async function deleteSpendingMoment(id: string): Promise<SpendingMoment[]> {
+export async function deleteSpendingMoment(id: string): Promise<WriteResult<SpendingMoment[]>> {
   const moments = await listSpendingMoments();
   const updated = moments.filter((moment) => moment.id !== id);
-  await persistSpendingMoments(updated);
-  return updated;
+  const persisted = await persistSpendingMoments(updated);
+  return { data: updated, persisted };
 }
 
 export async function clearSpendingMemory(): Promise<boolean> {
@@ -110,7 +110,7 @@ export async function listPatternFeedback(): Promise<PatternFeedback[]> {
 export async function savePatternFeedback(
   patternId: string,
   response: PatternFeedbackResponse
-): Promise<PatternFeedback[]> {
+): Promise<WriteResult<PatternFeedback[]>> {
   const current = await listPatternFeedback();
   const next: PatternFeedback = {
     patternId,
@@ -118,8 +118,8 @@ export async function savePatternFeedback(
     createdAt: new Date().toISOString()
   };
   const updated = [next, ...current.filter((item) => item.patternId !== patternId)].slice(0, 100);
-  await persistPatternFeedback(updated);
-  return updated;
+  const persisted = await persistPatternFeedback(updated);
+  return { data: updated, persisted };
 }
 
 export function isMomentsStorageCorrupt(): boolean {

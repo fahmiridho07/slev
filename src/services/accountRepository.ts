@@ -1,5 +1,5 @@
 import { MoneyAccount, MoneyTransfer } from "../features/spendingMemory.types";
-import { isKeyCorrupt, readJson, removeKeys, writeJson } from "./storage";
+import { isKeyCorrupt, readJson, removeKeys, WriteResult, writeJson } from "./storage";
 
 const ACCOUNTS_KEY = "slev_accounts";
 const TRANSFERS_KEY = "slev_transfers";
@@ -36,7 +36,7 @@ export async function listMoneyAccounts(): Promise<MoneyAccount[]> {
   return accounts.length > 0 ? sortAccounts(normalizeIncomeHubs(accounts)) : DEFAULT_ACCOUNTS;
 }
 
-export async function saveMoneyAccount(input: AccountInput): Promise<MoneyAccount[]> {
+export async function saveMoneyAccount(input: AccountInput): Promise<WriteResult<MoneyAccount[]>> {
   const current = await listMoneyAccounts();
   const existing = input.id ? current.find((account) => account.id === input.id) : undefined;
   const now = new Date().toISOString();
@@ -46,23 +46,23 @@ export async function saveMoneyAccount(input: AccountInput): Promise<MoneyAccoun
     createdAt: existing?.createdAt ?? now,
     updatedAt: now
   });
-  if (!account) return current;
+  if (!account) return { data: current, persisted: true };
 
   const merged = [
     account,
     ...current.filter((item) => item.id !== account.id && item.label.toLowerCase() !== account.label.toLowerCase())
   ];
   const updated = sortAccounts(normalizeIncomeHubs(merged, account.isIncomeHub ? account.id : undefined));
-  await writeJson(ACCOUNTS_KEY, updated);
-  return updated;
+  const persisted = await writeJson(ACCOUNTS_KEY, updated);
+  return { data: updated, persisted };
 }
 
-export async function deleteMoneyAccount(id: string): Promise<MoneyAccount[]> {
+export async function deleteMoneyAccount(id: string): Promise<WriteResult<MoneyAccount[]>> {
   const current = await listMoneyAccounts();
   const remaining = current.filter((account) => account.id !== id);
   const updated = remaining.length > 0 ? sortAccounts(normalizeIncomeHubs(remaining)) : current;
-  await writeJson(ACCOUNTS_KEY, updated);
-  return updated;
+  const persisted = await writeJson(ACCOUNTS_KEY, updated);
+  return { data: updated, persisted };
 }
 
 export async function listMoneyTransfers(): Promise<MoneyTransfer[]> {
@@ -71,7 +71,7 @@ export async function listMoneyTransfers(): Promise<MoneyTransfer[]> {
   return result.value.map(normalizeMoneyTransfer).filter(isMoneyTransfer).sort(sortTransfers);
 }
 
-export async function saveMoneyTransfer(input: TransferInput): Promise<MoneyTransfer[]> {
+export async function saveMoneyTransfer(input: TransferInput): Promise<WriteResult<MoneyTransfer[]>> {
   const current = await listMoneyTransfers();
   const now = new Date().toISOString();
   const transfer = normalizeMoneyTransfer({
@@ -81,18 +81,18 @@ export async function saveMoneyTransfer(input: TransferInput): Promise<MoneyTran
     createdAt: now,
     updatedAt: now
   });
-  if (!transfer) return current;
+  if (!transfer) return { data: current, persisted: true };
 
   const updated = [transfer, ...current].slice(0, 200).sort(sortTransfers);
-  await writeJson(TRANSFERS_KEY, updated);
-  return updated;
+  const persisted = await writeJson(TRANSFERS_KEY, updated);
+  return { data: updated, persisted };
 }
 
-export async function deleteMoneyTransfer(id: string): Promise<MoneyTransfer[]> {
+export async function deleteMoneyTransfer(id: string): Promise<WriteResult<MoneyTransfer[]>> {
   const current = await listMoneyTransfers();
   const updated = current.filter((transfer) => transfer.id !== id);
-  await writeJson(TRANSFERS_KEY, updated);
-  return updated;
+  const persisted = await writeJson(TRANSFERS_KEY, updated);
+  return { data: updated, persisted };
 }
 
 export async function clearAccountsAndTransfers(): Promise<boolean> {

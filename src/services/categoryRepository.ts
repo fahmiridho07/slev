@@ -1,6 +1,6 @@
 import { DEFAULT_SPENDING_CONTEXTS, normalizeSpendingContext } from "../data/spendingMemory";
 import { ExpenseCategory, SpendingContext } from "../features/spendingMemory.types";
-import { isKeyCorrupt, readJson, removeKeys, writeJson } from "./storage";
+import { isKeyCorrupt, readJson, removeKeys, WriteResult, writeJson } from "./storage";
 
 const EXPENSE_CATEGORIES_KEY = "slev_expense_categories";
 
@@ -17,7 +17,7 @@ export async function listExpenseCategories(): Promise<ExpenseCategory[]> {
   return buildVisibleCategories(await listStoredCategories());
 }
 
-export async function saveExpenseCategory(input: CategoryInput): Promise<ExpenseCategory[]> {
+export async function saveExpenseCategory(input: CategoryInput): Promise<WriteResult<ExpenseCategory[]>> {
   const stored = await listStoredCategories();
   const visible = buildVisibleCategories(stored);
   const existing = input.id ? visible.find((category) => category.id === input.id) : undefined;
@@ -29,11 +29,11 @@ export async function saveExpenseCategory(input: CategoryInput): Promise<Expense
     createdAt: existing?.createdAt ?? now,
     updatedAt: now
   });
-  if (!category) return visible;
+  if (!category) return { data: visible, persisted: true };
   const duplicateVisible = visible.find(
     (item) => item.id !== category.id && item.label.toLowerCase() === category.label.toLowerCase()
   );
-  if (duplicateVisible) return visible;
+  if (duplicateVisible) return { data: visible, persisted: true };
 
   const updatedStored = [
     category,
@@ -41,15 +41,15 @@ export async function saveExpenseCategory(input: CategoryInput): Promise<Expense
       (item) => item.id !== category.id && item.label.toLowerCase() !== category.label.toLowerCase()
     )
   ];
-  await writeJson(EXPENSE_CATEGORIES_KEY, compactStoredCategories(updatedStored));
-  return buildVisibleCategories(updatedStored);
+  const persisted = await writeJson(EXPENSE_CATEGORIES_KEY, compactStoredCategories(updatedStored));
+  return { data: buildVisibleCategories(updatedStored), persisted };
 }
 
-export async function deleteExpenseCategory(id: string): Promise<ExpenseCategory[]> {
+export async function deleteExpenseCategory(id: string): Promise<WriteResult<ExpenseCategory[]>> {
   const stored = await listStoredCategories();
   const visible = buildVisibleCategories(stored);
   const category = visible.find((item) => item.id === id);
-  if (!category) return visible;
+  if (!category) return { data: visible, persisted: true };
   const categoryKey = category.label.toLowerCase();
 
   const updatedStored = category.isDefault
@@ -63,8 +63,8 @@ export async function deleteExpenseCategory(id: string): Promise<ExpenseCategory
       ]
     : stored.filter((item) => item.id !== category.id);
 
-  await writeJson(EXPENSE_CATEGORIES_KEY, compactStoredCategories(updatedStored));
-  return buildVisibleCategories(updatedStored);
+  const persisted = await writeJson(EXPENSE_CATEGORIES_KEY, compactStoredCategories(updatedStored));
+  return { data: buildVisibleCategories(updatedStored), persisted };
 }
 
 export async function clearExpenseCategories(): Promise<boolean> {

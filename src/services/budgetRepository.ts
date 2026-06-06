@@ -1,6 +1,6 @@
 import { DEFAULT_SPENDING_CONTEXTS, normalizeSpendingContext } from "../data/spendingMemory";
 import { BudgetLimit, BudgetPeriod, SpendingContext } from "../features/spendingMemory.types";
-import { isKeyCorrupt, readJson, removeKeys, writeJson } from "./storage";
+import { isKeyCorrupt, readJson, removeKeys, WriteResult, writeJson } from "./storage";
 
 const BUDGET_LIMITS_KEY = "slev_budget_limits";
 
@@ -16,10 +16,10 @@ export async function listBudgetLimits(): Promise<BudgetLimit[]> {
   return result.value.map(normalizeBudgetLimit).filter(Boolean) as BudgetLimit[];
 }
 
-export async function saveBudgetLimit(input: BudgetLimitInput): Promise<BudgetLimit[]> {
+export async function saveBudgetLimit(input: BudgetLimitInput): Promise<WriteResult<BudgetLimit[]>> {
   const current = await listBudgetLimits();
   const limit = normalizeBudgetLimit(input);
-  if (!limit) return current;
+  if (!limit) return { data: current, persisted: true };
 
   const updated = [
     limit,
@@ -29,15 +29,15 @@ export async function saveBudgetLimit(input: BudgetLimitInput): Promise<BudgetLi
     return indexDiff !== 0 ? indexDiff : a.category.localeCompare(b.category);
   });
 
-  await persistBudgetLimits(updated);
-  return updated;
+  const persisted = await persistBudgetLimits(updated);
+  return { data: updated, persisted };
 }
 
-export async function deleteBudgetLimit(category: SpendingContext): Promise<BudgetLimit[]> {
+export async function deleteBudgetLimit(category: SpendingContext): Promise<WriteResult<BudgetLimit[]>> {
   const current = await listBudgetLimits();
   const updated = current.filter((item) => item.category !== category);
-  await persistBudgetLimits(updated);
-  return updated;
+  const persisted = await persistBudgetLimits(updated);
+  return { data: updated, persisted };
 }
 
 export async function clearBudgetLimits(): Promise<boolean> {

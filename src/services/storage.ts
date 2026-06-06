@@ -12,6 +12,11 @@ export type ReadJsonResult<T = unknown> =
   | { status: "ok"; value: T }
   | { status: "corrupt"; raw: string };
 
+export type WriteResult<T> = {
+  data: T;
+  persisted: boolean;
+};
+
 const defaultDriver: StorageDriver = {
   getItem: (key) => AsyncStorage.getItem(key),
   setItem: (key, value) => AsyncStorage.setItem(key, value),

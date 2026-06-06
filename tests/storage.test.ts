@@ -9,6 +9,7 @@ import {
   writeJson,
   writeRaw
 } from "../src/services/storage";
+import { listCorruptStorageIssues } from "../src/services/storageHealth";
 import { getSchemaVersion, runMigrations, STORAGE_KEYS } from "../src/services/storageSchema";
 
 declare const process: {
@@ -100,16 +101,46 @@ test("runMigrations is idempotent for legacy spending memory imports", async () 
   assertEqual(secondVersion, 2, "schema version stays stable");
 });
 
+test("saveSpendingMoment reports write failure on corrupt storage", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await driver.setItem(STORAGE_KEYS.moments, "{bad-json");
+  await readJson(STORAGE_KEYS.moments);
+
+  const result = await saveSpendingMoment({
+    amount: 10000,
+    label: "Snack",
+    context: "Food",
+    type: "expense"
+  });
+
+  assertEqual(result.persisted, false, "corrupt storage blocks save");
+  assertEqual(result.data.amount, 10000, "save still returns normalized moment");
+});
+
+test("listCorruptStorageIssues surfaces damaged collections", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await driver.setItem(STORAGE_KEYS.budgetLimits, "{bad-json");
+  await readJson(STORAGE_KEYS.budgetLimits);
+
+  const issues = listCorruptStorageIssues();
+  assertEqual(issues.some((issue) => issue.key === STORAGE_KEYS.budgetLimits), true, "budget issue listed");
+});
+
 test("exportAllData and importAllData round-trip finance collections", async () => {
   const driver = createMemoryDriver();
   setStorageDriver(driver);
 
-  await saveSpendingMoment({
+  const saved = await saveSpendingMoment({
     amount: 25000,
     label: "Lunch",
     context: "Food",
     type: "expense"
   });
+  assertEqual(saved.persisted, true, "seed moment persisted");
 
   const exported = await exportAllData();
   assertEqual(exported.app, "slev", "backup app id");

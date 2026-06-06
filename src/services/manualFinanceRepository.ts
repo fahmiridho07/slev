@@ -8,7 +8,7 @@ import {
   SavingsGoal,
   SpendingContext
 } from "../features/spendingMemory.types";
-import { isKeyCorrupt, readJson, removeKeys, writeJson } from "./storage";
+import { isKeyCorrupt, readJson, removeKeys, WriteResult, writeJson } from "./storage";
 
 const MONTHLY_PLANS_KEY = "slev_monthly_plans";
 const MANUAL_TEMPLATES_KEY = "slev_manual_templates";
@@ -54,7 +54,7 @@ export async function getMonthlyPlan(month: string): Promise<MonthlyPlan | null>
   return plans.find((plan) => plan.month === normalizeMonth(month)) ?? null;
 }
 
-export async function saveMonthlyPlan(input: MonthlyPlanInput): Promise<MonthlyPlan> {
+export async function saveMonthlyPlan(input: MonthlyPlanInput): Promise<WriteResult<MonthlyPlan>> {
   const plans = await listMonthlyPlans();
   const existing = plans.find((plan) => plan.month === normalizeMonth(input.month));
   const now = new Date().toISOString();
@@ -65,24 +65,27 @@ export async function saveMonthlyPlan(input: MonthlyPlanInput): Promise<MonthlyP
     updatedAt: now
   });
   if (!plan) {
-    return existing ?? {
-      id: createId(),
-      month: normalizeMonth(input.month),
-      expectedIncome: normalizeAmount(input.expectedIncome),
-      fixedCosts: normalizeAmount(input.fixedCosts),
-      flexibleBudget: normalizeAmount(input.flexibleBudget),
-      savingsTarget: normalizeAmount(input.savingsTarget),
-      note: cleanOptionalText(input.note),
-      createdAt: now,
-      updatedAt: now
+    return {
+      data: existing ?? {
+        id: createId(),
+        month: normalizeMonth(input.month),
+        expectedIncome: normalizeAmount(input.expectedIncome),
+        fixedCosts: normalizeAmount(input.fixedCosts),
+        flexibleBudget: normalizeAmount(input.flexibleBudget),
+        savingsTarget: normalizeAmount(input.savingsTarget),
+        note: cleanOptionalText(input.note),
+        createdAt: now,
+        updatedAt: now
+      },
+      persisted: true
     };
   }
   const updated = [
     plan,
     ...plans.filter((item) => item.month !== plan.month)
   ].sort((a, b) => b.month.localeCompare(a.month));
-  await writeJson(MONTHLY_PLANS_KEY, updated);
-  return plan;
+  const persisted = await writeJson(MONTHLY_PLANS_KEY, updated);
+  return { data: plan, persisted };
 }
 
 export async function listManualTemplates(): Promise<ManualTemplate[]> {
@@ -91,7 +94,7 @@ export async function listManualTemplates(): Promise<ManualTemplate[]> {
   return result.value.map(normalizeManualTemplate).filter(isManualTemplate);
 }
 
-export async function saveManualTemplate(input: ManualTemplateInput): Promise<ManualTemplate[]> {
+export async function saveManualTemplate(input: ManualTemplateInput): Promise<WriteResult<ManualTemplate[]>> {
   const current = await listManualTemplates();
   const now = new Date().toISOString();
   const template = normalizeManualTemplate({
@@ -101,18 +104,18 @@ export async function saveManualTemplate(input: ManualTemplateInput): Promise<Ma
     createdAt: now,
     updatedAt: now
   });
-  if (!template) return current;
+  if (!template) return { data: current, persisted: true };
 
   const updated = [template, ...current].slice(0, 12);
-  await writeJson(MANUAL_TEMPLATES_KEY, updated);
-  return updated;
+  const persisted = await writeJson(MANUAL_TEMPLATES_KEY, updated);
+  return { data: updated, persisted };
 }
 
-export async function deleteManualTemplate(id: string): Promise<ManualTemplate[]> {
+export async function deleteManualTemplate(id: string): Promise<WriteResult<ManualTemplate[]>> {
   const current = await listManualTemplates();
   const updated = current.filter((template) => template.id !== id);
-  await writeJson(MANUAL_TEMPLATES_KEY, updated);
-  return updated;
+  const persisted = await writeJson(MANUAL_TEMPLATES_KEY, updated);
+  return { data: updated, persisted };
 }
 
 export async function listCategoryModes(): Promise<CategoryMode[]> {
@@ -123,21 +126,24 @@ export async function listCategoryModes(): Promise<CategoryMode[]> {
   return mergeCategoryModes(result.value.map(normalizeCategoryMode).filter(isCategoryMode));
 }
 
-export async function saveCategoryMode(category: SpendingContext, mode: CategoryModeValue): Promise<CategoryMode[]> {
+export async function saveCategoryMode(
+  category: SpendingContext,
+  mode: CategoryModeValue
+): Promise<WriteResult<CategoryMode[]>> {
   const current = await listCategoryModes();
   const updated = mergeCategoryModes([
     { category, mode },
     ...current.filter((item) => item.category !== category)
   ]);
-  await writeJson(CATEGORY_MODES_KEY, updated);
-  return updated;
+  const persisted = await writeJson(CATEGORY_MODES_KEY, updated);
+  return { data: updated, persisted };
 }
 
-export async function deleteCategoryMode(category: SpendingContext): Promise<CategoryMode[]> {
+export async function deleteCategoryMode(category: SpendingContext): Promise<WriteResult<CategoryMode[]>> {
   const current = await listCategoryModes();
   const updated = mergeCategoryModes(current.filter((item) => item.category !== category));
-  await writeJson(CATEGORY_MODES_KEY, updated);
-  return updated;
+  const persisted = await writeJson(CATEGORY_MODES_KEY, updated);
+  return { data: updated, persisted };
 }
 
 export async function listSavingsGoals(): Promise<SavingsGoal[]> {
@@ -146,7 +152,7 @@ export async function listSavingsGoals(): Promise<SavingsGoal[]> {
   return result.value.map(normalizeSavingsGoal).filter(isSavingsGoal);
 }
 
-export async function saveSavingsGoal(input: SavingsGoalInput): Promise<SavingsGoal[]> {
+export async function saveSavingsGoal(input: SavingsGoalInput): Promise<WriteResult<SavingsGoal[]>> {
   const current = await listSavingsGoals();
   const now = new Date().toISOString();
   const existing = input.id ? current.find((goal) => goal.id === input.id) : undefined;
@@ -156,21 +162,21 @@ export async function saveSavingsGoal(input: SavingsGoalInput): Promise<SavingsG
     createdAt: existing?.createdAt ?? now,
     updatedAt: now
   });
-  if (!goal) return current;
+  if (!goal) return { data: current, persisted: true };
 
   const updated = [
     goal,
     ...current.filter((item) => item.id !== goal.id)
   ].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
-  await writeJson(SAVINGS_GOALS_KEY, updated);
-  return updated;
+  const persisted = await writeJson(SAVINGS_GOALS_KEY, updated);
+  return { data: updated, persisted };
 }
 
-export async function deleteSavingsGoal(id: string): Promise<SavingsGoal[]> {
+export async function deleteSavingsGoal(id: string): Promise<WriteResult<SavingsGoal[]>> {
   const current = await listSavingsGoals();
   const updated = current.filter((goal) => goal.id !== id);
-  await writeJson(SAVINGS_GOALS_KEY, updated);
-  return updated;
+  const persisted = await writeJson(SAVINGS_GOALS_KEY, updated);
+  return { data: updated, persisted };
 }
 
 export async function listBalanceSnapshots(): Promise<BalanceSnapshot[]> {
@@ -182,7 +188,7 @@ export async function listBalanceSnapshots(): Promise<BalanceSnapshot[]> {
     .sort((a, b) => Date.parse(b.snapshotDate) - Date.parse(a.snapshotDate));
 }
 
-export async function saveBalanceSnapshot(input: BalanceSnapshotInput): Promise<BalanceSnapshot[]> {
+export async function saveBalanceSnapshot(input: BalanceSnapshotInput): Promise<WriteResult<BalanceSnapshot[]>> {
   const current = await listBalanceSnapshots();
   const now = new Date().toISOString();
   const snapshot = normalizeBalanceSnapshot({
@@ -191,11 +197,11 @@ export async function saveBalanceSnapshot(input: BalanceSnapshotInput): Promise<
     snapshotDate: now,
     createdAt: now
   });
-  if (!snapshot) return current;
+  if (!snapshot) return { data: current, persisted: true };
 
   const updated = [snapshot, ...current].slice(0, 80);
-  await writeJson(BALANCE_SNAPSHOTS_KEY, updated);
-  return updated;
+  const persisted = await writeJson(BALANCE_SNAPSHOTS_KEY, updated);
+  return { data: updated, persisted };
 }
 
 export async function clearManualFinance(): Promise<boolean> {

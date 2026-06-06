@@ -50,7 +50,8 @@ import {
   saveSavingsGoal
 } from "../services/manualFinanceRepository";
 import { exportAllData, importAllData } from "../services/storageBackup";
-import { runMigrations } from "../services/storageSchema";
+import { getWriteFailureMessage } from "../services/storageHealth";
+import { runMigrations, STORAGE_KEYS } from "../services/storageSchema";
 import {
   clearSpendingMemory,
   deleteSpendingMoment,
@@ -126,6 +127,10 @@ export function createFinanceActions(
     dispatch({ type: "set_message", message });
   }
 
+  function notifyWriteFailure(area: string, storageKey: string) {
+    setMessage(getWriteFailureMessage(area, storageKey));
+  }
+
   function setClearConfirmVisible(visible: boolean) {
     dispatch({ type: "set_clear_confirm_visible", visible });
   }
@@ -148,18 +153,22 @@ export function createFinanceActions(
         return { ok: false as const };
       }
 
-      const updatedTransfers = await saveMoneyTransfer({
+      const { data: updatedTransfers, persisted } = await saveMoneyTransfer({
         amount,
         fromAccount: capture.fromAccount,
         note: capture.note,
         toAccount: capture.toAccount
       });
+      if (!persisted) {
+        notifyWriteFailure("this transfer", STORAGE_KEYS.transfers);
+        return { ok: false as const };
+      }
       dispatch({ type: "set_transfers", transfers: updatedTransfers });
       setMessage(`${formatRupiah(amount)} moved from ${capture.fromAccount} to ${capture.toAccount}.`);
       return { ok: true as const, resetNote: true };
     }
 
-    const saved = await saveSpendingMoment({
+    const { data: saved, persisted } = await saveSpendingMoment({
       amount,
       label: capture.entryType === "expense" ? capture.label : undefined,
       context: capture.entryType === "expense" ? capture.context : "Other",
@@ -168,6 +177,10 @@ export function createFinanceActions(
       source: capture.entryType === "income" ? capture.source : undefined,
       accountLabel: capture.accountLabel
     });
+    if (!persisted) {
+      notifyWriteFailure("this memory", STORAGE_KEYS.moments);
+      return { ok: false as const };
+    }
     dispatch({ type: "prepend_moment", moment: saved });
     setMessage(
       saved.type === "income"
@@ -181,7 +194,11 @@ export function createFinanceActions(
   }
 
   async function removeMoment(id: string) {
-    await deleteSpendingMoment(id);
+    const { persisted } = await deleteSpendingMoment(id);
+    if (!persisted) {
+      notifyWriteFailure("this memory", STORAGE_KEYS.moments);
+      return;
+    }
     dispatch({ type: "remove_moment", id });
     setMessage("Memory removed.");
   }
@@ -204,7 +221,7 @@ export function createFinanceActions(
       return;
     }
 
-    const updated = await updateSpendingMoment(id, {
+    const { data: updated, persisted } = await updateSpendingMoment(id, {
       amount,
       label: input.type === "expense" ? input.label : undefined,
       context: input.type === "expense" ? input.context : "Other",
@@ -213,6 +230,10 @@ export function createFinanceActions(
       source: input.type === "income" ? input.source : undefined,
       accountLabel: input.accountLabel
     });
+    if (!persisted) {
+      notifyWriteFailure("this memory", STORAGE_KEYS.moments);
+      return;
+    }
     const moment = updated.find((item) => item.id === id);
     if (moment) {
       dispatch({ type: "replace_moment", moment });
@@ -235,7 +256,7 @@ export function createFinanceActions(
       return;
     }
 
-    const updated = await saveManualTemplate({
+    const { data: updated, persisted } = await saveManualTemplate({
       amount: amount ?? undefined,
       context: capture.entryType === "expense" ? capture.context : "Other",
       label: capture.entryType === "expense" ? templateLabel : undefined,
@@ -244,18 +265,30 @@ export function createFinanceActions(
       source: capture.entryType === "income" ? capture.source : undefined,
       type: capture.entryType
     });
+    if (!persisted) {
+      notifyWriteFailure("this shortcut", STORAGE_KEYS.manualTemplates);
+      return;
+    }
     dispatch({ type: "set_manual_templates", manualTemplates: updated });
     setMessage(`${templateLabel} shortcut saved.`);
   }
 
   async function removeManualTemplate(id: string) {
-    const updated = await deleteManualTemplate(id);
+    const { data: updated, persisted } = await deleteManualTemplate(id);
+    if (!persisted) {
+      notifyWriteFailure("this shortcut", STORAGE_KEYS.manualTemplates);
+      return;
+    }
     dispatch({ type: "set_manual_templates", manualTemplates: updated });
     setMessage("Shortcut removed.");
   }
 
   async function removeTransfer(id: string) {
-    const updated = await deleteMoneyTransfer(id);
+    const { data: updated, persisted } = await deleteMoneyTransfer(id);
+    if (!persisted) {
+      notifyWriteFailure("this transfer", STORAGE_KEYS.transfers);
+      return;
+    }
     dispatch({ type: "set_transfers", transfers: updated });
     setMessage("Transfer removed.");
   }
@@ -271,13 +304,21 @@ export function createFinanceActions(
       return;
     }
 
-    const updated = await saveMoneyAccount(input);
+    const { data: updated, persisted } = await saveMoneyAccount(input);
+    if (!persisted) {
+      notifyWriteFailure("this account", STORAGE_KEYS.accounts);
+      return;
+    }
     dispatch({ type: "set_accounts", accounts: updated });
     setMessage(`${input.label.trim()} account saved.`);
   }
 
   async function removeAccount(id: string) {
-    const updated = await deleteMoneyAccount(id);
+    const { data: updated, persisted } = await deleteMoneyAccount(id);
+    if (!persisted) {
+      notifyWriteFailure("this account", STORAGE_KEYS.accounts);
+      return;
+    }
     dispatch({ type: "set_accounts", accounts: updated });
     setMessage(updated.some((account) => account.id === id) ? "Keep at least one account for balances." : "Account removed.");
   }
@@ -288,7 +329,11 @@ export function createFinanceActions(
       return;
     }
 
-    const updated = await saveExpenseCategory(input);
+    const { data: updated, persisted } = await saveExpenseCategory(input);
+    if (!persisted) {
+      notifyWriteFailure("this category", STORAGE_KEYS.expenseCategories);
+      return;
+    }
     dispatch({ type: "set_expense_categories", expenseCategories: updated });
     setMessage(`${input.label.trim()} category saved.`);
   }
@@ -297,9 +342,14 @@ export function createFinanceActions(
     const updatedCategories = await deleteExpenseCategory(category.id);
     const updatedLimits = await deleteBudgetLimit(category.label);
     const updatedModes = await deleteCategoryMode(category.label);
-    dispatch({ type: "set_expense_categories", expenseCategories: updatedCategories });
-    dispatch({ type: "set_budget_limits", budgetLimits: updatedLimits });
-    dispatch({ type: "set_category_modes", categoryModes: updatedModes });
+    if (!updatedCategories.persisted || !updatedLimits.persisted || !updatedModes.persisted) {
+      notifyWriteFailure("this category", STORAGE_KEYS.expenseCategories);
+      await reload();
+      return;
+    }
+    dispatch({ type: "set_expense_categories", expenseCategories: updatedCategories.data });
+    dispatch({ type: "set_budget_limits", budgetLimits: updatedLimits.data });
+    dispatch({ type: "set_category_modes", categoryModes: updatedModes.data });
     setMessage(`${category.label} category removed.`);
   }
 
@@ -310,19 +360,31 @@ export function createFinanceActions(
       return;
     }
 
-    const updated = await saveBudgetLimit({ category, limitAmount, period });
+    const { data: updated, persisted } = await saveBudgetLimit({ category, limitAmount, period });
+    if (!persisted) {
+      notifyWriteFailure("this budget limit", STORAGE_KEYS.budgetLimits);
+      return;
+    }
     dispatch({ type: "set_budget_limits", budgetLimits: updated });
     setMessage(`${category} limit saved for ${period === "weekly" ? "the week" : "the month"}.`);
   }
 
   async function removeCategoryBudget(category: SpendingContext) {
-    const updated = await deleteBudgetLimit(category);
+    const { data: updated, persisted } = await deleteBudgetLimit(category);
+    if (!persisted) {
+      notifyWriteFailure("this budget limit", STORAGE_KEYS.budgetLimits);
+      return;
+    }
     dispatch({ type: "set_budget_limits", budgetLimits: updated });
     setMessage(`${category} limit removed.`);
   }
 
   async function changeCategoryMode(category: SpendingContext, mode: CategoryModeValue) {
-    const updated = await saveCategoryMode(category, mode);
+    const { data: updated, persisted } = await saveCategoryMode(category, mode);
+    if (!persisted) {
+      notifyWriteFailure("this category mode", STORAGE_KEYS.categoryModes);
+      return;
+    }
     dispatch({ type: "set_category_modes", categoryModes: updated });
     setMessage(`${category} marked as ${mode}.`);
   }
@@ -335,7 +397,7 @@ export function createFinanceActions(
     savingsTarget: string;
   }) {
     const currentMonthKey = getMonthKey(new Date());
-    const saved = await saveMonthlyPlan({
+    const { data: saved, persisted } = await saveMonthlyPlan({
       expectedIncome: parseAmountInput(input.expectedIncome) ?? 0,
       fixedCosts: parseAmountInput(input.fixedCosts) ?? 0,
       flexibleBudget: parseAmountInput(input.flexibleBudget) ?? 0,
@@ -343,6 +405,10 @@ export function createFinanceActions(
       note: input.note,
       savingsTarget: parseAmountInput(input.savingsTarget) ?? 0
     });
+    if (!persisted) {
+      notifyWriteFailure("this monthly plan", STORAGE_KEYS.monthlyPlans);
+      return;
+    }
     dispatch({ type: "set_monthly_plan", monthlyPlan: saved });
     setMessage("Monthly plan saved.");
   }
@@ -359,18 +425,26 @@ export function createFinanceActions(
       return;
     }
 
-    const updated = await saveSavingsGoal({
+    const { data: updated, persisted } = await saveSavingsGoal({
       id: input.id,
       label: input.label,
       savedAmount: parseAmountInput(input.savedAmount) ?? 0,
       targetAmount
     });
+    if (!persisted) {
+      notifyWriteFailure("this savings goal", STORAGE_KEYS.savingsGoals);
+      return;
+    }
     dispatch({ type: "set_savings_goals", savingsGoals: updated });
     setMessage("Savings goal saved.");
   }
 
   async function removeSavingsGoal(id: string) {
-    const updated = await deleteSavingsGoal(id);
+    const { data: updated, persisted } = await deleteSavingsGoal(id);
+    if (!persisted) {
+      notifyWriteFailure("this savings goal", STORAGE_KEYS.savingsGoals);
+      return;
+    }
     dispatch({ type: "set_savings_goals", savingsGoals: updated });
     setMessage("Savings goal removed.");
   }
@@ -382,16 +456,24 @@ export function createFinanceActions(
       return;
     }
 
-    const updated = await saveBalanceSnapshot({
+    const { data: updated, persisted } = await saveBalanceSnapshot({
       amount,
       accountLabel: input.accountLabel
     });
+    if (!persisted) {
+      notifyWriteFailure("this balance snapshot", STORAGE_KEYS.balanceSnapshots);
+      return;
+    }
     dispatch({ type: "set_balance_snapshots", balanceSnapshots: updated });
     setMessage("Balance snapshot saved.");
   }
 
   async function answerPattern(patternId: string, response: PatternFeedbackResponse) {
-    const updated = await savePatternFeedback(patternId, response);
+    const { data: updated, persisted } = await savePatternFeedback(patternId, response);
+    if (!persisted) {
+      notifyWriteFailure("pattern feedback", STORAGE_KEYS.patternFeedback);
+      return;
+    }
     dispatch({ type: "set_feedback", feedback: updated });
   }
 

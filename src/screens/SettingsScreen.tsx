@@ -4,15 +4,17 @@ import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { DeleteConfirmDialog, EmptyState, SwipeActionRow } from "../components";
 import { ExpenseCategory } from "../features/spendingMemory.types";
 import { getCategoryDeleteBody } from "../lib/analysis";
+import { listCorruptStorageIssues } from "../services/storageHealth";
 import { shallowEqual, useActions, useFinanceSelector } from "../state/useFinance";
 import { colors } from "../theme/colors";
 import { styles } from "../theme/styles/app";
 
 function SettingsScreenComponent() {
   const actions = useActions();
-  const { expenseCategories, moments } = useFinanceSelector(
+  const { expenseCategories, isReady, moments } = useFinanceSelector(
     (state) => ({
       expenseCategories: state.expenseCategories,
+      isReady: state.isReady,
       moments: state.moments
     }),
     shallowEqual
@@ -67,14 +69,29 @@ function SettingsScreenComponent() {
 
   const categoryKeyExtractor = useCallback((category: ExpenseCategory) => category.id, []);
 
-  const listHeader = useMemo(
-    () => (
+  const listHeader = useMemo(() => {
+    const corruptIssues = isReady ? listCorruptStorageIssues() : [];
+
+    return (
       <>
         <View style={styles.heroPanel}>
           <Text style={styles.kickerDark}>Settings</Text>
           <Text style={styles.heroTitle}>Categories and local data.</Text>
           <Text style={styles.settingCopy}>{momentCount} money memor{momentCount === 1 ? "y" : "ies"} saved on this device.</Text>
         </View>
+
+        {corruptIssues.length > 0 && (
+          <View style={[styles.observationPanel, { borderColor: colors.coral, backgroundColor: "#fff4f1" }]}>
+            <View style={styles.analyticsRowHeader}>
+              <Ionicons name="warning-outline" size={18} color={colors.coral} />
+              <Text style={[styles.analyticsTitle, { color: colors.coral }]}>Local data needs attention</Text>
+            </View>
+            <Text style={styles.settingCopy}>
+              Some on-device records look damaged and were left unchanged: {corruptIssues.map((issue) => issue.label).join(", ")}.
+              Export a backup below, then re-import or clear local memory.
+            </Text>
+          </View>
+        )}
 
         <View style={styles.capturePanel}>
           <Text style={styles.microLabel}>{editingCategoryId ? "Edit category" : "Add expense category"}</Text>
@@ -103,9 +120,8 @@ function SettingsScreenComponent() {
           </View>
         </View>
       </>
-    ),
-    [actions, categoryDraft, editingCategoryId, momentCount]
-  );
+    );
+  }, [actions, categoryDraft, editingCategoryId, isReady, momentCount]);
 
   const listFooter = useMemo(
     () => (
