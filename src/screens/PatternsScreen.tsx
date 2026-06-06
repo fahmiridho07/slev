@@ -6,13 +6,13 @@ import { BreakdownPanel } from "../features/analysis/BreakdownPanel";
 import { PatternOverview } from "../features/analysis/PatternOverview";
 import { TrendsPanel } from "../features/analysis/TrendsPanel";
 import { PatternTabKey } from "../features/app.types";
-import { useFinance } from "../state/useFinance";
+import { useActions, useDerived, useFinanceState } from "../state/useFinance";
 import { styles } from "../theme/styles/app";
 
 function PatternsScreenComponent() {
-  const { actions, derived, state } = useFinance();
-  const { accounts, balanceSnapshots, moments, transfers } = state;
-  const { feedbackByPattern, patterns, projectedBalanceSnapshots } = derived;
+  const actions = useActions();
+  const { feedbackByPattern, patterns, projectedBalanceSnapshots } = useDerived();
+  const { accounts, balanceSnapshots, moments, transfers } = useFinanceState();
   const [activePatternTab, setActivePatternTab] = useState<PatternTabKey>("overview");
 
   return (

@@ -1,5 +1,5 @@
 import React, { createContext, useMemo, useReducer, useRef } from "react";
-import { PatternFeedbackResponse } from "../features/spendingMemory.types";
+import { MonthlyPlan, PatternFeedbackResponse } from "../features/spendingMemory.types";
 import { getRepeatSuggestions } from "../lib/analysis";
 import {
   buildCurrentMonthSummary,
@@ -15,6 +15,7 @@ export type FinanceDerived = {
   categoryLabels: ReturnType<typeof getCategoryLabels>;
   feedbackByPattern: Map<string, PatternFeedbackResponse>;
   latestBalanceTotal: number;
+  monthlyPlan: MonthlyPlan | null;
   monthlySummary: ReturnType<typeof buildCurrentMonthSummary>;
   patterns: ReturnType<typeof generateSpendingPatterns>;
   projectedBalanceSnapshots: ReturnType<typeof getProjectedBalanceSnapshots>;
@@ -69,12 +70,14 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     () => getCategoryLabels(state.expenseCategories),
     [state.expenseCategories]
   );
+  const monthlyPlan = useMemo(() => state.monthlyPlan, [state.monthlyPlan]);
 
   const derived = useMemo<FinanceDerived>(
     () => ({
       categoryLabels,
       feedbackByPattern,
       latestBalanceTotal,
+      monthlyPlan,
       monthlySummary,
       patterns,
       projectedBalanceSnapshots,
@@ -84,6 +87,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       categoryLabels,
       feedbackByPattern,
       latestBalanceTotal,
+      monthlyPlan,
       monthlySummary,
       patterns,
       projectedBalanceSnapshots,
