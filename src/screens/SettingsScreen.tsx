@@ -4,7 +4,7 @@ import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { DeleteConfirmDialog, EmptyState, SwipeActionRow } from "../components";
 import { ExpenseCategory } from "../features/spendingMemory.types";
 import { getCategoryDeleteBody } from "../lib/analysis";
-import { listCorruptStorageIssues } from "../services/storageHealth";
+import { listCorruptStorageIssues, StorageHealthIssue } from "../services/storageHealth";
 import { shallowEqual, useActions, useFinanceSelector } from "../state/useFinance";
 import { colors } from "../theme/colors";
 import { styles } from "../theme/styles/app";
@@ -26,6 +26,7 @@ function SettingsScreenComponent() {
   const [pendingDeleteCategory, setPendingDeleteCategory] = useState<ExpenseCategory | null>(null);
   const [importDraft, setImportDraft] = useState("");
   const [importConfirmVisible, setImportConfirmVisible] = useState(false);
+  const [pendingResetIssue, setPendingResetIssue] = useState<StorageHealthIssue | null>(null);
 
   function editCategory(category: ExpenseCategory) {
     setEditingCategoryId(category.id);
@@ -81,15 +82,27 @@ function SettingsScreenComponent() {
         </View>
 
         {corruptIssues.length > 0 && (
-          <View style={[styles.observationPanel, { borderColor: colors.coral, backgroundColor: "#fff4f1" }]}>
-            <View style={styles.analyticsRowHeader}>
-              <Ionicons name="warning-outline" size={18} color={colors.coral} />
-              <Text style={[styles.analyticsTitle, { color: colors.coral }]}>Local data needs attention</Text>
-            </View>
+          <View style={styles.capturePanel}>
+            <Text style={styles.microLabel}>Data health</Text>
             <Text style={styles.settingCopy}>
-              Some on-device records look damaged and were left unchanged: {corruptIssues.map((issue) => issue.label).join(", ")}.
-              Export a backup below, then re-import or clear local memory.
+              These collections look damaged on disk. Export a backup first, then reset only what you need to recover.
             </Text>
+            {corruptIssues.map((issue) => (
+              <View key={issue.key} style={styles.analyticsRow}>
+                <View style={styles.analyticsRowHeader}>
+                  <Ionicons name="warning-outline" size={16} color={colors.coral} />
+                  <Text style={styles.analyticsTitle}>{issue.label}</Text>
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setPendingResetIssue(issue)}
+                  style={styles.textButton}
+                >
+                  <Ionicons name="refresh-outline" size={16} color={colors.coral} />
+                  <Text style={[styles.textButtonLabel, { color: colors.coral }]}>Reset this data</Text>
+                </Pressable>
+              </View>
+            ))}
           </View>
         )}
 
@@ -210,6 +223,23 @@ function SettingsScreenComponent() {
         }}
         title="Import backup?"
         visible={importConfirmVisible}
+      />
+      <DeleteConfirmDialog
+        body={
+          pendingResetIssue
+            ? `This clears only ${pendingResetIssue.label} on this device. Export a backup first if you want to keep a copy.`
+            : ""
+        }
+        confirmLabel="Reset"
+        onCancel={() => setPendingResetIssue(null)}
+        onConfirm={() => {
+          if (pendingResetIssue) {
+            void actions.resetDamagedCollection(pendingResetIssue.key);
+            setPendingResetIssue(null);
+          }
+        }}
+        title={pendingResetIssue ? `Reset ${pendingResetIssue.label}?` : "Reset data?"}
+        visible={Boolean(pendingResetIssue)}
       />
     </>
   );
