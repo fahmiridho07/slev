@@ -82,6 +82,7 @@ test("hydrate merges stored collections without touching ui flags", () => {
         categoryModes: [],
         monthlyPlan: null,
         manualTemplates: [],
+        recurringBills: [],
         savingsGoals: [],
         balanceSnapshots: [],
         accounts: [],
