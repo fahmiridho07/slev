@@ -22,6 +22,8 @@ function SettingsScreenComponent() {
   const [editingCategoryId, setEditingCategoryId] = useState<string | undefined>(undefined);
   const [categoryDraft, setCategoryDraft] = useState("");
   const [pendingDeleteCategory, setPendingDeleteCategory] = useState<ExpenseCategory | null>(null);
+  const [importDraft, setImportDraft] = useState("");
+  const [importConfirmVisible, setImportConfirmVisible] = useState(false);
 
   function editCategory(category: ExpenseCategory) {
     setEditingCategoryId(category.id);
@@ -107,12 +109,45 @@ function SettingsScreenComponent() {
 
   const listFooter = useMemo(
     () => (
-      <Pressable accessibilityRole="button" onPress={() => actions.clearAll()} style={styles.dangerButton}>
-        <Ionicons name="trash-outline" size={18} color={colors.coral} />
-        <Text style={styles.dangerButtonText}>Clear local finance memory</Text>
-      </Pressable>
+      <>
+        <View style={styles.capturePanel}>
+          <Text style={styles.microLabel}>Backup</Text>
+          <Text style={styles.settingCopy}>
+            Export all local finance data as JSON, or paste a previous backup to restore it on this device.
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => void actions.exportLocalBackup()}
+            style={styles.secondaryInlineButton}
+          >
+            <Ionicons name="share-outline" size={16} color={colors.greenDark} />
+            <Text style={styles.secondaryButtonText}>Export JSON backup</Text>
+          </Pressable>
+          <TextInput
+            multiline
+            onChangeText={setImportDraft}
+            placeholder="Paste a Slev backup JSON here"
+            placeholderTextColor={colors.muted}
+            style={[styles.input, { minHeight: 120, textAlignVertical: "top" }]}
+            value={importDraft}
+          />
+          <Pressable
+            accessibilityRole="button"
+            disabled={!importDraft.trim()}
+            onPress={() => setImportConfirmVisible(true)}
+            style={[styles.smallPrimaryButton, !importDraft.trim() ? { opacity: 0.5 } : undefined]}
+          >
+            <Text style={styles.primaryButtonText}>Import backup</Text>
+          </Pressable>
+        </View>
+
+        <Pressable accessibilityRole="button" onPress={() => actions.clearAll()} style={styles.dangerButton}>
+          <Ionicons name="trash-outline" size={18} color={colors.coral} />
+          <Text style={styles.dangerButtonText}>Clear local finance memory</Text>
+        </Pressable>
+      </>
     ),
-    [actions]
+    [actions, importDraft]
   );
 
   const listEmpty = useMemo(
@@ -147,6 +182,18 @@ function SettingsScreenComponent() {
         }}
         title={pendingDeleteCategory?.isDefault ? "Remove default category?" : "Delete category?"}
         visible={Boolean(pendingDeleteCategory)}
+      />
+      <DeleteConfirmDialog
+        body="Importing replaces your current local finance data with the pasted backup."
+        confirmLabel="Import"
+        onCancel={() => setImportConfirmVisible(false)}
+        onConfirm={() => {
+          void actions.importLocalBackup(importDraft);
+          setImportDraft("");
+          setImportConfirmVisible(false);
+        }}
+        title="Import backup?"
+        visible={importConfirmVisible}
       />
     </>
   );

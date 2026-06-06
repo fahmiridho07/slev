@@ -1,3 +1,4 @@
+import { Share } from "react-native";
 import { CategoryModeValue } from "../features/app.types";
 import { CaptureFormValues } from "../features/capture/types";
 import {
@@ -48,6 +49,7 @@ import {
   saveMonthlyPlan,
   saveSavingsGoal
 } from "../services/manualFinanceRepository";
+import { exportAllData, importAllData } from "../services/storageBackup";
 import { runMigrations } from "../services/storageSchema";
 import {
   clearSpendingMemory,
@@ -397,6 +399,35 @@ export function createFinanceActions(
     setClearConfirmVisible(true);
   }
 
+  async function exportLocalBackup() {
+    try {
+      const backup = await exportAllData();
+      await Share.share({
+        message: JSON.stringify(backup, null, 2),
+        title: "Slev finance backup"
+      });
+      setMessage("Backup ready to share or save.");
+    } catch {
+      setMessage("Could not export local data.");
+    }
+  }
+
+  async function importLocalBackup(jsonText: string) {
+    try {
+      const parsed = JSON.parse(jsonText) as unknown;
+      const result = await importAllData(parsed);
+      if (!result.ok) {
+        setMessage(result.reason);
+        return;
+      }
+
+      await reload();
+      setMessage("Backup imported.");
+    } catch {
+      setMessage("That text is not valid Slev backup JSON.");
+    }
+  }
+
   async function confirmClearAll() {
     await Promise.all([
       clearSpendingMemory(),
@@ -422,6 +453,8 @@ export function createFinanceActions(
     changeCategoryMode,
     clearAll,
     confirmClearAll,
+    exportLocalBackup,
+    importLocalBackup,
     reload,
     removeAccount,
     removeCategory,
