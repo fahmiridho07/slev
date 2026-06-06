@@ -599,6 +599,17 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden"
   },
+  listPanelContinued: {
+    borderTopWidth: 0,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    marginTop: -1
+  },
+  listPanelMiddle: {
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    borderBottomWidth: 0
+  },
   momentRow: {
     alignItems: "center",
     borderBottomColor: colors.faint,

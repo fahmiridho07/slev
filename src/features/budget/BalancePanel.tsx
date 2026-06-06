@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useMemo, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { AccountPicker, AccountTitle, DeleteConfirmDialog, EmptyState, SectionHeader, SegmentedControl } from "../../components";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { getLatestBalanceSnapshots, getLatestBalanceTotal } from "../../lib/financeEngine";
@@ -63,6 +63,44 @@ export function BalancePanel({
     setAccountDraftKind("bank");
     setAccountDraftHub("pocket");
   }
+
+  const renderAccountItem = useCallback(
+    ({ item: account }: { item: MoneyAccount }) => (
+      <View style={styles.analyticsRow}>
+        <View style={styles.analyticsRowHeader}>
+          <AccountTitle kind={account.kind} label={account.label} />
+          <Text style={styles.analyticsAmount}>{account.isIncomeHub ? "Income hub" : account.kind}</Text>
+        </View>
+        <View style={styles.editActions}>
+          <Pressable onPress={() => editAccount(account)} style={styles.textButton}>
+            <Ionicons name="create-outline" size={16} color={colors.greenDark} />
+            <Text style={styles.textButtonLabel}>Edit</Text>
+          </Pressable>
+          <Pressable onPress={() => setPendingDeleteAccount(account)} style={styles.textButton}>
+            <Ionicons name="trash-outline" size={16} color={colors.coral} />
+            <Text style={[styles.textButtonLabel, styles.deleteText]}>Delete</Text>
+          </Pressable>
+        </View>
+      </View>
+    ),
+    []
+  );
+
+  const renderBalanceItem = useCallback(
+    ({ item: snapshot }: { item: BalanceSnapshot }) => (
+      <View style={styles.analyticsRow}>
+        <View style={styles.analyticsRowHeader}>
+          <AccountTitle label={snapshot.accountLabel} />
+          <Text style={styles.analyticsAmount}>{formatRupiah(snapshot.amount)}</Text>
+        </View>
+        <Text style={styles.settingCopy}>Estimated from the latest snapshot and logged movements.</Text>
+      </View>
+    ),
+    []
+  );
+
+  const accountKeyExtractor = useCallback((account: MoneyAccount) => account.id, []);
+  const balanceKeyExtractor = useCallback((snapshot: BalanceSnapshot) => snapshot.id, []);
 
   return (
     <View style={styles.analyticsBlock}>
@@ -155,24 +193,12 @@ export function BalancePanel({
       </View>
 
       <View style={styles.listPanel}>
-        {accounts.map((account) => (
-          <View key={account.id} style={styles.analyticsRow}>
-            <View style={styles.analyticsRowHeader}>
-              <AccountTitle kind={account.kind} label={account.label} />
-              <Text style={styles.analyticsAmount}>{account.isIncomeHub ? "Income hub" : account.kind}</Text>
-            </View>
-            <View style={styles.editActions}>
-              <Pressable onPress={() => editAccount(account)} style={styles.textButton}>
-                <Ionicons name="create-outline" size={16} color={colors.greenDark} />
-                <Text style={styles.textButtonLabel}>Edit</Text>
-              </Pressable>
-              <Pressable onPress={() => setPendingDeleteAccount(account)} style={styles.textButton}>
-                <Ionicons name="trash-outline" size={16} color={colors.coral} />
-                <Text style={[styles.textButtonLabel, styles.deleteText]}>Delete</Text>
-              </Pressable>
-            </View>
-          </View>
-        ))}
+        <FlatList
+          data={accounts}
+          keyExtractor={accountKeyExtractor}
+          renderItem={renderAccountItem}
+          scrollEnabled={false}
+        />
       </View>
 
       {currentBalances.length === 0 ? (
@@ -180,17 +206,12 @@ export function BalancePanel({
       ) : (
         <View style={styles.listPanel}>
           <SectionHeader title="Current account balances" />
-          {currentBalances.map((snapshot) => (
-            <View key={snapshot.id} style={styles.analyticsRow}>
-              <View style={styles.analyticsRowHeader}>
-                <AccountTitle label={snapshot.accountLabel} />
-                <Text style={styles.analyticsAmount}>{formatRupiah(snapshot.amount)}</Text>
-              </View>
-              <Text style={styles.settingCopy}>
-                Estimated from the latest snapshot and logged movements.
-              </Text>
-            </View>
-          ))}
+          <FlatList
+            data={currentBalances}
+            keyExtractor={balanceKeyExtractor}
+            renderItem={renderBalanceItem}
+            scrollEnabled={false}
+          />
         </View>
       )}
       <DeleteConfirmDialog
