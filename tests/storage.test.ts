@@ -14,7 +14,6 @@ import { listCorruptStorageIssues, resetStorageKey } from "../src/services/stora
 import {
   getSchemaVersion,
   runMigrations,
-  setSimulateMigrationFailure,
   STORAGE_KEYS
 } from "../src/services/storageSchema";
 
@@ -204,11 +203,17 @@ test("runMigrations warns and continues when a migration step throws", async () 
   };
 
   try {
-    setSimulateMigrationFailure(true);
     const driver = createMemoryDriver();
     setStorageDriver(driver);
 
-    await runMigrations();
+    await runMigrations([
+      {
+        toVersion: 2,
+        run: async () => {
+          throw new Error("simulated migration failure");
+        }
+      }
+    ]);
 
     assertEqual(
       warnings.some((entry) => JSON.stringify(entry).includes("migration failed")),
@@ -217,7 +222,6 @@ test("runMigrations warns and continues when a migration step throws", async () 
     );
     assertEqual(await getSchemaVersion(), 0, "schema version not advanced after failure");
   } finally {
-    setSimulateMigrationFailure(false);
     console.warn = originalWarn;
   }
 });

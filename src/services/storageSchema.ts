@@ -36,26 +36,15 @@ export const EXPORTABLE_STORAGE_KEYS = [
   STORAGE_KEYS.expenseCategories
 ] as const;
 
-type MigrationStep = {
+export type MigrationStep = {
   toVersion: number;
   run: () => Promise<void>;
 };
 
-let simulateMigrationFailure = false;
-
-export function setSimulateMigrationFailure(enabled: boolean): void {
-  simulateMigrationFailure = enabled;
-}
-
-const MIGRATIONS: MigrationStep[] = [
+const DEFAULT_MIGRATIONS: MigrationStep[] = [
   {
     toVersion: 2,
-    run: async () => {
-      if (simulateMigrationFailure) {
-        throw new Error("simulated migration failure");
-      }
-      await runSpendingMemoryV2Migration();
-    }
+    run: runSpendingMemoryV2Migration
   }
 ];
 
@@ -80,11 +69,11 @@ export async function setSchemaVersion(version: number): Promise<boolean> {
   return writeRaw(STORAGE_KEYS.schemaVersion, String(version));
 }
 
-export async function runMigrations(): Promise<void> {
+export async function runMigrations(steps: MigrationStep[] = DEFAULT_MIGRATIONS): Promise<void> {
   try {
     let version = await getSchemaVersion();
 
-    for (const step of MIGRATIONS) {
+    for (const step of steps) {
       if (version >= step.toVersion) {
         continue;
       }
