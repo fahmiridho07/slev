@@ -1,8 +1,8 @@
 import { isAccountsStorageCorrupt, isTransfersStorageCorrupt } from "./accountRepository";
 import { isBudgetLimitsStorageCorrupt } from "./budgetRepository";
 import { isExpenseCategoriesStorageCorrupt } from "./categoryRepository";
-import { isKeyCorrupt } from "./storage";
-import { STORAGE_KEYS } from "./storageSchema";
+import { isKeyCorrupt, removeKeys } from "./storage";
+import { EXPORTABLE_STORAGE_KEYS, STORAGE_KEYS } from "./storageSchema";
 import { isMomentsStorageCorrupt, isPatternFeedbackStorageCorrupt } from "./spendingMemoryRepository";
 
 export type StorageHealthIssue = {
@@ -49,6 +49,35 @@ export function listCorruptStorageIssues(): StorageHealthIssue[] {
     key: entry.key,
     label: entry.label
   }));
+}
+
+export function isResettableStorageKey(key: string): key is (typeof EXPORTABLE_STORAGE_KEYS)[number] {
+  return (EXPORTABLE_STORAGE_KEYS as readonly string[]).includes(key);
+}
+
+export async function resetStorageKey(key: string): Promise<boolean> {
+  if (!isResettableStorageKey(key)) {
+    return false;
+  }
+
+  return removeKeys([key]);
+}
+
+export function getStorageKeyLabel(key: string): string {
+  return CORRUPT_STORAGE_CHECKS.find((entry) => entry.key === key)?.label ?? key;
+}
+
+export function formatSkippedExportWarning(skippedKeys: string[]): string {
+  if (skippedKeys.length === 0) {
+    return "";
+  }
+
+  const labels = skippedKeys.map((key) => getStorageKeyLabel(key));
+  if (labels.length === 1) {
+    return `Note: ${labels[0]} looked damaged and was not included.`;
+  }
+
+  return `Note: ${labels.slice(0, -1).join(", ")} and ${labels[labels.length - 1]} looked damaged and were not included.`;
 }
 
 export function getWriteFailureMessage(area: string, storageKey?: string): string {

@@ -30,22 +30,38 @@ export type ImportResult =
   | { ok: true }
   | { ok: false; reason: string };
 
-export async function exportAllData(): Promise<StorageBackup> {
+export type ExportReport = {
+  backup: StorageBackup;
+  skipped: string[];
+};
+
+export async function exportAllDataWithReport(): Promise<ExportReport> {
   const data: StorageBackup["data"] = {};
+  const skipped: string[] = [];
 
   for (const key of EXPORTABLE_STORAGE_KEYS) {
     const result = await readJson(key);
     if (result.status === "ok") {
       data[key] = result.value;
+    } else if (result.status === "corrupt") {
+      skipped.push(key);
     }
   }
 
   return {
-    app: BACKUP_APP_ID,
-    schemaVersion: await getSchemaVersion(),
-    exportedAt: new Date().toISOString(),
-    data
+    backup: {
+      app: BACKUP_APP_ID,
+      schemaVersion: await getSchemaVersion(),
+      exportedAt: new Date().toISOString(),
+      data
+    },
+    skipped
   };
+}
+
+export async function exportAllData(): Promise<StorageBackup> {
+  const { backup } = await exportAllDataWithReport();
+  return backup;
 }
 
 export async function importAllData(raw: unknown): Promise<ImportResult> {

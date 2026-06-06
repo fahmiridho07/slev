@@ -49,8 +49,13 @@ import {
   saveMonthlyPlan,
   saveSavingsGoal
 } from "../services/manualFinanceRepository";
-import { exportAllData, importAllData } from "../services/storageBackup";
-import { getWriteFailureMessage } from "../services/storageHealth";
+import { exportAllDataWithReport, importAllData } from "../services/storageBackup";
+import {
+  formatSkippedExportWarning,
+  getStorageKeyLabel,
+  getWriteFailureMessage,
+  resetStorageKey
+} from "../services/storageHealth";
 import { runMigrations, STORAGE_KEYS } from "../services/storageSchema";
 import {
   clearSpendingMemory,
@@ -483,15 +488,30 @@ export function createFinanceActions(
 
   async function exportLocalBackup() {
     try {
-      const backup = await exportAllData();
+      const { backup, skipped } = await exportAllDataWithReport();
       await Share.share({
         message: JSON.stringify(backup, null, 2),
         title: "Slev finance backup"
       });
-      setMessage("Backup ready to share or save.");
+      const skipWarning = formatSkippedExportWarning(skipped);
+      setMessage(
+        skipWarning ? `Backup ready to share or save. ${skipWarning}` : "Backup ready to share or save."
+      );
     } catch {
       setMessage("Could not export local data.");
     }
+  }
+
+  async function resetDamagedCollection(key: string) {
+    const label = getStorageKeyLabel(key);
+    const reset = await resetStorageKey(key);
+    if (!reset) {
+      setMessage(`Could not reset ${label}.`);
+      return;
+    }
+
+    await reload();
+    setMessage(`${label} reset. You can start fresh in that area.`);
   }
 
   async function importLocalBackup(jsonText: string) {
@@ -538,6 +558,7 @@ export function createFinanceActions(
     exportLocalBackup,
     importLocalBackup,
     reload,
+    resetDamagedCollection,
     removeAccount,
     removeCategory,
     removeCategoryBudget,
