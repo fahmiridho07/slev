@@ -1,8 +1,9 @@
 import React, { memo } from "react";
 import { ScrollView } from "react-native";
 import { HomeMoneyPulse } from "../features/analysis/HomeMoneyPulse";
+import { UpcomingBillsPanel } from "../features/analysis/UpcomingBillsPanel";
 import { CapturePanel } from "../features/capture/CapturePanel";
-import { shallowEqual, useDerived, useFinanceSelector } from "../state/useFinance";
+import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
 import { styles } from "../theme/styles/app";
 
 type HomeScreenProps = {
@@ -10,7 +11,8 @@ type HomeScreenProps = {
 };
 
 function HomeScreenComponent({ onOpenSettings }: HomeScreenProps) {
-  const { allocationPlan, hasMonthlyPlan, latestBalanceTotal, monthlySummary, runwayMonths } = useDerived();
+  const actions = useActions();
+  const { allocationPlan, hasMonthlyPlan, latestBalanceTotal, monthlySummary, runwayMonths, upcomingBills } = useDerived();
   const { monthlyPlan, savingsGoals } = useFinanceSelector(
     (state) => ({
       monthlyPlan: state.monthlyPlan,
@@ -29,6 +31,10 @@ function HomeScreenComponent({ onOpenSettings }: HomeScreenProps) {
         monthlySummary={monthlySummary}
         runwayMonths={runwayMonths}
         savingsGoals={savingsGoals}
+      />
+      <UpcomingBillsPanel
+        upcomingBills={upcomingBills}
+        onLogPayment={(billId) => void actions.logRecurringBillPayment(billId)}
       />
       <CapturePanel onOpenSettings={onOpenSettings} />
     </ScrollView>

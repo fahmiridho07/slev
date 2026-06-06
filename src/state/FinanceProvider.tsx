@@ -1,6 +1,7 @@
 import React, { createContext, useEffect, useMemo, useReducer, useRef } from "react";
 import { PatternFeedbackResponse } from "../features/spendingMemory.types";
 import { getRepeatSuggestions } from "../lib/analysis";
+import { getUpcomingBills, UpcomingBill } from "../lib/recurringBills";
 import {
   AllocationPlan,
   buildAllocationPlan,
@@ -27,6 +28,7 @@ export type FinanceDerived = {
   patterns: ReturnType<typeof generateSpendingPatterns>;
   projectedBalanceSnapshots: ReturnType<typeof getProjectedBalanceSnapshots>;
   repeatSuggestions: ReturnType<typeof getRepeatSuggestions>;
+  upcomingBills: UpcomingBill[];
 };
 
 export const ActionsContext = createContext<FinanceActions | null>(null);
@@ -95,6 +97,11 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       }),
     [latestBalanceTotal, state.moments]
   );
+  // future: reserve unpaid upcoming bills in safe-to-spend once budgeting is unified.
+  const upcomingBills = useMemo(
+    () => getUpcomingBills({ bills: state.recurringBills }),
+    [state.recurringBills]
+  );
   const allocationPlan = useMemo(
     () => {
       const currentBalances = getLatestBalanceSnapshots(projectedBalanceSnapshots);
@@ -132,7 +139,8 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       monthlySummary,
       patterns,
       projectedBalanceSnapshots,
-      repeatSuggestions
+      repeatSuggestions,
+      upcomingBills
     }),
     [
       allocationPlan,
@@ -144,7 +152,8 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       monthlySummary,
       patterns,
       projectedBalanceSnapshots,
-      repeatSuggestions
+      repeatSuggestions,
+      upcomingBills
     ]
   );
 
