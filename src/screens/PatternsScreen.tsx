@@ -11,7 +11,7 @@ import { styles } from "../theme/styles/app";
 
 function PatternsScreenComponent() {
   const actions = useActions();
-  const { feedbackByPattern, patterns, projectedBalanceSnapshots } = useDerived();
+  const { feedbackByPattern, netWorthTrend, patterns, projectedBalanceSnapshots } = useDerived();
   const { accounts, balanceSnapshots, moments, transfers } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
@@ -60,7 +60,7 @@ function PatternsScreenComponent() {
           onDeleteTransfer={(id) => void actions.removeTransfer(id)}
         />
       )}
-      {activePatternTab === "trends" && <TrendsPanel moments={moments} />}
+      {activePatternTab === "trends" && <TrendsPanel moments={moments} netWorthTrend={netWorthTrend} />}
     </ScrollView>
   );
 }

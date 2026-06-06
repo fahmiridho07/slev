@@ -200,6 +200,60 @@ export function getLatestBalanceTotal(snapshots: BalanceSnapshot[]): number {
   return getLatestBalanceSnapshots(snapshots).reduce((sum, snapshot) => sum + snapshot.amount, 0);
 }
 
+export type NetWorthPoint = {
+  date: string;
+  total: number;
+};
+
+export function buildNetWorthTrend({
+  balanceSnapshots,
+  maxPoints = 12,
+  projectedSnapshots
+}: {
+  balanceSnapshots: BalanceSnapshot[];
+  projectedSnapshots?: BalanceSnapshot[];
+  maxPoints?: number;
+}): NetWorthPoint[] {
+  const sortedSnapshots = [...balanceSnapshots].sort(
+    (left, right) => safeTime(left.snapshotDate) - safeTime(right.snapshotDate)
+  );
+  const distinctDates = [...new Set(sortedSnapshots.map((snapshot) => snapshot.snapshotDate))]
+    .filter((date) => Number.isFinite(safeTime(date)))
+    .sort((left, right) => safeTime(left) - safeTime(right));
+
+  if (distinctDates.length === 0 && !projectedSnapshots?.length) {
+    return [];
+  }
+
+  const points: NetWorthPoint[] = distinctDates.map((date) => {
+    const asOfTime = safeTime(date);
+    const latestByAccount = new Map<string, number>();
+
+    sortedSnapshots.forEach((snapshot) => {
+      if (safeTime(snapshot.snapshotDate) <= asOfTime) {
+        latestByAccount.set(snapshot.accountLabel, snapshot.amount);
+      }
+    });
+
+    const total = [...latestByAccount.values()].reduce((sum, amount) => sum + amount, 0);
+    return { date, total };
+  });
+
+  if (projectedSnapshots?.length) {
+    const todayDate = projectedSnapshots[0]?.snapshotDate ?? new Date().toISOString();
+    const todayTotal = getLatestBalanceTotal(projectedSnapshots);
+    const lastPoint = points[points.length - 1];
+
+    if (!lastPoint || lastPoint.date !== todayDate) {
+      points.push({ date: todayDate, total: todayTotal });
+    } else {
+      points[points.length - 1] = { date: todayDate, total: todayTotal };
+    }
+  }
+
+  return points.slice(-maxPoints);
+}
+
 export function getProjectedBalanceSnapshots({
   accounts,
   balanceSnapshots,

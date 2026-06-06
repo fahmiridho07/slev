@@ -6,6 +6,7 @@ import {
   AllocationPlan,
   buildAllocationPlan,
   buildCurrentMonthSummary,
+  buildNetWorthTrend,
   getLatestBalanceSnapshots,
   getLatestBalanceTotal,
   getProjectedBalanceSnapshots,
@@ -29,6 +30,7 @@ export type FinanceDerived = {
   projectedBalanceSnapshots: ReturnType<typeof getProjectedBalanceSnapshots>;
   repeatSuggestions: ReturnType<typeof getRepeatSuggestions>;
   upcomingBills: UpcomingBill[];
+  netWorthTrend: ReturnType<typeof buildNetWorthTrend>;
 };
 
 export const ActionsContext = createContext<FinanceActions | null>(null);
@@ -102,6 +104,14 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     () => getUpcomingBills({ bills: state.recurringBills }),
     [state.recurringBills]
   );
+  const netWorthTrend = useMemo(
+    () =>
+      buildNetWorthTrend({
+        balanceSnapshots: state.balanceSnapshots,
+        projectedSnapshots: projectedBalanceSnapshots
+      }),
+    [projectedBalanceSnapshots, state.balanceSnapshots]
+  );
   const allocationPlan = useMemo(
     () => {
       const currentBalances = getLatestBalanceSnapshots(projectedBalanceSnapshots);
@@ -140,7 +150,8 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       patterns,
       projectedBalanceSnapshots,
       repeatSuggestions,
-      upcomingBills
+      upcomingBills,
+      netWorthTrend
     }),
     [
       allocationPlan,
@@ -148,6 +159,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       feedbackByPattern,
       hasMonthlyPlan,
       latestBalanceTotal,
+      netWorthTrend,
       runwayMonths,
       monthlySummary,
       patterns,
