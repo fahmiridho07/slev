@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { memo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SegmentedControl } from "../components";
 import { AllocationPanel } from "../features/budget/AllocationPanel";
@@ -6,79 +6,29 @@ import { BalancePanel } from "../features/budget/BalancePanel";
 import { BudgetLimitsPanel } from "../features/budget/BudgetLimitsPanel";
 import { MonthlyPlanPanel } from "../features/budget/MonthlyPlanPanel";
 import { SavingsGoalsPanel } from "../features/budget/SavingsGoalsPanel";
-import { BudgetTabKey, CategoryModeValue } from "../features/app.types";
-import { BalanceSnapshot, BudgetLimit, BudgetPeriod, CategoryMode, ExpenseCategory, MoneyAccount, MoneyTransfer, MonthlyPlan, SavingsGoal, SpendingContext, SpendingMoment } from "../features/spendingMemory.types";
-import { buildCurrentMonthSummary } from "../lib/financeEngine";
+import { BudgetTabKey } from "../features/app.types";
+import { useFinance } from "../state/useFinance";
 import { styles } from "../theme/styles/app";
 
-export function BudgetScreen({
-  accounts,
-  balanceSnapshots,
-  budgetLimits,
-  categoryLabels,
-  categoryModes,
-  expenseCategories,
-  monthlyPlan,
-  moments,
-  projectedBalanceSnapshots,
-  transfers,
-  onDeleteAccount,
-  onDeleteCategory,
-  onDeleteLimit,
-  onDeleteGoal,
-  onOpenSettings,
-  onSaveAccount,
-  onSaveBalance,
-  onSaveCategoryMode,
-  onSaveGoal,
-  onSaveLimit,
-  onSaveMonthlyPlan,
-  savingsGoals
-}: {
-  accounts: MoneyAccount[];
-  balanceSnapshots: BalanceSnapshot[];
-  budgetLimits: BudgetLimit[];
-  categoryLabels: SpendingContext[];
-  categoryModes: CategoryMode[];
-  expenseCategories: ExpenseCategory[];
-  monthlyPlan: MonthlyPlan | null;
-  moments: SpendingMoment[];
-  projectedBalanceSnapshots: BalanceSnapshot[];
-  transfers: MoneyTransfer[];
-  onDeleteAccount: (id: string) => void;
-  onDeleteCategory: (category: ExpenseCategory) => void;
-  onDeleteLimit: (category: SpendingContext) => void;
-  onDeleteGoal: (id: string) => void;
+type BudgetScreenProps = {
   onOpenSettings: () => void;
-  onSaveAccount: (input: {
-    id?: string;
-    isIncomeHub: boolean;
-    kind: MoneyAccount["kind"];
-    label: string;
-  }) => void;
-  onSaveBalance: (input: { accountLabel: string; amount: string }) => void;
-  onSaveCategoryMode: (category: SpendingContext, mode: CategoryModeValue) => void;
-  onSaveGoal: (input: {
-    id?: string;
-    label: string;
-    savedAmount: string;
-    targetAmount: string;
-  }) => void;
-  onSaveLimit: (category: SpendingContext, amountText: string, period: BudgetPeriod) => void;
-  onSaveMonthlyPlan: (input: {
-    expectedIncome: string;
-    fixedCosts: string;
-    flexibleBudget: string;
-    note: string;
-    savingsTarget: string;
-  }) => void;
-  savingsGoals: SavingsGoal[];
-}) {
+};
+
+function BudgetScreenComponent({ onOpenSettings }: BudgetScreenProps) {
+  const { actions, derived, state } = useFinance();
+  const {
+    accounts,
+    balanceSnapshots,
+    budgetLimits,
+    categoryModes,
+    expenseCategories,
+    monthlyPlan,
+    moments,
+    savingsGoals,
+    transfers
+  } = state;
+  const { categoryLabels, monthlySummary, projectedBalanceSnapshots } = derived;
   const [activeBudgetTab, setActiveBudgetTab] = useState<BudgetTabKey>("plan");
-  const monthlySummary = useMemo(
-    () => buildCurrentMonthSummary(moments, categoryModes),
-    [categoryModes, moments]
-  );
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
@@ -112,7 +62,7 @@ export function BudgetScreen({
           <MonthlyPlanPanel
             monthlyPlan={monthlyPlan}
             monthlySummary={monthlySummary}
-            onSaveMonthlyPlan={onSaveMonthlyPlan}
+            onSaveMonthlyPlan={(input) => void actions.savePlan(input)}
           />
         </View>
       )}
@@ -123,18 +73,18 @@ export function BudgetScreen({
           categoryModes={categoryModes}
           expenseCategories={expenseCategories}
           moments={moments}
-          onDeleteCategory={onDeleteCategory}
-          onDeleteLimit={onDeleteLimit}
+          onDeleteCategory={(category) => void actions.removeCategory(category)}
+          onDeleteLimit={(category) => void actions.removeCategoryBudget(category)}
           onOpenSettings={onOpenSettings}
-          onSaveCategoryMode={onSaveCategoryMode}
-          onSaveLimit={onSaveLimit}
+          onSaveCategoryMode={(category, mode) => void actions.changeCategoryMode(category, mode)}
+          onSaveLimit={(category, amountText, period) => void actions.saveCategoryBudget(category, amountText, period)}
         />
       )}
       {activeBudgetTab === "goals" && (
         <SavingsGoalsPanel
           savingsGoals={savingsGoals}
-          onDeleteGoal={onDeleteGoal}
-          onSaveGoal={onSaveGoal}
+          onDeleteGoal={(id) => void actions.removeSavingsGoal(id)}
+          onSaveGoal={(input) => void actions.saveGoal(input)}
         />
       )}
       {activeBudgetTab === "balance" && (
@@ -142,11 +92,13 @@ export function BudgetScreen({
           accounts={accounts}
           balanceSnapshots={balanceSnapshots}
           projectedBalanceSnapshots={projectedBalanceSnapshots}
-          onDeleteAccount={onDeleteAccount}
-          onSaveAccount={onSaveAccount}
-          onSaveBalance={onSaveBalance}
+          onDeleteAccount={(id) => void actions.removeAccount(id)}
+          onSaveAccount={(input) => void actions.saveAccount(input)}
+          onSaveBalance={(input) => void actions.saveBalance(input)}
         />
       )}
     </ScrollView>
   );
 }
+
+export const BudgetScreen = memo(BudgetScreenComponent);

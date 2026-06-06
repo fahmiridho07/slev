@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { memo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SegmentedControl } from "../components";
 import { AccountAnalysisPanel } from "../features/analysis/AccountAnalysisPanel";
@@ -6,30 +6,13 @@ import { BreakdownPanel } from "../features/analysis/BreakdownPanel";
 import { PatternOverview } from "../features/analysis/PatternOverview";
 import { TrendsPanel } from "../features/analysis/TrendsPanel";
 import { PatternTabKey } from "../features/app.types";
-import { BalanceSnapshot, MoneyAccount, MoneyTransfer, PatternFeedbackResponse, SpendingMoment, SpendingPattern } from "../features/spendingMemory.types";
+import { useFinance } from "../state/useFinance";
 import { styles } from "../theme/styles/app";
 
-export function PatternsScreen({
-  accounts,
-  balanceSnapshots,
-  feedbackByPattern,
-  moments,
-  patterns,
-  projectedBalanceSnapshots,
-  transfers,
-  onDeleteTransfer,
-  onAnswer
-}: {
-  accounts: MoneyAccount[];
-  balanceSnapshots: BalanceSnapshot[];
-  feedbackByPattern: Map<string, PatternFeedbackResponse>;
-  moments: SpendingMoment[];
-  patterns: SpendingPattern[];
-  projectedBalanceSnapshots: BalanceSnapshot[];
-  transfers: MoneyTransfer[];
-  onDeleteTransfer: (id: string) => void;
-  onAnswer: (patternId: string, response: PatternFeedbackResponse) => void;
-}) {
+function PatternsScreenComponent() {
+  const { actions, derived, state } = useFinance();
+  const { accounts, balanceSnapshots, moments, transfers } = state;
+  const { feedbackByPattern, patterns, projectedBalanceSnapshots } = derived;
   const [activePatternTab, setActivePatternTab] = useState<PatternTabKey>("overview");
 
   return (
@@ -55,7 +38,7 @@ export function PatternsScreen({
           feedbackByPattern={feedbackByPattern}
           moments={moments}
           patterns={patterns}
-          onAnswer={onAnswer}
+          onAnswer={(patternId, response) => void actions.answerPattern(patternId, response)}
         />
       )}
       {activePatternTab === "breakdown" && <BreakdownPanel moments={moments} />}
@@ -66,10 +49,12 @@ export function PatternsScreen({
           moments={moments}
           projectedBalanceSnapshots={projectedBalanceSnapshots}
           transfers={transfers}
-          onDeleteTransfer={onDeleteTransfer}
+          onDeleteTransfer={(id) => void actions.removeTransfer(id)}
         />
       )}
       {activePatternTab === "trends" && <TrendsPanel moments={moments} />}
     </ScrollView>
   );
 }
+
+export const PatternsScreen = memo(PatternsScreenComponent);
