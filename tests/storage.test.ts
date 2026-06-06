@@ -219,6 +219,9 @@ function createMemoryDriver(options?: { failWrites?: Set<string> }): MemoryDrive
     },
     async multiRemove(keys) {
       keys.forEach((key) => store.delete(key));
+    },
+    async getAllKeys() {
+      return [...store.keys()];
     }
   };
 }

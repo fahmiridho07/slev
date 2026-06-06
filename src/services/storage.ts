@@ -5,6 +5,7 @@ export type StorageDriver = {
   setItem(key: string, value: string): Promise<void>;
   removeItem(key: string): Promise<void>;
   multiRemove(keys: string[]): Promise<void>;
+  getAllKeys(): Promise<string[]>;
 };
 
 export type ReadJsonResult<T = unknown> =
@@ -17,11 +18,15 @@ export type WriteResult<T> = {
   persisted: boolean;
 };
 
+const CORRUPT_BACKUP_PREFIX = "slev_corrupt_backup__";
+const MAX_CORRUPT_BACKUPS_PER_KEY = 3;
+
 const defaultDriver: StorageDriver = {
   getItem: (key) => AsyncStorage.getItem(key),
   setItem: (key, value) => AsyncStorage.setItem(key, value),
   removeItem: (key) => AsyncStorage.removeItem(key),
-  multiRemove: (keys) => AsyncStorage.multiRemove(keys)
+  multiRemove: (keys) => AsyncStorage.multiRemove(keys),
+  getAllKeys: async () => [...(await AsyncStorage.getAllKeys())]
 };
 
 let activeDriver: StorageDriver = defaultDriver;
@@ -42,6 +47,10 @@ export function isKeyCorrupt(key: string): boolean {
 
 export function clearCorruptFlag(key: string): void {
   corruptKeys.delete(key);
+}
+
+export function corruptBackupKeyPrefix(sourceKey: string): string {
+  return `${CORRUPT_BACKUP_PREFIX}${sourceKey}__`;
 }
 
 export async function readRaw(key: string): Promise<string | null> {
@@ -102,9 +111,31 @@ export async function writeJson(key: string, value: unknown): Promise<boolean> {
 }
 
 async function backupCorruptBlob(key: string, raw: string): Promise<void> {
-  const backupKey = `slev_corrupt_backup__${key}__${Date.now()}`;
+  const backupKey = `${corruptBackupKeyPrefix(key)}${Date.now()}`;
   try {
     await activeDriver.setItem(backupKey, raw);
+    await pruneCorruptBackups(key);
+  } catch {
+    return;
+  }
+}
+
+async function pruneCorruptBackups(sourceKey: string): Promise<void> {
+  try {
+    const prefix = corruptBackupKeyPrefix(sourceKey);
+    const allKeys = await activeDriver.getAllKeys();
+    const backupKeys = allKeys
+      .filter((candidate) => candidate.startsWith(prefix))
+      .sort((left, right) => {
+        const leftTimestamp = Number.parseInt(left.slice(prefix.length), 10);
+        const rightTimestamp = Number.parseInt(right.slice(prefix.length), 10);
+        return rightTimestamp - leftTimestamp;
+      });
+
+    const staleBackups = backupKeys.slice(MAX_CORRUPT_BACKUPS_PER_KEY);
+    if (staleBackups.length > 0) {
+      await activeDriver.multiRemove(staleBackups);
+    }
   } catch {
     return;
   }
