@@ -1,10 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
+  Animated,
   Image,
   KeyboardAvoidingView,
+  Modal,
+  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -29,7 +32,6 @@ import {
   ManualTemplate,
   MoneyAccount,
   MoneyTransfer,
-  MonthlyClosing,
   MonthlyPlan,
   PatternFeedback,
   PatternFeedbackResponse,
@@ -51,11 +53,11 @@ import {
   buildAllocationPlan,
   buildCurrentMonthSummary,
   buildMonthlyBreakdown,
-  FinanceBreakdownRow,
   FinanceMonthSummary,
   getLatestBalanceSnapshots,
   getLatestBalanceTotal,
-  getModeByCategory
+  getModeByCategory,
+  getProjectedBalanceSnapshots
 } from "./src/lib/financeEngine";
 import {
   clearAccountsAndTransfers,
@@ -81,18 +83,17 @@ import {
 } from "./src/services/categoryRepository";
 import {
   clearManualFinance,
+  deleteCategoryMode,
   deleteManualTemplate,
   deleteSavingsGoal,
   getMonthlyPlan,
   listBalanceSnapshots,
   listCategoryModes,
   listManualTemplates,
-  listMonthlyClosings,
   listSavingsGoals,
   saveBalanceSnapshot,
   saveCategoryMode,
   saveManualTemplate,
-  saveMonthlyClosing,
   saveMonthlyPlan,
   saveSavingsGoal
 } from "./src/services/manualFinanceRepository";
@@ -119,6 +120,7 @@ const tabs: { key: TabKey; label: string; icon: keyof typeof Ionicons.glyphMap }
 ];
 
 const SLEV_MARK = require("./assets/brand/slev-mark-transparent.png");
+const SWIPE_DELETE_ACTION_WIDTH = 84;
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabKey>("home");
@@ -131,7 +133,6 @@ export default function App() {
   const [manualTemplates, setManualTemplates] = useState<ManualTemplate[]>([]);
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
   const [balanceSnapshots, setBalanceSnapshots] = useState<BalanceSnapshot[]>([]);
-  const [monthlyClosings, setMonthlyClosings] = useState<MonthlyClosing[]>([]);
   const [accounts, setAccounts] = useState<MoneyAccount[]>([]);
   const [transfers, setTransfers] = useState<MoneyTransfer[]>([]);
   const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>([]);
@@ -158,7 +159,6 @@ export default function App() {
       storedManualTemplates,
       storedSavingsGoals,
       storedBalanceSnapshots,
-      storedMonthlyClosings,
       storedAccounts,
       storedTransfers,
       storedExpenseCategories
@@ -171,7 +171,6 @@ export default function App() {
       listManualTemplates(),
       listSavingsGoals(),
       listBalanceSnapshots(),
-      listMonthlyClosings(),
       listMoneyAccounts(),
       listMoneyTransfers(),
       listExpenseCategories()
@@ -184,7 +183,6 @@ export default function App() {
     setManualTemplates(storedManualTemplates);
     setSavingsGoals(storedSavingsGoals);
     setBalanceSnapshots(storedBalanceSnapshots);
-    setMonthlyClosings(storedMonthlyClosings);
     setAccounts(storedAccounts);
     setTransfers(storedTransfers);
     setExpenseCategories(storedExpenseCategories);
@@ -223,9 +221,19 @@ export default function App() {
     () => buildCurrentMonthSummary(moments, categoryModes),
     [categoryModes, moments]
   );
+  const projectedBalanceSnapshots = useMemo(
+    () =>
+      getProjectedBalanceSnapshots({
+        accounts,
+        balanceSnapshots,
+        moments,
+        transfers
+      }),
+    [accounts, balanceSnapshots, moments, transfers]
+  );
   const latestBalanceTotal = useMemo(
-    () => getLatestBalanceTotal(balanceSnapshots),
-    [balanceSnapshots]
+    () => getLatestBalanceTotal(projectedBalanceSnapshots),
+    [projectedBalanceSnapshots]
   );
   const feedbackByPattern = useMemo(
     () => new Map(feedback.map((item) => [item.patternId, item.response])),
@@ -464,9 +472,10 @@ export default function App() {
     const updated = await deleteMoneyAccount(id);
     setAccounts(updated);
     const labels = updated.map((account) => account.label);
+    setAccountLabel((current) => labels.includes(current) ? current : labels[0] ?? "");
     setFromAccount((current) => labels.includes(current) ? current : labels[0] ?? "BRI");
     setToAccount((current) => labels.includes(current) ? current : labels[1] ?? labels[0] ?? "Jago");
-    setMessage("Account removed.");
+    setMessage(updated.some((account) => account.id === id) ? "Keep at least one account for balances." : "Account removed.");
   }
 
   async function saveCategory(input: { id?: string; label: string }) {
@@ -483,8 +492,10 @@ export default function App() {
   async function removeCategory(category: ExpenseCategory) {
     const updatedCategories = await deleteExpenseCategory(category.id);
     const updatedLimits = await deleteBudgetLimit(category.label);
+    const updatedModes = await deleteCategoryMode(category.label);
     setExpenseCategories(updatedCategories);
     setBudgetLimits(updatedLimits);
+    setCategoryModes(updatedModes);
     if (context === category.label) {
       setContext("Other");
     }
@@ -578,22 +589,6 @@ export default function App() {
     setMessage("Balance snapshot saved.");
   }
 
-  async function completeMonthlyClose(input: {
-    nextMonthAdjustment: string;
-    totalExpenses: number;
-    totalIncome: number;
-  }) {
-    const updated = await saveMonthlyClosing({
-      month: getMonthKey(new Date()),
-      netCashflow: input.totalIncome - input.totalExpenses,
-      nextMonthAdjustment: input.nextMonthAdjustment,
-      totalExpenses: input.totalExpenses,
-      totalIncome: input.totalIncome
-    });
-    setMonthlyClosings(updated);
-    setMessage("Monthly close saved.");
-  }
-
   async function answerPattern(patternId: string, response: PatternFeedbackResponse) {
     const updated = await savePatternFeedback(patternId, response);
     setFeedback(updated);
@@ -625,7 +620,6 @@ export default function App() {
           setManualTemplates([]);
           setSavingsGoals([]);
           setBalanceSnapshots([]);
-          setMonthlyClosings([]);
           setAccounts(resetAccounts);
           setTransfers([]);
           setExpenseCategories(resetCategories);
@@ -731,11 +725,12 @@ export default function App() {
                 categoryLabels={categoryLabels}
                 categoryModes={categoryModes}
                 expenseCategories={expenseCategories}
-                monthlyClosings={monthlyClosings}
                 monthlyPlan={monthlyPlan}
                 moments={moments}
+                projectedBalanceSnapshots={projectedBalanceSnapshots}
                 transfers={transfers}
                 onDeleteAccount={removeAccount}
+                onDeleteCategory={removeCategory}
                 onDeleteLimit={removeCategoryBudget}
                 onDeleteGoal={removeSavingsGoal}
                 onOpenSettings={() => setActiveTab("settings")}
@@ -744,7 +739,6 @@ export default function App() {
                 onSaveCategoryMode={changeCategoryMode}
                 onSaveGoal={saveGoal}
                 onSaveLimit={saveCategoryBudget}
-                onSaveMonthlyClose={completeMonthlyClose}
                 onSaveMonthlyPlan={savePlan}
                 savingsGoals={savingsGoals}
               />
@@ -753,11 +747,10 @@ export default function App() {
               <PatternsScreen
                 accounts={accounts}
                 balanceSnapshots={balanceSnapshots}
-                categoryModes={categoryModes}
                 feedbackByPattern={feedbackByPattern}
-                monthlyPlan={monthlyPlan}
                 moments={moments}
                 patterns={patterns}
+                projectedBalanceSnapshots={projectedBalanceSnapshots}
                 transfers={transfers}
                 onDeleteTransfer={removeTransfer}
                 onAnswer={answerPattern}
@@ -878,6 +871,12 @@ function HomeScreen({
   onUseRepeat: (suggestion: RepeatSuggestion) => void;
 }) {
   const [noteOpen, setNoteOpen] = useState(Boolean(note));
+
+  useEffect(() => {
+    if (note) {
+      setNoteOpen(true);
+    }
+  }, [note]);
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
@@ -1094,26 +1093,49 @@ function HomeMoneyPulse({
 }) {
   const savingsTarget = monthlyPlan?.savingsTarget ?? 0;
   const estimatedSavings = Math.max(0, monthlySummary.net);
+  const netIsNegative = monthlySummary.net < 0;
 
   return (
     <View style={styles.pulsePanel}>
-      <View style={styles.pulseItem}>
-        <Text style={styles.microLabel}>Net this month</Text>
-        <Text style={[styles.pulseValue, monthlySummary.net < 0 && styles.expenseText]}>
+      <View style={[styles.pulseItem, netIsNegative ? styles.pulseItemDanger : styles.pulseItemIncome]}>
+        <View style={styles.pulseTopRow}>
+          <View style={[styles.pulseIconBadge, netIsNegative ? styles.pulseIconDanger : styles.pulseIconIncome]}>
+            <Ionicons
+              name={netIsNegative ? "trending-down-outline" : "trending-up-outline"}
+              size={17}
+              color={netIsNegative ? colors.coral : colors.greenDark}
+            />
+          </View>
+          <Text style={styles.pulseLabel}>Net income</Text>
+        </View>
+        <Text style={[styles.pulseValue, netIsNegative ? styles.pulseValueDanger : styles.pulseValueIncome]}>
           {formatSignedCompactRupiah(monthlySummary.net)}
         </Text>
       </View>
-      <View style={styles.pulseItem}>
-        <Text style={styles.microLabel}>Spending</Text>
-        <Text style={styles.pulseValue}>{formatCompactRupiah(monthlySummary.expense)}</Text>
+      <View style={[styles.pulseItem, styles.pulseItemSpending]}>
+        <View style={styles.pulseTopRow}>
+          <View style={[styles.pulseIconBadge, styles.pulseIconSpending]}>
+            <Ionicons name="card-outline" size={17} color={colors.coral} />
+          </View>
+          <Text style={styles.pulseLabel}>Spending</Text>
+        </View>
+        <Text style={[styles.pulseValue, styles.pulseValueDanger]}>{formatCompactRupiah(monthlySummary.expense)}</Text>
       </View>
-      <View style={styles.pulseItem}>
-        <Text style={styles.microLabel}>Balance</Text>
-        <Text style={styles.pulseValue}>{formatCompactRupiah(latestBalanceTotal)}</Text>
+      <View style={[styles.pulseItem, styles.pulseItemBalance]}>
+        <View style={styles.pulseTopRow}>
+          <View style={[styles.pulseIconBadge, styles.pulseIconBalance]}>
+            <Ionicons name="wallet-outline" size={17} color={colors.blue} />
+          </View>
+          <Text style={styles.pulseLabel}>Est. balance</Text>
+        </View>
+        <Text style={[styles.pulseValue, styles.pulseValueBalance]}>{formatCompactRupiah(latestBalanceTotal)}</Text>
       </View>
       {savingsTarget > 0 && (
         <View style={styles.pulseWideItem}>
-          <Text style={styles.settingCopy}>
+          <View style={[styles.pulseIconBadge, styles.pulseIconIncome]}>
+            <Ionicons name="flag-outline" size={17} color={colors.greenDark} />
+          </View>
+          <Text style={styles.pulseSavingsText}>
             Savings target: {formatCompactRupiah(savingsTarget)} - current pace {formatCompactRupiah(estimatedSavings)}
           </Text>
         </View>
@@ -1300,11 +1322,12 @@ function BudgetScreen({
   categoryLabels,
   categoryModes,
   expenseCategories,
-  monthlyClosings,
   monthlyPlan,
   moments,
+  projectedBalanceSnapshots,
   transfers,
   onDeleteAccount,
+  onDeleteCategory,
   onDeleteLimit,
   onDeleteGoal,
   onOpenSettings,
@@ -1313,7 +1336,6 @@ function BudgetScreen({
   onSaveCategoryMode,
   onSaveGoal,
   onSaveLimit,
-  onSaveMonthlyClose,
   onSaveMonthlyPlan,
   savingsGoals
 }: {
@@ -1323,11 +1345,12 @@ function BudgetScreen({
   categoryLabels: SpendingContext[];
   categoryModes: CategoryMode[];
   expenseCategories: ExpenseCategory[];
-  monthlyClosings: MonthlyClosing[];
   monthlyPlan: MonthlyPlan | null;
   moments: SpendingMoment[];
+  projectedBalanceSnapshots: BalanceSnapshot[];
   transfers: MoneyTransfer[];
   onDeleteAccount: (id: string) => void;
+  onDeleteCategory: (category: ExpenseCategory) => void;
   onDeleteLimit: (category: SpendingContext) => void;
   onDeleteGoal: (id: string) => void;
   onOpenSettings: () => void;
@@ -1346,11 +1369,6 @@ function BudgetScreen({
     targetAmount: string;
   }) => void;
   onSaveLimit: (category: SpendingContext, amountText: string, period: BudgetPeriod) => void;
-  onSaveMonthlyClose: (input: {
-    nextMonthAdjustment: string;
-    totalExpenses: number;
-    totalIncome: number;
-  }) => void;
   onSaveMonthlyPlan: (input: {
     expectedIncome: string;
     fixedCosts: string;
@@ -1360,7 +1378,7 @@ function BudgetScreen({
   }) => void;
   savingsGoals: SavingsGoal[];
 }) {
-  const [activeBudgetTab, setActiveBudgetTab] = useState<BudgetTabKey>("allocation");
+  const [activeBudgetTab, setActiveBudgetTab] = useState<BudgetTabKey>("plan");
   const monthlySummary = useMemo(
     () => buildCurrentMonthSummary(moments, categoryModes),
     [categoryModes, moments]
@@ -1375,27 +1393,32 @@ function BudgetScreen({
 
       <SegmentedControl
         options={[
-          { label: "Alloc", value: "allocation" },
-          { label: "Limit", value: "limits" },
           { label: "Plan", value: "plan" },
-          { label: "Goal", value: "goals" },
-          { label: "Bal", value: "balance" },
-          { label: "Close", value: "close" }
+          { label: "Limits", value: "limits" },
+          { label: "Balance", value: "balance" },
+          { label: "Goals", value: "goals" }
         ]}
         selected={activeBudgetTab}
         onSelect={setActiveBudgetTab}
       />
 
-      {activeBudgetTab === "allocation" && (
-        <AllocationPanel
-          accounts={accounts}
-          balanceSnapshots={balanceSnapshots}
-          monthlyPlan={monthlyPlan}
-          monthlySummary={monthlySummary}
-          transfers={transfers}
-          onOpenBalance={() => setActiveBudgetTab("balance")}
-          onOpenPlan={() => setActiveBudgetTab("plan")}
-        />
+      {activeBudgetTab === "plan" && (
+        <View style={styles.analyticsBlock}>
+          <AllocationPanel
+            accounts={accounts}
+            balanceSnapshots={balanceSnapshots}
+            monthlyPlan={monthlyPlan}
+            monthlySummary={monthlySummary}
+            projectedBalanceSnapshots={projectedBalanceSnapshots}
+            transfers={transfers}
+            onOpenBalance={() => setActiveBudgetTab("balance")}
+          />
+          <MonthlyPlanPanel
+            monthlyPlan={monthlyPlan}
+            monthlySummary={monthlySummary}
+            onSaveMonthlyPlan={onSaveMonthlyPlan}
+          />
+        </View>
       )}
       {activeBudgetTab === "limits" && (
         <BudgetLimitsPanel
@@ -1404,17 +1427,11 @@ function BudgetScreen({
           categoryModes={categoryModes}
           expenseCategories={expenseCategories}
           moments={moments}
+          onDeleteCategory={onDeleteCategory}
           onDeleteLimit={onDeleteLimit}
           onOpenSettings={onOpenSettings}
           onSaveCategoryMode={onSaveCategoryMode}
           onSaveLimit={onSaveLimit}
-        />
-      )}
-      {activeBudgetTab === "plan" && (
-        <MonthlyPlanPanel
-          monthlyPlan={monthlyPlan}
-          monthlySummary={monthlySummary}
-          onSaveMonthlyPlan={onSaveMonthlyPlan}
         />
       )}
       {activeBudgetTab === "goals" && (
@@ -1428,17 +1445,10 @@ function BudgetScreen({
         <BalancePanel
           accounts={accounts}
           balanceSnapshots={balanceSnapshots}
+          projectedBalanceSnapshots={projectedBalanceSnapshots}
           onDeleteAccount={onDeleteAccount}
           onSaveAccount={onSaveAccount}
           onSaveBalance={onSaveBalance}
-        />
-      )}
-      {activeBudgetTab === "close" && (
-        <MonthlyClosePanel
-          monthlyClosings={monthlyClosings}
-          monthlyPlan={monthlyPlan}
-          monthlySummary={monthlySummary}
-          onSaveMonthlyClose={onSaveMonthlyClose}
         />
       )}
     </ScrollView>
@@ -1451,6 +1461,7 @@ function BudgetLimitsPanel({
   categoryModes,
   expenseCategories,
   moments,
+  onDeleteCategory,
   onDeleteLimit,
   onOpenSettings,
   onSaveCategoryMode,
@@ -1461,6 +1472,7 @@ function BudgetLimitsPanel({
   categoryModes: CategoryMode[];
   expenseCategories: ExpenseCategory[];
   moments: SpendingMoment[];
+  onDeleteCategory: (category: ExpenseCategory) => void;
   onDeleteLimit: (category: SpendingContext) => void;
   onOpenSettings: () => void;
   onSaveCategoryMode: (category: SpendingContext, mode: CategoryModeValue) => void;
@@ -1469,6 +1481,7 @@ function BudgetLimitsPanel({
   const [editingCategory, setEditingCategory] = useState<SpendingContext | null>(null);
   const [draftAmount, setDraftAmount] = useState("");
   const [draftPeriod, setDraftPeriod] = useState<BudgetPeriod>("weekly");
+  const [pendingDeleteCategory, setPendingDeleteCategory] = useState<ExpenseCategory | null>(null);
   const limitByCategory = useMemo(
     () => new Map(budgetLimits.map((limit) => [limit.category, limit])),
     [budgetLimits]
@@ -1483,7 +1496,7 @@ function BudgetLimitsPanel({
         const spent = sumExpenseMoments(getMomentsInPeriod(moments, period).filter((moment) => moment.context === category));
         return {
           category,
-          isDefault: categoryMeta?.isDefault ?? false,
+          categoryMeta,
           limit,
           mode: modeByCategory.get(category) ?? "flexible",
           period,
@@ -1512,17 +1525,18 @@ function BudgetLimitsPanel({
   }
 
   return (
-      <View style={styles.listPanel}>
-        {rows.map((row) => (
-          <Pressable
-            key={row.category}
-            onLongPress={() => {
-              if (row.limit) {
-                onDeleteLimit(row.category);
-              }
-            }}
-            style={styles.budgetRow}
-          >
+    <View style={styles.listPanel}>
+      {rows.map((row) => (
+        <SwipeActionRow
+          canDelete={Boolean(row.categoryMeta)}
+          key={row.category}
+          onDelete={() => {
+            if (row.categoryMeta) {
+              setPendingDeleteCategory(row.categoryMeta);
+            }
+          }}
+        >
+          <View style={styles.budgetRow}>
             <View style={styles.budgetHeader}>
               <View style={styles.budgetTitleBlock}>
                 <Text style={styles.budgetCategory}>{row.category}</Text>
@@ -1582,7 +1596,7 @@ function BudgetLimitsPanel({
                       }}
                       style={styles.secondaryButton}
                     >
-                      <Text style={styles.deleteText}>Delete</Text>
+                      <Text style={styles.deleteText}>Delete limit</Text>
                     </Pressable>
                   )}
                   <Pressable onPress={() => setEditingCategory(null)} style={styles.secondaryButton}>
@@ -1600,9 +1614,29 @@ function BudgetLimitsPanel({
                 </View>
               </View>
             )}
-          </Pressable>
-        ))}
-      </View>
+          </View>
+        </SwipeActionRow>
+      ))}
+      <DeleteConfirmDialog
+        body={
+          pendingDeleteCategory
+            ? `${pendingDeleteCategory.label} will disappear from capture and budget limits. Existing memories stay saved.`
+            : ""
+        }
+        onCancel={() => setPendingDeleteCategory(null)}
+        onConfirm={() => {
+          if (pendingDeleteCategory) {
+            onDeleteCategory(pendingDeleteCategory);
+            if (editingCategory === pendingDeleteCategory.label) {
+              setEditingCategory(null);
+            }
+            setPendingDeleteCategory(null);
+          }
+        }}
+        title="Remove category?"
+        visible={Boolean(pendingDeleteCategory)}
+      />
+    </View>
   );
 }
 
@@ -1611,32 +1645,29 @@ function AllocationPanel({
   balanceSnapshots,
   monthlyPlan,
   monthlySummary,
+  projectedBalanceSnapshots,
   transfers,
   onOpenBalance,
-  onOpenPlan
 }: {
   accounts: MoneyAccount[];
   balanceSnapshots: BalanceSnapshot[];
   monthlyPlan: MonthlyPlan | null;
   monthlySummary: MonthlySummary;
+  projectedBalanceSnapshots: BalanceSnapshot[];
   transfers: MoneyTransfer[];
   onOpenBalance: () => void;
-  onOpenPlan: () => void;
 }) {
-  const latestSnapshots = useMemo(() => getLatestBalanceSnapshots(balanceSnapshots), [balanceSnapshots]);
+  const currentBalances = useMemo(() => getLatestBalanceSnapshots(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
   const allocation = useMemo(
     () =>
       buildAllocationPlan({
         accounts,
-        latestSnapshots,
+        hasBalanceEvidence: balanceSnapshots.length > 0 || monthlySummary.income > 0 || monthlySummary.expense > 0 || transfers.length > 0,
+        latestSnapshots: currentBalances,
         monthlyPlan,
         monthlySummary
       }),
-    [accounts, latestSnapshots, monthlyPlan, monthlySummary]
-  );
-  const pocketFundingThisMonth = useMemo(
-    () => getPocketFundingThisMonth(accounts, transfers),
-    [accounts, transfers]
+    [accounts, currentBalances, monthlyPlan, monthlySummary]
   );
   const actionCopy = getAllocationActionCopy(allocation);
 
@@ -1655,8 +1686,6 @@ function AllocationPanel({
       {!monthlyPlan ? (
         <EmptyState
           text="Set expected income, fixed costs, flexible budget, and savings target to make allocation useful."
-          actionLabel="Open Plan"
-          onAction={onOpenPlan}
         />
       ) : (
         <>
@@ -1708,36 +1737,9 @@ function AllocationPanel({
             })}
           </View>
 
-          <View style={styles.settingsPanel}>
-            <View style={styles.settingRow}>
-              <Ionicons name="swap-horizontal-outline" size={20} color={colors.greenDark} />
-              <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Hub to pocket funding</Text>
-                <Text style={styles.settingCopy}>
-                  {pocketFundingThisMonth > 0
-                    ? `${formatCompactRupiah(pocketFundingThisMonth)} moved from income hub to spending pockets this month.`
-                    : "No hub-to-pocket transfer is logged this month yet."}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.settingRow}>
-              <Ionicons name="wallet-outline" size={20} color={colors.greenDark} />
-              <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Pocket top-up check</Text>
-                <Text style={styles.settingCopy}>
-                  {latestSnapshots.length === 0
-                    ? "Add balance snapshots to compare pocket cash against the remaining flexible budget."
-                    : allocation.pocketTopUpNeed > 0
-                      ? `${formatCompactRupiah(allocation.pocketTopUpNeed)} more would fully fund remaining flexible spending.`
-                      : "Current pocket balance already covers remaining flexible spending."}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {latestSnapshots.length === 0 && (
+          {balanceSnapshots.length === 0 && (
             <EmptyState
-              text="Allocation gets sharper after a quick snapshot for BRI, Jago, wallets, and cash."
+              text="Balance is estimated from logged income and spending. Add a snapshot to calibrate the real account balance."
               actionLabel="Open Balance"
               onAction={onOpenBalance}
             />
@@ -1786,18 +1788,6 @@ function MonthlyPlanPanel({
 
   return (
     <View style={styles.analyticsBlock}>
-      <View style={styles.settingsPanel}>
-        <View style={styles.settingRow}>
-          <Ionicons name="calendar-outline" size={20} color={colors.greenDark} />
-          <View style={styles.settingText}>
-            <Text style={styles.settingTitle}>This month so far</Text>
-            <Text style={styles.settingCopy}>
-              Income {formatCompactRupiah(monthlySummary.income)} - spending {formatCompactRupiah(monthlySummary.expense)} - net {formatSignedCompactRupiah(monthlySummary.net)}
-            </Text>
-          </View>
-        </View>
-      </View>
-
       <View style={styles.capturePanel}>
         <Text style={styles.microLabel}>Monthly spending plan</Text>
         <TextInput keyboardType="number-pad" onChangeText={(value) => setExpectedIncome(formatAmountInput(value))} placeholder="Expected income" placeholderTextColor={colors.muted} style={styles.input} value={expectedIncome} />
@@ -1840,6 +1830,7 @@ function SavingsGoalsPanel({
   const [goalLabel, setGoalLabel] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
   const [savedAmount, setSavedAmount] = useState("");
+  const [pendingDeleteGoal, setPendingDeleteGoal] = useState<SavingsGoal | null>(null);
 
   function editGoal(goal: SavingsGoal) {
     setEditingGoalId(goal.id);
@@ -1900,7 +1891,7 @@ function SavingsGoalsPanel({
                     <Ionicons name="create-outline" size={16} color={colors.greenDark} />
                     <Text style={styles.textButtonLabel}>Edit</Text>
                   </Pressable>
-                  <Pressable onPress={() => onDeleteGoal(goal.id)} style={styles.textButton}>
+                  <Pressable onPress={() => setPendingDeleteGoal(goal)} style={styles.textButton}>
                     <Ionicons name="trash-outline" size={16} color={colors.coral} />
                     <Text style={[styles.textButtonLabel, styles.deleteText]}>Delete</Text>
                   </Pressable>
@@ -1910,6 +1901,22 @@ function SavingsGoalsPanel({
           })}
         </View>
       )}
+      <DeleteConfirmDialog
+        body={
+          pendingDeleteGoal
+            ? `${pendingDeleteGoal.label} will be removed from your goals. This does not change saved memories or balances.`
+            : ""
+        }
+        onCancel={() => setPendingDeleteGoal(null)}
+        onConfirm={() => {
+          if (pendingDeleteGoal) {
+            onDeleteGoal(pendingDeleteGoal.id);
+            setPendingDeleteGoal(null);
+          }
+        }}
+        title="Delete goal?"
+        visible={Boolean(pendingDeleteGoal)}
+      />
     </View>
   );
 }
@@ -1917,12 +1924,14 @@ function SavingsGoalsPanel({
 function BalancePanel({
   accounts,
   balanceSnapshots,
+  projectedBalanceSnapshots,
   onDeleteAccount,
   onSaveAccount,
   onSaveBalance
 }: {
   accounts: MoneyAccount[];
   balanceSnapshots: BalanceSnapshot[];
+  projectedBalanceSnapshots: BalanceSnapshot[];
   onDeleteAccount: (id: string) => void;
   onSaveAccount: (input: {
     id?: string;
@@ -1938,12 +1947,18 @@ function BalancePanel({
   const [accountDraftLabel, setAccountDraftLabel] = useState("");
   const [accountDraftKind, setAccountDraftKind] = useState<MoneyAccount["kind"]>("bank");
   const [accountDraftHub, setAccountDraftHub] = useState<"hub" | "pocket">("pocket");
-  const latestBalanceTotal = useMemo(() => getLatestBalanceTotal(balanceSnapshots), [balanceSnapshots]);
+  const [pendingDeleteAccount, setPendingDeleteAccount] = useState<MoneyAccount | null>(null);
+  const currentBalanceTotal = useMemo(() => getLatestBalanceTotal(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
+  const manualBalanceTotal = useMemo(() => getLatestBalanceTotal(balanceSnapshots), [balanceSnapshots]);
+  const currentBalances = useMemo(() => getLatestBalanceSnapshots(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
   const latestSnapshots = useMemo(() => getLatestBalanceSnapshots(balanceSnapshots), [balanceSnapshots]);
 
   useEffect(() => {
-    if (!accountLabel && accounts[0]) {
-      setAccountLabel(accounts[0].label);
+    const labels = accounts.map((account) => account.label);
+    if (labels.length === 0) {
+      setAccountLabel("");
+    } else if (!labels.includes(accountLabel)) {
+      setAccountLabel(labels[0]);
     }
   }, [accountLabel, accounts]);
 
@@ -1967,10 +1982,21 @@ function BalancePanel({
         <View style={styles.settingRow}>
           <Ionicons name="albums-outline" size={20} color={colors.greenDark} />
           <View style={styles.settingText}>
-            <Text style={styles.settingTitle}>Latest manual balance</Text>
-            <Text style={styles.settingCopy}>{formatCompactRupiah(latestBalanceTotal)} across latest account snapshots.</Text>
+            <Text style={styles.settingTitle}>Estimated current balance</Text>
+            <Text style={styles.settingCopy}>
+              {formatCompactRupiah(currentBalanceTotal)} from snapshots plus logged income, spending, and transfers.
+            </Text>
           </View>
         </View>
+        {latestSnapshots.length > 0 && (
+          <View style={styles.settingRow}>
+            <Ionicons name="camera-outline" size={20} color={colors.greenDark} />
+            <View style={styles.settingText}>
+              <Text style={styles.settingTitle}>Manual snapshot base</Text>
+              <Text style={styles.settingCopy}>{formatCompactRupiah(manualBalanceTotal)} from the latest saved snapshots.</Text>
+            </View>
+          </View>
+        )}
       </View>
 
       <View style={styles.capturePanel}>
@@ -2052,7 +2078,7 @@ function BalancePanel({
                 <Ionicons name="create-outline" size={16} color={colors.greenDark} />
                 <Text style={styles.textButtonLabel}>Edit</Text>
               </Pressable>
-              <Pressable onPress={() => onDeleteAccount(account.id)} style={styles.textButton}>
+              <Pressable onPress={() => setPendingDeleteAccount(account)} style={styles.textButton}>
                 <Ionicons name="trash-outline" size={16} color={colors.coral} />
                 <Text style={[styles.textButtonLabel, styles.deleteText]}>Delete</Text>
               </Pressable>
@@ -2061,123 +2087,40 @@ function BalancePanel({
         ))}
       </View>
 
-      {latestSnapshots.length === 0 ? (
-        <EmptyState text="A weekly manual balance check is enough for a clear picture." />
+      {currentBalances.length === 0 ? (
+        <EmptyState text="Income, expenses, transfers, or snapshots will build account balances here." />
       ) : (
         <View style={styles.listPanel}>
-          {latestSnapshots.map((snapshot) => (
+          <SectionHeader title="Current account balances" />
+          {currentBalances.map((snapshot) => (
             <View key={snapshot.id} style={styles.analyticsRow}>
               <View style={styles.analyticsRowHeader}>
                 <AccountTitle label={snapshot.accountLabel} />
                 <Text style={styles.analyticsAmount}>{formatRupiah(snapshot.amount)}</Text>
               </View>
               <Text style={styles.settingCopy}>
-                {formatDate(dateKey(new Date(snapshot.snapshotDate)))}
+                Estimated from the latest snapshot and logged movements.
               </Text>
             </View>
           ))}
         </View>
       )}
-    </View>
-  );
-}
-
-function MonthlyClosePanel({
-  monthlyClosings,
-  monthlyPlan,
-  monthlySummary,
-  onSaveMonthlyClose
-}: {
-  monthlyClosings: MonthlyClosing[];
-  monthlyPlan: MonthlyPlan | null;
-  monthlySummary: MonthlySummary;
-  onSaveMonthlyClose: (input: {
-    nextMonthAdjustment: string;
-    totalExpenses: number;
-    totalIncome: number;
-  }) => void;
-}) {
-  const [nextMonthAdjustment, setNextMonthAdjustment] = useState("");
-  const currentMonthKey = getMonthKey(new Date());
-  const closing = monthlyClosings.find((item) => item.month === currentMonthKey);
-  const savingsTarget = monthlyPlan?.savingsTarget ?? 0;
-  const estimatedSavings = Math.max(0, monthlySummary.net);
-  const savingsGap = estimatedSavings - savingsTarget;
-
-  return (
-    <View style={styles.analyticsBlock}>
-      <View style={styles.settingsPanel}>
-        <View style={styles.settingRow}>
-          <Ionicons name="checkmark-done-outline" size={20} color={colors.greenDark} />
-          <View style={styles.settingText}>
-            <Text style={styles.settingTitle}>{closing ? "This month is closed" : "Monthly closing ritual"}</Text>
-            <Text style={styles.settingCopy}>
-              Income {formatCompactRupiah(monthlySummary.income)} - spending {formatCompactRupiah(monthlySummary.expense)} - possible savings {formatCompactRupiah(estimatedSavings)}.
-            </Text>
-          </View>
-        </View>
-        <View style={styles.settingRow}>
-          <Ionicons name="flag-outline" size={20} color={colors.greenDark} />
-          <View style={styles.settingText}>
-            <Text style={styles.settingTitle}>Savings target check</Text>
-            <Text style={styles.settingCopy}>
-              {savingsTarget > 0
-                ? `Against target: ${formatSignedCompactRupiah(savingsGap)}.`
-                : "Set a monthly savings target in Plan when it helps."}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.capturePanel}>
-        <Text style={styles.microLabel}>Next month adjustment</Text>
-        <TextInput multiline onChangeText={setNextMonthAdjustment} placeholder="One thing to keep, reduce, or plan differently" placeholderTextColor={colors.muted} style={[styles.input, styles.noteInput]} value={nextMonthAdjustment} />
-        <Pressable
-          onPress={() => {
-            onSaveMonthlyClose({
-              nextMonthAdjustment,
-              totalExpenses: monthlySummary.expense,
-              totalIncome: monthlySummary.income
-            });
-            setNextMonthAdjustment("");
-          }}
-          style={styles.primaryButton}
-        >
-          <Ionicons name="checkmark-circle-outline" size={18} color={colors.surface} />
-          <Text style={styles.primaryButtonText}>{closing ? "Update close" : "Complete close"}</Text>
-        </Pressable>
-      </View>
-
-      {closing?.nextMonthAdjustment && (
-        <ObservationPanel
-          pattern={{
-            id: "closing-note",
-            group: "Repeated lately",
-            title: "Saved adjustment",
-            detail: closing.nextMonthAdjustment,
-            tone: "calm"
-          }}
-        />
-      )}
-
-      {monthlyClosings.length > 0 && (
-        <View style={styles.listPanel}>
-          {monthlyClosings.map((item) => (
-            <View key={item.id} style={styles.analyticsRow}>
-              <View style={styles.analyticsRowHeader}>
-                <Text style={styles.analyticsTitle}>{item.month}</Text>
-                <Text style={[styles.analyticsAmount, item.netCashflow >= 0 ? styles.incomeText : styles.expenseText]}>
-                  {formatSignedCompactRupiah(item.netCashflow)}
-                </Text>
-              </View>
-              <Text style={styles.settingCopy}>
-                Income {formatRupiah(item.totalIncome)} - expenses {formatRupiah(item.totalExpenses)}
-              </Text>
-              {item.nextMonthAdjustment && <Text style={styles.settingCopy}>{item.nextMonthAdjustment}</Text>}
-            </View>
-          ))}
-        </View>
-      )}
+      <DeleteConfirmDialog
+        body={
+          pendingDeleteAccount
+            ? `${pendingDeleteAccount.label} will be removed from account pickers. Existing memories stay saved.`
+            : ""
+        }
+        onCancel={() => setPendingDeleteAccount(null)}
+        onConfirm={() => {
+          if (pendingDeleteAccount) {
+            onDeleteAccount(pendingDeleteAccount.id);
+            setPendingDeleteAccount(null);
+          }
+        }}
+        title="Delete account?"
+        visible={Boolean(pendingDeleteAccount)}
+      />
     </View>
   );
 }
@@ -2185,22 +2128,20 @@ function MonthlyClosePanel({
 function PatternsScreen({
   accounts,
   balanceSnapshots,
-  categoryModes,
   feedbackByPattern,
-  monthlyPlan,
   moments,
   patterns,
+  projectedBalanceSnapshots,
   transfers,
   onDeleteTransfer,
   onAnswer
 }: {
   accounts: MoneyAccount[];
   balanceSnapshots: BalanceSnapshot[];
-  categoryModes: CategoryMode[];
   feedbackByPattern: Map<string, PatternFeedbackResponse>;
-  monthlyPlan: MonthlyPlan | null;
   moments: SpendingMoment[];
   patterns: SpendingPattern[];
+  projectedBalanceSnapshots: BalanceSnapshot[];
   transfers: MoneyTransfer[];
   onDeleteTransfer: (id: string) => void;
   onAnswer: (patternId: string, response: PatternFeedbackResponse) => void;
@@ -2217,9 +2158,8 @@ function PatternsScreen({
       <SegmentedControl
         options={[
           { label: "Recap", value: "overview" },
-          { label: "Split", value: "breakdown" },
-          { label: "Flow", value: "cashflow" },
-          { label: "Pocket", value: "accounts" },
+          { label: "Category", value: "breakdown" },
+          { label: "Accounts", value: "accounts" },
           { label: "Trend", value: "trends" }
         ]}
         selected={activePatternTab}
@@ -2235,14 +2175,12 @@ function PatternsScreen({
         />
       )}
       {activePatternTab === "breakdown" && <BreakdownPanel moments={moments} />}
-      {activePatternTab === "cashflow" && <CashflowPanel moments={moments} />}
       {activePatternTab === "accounts" && (
         <AccountAnalysisPanel
           accounts={accounts}
           balanceSnapshots={balanceSnapshots}
-          categoryModes={categoryModes}
           moments={moments}
-          monthlyPlan={monthlyPlan}
+          projectedBalanceSnapshots={projectedBalanceSnapshots}
           transfers={transfers}
           onDeleteTransfer={onDeleteTransfer}
         />
@@ -2349,7 +2287,13 @@ function BreakdownPanel({ moments }: { moments: SpendingMoment[] }) {
   );
 }
 
-function CashflowPanel({ moments }: { moments: SpendingMoment[] }) {
+function CashflowPanel({
+  moments,
+  showEmpty = true
+}: {
+  moments: SpendingMoment[];
+  showEmpty?: boolean;
+}) {
   const weeks = useMemo(() => buildCashflowWeeks(moments), [moments]);
   const maxWeeklyAmount = useMemo(
     () => Math.max(1, ...weeks.flatMap((week) => [week.income, week.expense])),
@@ -2357,7 +2301,7 @@ function CashflowPanel({ moments }: { moments: SpendingMoment[] }) {
   );
 
   if (weeks.every((week) => week.income === 0 && week.expense === 0)) {
-    return <EmptyState text="Cashflow appears after income or spending entries." />;
+    return showEmpty ? <EmptyState text="Cashflow appears after income or spending entries." /> : null;
   }
 
   return (
@@ -2395,43 +2339,32 @@ function CashflowPanel({ moments }: { moments: SpendingMoment[] }) {
 function AccountAnalysisPanel({
   accounts,
   balanceSnapshots,
-  categoryModes,
   moments,
-  monthlyPlan,
+  projectedBalanceSnapshots,
   transfers,
   onDeleteTransfer
 }: {
   accounts: MoneyAccount[];
   balanceSnapshots: BalanceSnapshot[];
-  categoryModes: CategoryMode[];
   moments: SpendingMoment[];
-  monthlyPlan: MonthlyPlan | null;
+  projectedBalanceSnapshots: BalanceSnapshot[];
   transfers: MoneyTransfer[];
   onDeleteTransfer: (id: string) => void;
 }) {
-  const monthlySummary = useMemo(
-    () => buildCurrentMonthSummary(moments, categoryModes),
-    [categoryModes, moments]
-  );
-  const latestSnapshots = useMemo(() => getLatestBalanceSnapshots(balanceSnapshots), [balanceSnapshots]);
-  const distribution = useMemo(
-    () => buildAccountDistribution(accounts, latestSnapshots),
-    [accounts, latestSnapshots]
-  );
-  const transferFlows = useMemo(() => buildTransferFlows(transfers), [transfers]);
+  const currentBalances = useMemo(() => getLatestBalanceSnapshots(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
   const accountActivity = useMemo(() => buildAccountActivity(moments), [moments]);
   const reconciliationRows = useMemo(
     () => buildAccountReconciliation({ accounts, balanceSnapshots, moments, transfers }),
     [accounts, balanceSnapshots, moments, transfers]
   );
   const recentTransfers = useMemo(() => transfers.slice(0, 6), [transfers]);
-  const monthMath = useMemo(() => buildMonthMath(monthlySummary, monthlyPlan), [monthlyPlan, monthlySummary]);
+  const [pendingDeleteTransfer, setPendingDeleteTransfer] = useState<MoneyTransfer | null>(null);
   const reconciliationCopy = getReconciliationCopy(reconciliationRows);
   const incomeHub = accounts.find((account) => account.isIncomeHub);
   const hubBalance = incomeHub
-    ? latestSnapshots.find((snapshot) => snapshot.accountLabel === incomeHub.label)?.amount ?? 0
+    ? currentBalances.find((snapshot) => snapshot.accountLabel === incomeHub.label)?.amount ?? 0
     : 0;
-  const pocketBalance = latestSnapshots
+  const pocketBalance = currentBalances
     .filter((snapshot) => snapshot.accountLabel !== incomeHub?.label)
     .reduce((sum, snapshot) => sum + snapshot.amount, 0);
   const topSpendingAccount = accountActivity.find((row) => row.expense > 0);
@@ -2439,26 +2372,6 @@ function AccountAnalysisPanel({
   return (
     <View style={styles.analyticsBlock}>
       <View style={styles.settingsPanel}>
-        <View style={styles.settingRow}>
-          <Ionicons name="speedometer-outline" size={20} color={colors.greenDark} />
-          <View style={styles.settingText}>
-            <Text style={styles.settingTitle}>Flexible daily room</Text>
-            <Text style={styles.settingCopy}>
-              {monthlyPlan
-                ? `${formatCompactRupiah(monthMath.safeDailyFlexible)} per day until month end.`
-                : "Set a monthly plan to see daily flexible room."}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.settingRow}>
-          <Ionicons name="trending-up-outline" size={20} color={colors.greenDark} />
-          <View style={styles.settingText}>
-            <Text style={styles.settingTitle}>Projected month expense</Text>
-            <Text style={styles.settingCopy}>
-              {formatCompactRupiah(monthMath.projectedExpense)} from the current spending pace.
-            </Text>
-          </View>
-        </View>
         <View style={styles.settingRow}>
           <Ionicons name="swap-horizontal-outline" size={20} color={colors.greenDark} />
           <View style={styles.settingText}>
@@ -2475,18 +2388,7 @@ function AccountAnalysisPanel({
             <Text style={styles.settingCopy}>
               {topSpendingAccount
                 ? `${topSpendingAccount.label} has ${formatCompactRupiah(topSpendingAccount.expense)} spending logged this month.`
-                : "Spending by account appears after entries include an account."}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.settingRow}>
-          <Ionicons name="leaf-outline" size={20} color={colors.greenDark} />
-          <View style={styles.settingText}>
-            <Text style={styles.settingTitle}>Savings rate</Text>
-            <Text style={styles.settingCopy}>
-              {monthlySummary.income > 0
-                ? `${Math.round(monthMath.savingsRate * 100)}% of income remains visible this month.`
-                : "Savings rate appears after income is logged."}
+              : "Spending by account appears after entries include an account."}
             </Text>
           </View>
         </View>
@@ -2502,8 +2404,8 @@ function AccountAnalysisPanel({
         }}
       />
 
-      {latestSnapshots.length === 0 ? (
-        <EmptyState text="Reconciliation starts after the first balance snapshot. Two snapshots per account make the check meaningful." />
+      {balanceSnapshots.length === 0 ? (
+        <EmptyState text="Reconciliation starts after the first manual snapshot. Current balance can still be estimated from income and spending." />
       ) : (
         <View style={styles.listPanel}>
           <SectionHeader title="Balance reconciliation" />
@@ -2526,27 +2428,9 @@ function AccountAnalysisPanel({
         </View>
       )}
 
-      {distribution.length === 0 ? (
-        <EmptyState text="Account distribution appears after balance snapshots." />
-      ) : (
-        <View style={styles.listPanel}>
-          {distribution.map((row) => (
-            <View key={row.label} style={styles.analyticsRow}>
-              <View style={styles.analyticsRowHeader}>
-                <AccountTitle label={row.label} />
-                <Text style={styles.analyticsAmount}>{formatCompactRupiah(row.amount)} - {Math.round(row.share * 100)}%</Text>
-              </View>
-              <View style={styles.progressTrack}>
-                <View style={[styles.incomeFill, getPercentWidthStyle(row.share)]} />
-              </View>
-            </View>
-          ))}
-        </View>
-      )}
-
       {accountActivity.length > 0 && (
         <View style={styles.listPanel}>
-          <SectionHeader title="Spending by account this month" />
+          <SectionHeader title="Account movement this month" />
           {accountActivity.map((row) => (
             <View key={row.label} style={styles.analyticsRow}>
               <View style={styles.analyticsRowHeader}>
@@ -2559,21 +2443,6 @@ function AccountAnalysisPanel({
               <Text style={styles.settingCopy}>
                 Income {formatCompactRupiah(row.income)} - net {formatSignedCompactRupiah(row.net)}
               </Text>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {transferFlows.length > 0 && (
-        <View style={styles.listPanel}>
-          <SectionHeader title="Transfer flow this month" />
-          {transferFlows.map((flow) => (
-            <View key={flow.key} style={styles.analyticsRow}>
-              <View style={styles.analyticsRowHeader}>
-                <TransferTitle fromLabel={flow.fromAccount} toLabel={flow.toAccount} />
-                <Text style={styles.analyticsAmount}>{formatCompactRupiah(flow.amount)}</Text>
-              </View>
-              <Text style={styles.settingCopy}>{flow.count} transfer{flow.count === 1 ? "" : "s"} recorded manually.</Text>
             </View>
           ))}
         </View>
@@ -2592,7 +2461,7 @@ function AccountAnalysisPanel({
                 {formatDate(dateKey(new Date(transfer.occurredAt)))}{transfer.note ? ` - ${transfer.note}` : ""}
               </Text>
               <View style={styles.editActions}>
-                <Pressable onPress={() => onDeleteTransfer(transfer.id)} style={styles.textButton}>
+                <Pressable onPress={() => setPendingDeleteTransfer(transfer)} style={styles.textButton}>
                   <Ionicons name="trash-outline" size={16} color={colors.coral} />
                   <Text style={[styles.textButtonLabel, styles.deleteText]}>Delete</Text>
                 </Pressable>
@@ -2601,6 +2470,22 @@ function AccountAnalysisPanel({
           ))}
         </View>
       )}
+      <DeleteConfirmDialog
+        body={
+          pendingDeleteTransfer
+            ? `${formatCompactRupiah(pendingDeleteTransfer.amount)} from ${pendingDeleteTransfer.fromAccount} to ${pendingDeleteTransfer.toAccount} will be removed.`
+            : ""
+        }
+        onCancel={() => setPendingDeleteTransfer(null)}
+        onConfirm={() => {
+          if (pendingDeleteTransfer) {
+            onDeleteTransfer(pendingDeleteTransfer.id);
+            setPendingDeleteTransfer(null);
+          }
+        }}
+        title="Delete transfer?"
+        visible={Boolean(pendingDeleteTransfer)}
+      />
     </View>
   );
 }
@@ -2653,6 +2538,9 @@ function TrendsPanel({ moments }: { moments: SpendingMoment[] }) {
           </View>
         </View>
       </View>
+
+      <SectionHeader title="Weekly cashflow" />
+      <CashflowPanel moments={moments} showEmpty={false} />
     </View>
   );
 }
@@ -2681,6 +2569,26 @@ function SettingsScreen({
   function resetCategoryDraft() {
     setEditingCategoryId(undefined);
     setCategoryDraft("");
+  }
+
+  function confirmDeleteCategory(category: ExpenseCategory) {
+    const title = category.isDefault ? "Remove default category?" : "Delete category?";
+    const message = category.isDefault
+      ? `${category.label} will disappear from capture and budget limits. Existing memories stay saved.`
+      : `${category.label} will be removed from capture and budget limits. Existing memories stay saved.`;
+    Alert.alert(title, message, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          onDeleteCategory(category);
+          if (editingCategoryId === category.id) {
+            resetCategoryDraft();
+          }
+        }
+      }
+    ]);
   }
 
   return (
@@ -2721,28 +2629,30 @@ function SettingsScreen({
       {expenseCategories.length === 0 ? (
         <EmptyState text="No active categories. Add a category above to start assigning expenses again." />
       ) : (
-      <View style={styles.listPanel}>
-        {expenseCategories.map((category) => (
-          <View key={category.id} style={styles.analyticsRow}>
-            <View style={styles.analyticsRowHeader}>
-              <Text style={styles.analyticsTitle}>{category.label}</Text>
-              <Text style={styles.analyticsAmount}>{category.isDefault ? "Default" : "Custom"}</Text>
-            </View>
-            <View style={styles.editActions}>
-              {!category.isDefault && (
-                <Pressable onPress={() => editCategory(category)} style={styles.textButton}>
-                  <Ionicons name="create-outline" size={16} color={colors.greenDark} />
-                  <Text style={styles.textButtonLabel}>Edit</Text>
-                </Pressable>
-              )}
-              <Pressable onPress={() => onDeleteCategory(category)} style={styles.textButton}>
-                <Ionicons name="trash-outline" size={16} color={colors.coral} />
-                <Text style={[styles.textButtonLabel, styles.deleteText]}>Delete</Text>
-              </Pressable>
-            </View>
-          </View>
-        ))}
-      </View>
+        <View style={styles.listPanel}>
+          {expenseCategories.map((category) => (
+            <SwipeActionRow
+              canDelete
+              key={category.id}
+              onDelete={() => confirmDeleteCategory(category)}
+            >
+              <View style={styles.analyticsRow}>
+                <View style={styles.analyticsRowHeader}>
+                  <Text style={styles.analyticsTitle}>{category.label}</Text>
+                  <Text style={styles.analyticsAmount}>{category.isDefault ? "Default" : "Custom"}</Text>
+                </View>
+                {!category.isDefault && (
+                  <View style={styles.editActions}>
+                    <Pressable onPress={() => editCategory(category)} style={styles.textButton}>
+                      <Ionicons name="create-outline" size={16} color={colors.greenDark} />
+                      <Text style={styles.textButtonLabel}>Edit</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
+            </SwipeActionRow>
+          ))}
+        </View>
       )}
 
       <Pressable accessibilityRole="button" onPress={onClear} style={styles.dangerButton}>
@@ -2785,6 +2695,130 @@ function SegmentedControl<T extends string>({
         );
       })}
     </ScrollView>
+  );
+}
+
+function SwipeActionRow({
+  canDelete,
+  children,
+  onDelete
+}: {
+  canDelete: boolean;
+  children: React.ReactNode;
+  onDelete: () => void;
+}) {
+  const translateX = useRef(new Animated.Value(0)).current;
+  const isOpenRef = useRef(false);
+
+  const animateTo = useCallback(
+    (isOpen: boolean) => {
+      isOpenRef.current = isOpen;
+      Animated.spring(translateX, {
+        friction: 8,
+        tension: 90,
+        toValue: isOpen ? -SWIPE_DELETE_ACTION_WIDTH : 0,
+        useNativeDriver: true
+      }).start();
+    },
+    [translateX]
+  );
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gesture) =>
+          canDelete && Math.abs(gesture.dx) > 10 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+        onPanResponderMove: (_, gesture) => {
+          const base = isOpenRef.current ? -SWIPE_DELETE_ACTION_WIDTH : 0;
+          const nextPosition = Math.max(
+            -SWIPE_DELETE_ACTION_WIDTH,
+            Math.min(0, base + gesture.dx)
+          );
+          translateX.setValue(nextPosition);
+        },
+        onPanResponderRelease: (_, gesture) => {
+          const base = isOpenRef.current ? -SWIPE_DELETE_ACTION_WIDTH : 0;
+          const nextPosition = Math.max(
+            -SWIPE_DELETE_ACTION_WIDTH,
+            Math.min(0, base + gesture.dx)
+          );
+          const shouldOpen = nextPosition < -SWIPE_DELETE_ACTION_WIDTH / 2 || gesture.vx < -0.35;
+          animateTo(shouldOpen);
+        },
+        onPanResponderTerminate: () => animateTo(isOpenRef.current)
+      }),
+    [animateTo, canDelete, translateX]
+  );
+
+  const foregroundStyle = {
+    transform: [{ translateX }]
+  };
+
+  return (
+    <View style={styles.swipeRowShell}>
+      {canDelete && (
+        <View style={styles.swipeActionBackground}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              animateTo(false);
+              onDelete();
+            }}
+            style={styles.swipeDeleteButton}
+          >
+            <Ionicons name="trash-outline" size={18} color={colors.surface} />
+            <Text style={styles.swipeDeleteText}>Delete</Text>
+          </Pressable>
+        </View>
+      )}
+      <Animated.View
+        {...(canDelete ? panResponder.panHandlers : {})}
+        style={[styles.swipeForeground, foregroundStyle]}
+      >
+        {children}
+      </Animated.View>
+    </View>
+  );
+}
+
+function DeleteConfirmDialog({
+  body,
+  onCancel,
+  onConfirm,
+  title,
+  visible
+}: {
+  body: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+  title: string;
+  visible: boolean;
+}) {
+  return (
+    <Modal
+      animationType="fade"
+      onRequestClose={onCancel}
+      transparent
+      visible={visible}
+    >
+      <View style={styles.confirmBackdrop}>
+        <View style={styles.confirmCard}>
+          <View style={styles.confirmIcon}>
+            <Ionicons name="trash-outline" size={22} color={colors.coral} />
+          </View>
+          <Text style={styles.confirmTitle}>{title}</Text>
+          <Text style={styles.confirmBody}>{body}</Text>
+          <View style={styles.confirmActions}>
+            <Pressable accessibilityRole="button" onPress={onCancel} style={styles.confirmCancelButton}>
+              <Text style={styles.secondaryButtonText}>Cancel</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" onPress={onConfirm} style={styles.confirmDeleteButton}>
+              <Text style={styles.confirmDeleteText}>Delete</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -3017,11 +3051,10 @@ function formatAmountInput(value: string): string {
   return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
-type PatternTabKey = "overview" | "breakdown" | "cashflow" | "accounts" | "trends";
-type BudgetTabKey = "allocation" | "limits" | "plan" | "goals" | "balance" | "close";
+type PatternTabKey = "overview" | "breakdown" | "accounts" | "trends";
+type BudgetTabKey = "limits" | "plan" | "goals" | "balance";
 
 type MonthlySummary = FinanceMonthSummary;
-type BreakdownRow = FinanceBreakdownRow;
 
 type CashflowWeek = {
   expense: number;
@@ -3045,32 +3078,12 @@ type SpendingTrend = {
   }[];
 };
 
-type AccountDistributionRow = {
-  amount: number;
-  label: string;
-  share: number;
-};
-
-type TransferFlowRow = {
-  amount: number;
-  count: number;
-  fromAccount: string;
-  key: string;
-  toAccount: string;
-};
-
 type AccountActivityRow = {
   expense: number;
   income: number;
   label: string;
   net: number;
   share: number;
-};
-
-type MonthMath = {
-  projectedExpense: number;
-  safeDailyFlexible: number;
-  savingsRate: number;
 };
 
 type RepeatSuggestion = {
@@ -3231,21 +3244,6 @@ function getAllocationFillStyle(row: AllocationPlan["rows"][number]): Pick<ViewS
   };
 }
 
-function getPocketFundingThisMonth(accounts: MoneyAccount[], transfers: MoneyTransfer[]): number {
-  const incomeHubLabel = accounts.find((account) => account.isIncomeHub)?.label;
-  if (!incomeHubLabel) return 0;
-
-  const currentMonth = getMonthRange(new Date(), 0);
-  return transfers
-    .filter(
-      (transfer) =>
-        transfer.fromAccount === incomeHubLabel &&
-        transfer.toAccount !== incomeHubLabel &&
-        isWithinRange(transfer.occurredAt, currentMonth.start, currentMonth.end)
-    )
-    .reduce((sum, transfer) => sum + transfer.amount, 0);
-}
-
 function getReconciliationCopy(rows: AccountReconciliationRow[]): {
   detail: string;
   title: string;
@@ -3330,53 +3328,6 @@ function getReconciliationAmountStyle(row: AccountReconciliationRow): Pick<TextS
   return row.difference > 0 ? styles.incomeText : styles.expenseText;
 }
 
-function buildAccountDistribution(
-  accounts: MoneyAccount[],
-  latestSnapshots: BalanceSnapshot[]
-): AccountDistributionRow[] {
-  const snapshotByLabel = new Map(latestSnapshots.map((snapshot) => [snapshot.accountLabel, snapshot.amount]));
-  const labels = new Set([
-    ...accounts.map((account) => account.label),
-    ...latestSnapshots.map((snapshot) => snapshot.accountLabel)
-  ]);
-  const rows = Array.from(labels)
-    .map((label) => ({
-      amount: snapshotByLabel.get(label) ?? 0,
-      label,
-      share: 0
-    }))
-    .filter((row) => row.amount > 0)
-    .sort((a, b) => b.amount - a.amount);
-  const total = rows.reduce((sum, row) => sum + row.amount, 0);
-  return rows.map((row) => ({
-    ...row,
-    share: total > 0 ? row.amount / total : 0
-  }));
-}
-
-function buildTransferFlows(transfers: MoneyTransfer[]): TransferFlowRow[] {
-  const range = getMonthRange(new Date(), 0);
-  const grouped = transfers
-    .filter((transfer) => isWithinRange(transfer.occurredAt, range.start, range.end))
-    .reduce<Record<string, TransferFlowRow>>((acc, transfer) => {
-      const key = `${transfer.fromAccount}->${transfer.toAccount}`;
-      const current = acc[key] ?? {
-        amount: 0,
-        count: 0,
-        fromAccount: transfer.fromAccount,
-        key,
-        toAccount: transfer.toAccount
-      };
-      acc[key] = {
-        ...current,
-        amount: current.amount + transfer.amount,
-        count: current.count + 1
-      };
-      return acc;
-    }, {});
-  return Object.values(grouped).sort((a, b) => b.amount - a.amount);
-}
-
 function buildAccountActivity(moments: SpendingMoment[]): AccountActivityRow[] {
   const range = getMonthRange(new Date(), 0);
   const grouped = moments
@@ -3406,25 +3357,6 @@ function buildAccountActivity(moments: SpendingMoment[]): AccountActivityRow[] {
     ...row,
     share: row.expense / maxExpense
   }));
-}
-
-function buildMonthMath(monthlySummary: MonthlySummary, monthlyPlan: MonthlyPlan | null): MonthMath {
-  const today = new Date();
-  const dayOfMonth = today.getDate();
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const daysRemaining = Math.max(1, daysInMonth - dayOfMonth + 1);
-  const projectedExpense = Math.round((monthlySummary.expense / Math.max(1, dayOfMonth)) * daysInMonth);
-  const remainingFlexible = (monthlyPlan?.flexibleBudget ?? 0) - monthlySummary.flexibleExpense;
-  const safeDailyFlexible = monthlyPlan ? Math.max(0, Math.round(remainingFlexible / daysRemaining)) : 0;
-  const savingsRate = monthlySummary.income > 0
-    ? Math.max(0, monthlySummary.net) / monthlySummary.income
-    : 0;
-
-  return {
-    projectedExpense,
-    safeDailyFlexible,
-    savingsRate
-  };
 }
 
 function buildCashflowWeeks(moments: SpendingMoment[]): CashflowWeek[] {
@@ -3796,31 +3728,100 @@ const styles = StyleSheet.create({
     ...shadows.soft
   },
   pulsePanel: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10
+  },
+  pulseItem: {
+    borderRadius: 8,
+    borderWidth: 1,
+    flexBasis: "30%",
+    flexGrow: 1,
+    gap: 12,
+    minHeight: 108,
+    minWidth: 138,
+    padding: 14
+  },
+  pulseItemIncome: {
+    backgroundColor: "#f2fbf4",
+    borderColor: "#c3e3cc"
+  },
+  pulseItemDanger: {
+    backgroundColor: "#fff1ee",
+    borderColor: "#f3c8c0"
+  },
+  pulseItemSpending: {
+    backgroundColor: "#fff8e8",
+    borderColor: "#f3dfad"
+  },
+  pulseItemBalance: {
+    backgroundColor: "#eef6fa",
+    borderColor: "#cfe3ed"
+  },
+  pulseTopRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8
+  },
+  pulseIconBadge: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 32,
+    justifyContent: "center",
+    width: 32
+  },
+  pulseIconIncome: {
+    backgroundColor: colors.mint
+  },
+  pulseIconDanger: {
+    backgroundColor: "#ffe0da"
+  },
+  pulseIconSpending: {
+    backgroundColor: "#ffe9bd"
+  },
+  pulseIconBalance: {
+    backgroundColor: "#d9edf6"
+  },
+  pulseLabel: {
+    color: colors.muted,
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 0,
+    lineHeight: 16
+  },
+  pulseWideItem: {
+    alignItems: "center",
     backgroundColor: colors.surface,
     borderColor: colors.line,
     borderRadius: 8,
     borderWidth: 1,
+    flexBasis: "100%",
     flexDirection: "row",
-    flexWrap: "wrap",
     gap: 10,
     padding: 14
   },
-  pulseItem: {
-    flex: 1,
-    gap: 4,
-    minWidth: 92
-  },
-  pulseWideItem: {
-    borderTopColor: colors.faint,
-    borderTopWidth: 1,
-    flexBasis: "100%",
-    paddingTop: 10
-  },
   pulseValue: {
     color: colors.ink,
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: "900",
-    letterSpacing: 0
+    letterSpacing: 0,
+    lineHeight: 23
+  },
+  pulseValueIncome: {
+    color: colors.greenDark
+  },
+  pulseValueDanger: {
+    color: colors.coral
+  },
+  pulseValueBalance: {
+    color: colors.blue
+  },
+  pulseSavingsText: {
+    color: colors.muted,
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18
   },
   allocationGrid: {
     flexDirection: "row",
@@ -4372,6 +4373,103 @@ const styles = StyleSheet.create({
     marginHorizontal: -14,
     marginTop: 12,
     padding: 14
+  },
+  swipeRowShell: {
+    backgroundColor: colors.surface,
+    overflow: "hidden",
+    position: "relative"
+  },
+  swipeActionBackground: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.coral,
+    flexDirection: "row",
+    justifyContent: "flex-end"
+  },
+  swipeDeleteButton: {
+    alignItems: "center",
+    alignSelf: "stretch",
+    backgroundColor: colors.coral,
+    gap: 3,
+    justifyContent: "center",
+    width: SWIPE_DELETE_ACTION_WIDTH
+  },
+  swipeDeleteText: {
+    color: colors.surface,
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 0
+  },
+  swipeForeground: {
+    backgroundColor: colors.surface
+  },
+  confirmBackdrop: {
+    alignItems: "center",
+    backgroundColor: "rgba(24, 32, 28, 0.36)",
+    flex: 1,
+    justifyContent: "center",
+    padding: 24
+  },
+  confirmCard: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 12,
+    maxWidth: 360,
+    padding: 18,
+    width: "100%",
+    ...shadows.soft
+  },
+  confirmIcon: {
+    alignItems: "center",
+    backgroundColor: "#fff1ee",
+    borderColor: "#f3c8c0",
+    borderRadius: 8,
+    borderWidth: 1,
+    height: 44,
+    justifyContent: "center",
+    width: 44
+  },
+  confirmTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: "900",
+    letterSpacing: 0,
+    lineHeight: 24
+  },
+  confirmBody: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20
+  },
+  confirmActions: {
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "flex-end",
+    marginTop: 4
+  },
+  confirmCancelButton: {
+    alignItems: "center",
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: "center",
+    minHeight: 44,
+    paddingHorizontal: 16
+  },
+  confirmDeleteButton: {
+    alignItems: "center",
+    backgroundColor: colors.coral,
+    borderRadius: 8,
+    justifyContent: "center",
+    minHeight: 44,
+    paddingHorizontal: 18
+  },
+  confirmDeleteText: {
+    color: colors.surface,
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: 0
   },
   budgetRow: {
     borderBottomColor: colors.faint,

@@ -15,8 +15,8 @@ It is not an accounting app, bank-sync product, or notification-parsing pipeline
 - Manual shortcuts for recurring entries and a last-saved undo/edit flow.
 - Practical default context tags plus custom expense categories.
 - Memory timeline with recall grouping, search, compact edit, and delete actions.
-- Money plan area with monthly allocation, soft limits, fixed/flexible category modes, monthly plan, savings goals, account balance snapshots, and monthly closing.
-- Low-density Analysis screen with rule-based recap, breakdown, cashflow, account distribution, account reconciliation, transfer flow, burn-rate, and trend views.
+- Money plan area with monthly allocation, soft limits, fixed/flexible category modes, monthly plan, savings goals, and account balance snapshots.
+- Low-density Analysis screen with rule-based recap, category breakdown, account distribution, account reconciliation, weekly cashflow, and trend views.
 - Optional weekly recap responses: Keep, Less often, Not sure.
 - Privacy-first Settings with local category CRUD, no notification listener, no bank access, and no sync required.
 

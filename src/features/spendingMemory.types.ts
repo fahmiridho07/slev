@@ -88,16 +88,6 @@ export type BalanceSnapshot = {
   createdAt: string;
 };
 
-export type MonthlyClosing = {
-  id: string;
-  month: string;
-  totalIncome: number;
-  totalExpenses: number;
-  netCashflow: number;
-  nextMonthAdjustment?: string;
-  createdAt: string;
-};
-
 export type PatternFeedbackResponse = "keep" | "less_often" | "not_sure";
 
 export type PatternFeedback = {

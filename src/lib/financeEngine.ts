@@ -159,6 +159,77 @@ export function getLatestBalanceTotal(snapshots: BalanceSnapshot[]): number {
   return getLatestBalanceSnapshots(snapshots).reduce((sum, snapshot) => sum + snapshot.amount, 0);
 }
 
+export function getProjectedBalanceSnapshots({
+  accounts,
+  balanceSnapshots,
+  moments,
+  referenceDate = new Date(),
+  transfers
+}: {
+  accounts: MoneyAccount[];
+  balanceSnapshots: BalanceSnapshot[];
+  moments: SpendingMoment[];
+  referenceDate?: Date;
+  transfers: MoneyTransfer[];
+}): BalanceSnapshot[] {
+  const latestSnapshots = getLatestBalanceSnapshots(balanceSnapshots);
+  const latestByLabel = new Map(latestSnapshots.map((snapshot) => [snapshot.accountLabel, snapshot]));
+  const accountIndex = new Map(accounts.map((account, index) => [account.label, index]));
+  const labels = new Set<string>();
+  const referenceTime = referenceDate.getTime();
+  const projectedAt = referenceDate.toISOString();
+
+  accounts.forEach((account) => labels.add(account.label));
+  latestSnapshots.forEach((snapshot) => labels.add(snapshot.accountLabel));
+  moments.forEach((moment) => {
+    if (moment.accountLabel) labels.add(moment.accountLabel);
+  });
+  transfers.forEach((transfer) => {
+    labels.add(transfer.fromAccount);
+    labels.add(transfer.toAccount);
+  });
+
+  return Array.from(labels)
+    .map((label) => {
+      const latestSnapshot = latestByLabel.get(label);
+      const baseTime = latestSnapshot ? safeTime(latestSnapshot.snapshotDate) : 0;
+      const scopedMoments = moments.filter(
+        (moment) =>
+          moment.accountLabel === label &&
+          isBetweenProjectionTimes(moment.occurredAt, baseTime, referenceTime)
+      );
+      const scopedTransfers = transfers.filter(
+        (transfer) => isBetweenProjectionTimes(transfer.occurredAt, baseTime, referenceTime)
+      );
+      const income = scopedMoments
+        .filter((moment) => moment.type === "income")
+        .reduce((sum, moment) => sum + moment.amount, 0);
+      const expense = scopedMoments
+        .filter((moment) => moment.type === "expense")
+        .reduce((sum, moment) => sum + moment.amount, 0);
+      const transferIn = scopedTransfers
+        .filter((transfer) => transfer.toAccount === label)
+        .reduce((sum, transfer) => sum + transfer.amount, 0);
+      const transferOut = scopedTransfers
+        .filter((transfer) => transfer.fromAccount === label)
+        .reduce((sum, transfer) => sum + transfer.amount, 0);
+
+      return {
+        accountLabel: label,
+        amount: Math.round((latestSnapshot?.amount ?? 0) + income - expense + transferIn - transferOut),
+        createdAt: latestSnapshot?.createdAt ?? projectedAt,
+        id: `projected-${latestSnapshot?.id ?? label}`,
+        snapshotDate: projectedAt
+      };
+    })
+    .sort((a, b) => {
+      const accountDiff =
+        (accountIndex.get(a.accountLabel) ?? Number.MAX_SAFE_INTEGER) -
+        (accountIndex.get(b.accountLabel) ?? Number.MAX_SAFE_INTEGER);
+      return accountDiff !== 0 ? accountDiff : b.amount - a.amount;
+    });
+}
+
 export function getLatestBalanceSnapshots(snapshots: BalanceSnapshot[]): BalanceSnapshot[] {
   const latestByLabel = new Map<string, BalanceSnapshot>();
   snapshots.forEach((snapshot) => {
@@ -175,10 +246,12 @@ export function getLatestBalanceSnapshots(snapshots: BalanceSnapshot[]): Balance
 export function buildAllocationPlan({
   accounts,
   latestSnapshots,
+  hasBalanceEvidence,
   monthlyPlan,
   monthlySummary,
   today = new Date()
 }: {
+  hasBalanceEvidence?: boolean;
   accounts: MoneyAccount[];
   latestSnapshots: BalanceSnapshot[];
   monthlyPlan: MonthlyPlan | null;
@@ -197,6 +270,7 @@ export function buildAllocationPlan({
   const possibleSavings = Math.max(0, monthlySummary.net);
   const savingsGap = savingsTarget - possibleSavings;
   const daysRemaining = getDaysRemainingInMonth(today);
+  const hasBalances = hasBalanceEvidence ?? latestSnapshots.length > 0;
   const dailyFlexibleRoom = monthlyPlan
     ? Math.max(0, Math.round(flexibleRemaining / daysRemaining))
     : 0;
@@ -206,7 +280,7 @@ export function buildAllocationPlan({
   const pocketBalance = latestSnapshots
     .filter((snapshot) => snapshot.accountLabel !== incomeHubLabel)
     .reduce((sum, snapshot) => sum + snapshot.amount, 0);
-  const pocketTopUpNeed = monthlyPlan && latestSnapshots.length > 0
+  const pocketTopUpNeed = monthlyPlan && hasBalances
     ? Math.max(0, flexibleRemaining - pocketBalance)
     : 0;
   const pocketCoverageDays = dailyFlexibleRoom > 0
@@ -224,7 +298,7 @@ export function buildAllocationPlan({
     nextAction: getAllocationAction({
       flexibleRemaining,
       hasPlan: Boolean(monthlyPlan),
-      hasSnapshots: latestSnapshots.length > 0,
+      hasSnapshots: hasBalances,
       plannedGap,
       pocketTopUpNeed
     }),
@@ -458,6 +532,11 @@ function getDayDistance(startTime: number, endTime: number): number {
 }
 
 function isBetweenTimes(value: string, startTime: number, endTime: number): boolean {
+  const time = safeTime(value);
+  return time > startTime && time <= endTime;
+}
+
+function isBetweenProjectionTimes(value: string, startTime: number, endTime: number): boolean {
   const time = safeTime(value);
   return time > startTime && time <= endTime;
 }

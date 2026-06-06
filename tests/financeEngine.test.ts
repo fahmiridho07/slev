@@ -5,7 +5,8 @@ import {
   buildCurrentMonthSummary,
   buildMonthlyBreakdown,
   getLatestBalanceSnapshots,
-  getModeByCategory
+  getModeByCategory,
+  getProjectedBalanceSnapshots
 } from "../src/lib/financeEngine";
 import {
   BalanceSnapshot,
@@ -187,6 +188,29 @@ test("latest balance snapshots keep the newest snapshot per account", () => {
   assertEqual(latest[0]?.accountLabel, "BRI", "newest snapshot should be first");
   assertEqual(latest[0]?.amount, 2_000_000, "newest BRI amount should be kept");
   assertEqual(latest[1]?.accountLabel, "Jago", "Jago should be retained");
+});
+
+test("projected balances include income before any manual snapshot", () => {
+  const projected = getProjectedBalanceSnapshots({
+    accounts: [
+      account("BRI", "bank", true),
+      account("Jago", "bank", false)
+    ],
+    balanceSnapshots: [],
+    moments: [
+      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
+      moment({ accountLabel: "Jago", amount: 250_000, occurredAt: "2026-06-03T00:00:00.000Z" })
+    ],
+    referenceDate: juneMidpoint,
+    transfers: [
+      transfer("BRI", "Jago", 500_000, "2026-06-04T00:00:00.000Z")
+    ]
+  });
+  const bri = projected.find((row) => row.accountLabel === "BRI");
+  const jago = projected.find((row) => row.accountLabel === "Jago");
+
+  assertEqual(bri?.amount, 1_500_000, "BRI projected balance should include income and transfer out");
+  assertEqual(jago?.amount, 250_000, "Jago projected balance should include transfer in and expense");
 });
 
 test("category modes preserve fixed defaults and custom overrides", () => {

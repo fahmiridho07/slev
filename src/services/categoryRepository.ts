@@ -30,6 +30,10 @@ export async function saveExpenseCategory(input: CategoryInput): Promise<Expense
     updatedAt: now
   });
   if (!category) return visible;
+  const duplicateVisible = visible.find(
+    (item) => item.id !== category.id && item.label.toLowerCase() === category.label.toLowerCase()
+  );
+  if (duplicateVisible) return visible;
 
   const updatedStored = [
     category,
@@ -46,6 +50,7 @@ export async function deleteExpenseCategory(id: string): Promise<ExpenseCategory
   const visible = buildVisibleCategories(stored);
   const category = visible.find((item) => item.id === id);
   if (!category) return visible;
+  const categoryKey = category.label.toLowerCase();
 
   const updatedStored = category.isDefault
     ? [
@@ -54,7 +59,7 @@ export async function deleteExpenseCategory(id: string): Promise<ExpenseCategory
           isArchived: true,
           updatedAt: new Date().toISOString()
         },
-        ...stored.filter((item) => item.id !== category.id && item.label !== category.label)
+        ...stored.filter((item) => item.id !== category.id && item.label.toLowerCase() !== categoryKey)
       ]
     : stored.filter((item) => item.id !== category.id);
 

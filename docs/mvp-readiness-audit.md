@@ -18,9 +18,9 @@ This audit reflects the pivot from passive finance tracker to lightweight spendi
 - One-time migration from confirmed legacy transactions.
 - Practical context tags instead of emotional capture fields.
 - Memory timeline with search, recall-range grouping, repeat hints, and compact edit/delete actions.
-- Rule-based Analysis screen focused on changed repeats, new repeats, quieter contexts, small spends, weekend shape, cashflow, account distribution, balance reconciliation, transfer flow, burn-rate, and trends.
+- Rule-based Analysis screen focused on changed repeats, new repeats, quieter contexts, small spends, weekend shape, category breakdown, account distribution, balance reconciliation, weekly cashflow, and trends.
 - Optional recap feedback with Keep, Less often, and Not sure.
-- Money plan screen with monthly allocation, soft limits, monthly plan, savings goals, account balance snapshots, and monthly close.
+- Money plan screen with monthly allocation, soft limits, monthly plan, savings goals, and account balance snapshots.
 - Settings screen for category CRUD and local data clearing.
 
 ## Verified

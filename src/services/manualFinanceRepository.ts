@@ -5,7 +5,6 @@ import {
   CategoryMode,
   EntryType,
   ManualTemplate,
-  MonthlyClosing,
   MonthlyPlan,
   SavingsGoal,
   SpendingContext
@@ -16,7 +15,6 @@ const MANUAL_TEMPLATES_KEY = "slev_manual_templates";
 const CATEGORY_MODES_KEY = "slev_category_modes";
 const SAVINGS_GOALS_KEY = "slev_savings_goals";
 const BALANCE_SNAPSHOTS_KEY = "slev_balance_snapshots";
-const MONTHLY_CLOSINGS_KEY = "slev_monthly_closings";
 
 type CategoryModeValue = CategoryMode["mode"];
 
@@ -49,14 +47,6 @@ type SavingsGoalInput = {
 type BalanceSnapshotInput = {
   accountLabel: string;
   amount: number;
-};
-
-type MonthlyClosingInput = {
-  month: string;
-  netCashflow: number;
-  nextMonthAdjustment?: string;
-  totalExpenses: number;
-  totalIncome: number;
 };
 
 export async function getMonthlyPlan(month: string): Promise<MonthlyPlan | null> {
@@ -155,6 +145,13 @@ export async function saveCategoryMode(category: SpendingContext, mode: Category
   return updated;
 }
 
+export async function deleteCategoryMode(category: SpendingContext): Promise<CategoryMode[]> {
+  const current = await listCategoryModes();
+  const updated = mergeCategoryModes(current.filter((item) => item.category !== category));
+  await writeJson(CATEGORY_MODES_KEY, updated);
+  return updated;
+}
+
 export async function listSavingsGoals(): Promise<SavingsGoal[]> {
   const raw = await readStorage(SAVINGS_GOALS_KEY);
   if (!raw) return [];
@@ -227,37 +224,6 @@ export async function saveBalanceSnapshot(input: BalanceSnapshotInput): Promise<
   return updated;
 }
 
-export async function listMonthlyClosings(): Promise<MonthlyClosing[]> {
-  const raw = await readStorage(MONTHLY_CLOSINGS_KEY);
-  if (!raw) return [];
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .map(normalizeMonthlyClosing)
-      .filter(isMonthlyClosing)
-      .sort((a, b) => b.month.localeCompare(a.month));
-  } catch {
-    return [];
-  }
-}
-
-export async function saveMonthlyClosing(input: MonthlyClosingInput): Promise<MonthlyClosing[]> {
-  const current = await listMonthlyClosings();
-  const existing = current.find((closing) => closing.month === normalizeMonth(input.month));
-  const closing = normalizeMonthlyClosing({
-    ...input,
-    id: existing?.id ?? createId(),
-    createdAt: new Date().toISOString()
-  });
-  if (!closing) return current;
-
-  const updated = [closing, ...current.filter((item) => item.month !== closing.month)];
-  await writeJson(MONTHLY_CLOSINGS_KEY, updated);
-  return updated;
-}
-
 export async function clearManualFinance(): Promise<void> {
   try {
     await AsyncStorage.multiRemove([
@@ -265,8 +231,7 @@ export async function clearManualFinance(): Promise<void> {
       MANUAL_TEMPLATES_KEY,
       CATEGORY_MODES_KEY,
       SAVINGS_GOALS_KEY,
-      BALANCE_SNAPSHOTS_KEY,
-      MONTHLY_CLOSINGS_KEY
+      BALANCE_SNAPSHOTS_KEY
     ]);
   } catch {
     return;
@@ -394,28 +359,6 @@ function normalizeBalanceSnapshot(value: unknown): BalanceSnapshot | null {
   };
 }
 
-function normalizeMonthlyClosing(value: unknown): MonthlyClosing | null {
-  const record = toRecord(value);
-  if (!record) return null;
-  const month = normalizeMonth(readString(record, "month") ?? readString(record, "monthKey"));
-  const totalIncome = normalizeAmount(readNumber(record, "totalIncome") ?? 0);
-  const totalExpenses = normalizeAmount(readNumber(record, "totalExpenses") ?? 0);
-  const netCashflow = readNumber(record, "netCashflow") ?? totalIncome - totalExpenses;
-  const now = new Date().toISOString();
-
-  return {
-    id: readString(record, "id") ?? createId(),
-    month,
-    totalIncome,
-    totalExpenses,
-    netCashflow: Math.round(netCashflow),
-    nextMonthAdjustment: cleanOptionalText(
-      readString(record, "nextMonthAdjustment") ?? readString(record, "adjustmentNote")
-    ),
-    createdAt: readString(record, "createdAt") ?? readString(record, "completedAt") ?? now
-  };
-}
-
 function getDefaultCategoryModes(): CategoryMode[] {
   return DEFAULT_SPENDING_CONTEXTS.map((category) => ({
     category,
@@ -466,10 +409,6 @@ function isSavingsGoal(value: SavingsGoal | null): value is SavingsGoal {
 }
 
 function isBalanceSnapshot(value: BalanceSnapshot | null): value is BalanceSnapshot {
-  return value !== null;
-}
-
-function isMonthlyClosing(value: MonthlyClosing | null): value is MonthlyClosing {
   return value !== null;
 }
 

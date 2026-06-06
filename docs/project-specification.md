@@ -67,7 +67,7 @@ The product should avoid:
   - Keep.
   - Less often.
   - Not sure.
-- Breakdown, cashflow, account distribution, transfer flow, burn-rate, and trend views use plain React Native views.
+- Category breakdown, account distribution, balance reconciliation, weekly cashflow, and trend views use plain React Native views.
 - Account reconciliation compares the two latest balance snapshots for an account against logged income, expenses, and transfers between those snapshots.
 
 ### Money Plan
@@ -79,7 +79,6 @@ The product should avoid:
 - Savings goals with target and saved-so-far amounts.
 - Manual account/wallet balance snapshots.
 - Local account list for income hub and daily spending pockets.
-- Monthly closing ritual with one next-month adjustment.
 
 ### Settings
 
@@ -190,7 +189,7 @@ src/services/spendingMemoryRepository.ts
   AsyncStorage persistence, legacy migration, update, delete, clear, and pattern feedback helpers.
 
 src/services/manualFinanceRepository.ts
-  Monthly plans, manual templates, category modes, savings goals, balance snapshots, and monthly closings.
+  Monthly plans, manual templates, category modes, savings goals, and balance snapshots.
 
 src/services/budgetRepository.ts
   Soft budget limits per category.
@@ -227,7 +226,6 @@ slev_manual_templates
 slev_category_modes
 slev_savings_goals
 slev_balance_snapshots
-slev_monthly_closings
 slev_accounts
 slev_transfers
 slev_expense_categories

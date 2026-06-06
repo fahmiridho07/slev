@@ -34,7 +34,7 @@ export async function listMoneyAccounts(): Promise<MoneyAccount[]> {
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return DEFAULT_ACCOUNTS;
     const accounts = parsed.map(normalizeMoneyAccount).filter(isMoneyAccount);
-    return accounts.length > 0 ? sortAccounts(accounts) : DEFAULT_ACCOUNTS;
+    return accounts.length > 0 ? sortAccounts(normalizeIncomeHubs(accounts)) : DEFAULT_ACCOUNTS;
   } catch {
     return DEFAULT_ACCOUNTS;
   }
@@ -52,17 +52,19 @@ export async function saveMoneyAccount(input: AccountInput): Promise<MoneyAccoun
   });
   if (!account) return current;
 
-  const updated = sortAccounts([
+  const merged = [
     account,
     ...current.filter((item) => item.id !== account.id && item.label.toLowerCase() !== account.label.toLowerCase())
-  ]);
+  ];
+  const updated = sortAccounts(normalizeIncomeHubs(merged, account.isIncomeHub ? account.id : undefined));
   await writeJson(ACCOUNTS_KEY, updated);
   return updated;
 }
 
 export async function deleteMoneyAccount(id: string): Promise<MoneyAccount[]> {
   const current = await listMoneyAccounts();
-  const updated = current.filter((account) => account.id !== id);
+  const remaining = current.filter((account) => account.id !== id);
+  const updated = remaining.length > 0 ? sortAccounts(normalizeIncomeHubs(remaining)) : current;
   await writeJson(ACCOUNTS_KEY, updated);
   return updated;
 }
@@ -188,6 +190,20 @@ function sortAccounts(accounts: MoneyAccount[]): MoneyAccount[] {
     if (a.isIncomeHub !== b.isIncomeHub) return a.isIncomeHub ? -1 : 1;
     return a.label.localeCompare(b.label);
   });
+}
+
+function normalizeIncomeHubs(accounts: MoneyAccount[], preferredHubId?: string): MoneyAccount[] {
+  if (accounts.length === 0) return accounts;
+  const sorted = sortAccounts(accounts);
+  const selectedHub =
+    sorted.find((account) => account.id === preferredHubId && account.isIncomeHub) ??
+    sorted.find((account) => account.isIncomeHub) ??
+    sorted[0];
+
+  return sorted.map((account) => ({
+    ...account,
+    isIncomeHub: account.id === selectedHub.id
+  }));
 }
 
 function sortTransfers(a: MoneyTransfer, b: MoneyTransfer): number {
