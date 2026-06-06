@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useMemo, useReducer, useRef } from "react";
-import { MonthlyPlan, PatternFeedbackResponse } from "../features/spendingMemory.types";
+import { PatternFeedbackResponse } from "../features/spendingMemory.types";
 import { getRepeatSuggestions } from "../lib/analysis";
 import {
   buildCurrentMonthSummary,
@@ -9,14 +9,13 @@ import {
 import { generateSpendingPatterns } from "../lib/spendingMemoryPatterns";
 import { getCategoryLabels } from "../services/categoryRepository";
 import { createFinanceActions, FinanceActions } from "./financeActions";
-import { financeReducer, FinanceState, initialFinanceState } from "./financeReducer";
+import { financeReducer, initialFinanceState } from "./financeReducer";
 import { createFinanceStore, FinanceStore } from "./financeStore";
 
 export type FinanceDerived = {
   categoryLabels: ReturnType<typeof getCategoryLabels>;
   feedbackByPattern: Map<string, PatternFeedbackResponse>;
   latestBalanceTotal: number;
-  monthlyPlan: MonthlyPlan | null;
   monthlySummary: ReturnType<typeof buildCurrentMonthSummary>;
   patterns: ReturnType<typeof generateSpendingPatterns>;
   projectedBalanceSnapshots: ReturnType<typeof getProjectedBalanceSnapshots>;
@@ -25,7 +24,6 @@ export type FinanceDerived = {
 
 export const ActionsContext = createContext<FinanceActions | null>(null);
 export const DerivedContext = createContext<FinanceDerived | null>(null);
-export const StateContext = createContext<FinanceState | null>(null);
 export const FinanceStoreContext = createContext<FinanceStore | null>(null);
 
 export function FinanceProvider({ children }: { children: React.ReactNode }) {
@@ -81,14 +79,11 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     () => getCategoryLabels(state.expenseCategories),
     [state.expenseCategories]
   );
-  const monthlyPlan = useMemo(() => state.monthlyPlan, [state.monthlyPlan]);
-
   const derived = useMemo<FinanceDerived>(
     () => ({
       categoryLabels,
       feedbackByPattern,
       latestBalanceTotal,
-      monthlyPlan,
       monthlySummary,
       patterns,
       projectedBalanceSnapshots,
@@ -98,7 +93,6 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       categoryLabels,
       feedbackByPattern,
       latestBalanceTotal,
-      monthlyPlan,
       monthlySummary,
       patterns,
       projectedBalanceSnapshots,
@@ -108,11 +102,9 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <FinanceStoreContext.Provider value={store}>
-      <StateContext.Provider value={state}>
-        <DerivedContext.Provider value={derived}>
-          <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
-        </DerivedContext.Provider>
-      </StateContext.Provider>
+      <DerivedContext.Provider value={derived}>
+        <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
+      </DerivedContext.Provider>
     </FinanceStoreContext.Provider>
   );
 }

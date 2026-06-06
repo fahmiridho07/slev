@@ -3,8 +3,7 @@ import {
   ActionsContext,
   DerivedContext,
   FinanceDerived,
-  FinanceStoreContext,
-  StateContext
+  FinanceStoreContext
 } from "./FinanceProvider";
 import { FinanceActions } from "./financeActions";
 import { FinanceState } from "./financeReducer";
@@ -24,14 +23,6 @@ export function useDerived(): FinanceDerived {
   const context = useContext(DerivedContext);
   if (!context) {
     throw new Error("useDerived must be used within FinanceProvider");
-  }
-  return context;
-}
-
-export function useFinanceState(): FinanceState {
-  const context = useContext(StateContext);
-  if (!context) {
-    throw new Error("useFinanceState must be used within FinanceProvider");
   }
   return context;
 }
@@ -62,15 +53,4 @@ export function useFinanceSelector<T>(
   }, [store]);
 
   return useSyncExternalStore(store.subscribe, getSnapshot, getSnapshot);
-}
-
-/** Alias for `useFinanceSelector`. */
-export const useFinanceSlice = useFinanceSelector;
-
-export function useFinance() {
-  return {
-    actions: useActions(),
-    derived: useDerived(),
-    state: useFinanceState()
-  };
 }
