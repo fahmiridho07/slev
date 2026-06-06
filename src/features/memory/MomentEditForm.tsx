@@ -30,15 +30,14 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
   const actions = useActions();
   const { categoryLabels } = useDerived();
   const accounts = useFinanceSelector((state) => state.accounts);
-  const initial = buildEditForm(moment, accounts);
 
-  const [amountText, setAmountText] = useState(initial.amountText);
-  const [label, setLabel] = useState(initial.label);
-  const [context, setContext] = useState<SpendingContext>(initial.context);
-  const [note, setNote] = useState(initial.note);
-  const [type, setType] = useState<EntryType>(initial.type);
-  const [source, setSource] = useState(initial.source);
-  const [accountLabel, setAccountLabel] = useState(initial.accountLabel);
+  const [amountText, setAmountText] = useState(() => buildEditForm(moment, accounts).amountText);
+  const [label, setLabel] = useState(() => buildEditForm(moment, accounts).label);
+  const [context, setContext] = useState<SpendingContext>(() => buildEditForm(moment, accounts).context);
+  const [note, setNote] = useState(() => buildEditForm(moment, accounts).note);
+  const [type, setType] = useState<EntryType>(() => buildEditForm(moment, accounts).type);
+  const [source, setSource] = useState(() => buildEditForm(moment, accounts).source);
+  const [accountLabel, setAccountLabel] = useState(() => buildEditForm(moment, accounts).accountLabel);
 
   const save = useCallback(async () => {
     await actions.updateMoment(moment.id, {
