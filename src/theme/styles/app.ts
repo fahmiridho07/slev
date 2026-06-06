@@ -1,0 +1,1112 @@
+import { StyleSheet } from "react-native";
+import { colors, shadows } from "../colors";
+
+export const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.canvas
+  },
+  appShell: {
+    flex: 1
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 12,
+    gap: 12
+  },
+  headerTopRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12
+  },
+  brandRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10
+  },
+  brandMark: {
+    height: 42,
+    width: 42
+  },
+  brandName: {
+    color: colors.ink,
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  brandLine: {
+    color: colors.muted,
+    fontSize: 13,
+    letterSpacing: 0
+  },
+  headerMessage: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18
+  },
+  iconButton: {
+    alignItems: "center",
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    height: 42,
+    justifyContent: "center",
+    width: 42
+  },
+  iconButtonActive: {
+    backgroundColor: colors.mint,
+    borderColor: colors.green
+  },
+  content: {
+    flex: 1
+  },
+  bootState: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    padding: 24
+  },
+  bootText: {
+    color: colors.muted,
+    fontSize: 14,
+    letterSpacing: 0
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 112,
+    gap: 18
+  },
+  capturePanel: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 18,
+    gap: 14,
+    ...shadows.soft
+  },
+  pulsePanel: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10
+  },
+  pulseItem: {
+    borderRadius: 8,
+    borderWidth: 1,
+    flexBasis: "30%",
+    flexGrow: 1,
+    gap: 12,
+    minHeight: 108,
+    minWidth: 138,
+    padding: 14
+  },
+  pulseItemIncome: {
+    backgroundColor: "#f2fbf4",
+    borderColor: "#c3e3cc"
+  },
+  pulseItemDanger: {
+    backgroundColor: "#fff1ee",
+    borderColor: "#f3c8c0"
+  },
+  pulseItemSpending: {
+    backgroundColor: "#fff8e8",
+    borderColor: "#f3dfad"
+  },
+  pulseItemBalance: {
+    backgroundColor: "#eef6fa",
+    borderColor: "#cfe3ed"
+  },
+  pulseTopRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8
+  },
+  pulseIconBadge: {
+    alignItems: "center",
+    borderRadius: 8,
+    height: 32,
+    justifyContent: "center",
+    width: 32
+  },
+  pulseIconIncome: {
+    backgroundColor: colors.mint
+  },
+  pulseIconDanger: {
+    backgroundColor: "#ffe0da"
+  },
+  pulseIconSpending: {
+    backgroundColor: "#ffe9bd"
+  },
+  pulseIconBalance: {
+    backgroundColor: "#d9edf6"
+  },
+  pulseLabel: {
+    color: colors.muted,
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 0,
+    lineHeight: 16
+  },
+  pulseWideItem: {
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexBasis: "100%",
+    flexDirection: "row",
+    gap: 10,
+    padding: 14
+  },
+  pulseValue: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: "900",
+    letterSpacing: 0,
+    lineHeight: 23
+  },
+  pulseValueIncome: {
+    color: colors.greenDark
+  },
+  pulseValueDanger: {
+    color: colors.coral
+  },
+  pulseValueBalance: {
+    color: colors.blue
+  },
+  pulseSavingsText: {
+    color: colors.muted,
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18
+  },
+  allocationGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10
+  },
+  allocationMetric: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexBasis: "48%",
+    flexGrow: 1,
+    gap: 5,
+    minHeight: 104,
+    minWidth: 138,
+    padding: 14
+  },
+  allocationValue: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: "900",
+    letterSpacing: 0
+  },
+  kicker: {
+    color: colors.greenDark,
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0,
+    textTransform: "uppercase"
+  },
+  kickerDark: {
+    color: colors.greenDark,
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0,
+    textTransform: "uppercase"
+  },
+  amountRow: {
+    alignItems: "center",
+    borderBottomColor: colors.line,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    minHeight: 70
+  },
+  currencyPrefix: {
+    color: colors.greenDark,
+    fontSize: 26,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  amountInput: {
+    color: colors.ink,
+    flex: 1,
+    fontSize: 42,
+    fontWeight: "800",
+    letterSpacing: 0,
+    paddingVertical: 8
+  },
+  input: {
+    backgroundColor: colors.faint,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    color: colors.ink,
+    fontSize: 15,
+    letterSpacing: 0,
+    minHeight: 48,
+    paddingHorizontal: 14,
+    paddingVertical: 10
+  },
+  segmentedControl: {
+    backgroundColor: colors.faint,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    maxWidth: "100%"
+  },
+  segmentedControlCompact: {
+    alignSelf: "flex-start",
+    maxWidth: "100%"
+  },
+  segmentedControlContent: {
+    flexDirection: "row",
+    gap: 3,
+    padding: 4
+  },
+  segmentButton: {
+    alignItems: "center",
+    borderColor: "transparent",
+    borderWidth: 1,
+    borderRadius: 6,
+    flexGrow: 0,
+    flexShrink: 0,
+    justifyContent: "center",
+    minHeight: 40,
+    minWidth: 88,
+    paddingHorizontal: 10
+  },
+  segmentButtonCompact: {
+    minHeight: 34,
+    minWidth: 84
+  },
+  segmentButtonActive: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line
+  },
+  segmentButtonText: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0,
+    textAlign: "center"
+  },
+  segmentButtonTextActive: {
+    color: colors.greenDark
+  },
+  transferPickerBlock: {
+    gap: 12
+  },
+  accountPickerBlock: {
+    gap: 8
+  },
+  accountChipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  accountChip: {
+    alignItems: "center",
+    backgroundColor: colors.canvas,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 6,
+    minHeight: 38,
+    paddingHorizontal: 10
+  },
+  accountChipActive: {
+    backgroundColor: colors.mint,
+    borderColor: colors.green
+  },
+  accountChipText: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  accountChipTextActive: {
+    color: colors.greenDark
+  },
+  accountMark: {
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    height: 32,
+    justifyContent: "center",
+    width: 32
+  },
+  accountMarkSmall: {
+    borderRadius: 6,
+    height: 24,
+    width: 24
+  },
+  accountMarkText: {
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 0,
+    lineHeight: 13,
+    textAlign: "center"
+  },
+  accountMarkTextSmall: {
+    fontSize: 9,
+    lineHeight: 11
+  },
+  accountTitleRow: {
+    alignItems: "center",
+    flex: 1,
+    flexDirection: "row",
+    gap: 8,
+    minWidth: 0
+  },
+  transferTitleRow: {
+    alignItems: "center",
+    flex: 1,
+    flexDirection: "row",
+    gap: 6,
+    minWidth: 0
+  },
+  noteInput: {
+    minHeight: 64,
+    textAlignVertical: "top"
+  },
+  suggestionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  repeatBlock: {
+    gap: 8
+  },
+  templateGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  templateChip: {
+    alignItems: "stretch",
+    backgroundColor: colors.mint,
+    borderColor: "#c3e3cc",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    minHeight: 48,
+    overflow: "hidden"
+  },
+  templateMain: {
+    gap: 2,
+    minWidth: 104,
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
+  templateRemoveButton: {
+    alignItems: "center",
+    borderLeftColor: "#c3e3cc",
+    borderLeftWidth: 1,
+    justifyContent: "center",
+    minWidth: 30
+  },
+  microLabel: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0,
+    textTransform: "uppercase"
+  },
+  repeatChip: {
+    backgroundColor: colors.mint,
+    borderColor: "#c3e3cc",
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 2,
+    minHeight: 48,
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
+  repeatText: {
+    color: colors.greenDark,
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: 0
+  },
+  repeatAmount: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0
+  },
+  suggestionChip: {
+    backgroundColor: colors.canvas,
+    borderColor: colors.line,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
+  suggestionText: {
+    color: colors.greenDark,
+    fontSize: 13,
+    fontWeight: "700"
+  },
+  contextWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  contextWrapCompact: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6
+  },
+  contextHeaderRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10
+  },
+  contextDefault: {
+    color: colors.muted,
+    flexShrink: 1,
+    fontSize: 12,
+    fontWeight: "700",
+    textAlign: "right"
+  },
+  contextChip: {
+    backgroundColor: colors.canvas,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    minHeight: 42,
+    minWidth: "30%",
+    paddingHorizontal: 12,
+    paddingVertical: 9
+  },
+  contextChipActive: {
+    backgroundColor: colors.mint,
+    borderColor: colors.green
+  },
+  contextChipText: {
+    color: colors.ink,
+    fontSize: 14,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  contextChipTextActive: {
+    color: colors.greenDark
+  },
+  contextHint: {
+    color: colors.muted,
+    fontSize: 11,
+    marginTop: 2
+  },
+  addNoteButton: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    gap: 6,
+    minHeight: 36,
+    paddingHorizontal: 2
+  },
+  addNoteText: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: "700"
+  },
+  primaryButton: {
+    alignItems: "center",
+    backgroundColor: colors.greenDark,
+    borderRadius: 8,
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "center",
+    minHeight: 52,
+    paddingHorizontal: 16
+  },
+  smallPrimaryButton: {
+    alignItems: "center",
+    backgroundColor: colors.greenDark,
+    borderRadius: 8,
+    justifyContent: "center",
+    minHeight: 44,
+    paddingHorizontal: 18
+  },
+  primaryButtonText: {
+    color: colors.surface,
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  secondaryButton: {
+    alignItems: "center",
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: "center",
+    minHeight: 44,
+    paddingHorizontal: 18
+  },
+  secondaryButtonText: {
+    color: colors.greenDark,
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  secondaryInlineButton: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    gap: 6,
+    minHeight: 36,
+    paddingHorizontal: 2
+  },
+  observationPanel: {
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 16,
+    gap: 8
+  },
+  heroPanel: {
+    backgroundColor: colors.mint,
+    borderColor: "#c3e3cc",
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 18,
+    gap: 8
+  },
+  heroTitle: {
+    color: colors.ink,
+    fontSize: 23,
+    fontWeight: "800",
+    letterSpacing: 0,
+    lineHeight: 30
+  },
+  sectionTitle: {
+    color: colors.ink,
+    fontSize: 17,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  listPanel: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: "hidden"
+  },
+  momentRow: {
+    alignItems: "center",
+    borderBottomColor: colors.faint,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 12,
+    minHeight: 68,
+    padding: 14
+  },
+  momentIcon: {
+    alignItems: "center",
+    backgroundColor: colors.mint,
+    borderRadius: 8,
+    height: 38,
+    justifyContent: "center",
+    width: 38
+  },
+  incomeMomentIcon: {
+    backgroundColor: "#eef6fa"
+  },
+  momentText: {
+    flex: 1,
+    gap: 3
+  },
+  momentTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  momentMeta: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 16
+  },
+  repeatHint: {
+    color: colors.blue,
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 16
+  },
+  momentAmount: {
+    color: colors.greenDark,
+    fontSize: 15,
+    fontWeight: "900",
+    letterSpacing: 0
+  },
+  incomeText: {
+    color: colors.blue
+  },
+  expenseText: {
+    color: colors.coral
+  },
+  memoryGroup: {
+    gap: 8
+  },
+  groupTitle: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 0,
+    textTransform: "uppercase"
+  },
+  rowActions: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "flex-end",
+    paddingBottom: 12,
+    paddingHorizontal: 14
+  },
+  textButton: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 5,
+    minHeight: 32
+  },
+  textButtonLabel: {
+    color: colors.greenDark,
+    fontSize: 13,
+    fontWeight: "800"
+  },
+  deleteText: {
+    color: colors.coral
+  },
+  editPanel: {
+    backgroundColor: colors.canvas,
+    borderTopColor: colors.line,
+    borderTopWidth: 1,
+    gap: 10,
+    padding: 14
+  },
+  editActions: {
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "flex-end"
+  },
+  inlineEditor: {
+    backgroundColor: colors.canvas,
+    borderTopColor: colors.line,
+    borderTopWidth: 1,
+    gap: 10,
+    marginHorizontal: -14,
+    marginTop: 12,
+    padding: 14
+  },
+  confirmBackdrop: {
+    alignItems: "center",
+    backgroundColor: "rgba(24, 32, 28, 0.36)",
+    flex: 1,
+    justifyContent: "center",
+    padding: 24
+  },
+  confirmCard: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 12,
+    maxWidth: 360,
+    padding: 18,
+    width: "100%",
+    ...shadows.soft
+  },
+  confirmIcon: {
+    alignItems: "center",
+    backgroundColor: "#fff1ee",
+    borderColor: "#f3c8c0",
+    borderRadius: 8,
+    borderWidth: 1,
+    height: 44,
+    justifyContent: "center",
+    width: 44
+  },
+  confirmTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: "900",
+    letterSpacing: 0,
+    lineHeight: 24
+  },
+  confirmBody: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20
+  },
+  confirmActions: {
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "flex-end",
+    marginTop: 4
+  },
+  confirmCancelButton: {
+    alignItems: "center",
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: "center",
+    minHeight: 44,
+    paddingHorizontal: 16
+  },
+  confirmDeleteButton: {
+    alignItems: "center",
+    backgroundColor: colors.coral,
+    borderRadius: 8,
+    justifyContent: "center",
+    minHeight: 44,
+    paddingHorizontal: 18
+  },
+  confirmDeleteText: {
+    color: colors.surface,
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: 0
+  },
+  budgetRow: {
+    borderBottomColor: colors.faint,
+    borderBottomWidth: 1,
+    gap: 10,
+    padding: 14
+  },
+  budgetHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "space-between"
+  },
+  budgetTitleBlock: {
+    flex: 1,
+    gap: 4
+  },
+  budgetCategory: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "900",
+    letterSpacing: 0
+  },
+  budgetMeta: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 16
+  },
+  progressTrack: {
+    backgroundColor: colors.faint,
+    borderRadius: 8,
+    height: 10,
+    overflow: "hidden"
+  },
+  progressFill: {
+    borderRadius: 8,
+    height: 10
+  },
+  planSummaryRow: {
+    alignItems: "center",
+    backgroundColor: colors.faint,
+    borderRadius: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    minHeight: 44,
+    paddingHorizontal: 12
+  },
+  goalCard: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 10,
+    padding: 14
+  },
+  patternGroup: {
+    gap: 10
+  },
+  patternCard: {
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+    padding: 16
+  },
+  patternCalm: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line
+  },
+  patternNotice: {
+    backgroundColor: "#eef6fa",
+    borderColor: "#cfe3ed"
+  },
+  patternWarm: {
+    backgroundColor: "#fff8e8",
+    borderColor: "#f3dfad"
+  },
+  patternTitleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8
+  },
+  patternTitle: {
+    color: colors.ink,
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "800",
+    letterSpacing: 0,
+    lineHeight: 22
+  },
+  patternDetail: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20
+  },
+  recapBlock: {
+    borderTopColor: "rgba(24,32,28,0.08)",
+    borderTopWidth: 1,
+    gap: 10,
+    marginTop: 4,
+    paddingTop: 12
+  },
+  recapQuestion: {
+    color: colors.ink,
+    fontSize: 14,
+    fontWeight: "800",
+    lineHeight: 19
+  },
+  feedbackRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  feedbackButton: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
+  feedbackButtonActive: {
+    backgroundColor: colors.greenDark,
+    borderColor: colors.greenDark
+  },
+  feedbackText: {
+    color: colors.greenDark,
+    fontSize: 13,
+    fontWeight: "800"
+  },
+  feedbackTextActive: {
+    color: colors.surface
+  },
+  analyticsBlock: {
+    gap: 14
+  },
+  analyticsRow: {
+    borderBottomColor: colors.faint,
+    borderBottomWidth: 1,
+    gap: 10,
+    padding: 14
+  },
+  analyticsRowHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "space-between"
+  },
+  analyticsTitle: {
+    color: colors.ink,
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: 0
+  },
+  analyticsAmount: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0,
+    textAlign: "right"
+  },
+  breakdownFill: {
+    backgroundColor: colors.blue,
+    borderRadius: 8,
+    height: 10
+  },
+  trendFill: {
+    backgroundColor: colors.green,
+    borderRadius: 8,
+    height: 10
+  },
+  cashflowRow: {
+    borderBottomColor: colors.faint,
+    borderBottomWidth: 1,
+    gap: 12,
+    padding: 14
+  },
+  cashflowRowRecent: {
+    backgroundColor: "#f3f7f0"
+  },
+  cashflowBars: {
+    gap: 8
+  },
+  cashflowBarLine: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    minHeight: 24
+  },
+  cashflowLabel: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0,
+    width: 56
+  },
+  cashflowTrack: {
+    backgroundColor: colors.faint,
+    borderRadius: 8,
+    flex: 1,
+    height: 9,
+    overflow: "hidden"
+  },
+  incomeFill: {
+    backgroundColor: colors.blue,
+    borderRadius: 8,
+    height: 9
+  },
+  expenseFill: {
+    backgroundColor: colors.amber,
+    borderRadius: 8,
+    height: 9
+  },
+  cashflowAmount: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0,
+    textAlign: "right",
+    width: 64
+  },
+  settingsPanel: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: "hidden"
+  },
+  settingRow: {
+    alignItems: "flex-start",
+    borderBottomColor: colors.faint,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 12,
+    padding: 16
+  },
+  settingText: {
+    flex: 1,
+    gap: 4
+  },
+  settingTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  settingCopy: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18
+  },
+  cardGrid: {
+    gap: 10
+  },
+  dangerButton: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    borderColor: "#f3c8c0",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    minHeight: 46,
+    paddingHorizontal: 14
+  },
+  dangerButtonText: {
+    color: colors.coral,
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  emptyState: {
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+    justifyContent: "center",
+    minHeight: 112,
+    padding: 18
+  },
+  emptyText: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center"
+  },
+  emptyActionButton: {
+    alignItems: "center",
+    borderColor: colors.green,
+    borderRadius: 8,
+    borderWidth: 1,
+    minHeight: 38,
+    justifyContent: "center",
+    paddingHorizontal: 12
+  },
+  emptyActionText: {
+    color: colors.greenDark,
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  tabBar: {
+    backgroundColor: "rgba(247, 248, 244, 0.96)",
+    borderTopColor: colors.line,
+    borderTopWidth: 1,
+    bottom: 0,
+    flexDirection: "row",
+    gap: 6,
+    left: 0,
+    paddingBottom: 10,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    position: "absolute",
+    right: 0
+  },
+  tabItem: {
+    alignItems: "center",
+    borderRadius: 8,
+    flex: 1,
+    gap: 3,
+    justifyContent: "center",
+    minHeight: 54
+  },
+  tabItemActive: {
+    backgroundColor: colors.mint
+  },
+  tabLabel: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  tabLabelActive: {
+    color: colors.greenDark
+  }
+});

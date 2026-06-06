@@ -1,0 +1,57 @@
+import React, { useMemo } from "react";
+import { Text, View } from "react-native";
+import { EmptyState } from "../../components";
+import { buildCashflowWeeks, getPercentWidthStyle } from "../../lib/analysis";
+import { formatSignedCompactRupiah } from "../../lib/formatMoney";
+import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
+import { SpendingMoment } from "../spendingMemory.types";
+import { styles } from "../../theme/styles/app";
+
+export function CashflowPanel({
+  moments,
+  showEmpty = true
+}: {
+  moments: SpendingMoment[];
+  showEmpty?: boolean;
+}) {
+  const weeks = useMemo(() => buildCashflowWeeks(moments), [moments]);
+  const maxWeeklyAmount = useMemo(
+    () => Math.max(1, ...weeks.flatMap((week) => [week.income, week.expense])),
+    [weeks]
+  );
+
+  if (weeks.every((week) => week.income === 0 && week.expense === 0)) {
+    return showEmpty ? <EmptyState text="Cashflow appears after income or spending entries." /> : null;
+  }
+
+  return (
+    <View style={styles.listPanel}>
+      {weeks.map((week, index) => (
+        <View key={week.key} style={[styles.cashflowRow, index === weeks.length - 1 && styles.cashflowRowRecent]}>
+          <View style={styles.analyticsRowHeader}>
+            <Text style={styles.analyticsTitle}>{week.label}</Text>
+            <Text style={[styles.analyticsAmount, week.net >= 0 ? styles.incomeText : styles.expenseText]}>
+              Net {formatSignedCompactRupiah(week.net)}
+            </Text>
+          </View>
+          <View style={styles.cashflowBars}>
+            <View style={styles.cashflowBarLine}>
+              <Text style={styles.cashflowLabel}>Income</Text>
+              <View style={styles.cashflowTrack}>
+                <View style={[styles.incomeFill, getPercentWidthStyle(week.income / maxWeeklyAmount)]} />
+              </View>
+              <Text style={styles.cashflowAmount}>{formatCompactRupiah(week.income)}</Text>
+            </View>
+            <View style={styles.cashflowBarLine}>
+              <Text style={styles.cashflowLabel}>Expense</Text>
+              <View style={styles.cashflowTrack}>
+                <View style={[styles.expenseFill, getPercentWidthStyle(week.expense / maxWeeklyAmount)]} />
+              </View>
+              <Text style={styles.cashflowAmount}>{formatCompactRupiah(week.expense)}</Text>
+            </View>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
