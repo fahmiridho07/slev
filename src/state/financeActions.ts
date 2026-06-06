@@ -177,8 +177,8 @@ export function createFinanceActions(
   }
 
   async function removeMoment(id: string) {
-    const updated = await deleteSpendingMoment(id);
-    dispatch({ type: "set_moments", moments: updated });
+    await deleteSpendingMoment(id);
+    dispatch({ type: "remove_moment", id });
     setMessage("Memory removed.");
   }
 
@@ -209,7 +209,12 @@ export function createFinanceActions(
       source: input.type === "income" ? input.source : undefined,
       accountLabel: input.accountLabel
     });
-    dispatch({ type: "set_moments", moments: updated });
+    const moment = updated.find((item) => item.id === id);
+    if (moment) {
+      dispatch({ type: "replace_moment", moment });
+    } else {
+      dispatch({ type: "set_moments", moments: updated });
+    }
     setMessage("Memory updated.");
   }
 

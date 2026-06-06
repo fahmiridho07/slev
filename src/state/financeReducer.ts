@@ -53,6 +53,8 @@ export type FinanceAction =
   | { type: "set_clear_confirm_visible"; visible: boolean }
   | { type: "set_moments"; moments: SpendingMoment[] }
   | { type: "prepend_moment"; moment: SpendingMoment }
+  | { type: "replace_moment"; moment: SpendingMoment }
+  | { type: "remove_moment"; id: string }
   | { type: "set_feedback"; feedback: PatternFeedback[] }
   | { type: "set_budget_limits"; budgetLimits: BudgetLimit[] }
   | { type: "set_category_modes"; categoryModes: CategoryMode[] }
@@ -85,6 +87,15 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       return { ...state, moments: action.moments };
     case "prepend_moment":
       return { ...state, moments: [action.moment, ...state.moments] };
+    case "replace_moment":
+      return {
+        ...state,
+        moments: state.moments.map((moment) =>
+          moment.id === action.moment.id ? action.moment : moment
+        )
+      };
+    case "remove_moment":
+      return { ...state, moments: state.moments.filter((moment) => moment.id !== action.id) };
     case "set_feedback":
       return { ...state, feedback: action.feedback };
     case "set_budget_limits":
