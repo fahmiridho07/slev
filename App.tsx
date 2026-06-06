@@ -40,6 +40,42 @@ import {
   SpendingPattern
 } from "./src/features/spendingMemory.types";
 import {
+  buildAccountActivity,
+  buildCashflowWeeks,
+  buildSpendingTrend,
+  dateKey,
+  filterMoments,
+  formatDate,
+  formatReconciliationDifference,
+  formatTime,
+  getAllocationActionCopy,
+  getAllocationRowCopy,
+  getCategoryDeleteBody,
+  getDailyPocketLabel,
+  getDefaultMomentAccount,
+  getIncomeHubLabel,
+  getMomentTitle,
+  getMomentsInPeriod,
+  getMonthKey,
+  getPercentWidthStyle,
+  getReconciliationCopy,
+  getReconciliationDetail,
+  getRepeatHint,
+  getRepeatSuggestions,
+  getTemplateLabel,
+  groupMomentsByRecallRange,
+  groupPatterns,
+  clampPercent,
+  RepeatSuggestion,
+  sumExpenseMoments
+} from "./src/lib/analysis";
+import {
+  formatAmountInput,
+  formatMomentAmount,
+  formatSignedCompactRupiah,
+  parseAmountInput
+} from "./src/lib/formatMoney";
+import {
   formatCompactRupiah,
   formatRupiah,
   generateSpendingPatterns
@@ -677,11 +713,13 @@ export default function App() {
                 budgetLimits={budgetLimits}
                 categoryLabels={categoryLabels}
                 categoryModes={categoryModes}
+                expenseCategories={expenseCategories}
                 monthlyPlan={monthlyPlan}
                 moments={moments}
                 projectedBalanceSnapshots={projectedBalanceSnapshots}
                 transfers={transfers}
                 onDeleteAccount={removeAccount}
+                onDeleteCategory={removeCategory}
                 onDeleteLimit={removeCategoryBudget}
                 onDeleteGoal={removeSavingsGoal}
                 onOpenSettings={() => setActiveTab("settings")}
@@ -1230,11 +1268,13 @@ function BudgetScreen({
   budgetLimits,
   categoryLabels,
   categoryModes,
+  expenseCategories,
   monthlyPlan,
   moments,
   projectedBalanceSnapshots,
   transfers,
   onDeleteAccount,
+  onDeleteCategory,
   onDeleteLimit,
   onDeleteGoal,
   onOpenSettings,
@@ -1251,11 +1291,13 @@ function BudgetScreen({
   budgetLimits: BudgetLimit[];
   categoryLabels: SpendingContext[];
   categoryModes: CategoryMode[];
+  expenseCategories: ExpenseCategory[];
   monthlyPlan: MonthlyPlan | null;
   moments: SpendingMoment[];
   projectedBalanceSnapshots: BalanceSnapshot[];
   transfers: MoneyTransfer[];
   onDeleteAccount: (id: string) => void;
+  onDeleteCategory: (category: ExpenseCategory) => void;
   onDeleteLimit: (category: SpendingContext) => void;
   onDeleteGoal: (id: string) => void;
   onOpenSettings: () => void;
@@ -1330,7 +1372,9 @@ function BudgetScreen({
           budgetLimits={budgetLimits}
           categoryLabels={categoryLabels}
           categoryModes={categoryModes}
+          expenseCategories={expenseCategories}
           moments={moments}
+          onDeleteCategory={onDeleteCategory}
           onDeleteLimit={onDeleteLimit}
           onOpenSettings={onOpenSettings}
           onSaveCategoryMode={onSaveCategoryMode}
@@ -1362,7 +1406,9 @@ function BudgetLimitsPanel({
   budgetLimits,
   categoryLabels,
   categoryModes,
+  expenseCategories,
   moments,
+  onDeleteCategory,
   onDeleteLimit,
   onOpenSettings,
   onSaveCategoryMode,
@@ -1371,7 +1417,9 @@ function BudgetLimitsPanel({
   budgetLimits: BudgetLimit[];
   categoryLabels: SpendingContext[];
   categoryModes: CategoryMode[];
+  expenseCategories: ExpenseCategory[];
   moments: SpendingMoment[];
+  onDeleteCategory: (category: ExpenseCategory) => void;
   onDeleteLimit: (category: SpendingContext) => void;
   onOpenSettings: () => void;
   onSaveCategoryMode: (category: SpendingContext, mode: CategoryModeValue) => void;
@@ -1380,6 +1428,7 @@ function BudgetLimitsPanel({
   const [editingCategory, setEditingCategory] = useState<SpendingContext | null>(null);
   const [draftAmount, setDraftAmount] = useState("");
   const [draftPeriod, setDraftPeriod] = useState<BudgetPeriod>("weekly");
+  const [pendingDeleteCategory, setPendingDeleteCategory] = useState<ExpenseCategory | null>(null);
   const limitByCategory = useMemo(
     () => new Map(budgetLimits.map((limit) => [limit.category, limit])),
     [budgetLimits]
@@ -1388,11 +1437,13 @@ function BudgetLimitsPanel({
   const rows = useMemo(
     () =>
       categoryLabels.map((category) => {
+        const categoryMeta = expenseCategories.find((item) => item.label === category);
         const limit = limitByCategory.get(category);
         const period = limit?.period ?? "monthly";
         const spent = sumExpenseMoments(getMomentsInPeriod(moments, period).filter((moment) => moment.context === category));
         return {
           category,
+          categoryMeta,
           limit,
           mode: modeByCategory.get(category) ?? "flexible",
           period,
@@ -1400,7 +1451,7 @@ function BudgetLimitsPanel({
           progress: limit ? spent / limit.limitAmount : 0
         };
       }),
-    [categoryLabels, limitByCategory, modeByCategory, moments]
+    [categoryLabels, expenseCategories, limitByCategory, modeByCategory, moments]
   );
 
   function startEditing(category: SpendingContext) {
@@ -1423,86 +1474,111 @@ function BudgetLimitsPanel({
   return (
     <View style={styles.listPanel}>
       {rows.map((row) => (
-        <View key={row.category} style={styles.budgetRow}>
-          <View style={styles.budgetHeader}>
-            <View style={styles.budgetTitleBlock}>
-              <Text style={styles.budgetCategory}>{row.category}</Text>
-              <Text style={styles.budgetMeta}>
-                {row.limit
-                  ? `${formatCompactRupiah(row.spent)} of ${formatCompactRupiah(row.limit.limitAmount)} ${row.period}`
-                  : `No limit set - ${formatCompactRupiah(row.spent)} this month`}
-              </Text>
+        <SwipeActionRow
+          canDelete={Boolean(row.categoryMeta)}
+          key={row.category}
+          onDelete={() => {
+            if (row.categoryMeta) {
+              setPendingDeleteCategory(row.categoryMeta);
+            }
+          }}
+        >
+          <View style={styles.budgetRow}>
+            <View style={styles.budgetHeader}>
+              <View style={styles.budgetTitleBlock}>
+                <Text style={styles.budgetCategory}>{row.category}</Text>
+                <Text style={styles.budgetMeta}>
+                  {row.limit
+                    ? `${formatCompactRupiah(row.spent)} of ${formatCompactRupiah(row.limit.limitAmount)} ${row.period}`
+                    : `No limit set - ${formatCompactRupiah(row.spent)} this month`}
+                </Text>
+              </View>
+              <Pressable onPress={() => startEditing(row.category)} style={styles.textButton}>
+                <Ionicons name={row.limit ? "create-outline" : "add-circle-outline"} size={16} color={colors.greenDark} />
+                <Text style={styles.textButtonLabel}>{row.limit ? "Edit" : "Set"}</Text>
+              </Pressable>
             </View>
-            <Pressable onPress={() => startEditing(row.category)} style={styles.textButton}>
-              <Ionicons name={row.limit ? "create-outline" : "add-circle-outline"} size={16} color={colors.greenDark} />
-              <Text style={styles.textButtonLabel}>{row.limit ? "Edit" : "Set"}</Text>
-            </Pressable>
-          </View>
 
-          <SegmentedControl
-            compact
-            options={[
-              { label: "Fixed", value: "fixed" },
-              { label: "Flexible", value: "flexible" }
-            ]}
-            selected={row.mode}
-            onSelect={(mode) => onSaveCategoryMode(row.category, mode)}
-          />
+            <SegmentedControl
+              compact
+              options={[
+                { label: "Fixed", value: "fixed" },
+                { label: "Flexible", value: "flexible" }
+              ]}
+              selected={row.mode}
+              onSelect={(mode) => onSaveCategoryMode(row.category, mode)}
+            />
 
-          {row.limit && (
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, getProgressFillStyle(row.progress)]} />
-            </View>
-          )}
+            {row.limit && (
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, getProgressFillStyle(row.progress)]} />
+              </View>
+            )}
 
-          {editingCategory === row.category && (
-            <View style={styles.inlineEditor}>
-              <TextInput
-                keyboardType="number-pad"
-                onChangeText={(value) => setDraftAmount(formatAmountInput(value))}
-                placeholder="Limit amount"
-                placeholderTextColor={colors.muted}
-                style={styles.input}
-                value={draftAmount}
-              />
-              <SegmentedControl
-                compact
-                options={[
-                  { label: "Weekly", value: "weekly" },
-                  { label: "Monthly", value: "monthly" }
-                ]}
-                selected={draftPeriod}
-                onSelect={setDraftPeriod}
-              />
-              <View style={styles.editActions}>
-                {row.limit && (
+            {editingCategory === row.category && (
+              <View style={styles.inlineEditor}>
+                <TextInput
+                  keyboardType="number-pad"
+                  onChangeText={(value) => setDraftAmount(formatAmountInput(value))}
+                  placeholder="Limit amount"
+                  placeholderTextColor={colors.muted}
+                  style={styles.input}
+                  value={draftAmount}
+                />
+                <SegmentedControl
+                  compact
+                  options={[
+                    { label: "Weekly", value: "weekly" },
+                    { label: "Monthly", value: "monthly" }
+                  ]}
+                  selected={draftPeriod}
+                  onSelect={setDraftPeriod}
+                />
+                <View style={styles.editActions}>
+                  {row.limit && (
+                    <Pressable
+                      onPress={() => {
+                        onDeleteLimit(row.category);
+                        setEditingCategory(null);
+                      }}
+                      style={styles.secondaryButton}
+                    >
+                      <Text style={styles.deleteText}>Delete limit</Text>
+                    </Pressable>
+                  )}
+                  <Pressable onPress={() => setEditingCategory(null)} style={styles.secondaryButton}>
+                    <Text style={styles.secondaryButtonText}>Cancel</Text>
+                  </Pressable>
                   <Pressable
                     onPress={() => {
-                      onDeleteLimit(row.category);
+                      onSaveLimit(row.category, draftAmount, draftPeriod);
                       setEditingCategory(null);
                     }}
-                    style={styles.secondaryButton}
+                    style={styles.smallPrimaryButton}
                   >
-                    <Text style={styles.deleteText}>Delete limit</Text>
+                    <Text style={styles.primaryButtonText}>Save</Text>
                   </Pressable>
-                )}
-                <Pressable onPress={() => setEditingCategory(null)} style={styles.secondaryButton}>
-                  <Text style={styles.secondaryButtonText}>Cancel</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    onSaveLimit(row.category, draftAmount, draftPeriod);
-                    setEditingCategory(null);
-                  }}
-                  style={styles.smallPrimaryButton}
-                >
-                  <Text style={styles.primaryButtonText}>Save</Text>
-                </Pressable>
+                </View>
               </View>
-            </View>
-          )}
-        </View>
+            )}
+          </View>
+        </SwipeActionRow>
       ))}
+      <DeleteConfirmDialog
+        body={pendingDeleteCategory ? getCategoryDeleteBody(pendingDeleteCategory) : ""}
+        onCancel={() => setPendingDeleteCategory(null)}
+        onConfirm={() => {
+          if (pendingDeleteCategory) {
+            onDeleteCategory(pendingDeleteCategory);
+            if (editingCategory === pendingDeleteCategory.label) {
+              setEditingCategory(null);
+            }
+            setPendingDeleteCategory(null);
+          }
+        }}
+        title={pendingDeleteCategory?.isDefault ? "Remove default category?" : "Delete category?"}
+        visible={Boolean(pendingDeleteCategory)}
+      />
     </View>
   );
 }
@@ -2439,12 +2515,6 @@ function SettingsScreen({
     setCategoryDraft("");
   }
 
-  function getCategoryDeleteBody(category: ExpenseCategory) {
-    return category.isDefault
-      ? `${category.label} will disappear from capture and budget limits. Existing memories stay saved.`
-      : `${category.label} will be removed from capture and budget limits. Existing memories stay saved.`;
-  }
-
   return (
     <ScrollView contentContainerStyle={styles.scrollContent}>
       <View style={styles.heroPanel}>
@@ -2903,193 +2973,10 @@ function EmptyState({
   );
 }
 
-function parseAmountInput(value: string): number | null {
-  const amount = Number.parseInt(value.replace(/[^\d]/g, ""), 10);
-  return Number.isFinite(amount) && amount > 0 ? amount : null;
-}
-
-function formatAmountInput(value: string): string {
-  const digits = value.replace(/[^\d]/g, "");
-  if (!digits) return "";
-  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-}
-
 type PatternTabKey = "overview" | "breakdown" | "accounts" | "trends";
 type BudgetTabKey = "limits" | "plan" | "goals" | "balance";
 
 type MonthlySummary = FinanceMonthSummary;
-
-type CashflowWeek = {
-  expense: number;
-  income: number;
-  key: string;
-  label: string;
-  net: number;
-};
-
-type SpendingTrend = {
-  midpointMessage?: string;
-  months: {
-    amount: number;
-    key: string;
-    label: string;
-    share: number;
-  }[];
-  topCategories: {
-    amount: number;
-    label: string;
-  }[];
-};
-
-type AccountActivityRow = {
-  expense: number;
-  income: number;
-  label: string;
-  net: number;
-  share: number;
-};
-
-type RepeatSuggestion = {
-  accountLabel?: string;
-  amount: number;
-  context: SpendingContext;
-  label: string;
-};
-
-function getMomentTitle(moment: SpendingMoment): string {
-  if (moment.type === "income") return moment.source || moment.label || "Income";
-  return moment.label || moment.context;
-}
-
-function getTemplateLabel(template: ManualTemplate): string {
-  if (template.type === "income") return template.source || "Income";
-  return template.label || template.context;
-}
-
-function formatMomentAmount(moment: SpendingMoment): string {
-  return moment.type === "income"
-    ? `+${formatCompactRupiah(moment.amount)}`
-    : formatCompactRupiah(moment.amount);
-}
-
-function formatSignedCompactRupiah(amount: number): string {
-  if (amount > 0) return `+${formatCompactRupiah(amount)}`;
-  if (amount < 0) return `-${formatCompactRupiah(Math.abs(amount))}`;
-  return formatCompactRupiah(0);
-}
-
-function getAllocationActionCopy(allocation: AllocationPlan): {
-  detail: string;
-  title: string;
-  tone: SpendingPattern["tone"];
-} {
-  const amount = allocation.nextAction.amount ?? 0;
-
-  switch (allocation.nextAction.kind) {
-    case "set_plan":
-      return {
-        detail: "Add expected income, fixed costs, flexible spending, and savings target for this month.",
-        title: "Set the monthly envelope",
-        tone: "calm"
-      };
-    case "snapshot_balances":
-      return {
-        detail: "Add quick snapshots for BRI, Jago, wallets, and cash so pocket funding can be checked.",
-        title: "Snapshot balances first",
-        tone: "calm"
-      };
-    case "plan_exceeds_income":
-      return {
-        detail: `The plan is ${formatCompactRupiah(amount)} above expected income. Lower one allocation or raise the expected income only if it is realistic.`,
-        title: "Plan is above income",
-        tone: "notice"
-      };
-    case "flexible_over_plan":
-      return {
-        detail: `Flexible spending is ${formatCompactRupiah(amount)} over the monthly envelope. Treat the rest of the month as a slower-spend period.`,
-        title: "Flexible budget is already crossed",
-        tone: "notice"
-      };
-    case "top_up_pockets":
-      return {
-        detail: `Moving up to ${formatCompactRupiah(amount)} from the income hub would fully fund the remaining flexible budget. Hub snapshot shows ${formatCompactRupiah(allocation.hubBalance)}.`,
-        title: "Pocket top-up is visible",
-        tone: "warm"
-      };
-    case "hold":
-      return {
-        detail: "The current pocket balance covers remaining flexible spending. Keep logging normally and update snapshots when balances change.",
-        title: "Allocation is steady",
-        tone: "calm"
-      };
-  }
-}
-
-function getAllocationRowCopy(row: AllocationPlan["rows"][number]): {
-  detail: string;
-  title: string;
-} {
-  const remainingAmount = Math.abs(row.remaining);
-
-  if (row.key === "income") {
-    if (row.planned <= 0) {
-      return {
-        detail: "No expected income is set for this month.",
-        title: "Income received"
-      };
-    }
-    return {
-      detail: row.remaining > 0
-        ? `${formatCompactRupiah(remainingAmount)} expected income is not logged yet.`
-        : `Income is ${formatCompactRupiah(remainingAmount)} above plan.`,
-      title: "Income received"
-    };
-  }
-
-  if (row.key === "fixed") {
-    if (row.planned <= 0) {
-      return {
-        detail: "No fixed-cost envelope is set.",
-        title: "Fixed costs"
-      };
-    }
-    return {
-      detail: row.remaining >= 0
-        ? `${formatCompactRupiah(remainingAmount)} fixed-cost room remains.`
-        : `Fixed costs are ${formatCompactRupiah(remainingAmount)} above plan.`,
-      title: "Fixed costs"
-    };
-  }
-
-  if (row.key === "flexible") {
-    if (row.planned <= 0) {
-      return {
-        detail: "No flexible spending envelope is set.",
-        title: "Flexible spending"
-      };
-    }
-    return {
-      detail: row.remaining >= 0
-        ? `${formatCompactRupiah(remainingAmount)} flexible spending remains.`
-        : `Flexible spending is ${formatCompactRupiah(remainingAmount)} above plan.`,
-      title: "Flexible spending"
-    };
-  }
-
-  if (row.planned <= 0) {
-    return {
-      detail: "No savings target is set.",
-      title: "Savings target"
-    };
-  }
-
-  return {
-    detail: row.remaining > 0
-      ? `${formatCompactRupiah(remainingAmount)} still needed to hit the savings target.`
-      : `Savings pace is ${formatCompactRupiah(remainingAmount)} above target.`,
-    title: "Savings target"
-  };
-}
 
 function getAllocationFillStyle(row: AllocationPlan["rows"][number]): Pick<ViewStyle, "backgroundColor" | "width"> {
   const isSpendingRow = row.key === "fixed" || row.key === "flexible";
@@ -3107,193 +2994,9 @@ function getAllocationFillStyle(row: AllocationPlan["rows"][number]): Pick<ViewS
   };
 }
 
-function getReconciliationCopy(rows: AccountReconciliationRow[]): {
-  detail: string;
-  title: string;
-  tone: SpendingPattern["tone"];
-} {
-  const rowsWithSnapshots = rows.filter((row) => row.status !== "no_snapshot");
-  const reviewRows = rows.filter((row) => row.status === "needs_review");
-  const smallGapRows = rows.filter((row) => row.status === "small_gap");
-  const historyRows = rows.filter((row) => row.status === "needs_history");
-  const totalGap = rows.reduce((sum, row) => sum + Math.abs(row.difference ?? 0), 0);
-
-  if (rowsWithSnapshots.length === 0) {
-    return {
-      detail: "Add balance snapshots first. Reconciliation becomes useful after two snapshots for the same account.",
-      title: "No balance check yet",
-      tone: "calm"
-    };
-  }
-
-  if (reviewRows.length > 0) {
-    return {
-      detail: `${reviewRows.length} account${reviewRows.length === 1 ? "" : "s"} need checking. Total visible gap is ${formatCompactRupiah(totalGap)}.`,
-      title: "Some balances need review",
-      tone: "notice"
-    };
-  }
-
-  if (smallGapRows.length > 0) {
-    return {
-      detail: `${smallGapRows.length} account${smallGapRows.length === 1 ? "" : "s"} have small gaps. They may be fees, rounding, or one missing entry.`,
-      title: "Small balance gaps are visible",
-      tone: "warm"
-    };
-  }
-
-  if (historyRows.length > 0) {
-    return {
-      detail: "At least one account has only one snapshot. Add the next snapshot to compare logged movement.",
-      title: "One more snapshot will unlock checks",
-      tone: "calm"
-    };
-  }
-
-  return {
-    detail: "Latest snapshots match the movement logged between balance checks.",
-    title: "Logged movement matches balances",
-    tone: "calm"
-  };
-}
-
-function formatReconciliationDifference(row: AccountReconciliationRow): string {
-  if (row.status === "no_snapshot") return "No snapshot";
-  if (row.status === "needs_history") return "Need 2 snapshots";
-  if (row.difference === null || Math.abs(row.difference) <= 1000) return "Matched";
-  return formatSignedCompactRupiah(row.difference);
-}
-
-function getReconciliationDetail(row: AccountReconciliationRow): string {
-  if (row.status === "no_snapshot") {
-    return "Add a manual balance snapshot for this account.";
-  }
-
-  if (row.status === "needs_history") {
-    return "Add one more snapshot later; Slev will compare the movement between both checks.";
-  }
-
-  const movement = `Logged movement over ${row.daysCovered} day${row.daysCovered === 1 ? "" : "s"}: income ${formatCompactRupiah(row.income)}, spending ${formatCompactRupiah(row.expense)}, transfer in ${formatCompactRupiah(row.transferIn)}, transfer out ${formatCompactRupiah(row.transferOut)}.`;
-  if (row.difference === null || Math.abs(row.difference) <= 1000) {
-    return movement;
-  }
-
-  const gap = formatCompactRupiah(Math.abs(row.difference));
-  const direction = row.difference > 0
-    ? `Actual balance is ${gap} higher than expected. Check missing income, transfer in, or an overstated expense.`
-    : `Actual balance is ${gap} lower than expected. Check missing expense, transfer out, or a balance typo.`;
-
-  return `${direction} ${movement}`;
-}
-
 function getReconciliationAmountStyle(row: AccountReconciliationRow): Pick<TextStyle, "color"> | undefined {
   if (row.difference === null || Math.abs(row.difference) <= 1000) return undefined;
   return row.difference > 0 ? styles.incomeText : styles.expenseText;
-}
-
-function buildAccountActivity(moments: SpendingMoment[]): AccountActivityRow[] {
-  const range = getMonthRange(new Date(), 0);
-  const grouped = moments
-    .filter((moment) => isWithinRange(moment.occurredAt, range.start, range.end))
-    .reduce<Record<string, AccountActivityRow>>((acc, moment) => {
-      const label = moment.accountLabel || "Unassigned";
-      const current = acc[label] ?? {
-        expense: 0,
-        income: 0,
-        label,
-        net: 0,
-        share: 0
-      };
-      const income = current.income + (moment.type === "income" ? moment.amount : 0);
-      const expense = current.expense + (moment.type === "expense" ? moment.amount : 0);
-      acc[label] = {
-        ...current,
-        expense,
-        income,
-        net: income - expense
-      };
-      return acc;
-    }, {});
-  const rows = Object.values(grouped).sort((a, b) => b.expense - a.expense);
-  const maxExpense = Math.max(1, ...rows.map((row) => row.expense));
-  return rows.map((row) => ({
-    ...row,
-    share: row.expense / maxExpense
-  }));
-}
-
-function buildCashflowWeeks(moments: SpendingMoment[]): CashflowWeek[] {
-  const currentWeekStart = getStartOfWeek(new Date());
-  return Array.from({ length: 8 }, (_, index) => {
-    const start = new Date(currentWeekStart.getTime() - (7 - index) * 7 * 24 * 60 * 60 * 1000);
-    const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const weekMoments = moments.filter((moment) => isWithinRange(moment.occurredAt, start, end));
-    const income = sumMoments(weekMoments.filter((moment) => moment.type === "income"));
-    const expense = sumExpenseMoments(weekMoments);
-    return {
-      expense,
-      income,
-      key: dateKey(start),
-      label: start.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      net: income - expense
-    };
-  });
-}
-
-function buildSpendingTrend(moments: SpendingMoment[]): SpendingTrend {
-  const today = new Date();
-  const months = [-2, -1, 0].map((offset) => {
-    const range = getMonthRange(today, offset);
-    const amount = sumExpenseMoments(
-      moments.filter((moment) => isWithinRange(moment.occurredAt, range.start, range.end))
-    );
-    return {
-      amount,
-      key: dateKey(range.start),
-      label: range.start.toLocaleDateString("en-US", { month: "short" }),
-      share: 0
-    };
-  });
-  const maxAmount = Math.max(1, ...months.map((month) => month.amount));
-  const monthsWithShare = months.map((month) => ({
-    ...month,
-    share: month.amount / maxAmount
-  }));
-  const currentMonth = monthsWithShare[2];
-  const lastMonth = monthsWithShare[1];
-  const dayOfMonth = today.getDate();
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const expectedPace = lastMonth.amount * (dayOfMonth / daysInMonth);
-  const midpointMessage =
-    dayOfMonth >= Math.ceil(daysInMonth / 2) && lastMonth.amount > 0 && currentMonth.amount > expectedPace
-      ? `${currentMonth.label} is running above last month's pace at this point.`
-      : undefined;
-  const currentRange = getMonthRange(today, 0);
-  const topCategories = buildMonthlyBreakdown(
-    moments.filter((moment) => isWithinRange(moment.occurredAt, currentRange.start, currentRange.end)),
-    "expense"
-  )
-    .slice(0, 2)
-    .map((row) => ({ amount: row.amount, label: row.label }));
-
-  return {
-    midpointMessage,
-    months: monthsWithShare,
-    topCategories
-  };
-}
-
-function getMomentsInPeriod(moments: SpendingMoment[], period: BudgetPeriod, referenceDate = new Date()): SpendingMoment[] {
-  const range = period === "weekly" ? getWeekRange(referenceDate) : getMonthRange(referenceDate, 0);
-  return moments.filter((moment) => isWithinRange(moment.occurredAt, range.start, range.end));
-}
-
-function sumExpenseMoments(moments: SpendingMoment[]): number {
-  return sumMoments(moments.filter((moment) => moment.type === "expense"));
-}
-
-function sumMoments(moments: SpendingMoment[]): number {
-  return moments.reduce((sum, moment) => sum + moment.amount, 0);
 }
 
 function getProgressFillStyle(progress: number): Pick<ViewStyle, "backgroundColor" | "width"> {
@@ -3303,176 +3006,6 @@ function getProgressFillStyle(progress: number): Pick<ViewStyle, "backgroundColo
     backgroundColor,
     width: `${Math.round(clampedProgress * 100)}%` as ViewStyle["width"]
   };
-}
-
-function getPercentWidthStyle(value: number): Pick<ViewStyle, "width"> {
-  const clamped = clampPercent(value);
-  const width = clamped > 0 && clamped < 0.02 ? 2 : Math.round(clamped * 100);
-  return { width: `${width}%` as ViewStyle["width"] };
-}
-
-function clampPercent(value: number): number {
-  if (!Number.isFinite(value)) return 0;
-  return Math.min(1, Math.max(0, value));
-}
-
-function getWeekRange(date: Date): { start: Date; end: Date } {
-  const start = getStartOfWeek(date);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 7);
-  return { start, end };
-}
-
-function getStartOfWeek(date: Date): Date {
-  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const day = start.getDay();
-  const offset = day === 0 ? -6 : 1 - day;
-  start.setDate(start.getDate() + offset);
-  return start;
-}
-
-function getMonthRange(date: Date, monthOffset: number): { start: Date; end: Date } {
-  const start = new Date(date.getFullYear(), date.getMonth() + monthOffset, 1);
-  const end = new Date(date.getFullYear(), date.getMonth() + monthOffset + 1, 1);
-  return { start, end };
-}
-
-function isWithinRange(value: string, start: Date, end: Date): boolean {
-  const time = Date.parse(value);
-  return time >= start.getTime() && time < end.getTime();
-}
-
-function getRepeatSuggestions(moments: SpendingMoment[]): RepeatSuggestion[] {
-  const seen = new Set<string>();
-  const suggestions: RepeatSuggestion[] = [];
-
-  for (const moment of moments) {
-    if (moment.type === "income") continue;
-    const label = moment.label || moment.context;
-    const key = `${label.toLowerCase()}-${moment.context}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    suggestions.push({
-      accountLabel: moment.accountLabel,
-      amount: moment.amount,
-      context: moment.context,
-      label
-    });
-    if (suggestions.length >= 4) break;
-  }
-
-  return suggestions;
-}
-
-function filterMoments(moments: SpendingMoment[], query: string): SpendingMoment[] {
-  const normalized = query.trim().toLowerCase();
-  if (!normalized) return moments;
-
-  return moments.filter((moment) => {
-    const haystack = [
-      moment.label,
-      moment.source,
-      moment.accountLabel,
-      moment.type,
-      moment.context,
-      moment.note,
-      String(moment.amount),
-      formatCompactRupiah(moment.amount)
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-    return haystack.includes(normalized);
-  });
-}
-
-function getRepeatHint(moment: SpendingMoment, moments: SpendingMoment[]): string | undefined {
-  if (moment.type === "income") return undefined;
-  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const count = moments.filter(
-    (item) => item.type === "expense" && item.context === moment.context && Date.parse(item.occurredAt) >= weekAgo
-  ).length;
-  return count >= 3 ? `${count} this week` : undefined;
-}
-
-function groupMomentsByRecallRange(moments: SpendingMoment[]) {
-  const now = new Date();
-  const todayKey = dateKey(now);
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  const yesterdayKey = dateKey(yesterday);
-  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const groups = [
-    { key: "today", label: "Today", items: [] as SpendingMoment[] },
-    { key: "yesterday", label: "Yesterday", items: [] as SpendingMoment[] },
-    { key: "this-week", label: "This week", items: [] as SpendingMoment[] },
-    { key: "earlier", label: "Earlier", items: [] as SpendingMoment[] }
-  ];
-
-  moments.forEach((moment) => {
-    const key = dateKey(new Date(moment.occurredAt));
-    const time = Date.parse(moment.occurredAt);
-    if (key === todayKey) {
-      groups[0].items.push(moment);
-    } else if (key === yesterdayKey) {
-      groups[1].items.push(moment);
-    } else if (time >= weekAgo) {
-      groups[2].items.push(moment);
-    } else {
-      groups[3].items.push(moment);
-    }
-  });
-
-  return groups.filter((group) => group.items.length > 0);
-}
-
-function groupPatterns(patterns: SpendingPattern[]) {
-  const byGroup = patterns.reduce<Record<string, SpendingPattern[]>>((acc, pattern) => {
-    acc[pattern.group] = [...(acc[pattern.group] ?? []), pattern];
-    return acc;
-  }, {});
-
-  return Object.entries(byGroup).map(([title, items]) => ({ title, items }));
-}
-
-function formatDate(key: string): string {
-  return new Date(`${key}T00:00:00`).toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric"
-  });
-}
-
-function dateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, "0");
-  const day = `${date.getDate()}`.padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function getMonthKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, "0");
-  return `${year}-${month}`;
-}
-
-function formatTime(value: string): string {
-  return new Date(value).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-}
-
-function getIncomeHubLabel(accounts: MoneyAccount[]): string {
-  return accounts.find((account) => account.isIncomeHub)?.label ?? accounts[0]?.label ?? "BRI";
-}
-
-function getDailyPocketLabel(accounts: MoneyAccount[]): string {
-  return accounts.find((account) => !account.isIncomeHub)?.label ?? accounts[0]?.label ?? "Jago";
-}
-
-function getDefaultMomentAccount(type: EntryType, accounts: MoneyAccount[]): string {
-  return type === "income" ? getIncomeHubLabel(accounts) : getDailyPocketLabel(accounts);
 }
 
 function contextIcon(context: SpendingContext): keyof typeof Ionicons.glyphMap {

@@ -12,7 +12,10 @@
   "include": [
     "src/data/spendingMemory.ts",
     "src/features/spendingMemory.types.ts",
+    "src/lib/analysis.ts",
     "src/lib/financeEngine.ts",
+    "src/lib/formatMoney.ts",
+    "src/lib/spendingMemoryPatterns.ts",
     "tests/**/*.ts"
   ]
 }
