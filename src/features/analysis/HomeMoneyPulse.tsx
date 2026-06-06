@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Text, View } from "react-native";
-import { MonthlyPlan } from "../spendingMemory.types";
+import { MonthlyPlan, SavingsGoal } from "../spendingMemory.types";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { MonthlySummary } from "../app.types";
@@ -15,6 +15,7 @@ type HomeMoneyPulseProps = {
   monthlyPlan: MonthlyPlan | null;
   monthlySummary: MonthlySummary;
   runwayMonths: number | null;
+  savingsGoals: SavingsGoal[];
 };
 
 export function HomeMoneyPulse({
@@ -23,11 +24,15 @@ export function HomeMoneyPulse({
   latestBalanceTotal,
   monthlyPlan,
   monthlySummary,
-  runwayMonths
+  runwayMonths,
+  savingsGoals
 }: HomeMoneyPulseProps) {
   const savingsTarget = monthlyPlan?.savingsTarget ?? 0;
-  const estimatedSavings = Math.max(0, monthlySummary.net);
   const netIsNegative = monthlySummary.net < 0;
+  const goalsSavedTotal = savingsGoals.reduce((sum, goal) => sum + goal.savedAmount, 0);
+  const goalsTargetTotal = savingsGoals.reduce((sum, goal) => sum + goal.targetAmount, 0);
+  const showGoalProgress = savingsGoals.length > 0;
+  const showMonthlySavingsTarget = !showGoalProgress && savingsTarget > 0;
   const hasFlexibleBudget = (monthlyPlan?.flexibleBudget ?? 0) > 0;
   const showSafeToSpend = hasMonthlyPlan && hasFlexibleBudget;
 
@@ -52,7 +57,7 @@ export function HomeMoneyPulse({
               color={netIsNegative ? colors.coral : colors.greenDark}
             />
           </View>
-          <Text style={styles.pulseLabel}>Net income</Text>
+          <Text style={styles.pulseLabel}>Net left this month</Text>
         </View>
         <Text style={[styles.pulseValue, netIsNegative ? styles.pulseValueDanger : styles.pulseValueIncome]}>
           {formatSignedCompactRupiah(monthlySummary.net)}
@@ -81,13 +86,23 @@ export function HomeMoneyPulse({
           <Text style={styles.pulseLabel}>Add a few expenses to estimate runway</Text>
         )}
       </View>
-      {savingsTarget > 0 && (
+      {showGoalProgress && (
         <View style={styles.pulseWideItem}>
           <View style={[styles.pulseIconBadge, styles.pulseIconIncome]}>
             <Ionicons name="flag-outline" size={17} color={colors.greenDark} />
           </View>
           <Text style={styles.pulseSavingsText}>
-            Savings target: {formatCompactRupiah(savingsTarget)} - current pace {formatCompactRupiah(estimatedSavings)}
+            Saved toward goals: {formatCompactRupiah(goalsSavedTotal)} of {formatCompactRupiah(goalsTargetTotal)}
+          </Text>
+        </View>
+      )}
+      {showMonthlySavingsTarget && (
+        <View style={styles.pulseWideItem}>
+          <View style={[styles.pulseIconBadge, styles.pulseIconIncome]}>
+            <Ionicons name="flag-outline" size={17} color={colors.greenDark} />
+          </View>
+          <Text style={styles.pulseSavingsText}>
+            Monthly savings target: {formatCompactRupiah(savingsTarget)}
           </Text>
         </View>
       )}

@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { ScrollView } from "react-native";
 import { HomeMoneyPulse } from "../features/analysis/HomeMoneyPulse";
 import { CapturePanel } from "../features/capture/CapturePanel";
-import { useDerived, useFinanceSelector } from "../state/useFinance";
+import { shallowEqual, useDerived, useFinanceSelector } from "../state/useFinance";
 import { styles } from "../theme/styles/app";
 
 type HomeScreenProps = {
@@ -11,7 +11,13 @@ type HomeScreenProps = {
 
 function HomeScreenComponent({ onOpenSettings }: HomeScreenProps) {
   const { allocationPlan, hasMonthlyPlan, latestBalanceTotal, monthlySummary, runwayMonths } = useDerived();
-  const monthlyPlan = useFinanceSelector((state) => state.monthlyPlan);
+  const { monthlyPlan, savingsGoals } = useFinanceSelector(
+    (state) => ({
+      monthlyPlan: state.monthlyPlan,
+      savingsGoals: state.savingsGoals
+    }),
+    shallowEqual
+  );
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
@@ -22,6 +28,7 @@ function HomeScreenComponent({ onOpenSettings }: HomeScreenProps) {
         monthlyPlan={monthlyPlan}
         monthlySummary={monthlySummary}
         runwayMonths={runwayMonths}
+        savingsGoals={savingsGoals}
       />
       <CapturePanel onOpenSettings={onOpenSettings} />
     </ScrollView>

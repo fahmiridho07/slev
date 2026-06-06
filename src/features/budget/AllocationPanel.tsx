@@ -76,7 +76,7 @@ export function AllocationPanel({
               <Text style={styles.settingCopy}>{allocation.pocketCoverageDays} day coverage</Text>
             </View>
             <View style={styles.allocationMetric}>
-              <Text style={styles.microLabel}>Savings pace</Text>
+              <Text style={styles.microLabel}>Net left</Text>
               <Text style={[styles.allocationValue, allocation.savingsGap > 0 && styles.expenseText]}>
                 {formatSignedCompactRupiah(allocation.possibleSavings - (monthlyPlan.savingsTarget ?? 0))}
               </Text>

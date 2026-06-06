@@ -308,6 +308,7 @@ export function buildAllocationPlan({
   const incomeGap = Math.max(0, expectedIncome - monthlySummary.income);
   const fixedRemaining = fixedBudget - monthlySummary.fixedExpense;
   const flexibleRemaining = flexibleBudget - monthlySummary.flexibleExpense;
+  // Leftover cashflow (income - expense), not explicit savings transfers; true amount saved is deferred.
   const possibleSavings = Math.max(0, monthlySummary.net);
   const savingsGap = savingsTarget - possibleSavings;
   const daysRemaining = getDaysRemainingInMonth(today);

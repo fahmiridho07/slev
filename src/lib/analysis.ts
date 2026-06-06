@@ -177,7 +177,7 @@ export function getAllocationRowCopy(row: AllocationPlan["rows"][number]): {
   return {
     detail: row.remaining > 0
       ? `${formatCompactRupiah(remainingAmount)} still needed to hit the savings target.`
-      : `Savings pace is ${formatCompactRupiah(remainingAmount)} above target.`,
+      : `Net left is ${formatCompactRupiah(remainingAmount)} above target.`,
     title: "Savings target"
   };
 }
