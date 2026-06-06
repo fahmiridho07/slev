@@ -49,13 +49,6 @@ export function useCaptureForm() {
   );
 
   useEffect(() => {
-    const lastExpense = moments.find((moment) => moment.type === "expense");
-    if (lastExpense) {
-      setForm((current) => ({ ...current, context: lastExpense.context }));
-    }
-  }, [moments]);
-
-  useEffect(() => {
     if (categoryLabels.length > 0 && !categoryLabels.includes(form.context)) {
       setForm((current) => ({
         ...current,
