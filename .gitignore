@@ -13,6 +13,8 @@ android/app/debug.keystore
 # Expo / Node
 node_modules/
 .expo/
+.expo-server.err.log
+.expo-server.out.log
 dist/
 web-build/
 .tmp-tests/
