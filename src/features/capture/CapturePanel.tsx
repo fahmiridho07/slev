@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { AccountPicker, ContextPicker, EmptyState, SegmentedControl } from "../../components";
 import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
@@ -41,6 +41,13 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
       setNoteOpen(true);
     }
   }, [form.note]);
+
+  const handleSave = useCallback(async () => {
+    const saved = await save();
+    if (saved) {
+      setNoteOpen(false);
+    }
+  }, [save]);
 
   return (
     <View style={styles.capturePanel}>
@@ -181,7 +188,7 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
         </Pressable>
       )}
 
-      <Pressable accessibilityRole="button" onPress={save} style={styles.primaryButton}>
+      <Pressable accessibilityRole="button" onPress={() => void handleSave()} style={styles.primaryButton}>
         <Ionicons name="checkmark-circle-outline" size={20} color={colors.surface} />
         <Text style={styles.primaryButtonText}>
           {form.entryType === "income" ? "Save income" : form.entryType === "transfer" ? "Save transfer" : "Save memory"}

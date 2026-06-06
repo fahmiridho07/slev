@@ -255,13 +255,13 @@ export const componentStyles = StyleSheet.create({
     borderColor: colors.line,
     borderRadius: 8,
     borderWidth: 1,
-    flexBasis: "30%",
-    flexGrow: 1,
+    flexGrow: 0,
+    flexShrink: 0,
     justifyContent: "center",
-    maxWidth: "32%",
     minHeight: 42,
     paddingHorizontal: 10,
-    paddingVertical: 10
+    paddingVertical: 10,
+    width: "31.5%"
   },
   contextChipActive: {
     backgroundColor: colors.mint,
@@ -276,11 +276,14 @@ export const componentStyles = StyleSheet.create({
   contextChipTextActive: {
     color: colors.greenDark
   },
+  contextHintBox: {
+    justifyContent: "center",
+    minHeight: 34
+  },
   contextHint: {
     color: colors.muted,
     fontSize: 12,
-    lineHeight: 17,
-    minHeight: 17
+    lineHeight: 17
   },
   segmentedControlStretch: {
     width: "100%"

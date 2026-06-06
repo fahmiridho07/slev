@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CaptureType } from "../app.types";
 import {
   getDailyPocketLabel,
@@ -9,7 +9,7 @@ import {
 } from "../../lib/analysis";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { ManualTemplate, MoneyAccount, SpendingContext } from "../spendingMemory.types";
-import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
+import { useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
 import { CaptureFormValues } from "./types";
 
 function buildDefaultCapture(accounts: MoneyAccount[], context: SpendingContext): CaptureFormValues {
@@ -35,44 +35,95 @@ function buildDefaultCapture(accounts: MoneyAccount[], context: SpendingContext)
 export function useCaptureForm() {
   const actions = useActions();
   const { categoryLabels } = useDerived();
-  const { accounts, moments } = useFinanceSelector(
-    (state) => ({
-      accounts: state.accounts,
-      moments: state.moments
-    }),
-    shallowEqual
+  const accounts = useFinanceSelector((state) => state.accounts);
+  const lastExpenseContext = useFinanceSelector(
+    (state) => state.moments.find((moment) => moment.type === "expense")?.context ?? "Other"
   );
 
-  const lastExpenseContext = moments.find((moment) => moment.type === "expense")?.context ?? "Other";
-  const [form, setForm] = useState<CaptureFormValues>(() =>
-    buildDefaultCapture(accounts, lastExpenseContext)
-  );
+  const [form, setForm] = useState<CaptureFormValues>(() => buildDefaultCapture([], "Other"));
+  const bootstrappedRef = useRef(false);
 
   useEffect(() => {
-    if (categoryLabels.length > 0 && !categoryLabels.includes(form.context)) {
-      setForm((current) => ({
+    if (bootstrappedRef.current || accounts.length === 0) {
+      return;
+    }
+
+    setForm((current) => {
+      const hasDraft = Boolean(
+        current.amountText.trim()
+        || current.label.trim()
+        || current.note.trim()
+        || current.source.trim()
+      );
+      bootstrappedRef.current = true;
+
+      if (hasDraft) {
+        return current;
+      }
+
+      const context = categoryLabels.includes(lastExpenseContext)
+        ? lastExpenseContext
+        : categoryLabels.includes("Other")
+          ? "Other"
+          : categoryLabels[0] ?? "Other";
+
+      return buildDefaultCapture(accounts, context);
+    });
+  }, [accounts, categoryLabels, lastExpenseContext]);
+
+  useEffect(() => {
+    if (categoryLabels.length === 0) {
+      return;
+    }
+
+    setForm((current) => {
+      if (categoryLabels.includes(current.context)) {
+        return current;
+      }
+
+      return {
         ...current,
         context: categoryLabels.includes("Other") ? "Other" : categoryLabels[0]
-      }));
-    }
-  }, [categoryLabels, form.context]);
+      };
+    });
+  }, [categoryLabels]);
 
   useEffect(() => {
+    if (accounts.length === 0) {
+      return;
+    }
+
     const accountLabels = accounts.map((account) => account.label);
     const incomeHub = getIncomeHubLabel(accounts);
     const dailyPocket = getDailyPocketLabel(accounts);
+    const fallbackToAccount =
+      dailyPocket === incomeHub
+        ? accounts.find((account) => account.label !== incomeHub)?.label ?? dailyPocket
+        : dailyPocket;
 
-    setForm((current) => ({
-      ...current,
-      accountLabel: accountLabels.includes(current.accountLabel) ? current.accountLabel : dailyPocket,
-      fromAccount: accountLabels.includes(current.fromAccount) ? current.fromAccount : incomeHub,
-      toAccount:
+    setForm((current) => {
+      const nextAccountLabel = accountLabels.includes(current.accountLabel) ? current.accountLabel : dailyPocket;
+      const nextFromAccount = accountLabels.includes(current.fromAccount) ? current.fromAccount : incomeHub;
+      const nextToAccount =
         accountLabels.includes(current.toAccount) && current.toAccount !== incomeHub
           ? current.toAccount
-          : dailyPocket === incomeHub
-            ? accounts.find((account) => account.label !== incomeHub)?.label ?? dailyPocket
-            : dailyPocket
-    }));
+          : fallbackToAccount;
+
+      if (
+        nextAccountLabel === current.accountLabel
+        && nextFromAccount === current.fromAccount
+        && nextToAccount === current.toAccount
+      ) {
+        return current;
+      }
+
+      return {
+        ...current,
+        accountLabel: nextAccountLabel,
+        fromAccount: nextFromAccount,
+        toAccount: nextToAccount
+      };
+    });
   }, [accounts]);
 
   const changeAmountText = useCallback((value: string) => {
@@ -161,14 +212,15 @@ export function useCaptureForm() {
 
   const save = useCallback(async () => {
     const result = await actions.saveMoment(form, categoryLabels.length);
-    if (!result.ok) return;
+    if (!result.ok) return false;
 
     if (result.resetNote) {
-      setForm((current) => ({ ...current, amountText: "", note: "" }));
-      return;
+      resetAfterSave(form.context);
+      return true;
     }
 
     resetAfterSave(result.expenseContext);
+    return true;
   }, [actions, categoryLabels.length, form, resetAfterSave]);
 
   const saveTemplate = useCallback(async () => {

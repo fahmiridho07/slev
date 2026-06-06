@@ -24,7 +24,11 @@ function ContextPickerComponent({
           <Pressable
             accessibilityRole="button"
             key={item}
-            onPress={() => onSelect(item)}
+            onPress={() => {
+              if (item !== selected) {
+                onSelect(item);
+              }
+            }}
             style={[componentStyles.contextChip, selected === item && componentStyles.contextChipActive]}
           >
             <Text style={[componentStyles.contextChipText, selected === item && componentStyles.contextChipTextActive]}>
@@ -34,9 +38,11 @@ function ContextPickerComponent({
         ))}
       </View>
       {!compact && (
-        <Text style={componentStyles.contextHint}>
-          {CONTEXT_HINTS[selected] ?? "Custom spending category"}
-        </Text>
+        <View style={componentStyles.contextHintBox}>
+          <Text numberOfLines={2} style={componentStyles.contextHint}>
+            {CONTEXT_HINTS[selected] ?? "Custom spending category"}
+          </Text>
+        </View>
       )}
     </View>
   );
