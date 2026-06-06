@@ -1,12 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Animated,
   Image,
   KeyboardAvoidingView,
-  Modal,
-  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -18,9 +15,24 @@ import {
   View
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { getAccountBrand } from "./src/data/accountBrands";
+import {
+  AccountPicker,
+  AccountTitle,
+  ContextPicker,
+  DeleteConfirmDialog,
+  EmptyState,
+  FeedbackButton,
+  getPatternToneStyle,
+  MomentRow,
+  ObservationPanel,
+  patternColor,
+  patternIcon,
+  SectionHeader,
+  SegmentedControl,
+  SwipeActionRow,
+  TransferTitle
+} from "./src/components";
 import { BRAND } from "./src/data/brand";
-import { CONTEXT_HINTS } from "./src/data/spendingMemory";
 import {
   BalanceSnapshot,
   BudgetLimit,
@@ -47,7 +59,6 @@ import {
   filterMoments,
   formatDate,
   formatReconciliationDifference,
-  formatTime,
   getAllocationActionCopy,
   getAllocationRowCopy,
   getCategoryDeleteBody,
@@ -71,7 +82,6 @@ import {
 } from "./src/lib/analysis";
 import {
   formatAmountInput,
-  formatMomentAmount,
   formatSignedCompactRupiah,
   parseAmountInput
 } from "./src/lib/formatMoney";
@@ -154,7 +164,6 @@ const tabs: { key: TabKey; label: string; icon: keyof typeof Ionicons.glyphMap }
 ];
 
 const SLEV_MARK = require("./assets/brand/slev-mark-transparent.png");
-const SWIPE_DELETE_ACTION_WIDTH = 84;
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabKey>("home");
@@ -2156,7 +2165,7 @@ function PatternOverview({
           <View key={group.title} style={styles.patternGroup}>
             <SectionHeader title={group.title} />
             {group.items.map((pattern) => (
-              <View key={pattern.id} style={[styles.patternCard, patternStyle(pattern.tone)]}>
+              <View key={pattern.id} style={[styles.patternCard, getPatternToneStyle(pattern.tone)]}>
                 <View style={styles.patternTitleRow}>
                   <Ionicons name={patternIcon(pattern.tone)} size={18} color={patternColor(pattern.tone)} />
                   <Text style={styles.patternTitle}>{pattern.title}</Text>
@@ -2602,377 +2611,6 @@ function SettingsScreen({
   );
 }
 
-function SegmentedControl<T extends string>({
-  compact = false,
-  options,
-  selected,
-  onSelect
-}: {
-  compact?: boolean;
-  options: { label: string; value: T }[];
-  selected: T;
-  onSelect: (value: T) => void;
-}) {
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={[styles.segmentedControl, compact && styles.segmentedControlCompact]}
-      contentContainerStyle={styles.segmentedControlContent}
-    >
-      {options.map((option) => {
-        const active = option.value === selected;
-        return (
-          <Pressable
-            accessibilityRole="button"
-            key={option.value}
-            onPress={() => onSelect(option.value)}
-            style={[styles.segmentButton, compact && styles.segmentButtonCompact, active && styles.segmentButtonActive]}
-          >
-            <Text numberOfLines={1} style={[styles.segmentButtonText, active && styles.segmentButtonTextActive]}>{option.label}</Text>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
-  );
-}
-
-function SwipeActionRow({
-  canDelete,
-  children,
-  onDelete
-}: {
-  canDelete: boolean;
-  children: React.ReactNode;
-  onDelete: () => void;
-}) {
-  const translateX = useRef(new Animated.Value(0)).current;
-  const isOpenRef = useRef(false);
-
-  const animateTo = useCallback(
-    (isOpen: boolean) => {
-      isOpenRef.current = isOpen;
-      Animated.spring(translateX, {
-        friction: 8,
-        tension: 90,
-        toValue: isOpen ? -SWIPE_DELETE_ACTION_WIDTH : 0,
-        useNativeDriver: true
-      }).start();
-    },
-    [translateX]
-  );
-
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gesture) =>
-          canDelete && Math.abs(gesture.dx) > 10 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
-        onPanResponderMove: (_, gesture) => {
-          const base = isOpenRef.current ? -SWIPE_DELETE_ACTION_WIDTH : 0;
-          const nextPosition = Math.max(
-            -SWIPE_DELETE_ACTION_WIDTH,
-            Math.min(0, base + gesture.dx)
-          );
-          translateX.setValue(nextPosition);
-        },
-        onPanResponderRelease: (_, gesture) => {
-          const base = isOpenRef.current ? -SWIPE_DELETE_ACTION_WIDTH : 0;
-          const nextPosition = Math.max(
-            -SWIPE_DELETE_ACTION_WIDTH,
-            Math.min(0, base + gesture.dx)
-          );
-          const shouldOpen = nextPosition < -SWIPE_DELETE_ACTION_WIDTH / 2 || gesture.vx < -0.35;
-          animateTo(shouldOpen);
-        },
-        onPanResponderTerminate: () => animateTo(isOpenRef.current)
-      }),
-    [animateTo, canDelete, translateX]
-  );
-
-  const foregroundStyle = {
-    transform: [{ translateX }]
-  };
-
-  return (
-    <View style={styles.swipeRowShell}>
-      {canDelete && (
-        <View style={styles.swipeActionBackground}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => {
-              animateTo(false);
-              onDelete();
-            }}
-            style={styles.swipeDeleteButton}
-          >
-            <Ionicons name="trash-outline" size={18} color={colors.surface} />
-            <Text style={styles.swipeDeleteText}>Delete</Text>
-          </Pressable>
-        </View>
-      )}
-      <Animated.View
-        {...(canDelete ? panResponder.panHandlers : {})}
-        style={[styles.swipeForeground, foregroundStyle]}
-      >
-        {children}
-      </Animated.View>
-    </View>
-  );
-}
-
-function DeleteConfirmDialog({
-  body,
-  confirmLabel = "Delete",
-  onCancel,
-  onConfirm,
-  title,
-  visible
-}: {
-  body: string;
-  confirmLabel?: string;
-  onCancel: () => void;
-  onConfirm: () => void;
-  title: string;
-  visible: boolean;
-}) {
-  return (
-    <Modal
-      animationType="fade"
-      onRequestClose={onCancel}
-      transparent
-      visible={visible}
-    >
-      <View style={styles.confirmBackdrop}>
-        <View style={styles.confirmCard}>
-          <View style={styles.confirmIcon}>
-            <Ionicons name="trash-outline" size={22} color={colors.coral} />
-          </View>
-          <Text style={styles.confirmTitle}>{title}</Text>
-          <Text style={styles.confirmBody}>{body}</Text>
-          <View style={styles.confirmActions}>
-            <Pressable accessibilityRole="button" onPress={onCancel} style={styles.confirmCancelButton}>
-              <Text style={styles.secondaryButtonText}>Cancel</Text>
-            </Pressable>
-            <Pressable accessibilityRole="button" onPress={onConfirm} style={styles.confirmDeleteButton}>
-              <Text style={styles.confirmDeleteText}>{confirmLabel}</Text>
-            </Pressable>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
-function AccountPicker({
-  accounts,
-  label,
-  selected,
-  onSelect
-}: {
-  accounts: MoneyAccount[];
-  label: string;
-  selected: string;
-  onSelect: (value: string) => void;
-}) {
-  return (
-    <View style={styles.accountPickerBlock}>
-      <Text style={styles.microLabel}>{label}</Text>
-      <View style={styles.accountChipRow}>
-        {accounts.map((account) => {
-          const active = selected === account.label;
-          return (
-            <Pressable
-              accessibilityRole="button"
-              key={account.id}
-              onPress={() => onSelect(account.label)}
-              style={[styles.accountChip, active && styles.accountChipActive]}
-            >
-              <AccountMark kind={account.kind} label={account.label} size="small" />
-              <Text style={[styles.accountChipText, active && styles.accountChipTextActive]}>{account.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
-  );
-}
-
-function ContextPicker({
-  categories,
-  compact = false,
-  selected,
-  onSelect
-}: {
-  categories: SpendingContext[];
-  compact?: boolean;
-  selected: SpendingContext;
-  onSelect: (context: SpendingContext) => void;
-}) {
-  return (
-    <View style={compact ? styles.contextWrapCompact : styles.contextWrap}>
-      {categories.map((item) => (
-        <Pressable
-          accessibilityRole="button"
-          key={item}
-          onPress={() => onSelect(item)}
-          style={[styles.contextChip, selected === item && styles.contextChipActive]}
-        >
-          <Text style={[styles.contextChipText, selected === item && styles.contextChipTextActive]}>
-            {item}
-          </Text>
-          {!compact && selected === item && (
-            <Text style={styles.contextHint}>{CONTEXT_HINTS[item] ?? "Custom spending category"}</Text>
-          )}
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
-function AccountTitle({
-  kind,
-  label
-}: {
-  kind?: MoneyAccount["kind"];
-  label: string;
-}) {
-  return (
-    <View style={styles.accountTitleRow}>
-      <AccountMark kind={kind} label={label} />
-      <Text style={styles.analyticsTitle}>{label}</Text>
-    </View>
-  );
-}
-
-function TransferTitle({
-  fromLabel,
-  toLabel
-}: {
-  fromLabel: string;
-  toLabel: string;
-}) {
-  return (
-    <View style={styles.transferTitleRow}>
-      <AccountMark label={fromLabel} size="small" />
-      <Ionicons name="arrow-forward-outline" size={14} color={colors.muted} />
-      <AccountMark label={toLabel} size="small" />
-      <Text style={styles.analyticsTitle}>{fromLabel} to {toLabel}</Text>
-    </View>
-  );
-}
-
-function AccountMark({
-  kind = "other",
-  label,
-  size = "medium"
-}: {
-  kind?: MoneyAccount["kind"];
-  label: string;
-  size?: "small" | "medium";
-}) {
-  const brand = getAccountBrand(label, kind);
-  const markStyle = {
-    backgroundColor: brand.backgroundColor,
-    borderColor: brand.borderColor
-  };
-  const textStyle = {
-    color: brand.foregroundColor
-  };
-
-  return (
-    <View style={[styles.accountMark, size === "small" && styles.accountMarkSmall, markStyle]}>
-      <Text
-        adjustsFontSizeToFit
-        minimumFontScale={0.75}
-        numberOfLines={1}
-        style={[styles.accountMarkText, size === "small" && styles.accountMarkTextSmall, textStyle]}
-      >
-        {brand.shortLabel}
-      </Text>
-    </View>
-  );
-}
-
-function ObservationPanel({ pattern }: { pattern: SpendingPattern }) {
-  return (
-    <View style={[styles.observationPanel, patternStyle(pattern.tone)]}>
-      <View style={styles.patternTitleRow}>
-        <Ionicons name={patternIcon(pattern.tone)} size={18} color={patternColor(pattern.tone)} />
-        <Text style={styles.patternTitle}>{pattern.title}</Text>
-      </View>
-      <Text style={styles.patternDetail}>{pattern.detail}</Text>
-    </View>
-  );
-}
-
-function FeedbackButton({
-  active,
-  label,
-  onPress
-}: {
-  active: boolean;
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable onPress={onPress} style={[styles.feedbackButton, active && styles.feedbackButtonActive]}>
-      <Text style={[styles.feedbackText, active && styles.feedbackTextActive]}>{label}</Text>
-    </Pressable>
-  );
-}
-
-function MomentRow({ moment, repeatHint }: { moment: SpendingMoment; repeatHint?: string }) {
-  const isIncome = moment.type === "income";
-
-  return (
-    <View style={styles.momentRow}>
-      <View style={[styles.momentIcon, isIncome && styles.incomeMomentIcon]}>
-        <Ionicons
-          name={isIncome ? "cash-outline" : contextIcon(moment.context)}
-          size={18}
-          color={isIncome ? colors.blue : colors.greenDark}
-        />
-      </View>
-      <View style={styles.momentText}>
-        <Text style={styles.momentTitle}>{getMomentTitle(moment)}</Text>
-        <Text style={styles.momentMeta}>
-          {isIncome ? "Income" : moment.context} - {formatTime(moment.occurredAt)}
-          {moment.accountLabel ? ` - ${moment.accountLabel}` : ""}
-          {moment.note ? ` - ${moment.note}` : ""}
-        </Text>
-        {repeatHint && !isIncome && <Text style={styles.repeatHint}>{repeatHint}</Text>}
-      </View>
-      <Text style={[styles.momentAmount, isIncome && styles.incomeText]}>{formatMomentAmount(moment)}</Text>
-    </View>
-  );
-}
-
-function SectionHeader({ title }: { title: string }) {
-  return <Text style={styles.sectionTitle}>{title}</Text>;
-}
-
-function EmptyState({
-  actionLabel,
-  onAction,
-  text
-}: {
-  actionLabel?: string;
-  onAction?: () => void;
-  text: string;
-}) {
-  return (
-    <View style={styles.emptyState}>
-      <Ionicons name="leaf-outline" size={22} color={colors.greenDark} />
-      <Text style={styles.emptyText}>{text}</Text>
-      {actionLabel && onAction && (
-        <Pressable accessibilityRole="button" onPress={onAction} style={styles.emptyActionButton}>
-          <Text style={styles.emptyActionText}>{actionLabel}</Text>
-        </Pressable>
-      )}
-    </View>
-  );
-}
-
 type PatternTabKey = "overview" | "breakdown" | "accounts" | "trends";
 type BudgetTabKey = "limits" | "plan" | "goals" | "balance";
 
@@ -3006,35 +2644,6 @@ function getProgressFillStyle(progress: number): Pick<ViewStyle, "backgroundColo
     backgroundColor,
     width: `${Math.round(clampedProgress * 100)}%` as ViewStyle["width"]
   };
-}
-
-function contextIcon(context: SpendingContext): keyof typeof Ionicons.glyphMap {
-  if (context === "Meal") return "restaurant-outline";
-  if (context === "Coffee") return "cafe-outline";
-  if (context === "Transport") return "car-outline";
-  if (context === "Groceries") return "basket-outline";
-  if (context === "Bills") return "receipt-outline";
-  if (context === "Treat") return "sparkles-outline";
-  if (context === "Home") return "home-outline";
-  return "ellipse-outline";
-}
-
-function patternIcon(tone: SpendingPattern["tone"]): keyof typeof Ionicons.glyphMap {
-  if (tone === "notice") return "radio-button-on-outline";
-  if (tone === "warm") return "sunny-outline";
-  return "leaf-outline";
-}
-
-function patternColor(tone: SpendingPattern["tone"]): string {
-  if (tone === "notice") return colors.blue;
-  if (tone === "warm") return colors.amber;
-  return colors.greenDark;
-}
-
-function patternStyle(tone: SpendingPattern["tone"]) {
-  if (tone === "notice") return styles.patternNotice;
-  if (tone === "warm") return styles.patternWarm;
-  return styles.patternCalm;
 }
 
 const styles = StyleSheet.create({
@@ -3740,34 +3349,6 @@ const styles = StyleSheet.create({
     marginHorizontal: -14,
     marginTop: 12,
     padding: 14
-  },
-  swipeRowShell: {
-    backgroundColor: colors.surface,
-    overflow: "hidden",
-    position: "relative"
-  },
-  swipeActionBackground: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.coral,
-    flexDirection: "row",
-    justifyContent: "flex-end"
-  },
-  swipeDeleteButton: {
-    alignItems: "center",
-    alignSelf: "stretch",
-    backgroundColor: colors.coral,
-    gap: 3,
-    justifyContent: "center",
-    width: SWIPE_DELETE_ACTION_WIDTH
-  },
-  swipeDeleteText: {
-    color: colors.surface,
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 0
-  },
-  swipeForeground: {
-    backgroundColor: colors.surface
   },
   confirmBackdrop: {
     alignItems: "center",
