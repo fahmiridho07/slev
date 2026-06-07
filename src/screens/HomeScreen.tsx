@@ -32,11 +32,11 @@ function HomeScreenComponent({ onOpenSettings }: HomeScreenProps) {
         runwayMonths={runwayMonths}
         savingsGoals={savingsGoals}
       />
+      <CapturePanel onOpenSettings={onOpenSettings} />
       <UpcomingBillsPanel
         upcomingBills={upcomingBills}
         onLogPayment={(billId) => void actions.logRecurringBillPayment(billId)}
       />
-      <CapturePanel onOpenSettings={onOpenSettings} />
     </ScrollView>
   );
 }
