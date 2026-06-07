@@ -1,4 +1,5 @@
 import {
+  AccountTier,
   BalanceSnapshot,
   CategoryMode,
   EntryType,
@@ -336,6 +337,52 @@ export function getLatestBalanceSnapshots(snapshots: BalanceSnapshot[]): Balance
   return Array.from(latestByLabel.values()).sort(
     (a, b) => safeTime(b.snapshotDate) - safeTime(a.snapshotDate)
   );
+}
+
+export type TierBalanceSummary = {
+  trackedTotal: number;
+  ephemeralTotal: number;
+  total: number;
+  trackedAccountCount: number;
+  ephemeralAccountCount: number;
+};
+
+export function summarizeBalanceByTier({
+  accounts,
+  snapshots
+}: {
+  accounts: MoneyAccount[];
+  snapshots: BalanceSnapshot[];
+}): TierBalanceSummary {
+  const tierByLabel = new Map(
+    accounts.map((account) => [account.label, account.tier ?? "tracked" as AccountTier])
+  );
+  const latestSnapshots = getLatestBalanceSnapshots(snapshots);
+
+  let trackedTotal = 0;
+  let ephemeralTotal = 0;
+  let trackedAccountCount = 0;
+  let ephemeralAccountCount = 0;
+
+  for (const row of latestSnapshots) {
+    const tier = tierByLabel.get(row.accountLabel) ?? "tracked";
+    if (tier === "ephemeral") {
+      ephemeralTotal += row.amount;
+      ephemeralAccountCount += 1;
+      continue;
+    }
+
+    trackedTotal += row.amount;
+    trackedAccountCount += 1;
+  }
+
+  return {
+    trackedTotal,
+    ephemeralTotal,
+    total: trackedTotal + ephemeralTotal,
+    trackedAccountCount,
+    ephemeralAccountCount
+  };
 }
 
 export function buildAllocationPlan({

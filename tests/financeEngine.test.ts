@@ -4,11 +4,14 @@ import {
   buildAllocationPlan,
   buildCurrentMonthSummary,
   buildMonthlyBreakdown,
+  getLatestBalanceTotal,
   getLatestBalanceSnapshots,
   getModeByCategory,
-  getProjectedBalanceSnapshots
+  getProjectedBalanceSnapshots,
+  summarizeBalanceByTier
 } from "../src/lib/financeEngine";
 import {
+  AccountTier,
   BalanceSnapshot,
   CategoryMode,
   EntryType,
@@ -213,6 +216,74 @@ test("projected balances include income before any manual snapshot", () => {
   assertEqual(jago?.amount, 250_000, "Jago projected balance should include transfer in and expense");
 });
 
+test("summarizeBalanceByTier treats accounts without tier as tracked", () => {
+  const snapshots = [
+    snapshot("BRI", 2_000_000, "2026-06-13T00:00:00.000Z"),
+    snapshot("Jago", 700_000, "2026-06-12T00:00:00.000Z")
+  ];
+  const summary = summarizeBalanceByTier({
+    accounts: [
+      account("BRI", "bank", true),
+      account("Jago", "bank", false)
+    ],
+    snapshots
+  });
+
+  assertEqual(summary.ephemeralTotal, 0, "no ephemeral balance");
+  assertEqual(summary.trackedTotal, 2_700_000, "tracked total should sum all balances");
+  assertEqual(summary.total, 2_700_000, "total should match tracked sum");
+  assertEqual(summary.trackedAccountCount, 2, "both accounts counted as tracked");
+  assertEqual(summary.ephemeralAccountCount, 0, "no ephemeral accounts");
+});
+
+test("summarizeBalanceByTier splits mixed tracked and ephemeral balances", () => {
+  const snapshots = [
+    snapshot("BRI", 2_000_000, "2026-06-13T00:00:00.000Z"),
+    snapshot("GoPay", 150_000, "2026-06-12T00:00:00.000Z")
+  ];
+  const summary = summarizeBalanceByTier({
+    accounts: [
+      account("BRI", "bank", true),
+      account("GoPay", "wallet", false, "ephemeral")
+    ],
+    snapshots
+  });
+
+  assertEqual(summary.trackedTotal, 2_000_000, "tracked portion");
+  assertEqual(summary.ephemeralTotal, 150_000, "ephemeral portion");
+  assertEqual(summary.total, 2_150_000, "combined total");
+  assertEqual(summary.trackedAccountCount, 1, "one tracked account");
+  assertEqual(summary.ephemeralAccountCount, 1, "one ephemeral account");
+});
+
+test("summarizeBalanceByTier counts unknown snapshot labels as tracked", () => {
+  const summary = summarizeBalanceByTier({
+    accounts: [account("BRI", "bank", true)],
+    snapshots: [snapshot("Old wallet", 80_000, "2026-06-10T00:00:00.000Z")]
+  });
+
+  assertEqual(summary.trackedTotal, 80_000, "unknown label defaults to tracked");
+  assertEqual(summary.ephemeralTotal, 0, "no ephemeral balance");
+  assertEqual(summary.trackedAccountCount, 1, "unknown label counted as tracked");
+});
+
+test("summarizeBalanceByTier total matches getLatestBalanceTotal", () => {
+  const snapshots = [
+    snapshot("BRI", 2_000_000, "2026-06-13T00:00:00.000Z"),
+    snapshot("GoPay", 150_000, "2026-06-12T00:00:00.000Z"),
+    snapshot("BRI", 1_000_000, "2026-06-01T00:00:00.000Z")
+  ];
+  const summary = summarizeBalanceByTier({
+    accounts: [
+      account("BRI", "bank", true),
+      account("GoPay", "wallet", false, "ephemeral")
+    ],
+    snapshots
+  });
+
+  assertEqual(summary.total, getLatestBalanceTotal(snapshots), "tier total should match latest balance total");
+});
+
 test("category modes preserve fixed defaults and custom overrides", () => {
   const modes = getModeByCategory([{ category: "Meal", mode: "fixed" }]);
 
@@ -268,7 +339,8 @@ function findReconciliation(rows: AccountReconciliationRow[], label: string): Ac
 function account(
   label: string,
   kind: MoneyAccount["kind"],
-  isIncomeHub: boolean
+  isIncomeHub: boolean,
+  tier?: AccountTier
 ): MoneyAccount {
   return {
     createdAt: "2026-06-01T00:00:00.000Z",
@@ -276,7 +348,8 @@ function account(
     isIncomeHub,
     kind,
     label,
-    updatedAt: "2026-06-01T00:00:00.000Z"
+    updatedAt: "2026-06-01T00:00:00.000Z",
+    ...(tier !== undefined ? { tier } : {})
   };
 }
 
