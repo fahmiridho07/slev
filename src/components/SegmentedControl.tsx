@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useTheme } from "../hooks/useTheme";
 
 type SegmentedControlProps<T extends string> = {
@@ -18,54 +18,65 @@ function SegmentedControlComponent<T extends string>({
   stretch = false
 }: SegmentedControlProps<T>) {
   const { componentStyles } = useTheme();
-  const segments = options.map((option) => {
-    const active = option.value === selected;
-    return (
-      <Pressable
-        accessibilityLabel={option.label}
-        accessibilityRole="button"
-        accessibilityState={{ selected: active }}
-        key={option.value}
-        onPress={() => onSelect(option.value)}
-        style={[
-          componentStyles.segmentButton,
-          compact && componentStyles.segmentButtonCompact,
-          stretch && componentStyles.segmentButtonStretch,
-          active && componentStyles.segmentButtonActive
-        ]}
-      >
-        <Text numberOfLines={1} style={[componentStyles.segmentButtonText, active && componentStyles.segmentButtonTextActive]}>
-          {option.label}
-        </Text>
-      </Pressable>
-    );
-  });
 
   if (stretch) {
     return (
-      <View
-        style={[
-          componentStyles.segmentedControl,
-          componentStyles.segmentedControlStretch,
-          compact && componentStyles.segmentedControlCompact
-        ]}
-      >
+      <View style={[componentStyles.segmentedControl, componentStyles.segmentedControlStretch]}>
         <View style={[componentStyles.segmentedControlContent, componentStyles.segmentedControlContentStretch]}>
-          {segments}
+          {options.map((option) => {
+            const active = option.value === selected;
+            return (
+              <Pressable
+                accessibilityLabel={option.label}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                key={option.value}
+                onPress={() => onSelect(option.value)}
+                style={[
+                  componentStyles.choiceChip,
+                  componentStyles.choiceChipStretch,
+                  active && componentStyles.choiceChipActive
+                ]}
+              >
+                <Text
+                  numberOfLines={2}
+                  style={[componentStyles.choiceChipText, active && componentStyles.choiceChipTextActive]}
+                >
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       </View>
     );
   }
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={[componentStyles.segmentedControl, compact && componentStyles.segmentedControlCompact]}
-      contentContainerStyle={componentStyles.segmentedControlContent}
+    <View
+      style={[
+        componentStyles.choiceChipWrap,
+        compact && componentStyles.choiceChipWrapCompact
+      ]}
     >
-      {segments}
-    </ScrollView>
+      {options.map((option) => {
+        const active = option.value === selected;
+        return (
+          <Pressable
+            accessibilityLabel={option.label}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+            key={option.value}
+            onPress={() => onSelect(option.value)}
+            style={[componentStyles.choiceChip, active && componentStyles.choiceChipActive]}
+          >
+            <Text style={[componentStyles.choiceChipText, active && componentStyles.choiceChipTextActive]}>
+              {option.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 

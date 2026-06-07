@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from "react-native";
-import { ScreenHero, SegmentedControl } from "../components";
+import { ScreenHero, ScreenTabBar } from "../components";
 import { AllocationPanel } from "../features/budget/AllocationPanel";
 import { BalancePanel } from "../features/budget/BalancePanel";
 import { BudgetLimitsPanel } from "../features/budget/BudgetLimitsPanel";
@@ -146,14 +146,13 @@ function BudgetScreenComponent({
         variant={hero.variant}
       />
 
-      <SegmentedControl
+      <ScreenTabBar
         options={[
-          { label: strings.budget.tabs.plan, value: "plan" },
-          { label: strings.budget.tabs.balance, value: "balance" },
-          { label: strings.budget.tabs.goals, value: "goals" }
+          { icon: "clipboard-outline", label: strings.budget.tabs.plan, value: "plan" },
+          { icon: "wallet-outline", label: strings.budget.tabs.balance, value: "balance" },
+          { icon: "flag-outline", label: strings.budget.tabs.goals, value: "goals" }
         ]}
         selected={activeBudgetTab}
-        stretch
         onSelect={onBudgetTabChange}
       />
 

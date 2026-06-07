@@ -1,7 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useCallback, useMemo, useState } from "react";
 import { FlatList, Pressable, StyleProp, Text, TextInput, View, ViewStyle } from "react-native";
-import { DeleteConfirmDialog, EmptyState, ListActionRow, ListActionsOnboardingTip, ScreenHero, SegmentedControl } from "../components";
+import {
+  DeleteConfirmDialog,
+  EmptyState,
+  ListActionRow,
+  ListActionsOnboardingTip,
+  ScreenHero,
+  ScreenTabBar,
+  SegmentedControl
+} from "../components";
 import { useListActionsHint } from "../hooks/useListActionsHint";
 import { ExpenseCategory } from "../features/spendingMemory.types";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
@@ -103,14 +111,13 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
           variant="surface"
         />
 
-        <SegmentedControl
+        <ScreenTabBar
           options={[
-            { label: strings.settings.billsTab, value: "bills" },
-            { label: strings.settings.categoriesTab, value: "categories" },
-            { label: strings.settings.dataTab, value: "data" }
+            { icon: "receipt-outline", label: strings.settings.billsTab, value: "bills" },
+            { icon: "pricetags-outline", label: strings.settings.categoriesTab, value: "categories" },
+            { icon: "cloud-outline", label: strings.settings.dataTab, value: "data" }
           ]}
           selected={activeTab}
-          stretch
           onSelect={setActiveTab}
         />
 

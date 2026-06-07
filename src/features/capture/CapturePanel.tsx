@@ -12,12 +12,20 @@ import { hapticSuccess } from "../../lib/haptics";
 import { useCaptureForm } from "./useCaptureForm";
 
 type CapturePanelProps = {
+  compactTypePicker?: boolean;
+  defaultExpanded?: boolean;
   onOpenSettings: () => void;
   onSaved?: () => void;
   sheet?: boolean;
 };
 
-function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: CapturePanelProps) {
+function CapturePanelComponent({
+  compactTypePicker = false,
+  defaultExpanded = false,
+  onOpenSettings,
+  onSaved,
+  sheet = false
+}: CapturePanelProps) {
   const { colors, strings, styles } = useTheme();
 
   function getSaveLabel(entryType: "expense" | "income" | "transfer") {
@@ -45,7 +53,7 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
     saveTemplate
   } = useCaptureForm();
 
-  const [expanded, setExpanded] = useState(sheet);
+  const [expanded, setExpanded] = useState(sheet || defaultExpanded);
   const [noteOpen, setNoteOpen] = useState(Boolean(form.note));
 
   useEffect(() => {
@@ -138,7 +146,13 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
           )}
         </View>
       )}
-      {expanded && <CaptureTypePicker onSelect={changeEntryType} selected={form.entryType} />}
+      {expanded && (
+        <CaptureTypePicker
+          compact={compactTypePicker}
+          onSelect={changeEntryType}
+          selected={form.entryType}
+        />
+      )}
 
       <View style={styles.amountRow}>
         <Text style={styles.currencyPrefix}>Rp</Text>

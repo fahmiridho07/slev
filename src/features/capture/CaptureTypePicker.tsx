@@ -12,9 +12,11 @@ type CaptureTypeOption = {
 };
 
 export function CaptureTypePicker({
+  compact = false,
   selected,
   onSelect
 }: {
+  compact?: boolean;
   selected: CaptureType;
   onSelect: (value: CaptureType) => void;
 }) {
@@ -43,6 +45,39 @@ export function CaptureTypePicker({
     ],
     [strings.capture.type]
   );
+
+  if (compact) {
+    return (
+      <View style={styles.captureTypeCompactRow}>
+        {captureTypeOptions.map((option) => {
+          const active = option.value === selected;
+          return (
+            <Pressable
+              accessibilityLabel={`${option.label}. ${option.hint}`}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              key={option.value}
+              onPress={() => {
+                if (!active) {
+                  onSelect(option.value);
+                }
+              }}
+              style={[styles.captureTypeCompactChip, active && styles.captureTypeCompactChipActive]}
+            >
+              <Ionicons
+                color={active ? colors.greenDark : colors.muted}
+                name={option.icon}
+                size={18}
+              />
+              <Text style={[styles.captureTypeCompactLabel, active && styles.captureTypeCompactLabelActive]}>
+                {option.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    );
+  }
 
   return (
     <View style={styles.captureTypeBlock}>

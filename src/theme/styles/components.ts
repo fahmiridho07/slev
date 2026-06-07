@@ -302,6 +302,78 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     minWidth: 0,
     paddingHorizontal: 6
   },
+  screenTabBar: {
+    flexDirection: "row",
+    gap: 8,
+    width: "100%"
+  },
+  screenTabItem: {
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 10,
+    borderWidth: 1,
+    flex: 1,
+    gap: 6,
+    justifyContent: "center",
+    minHeight: 72,
+    paddingHorizontal: 8,
+    paddingVertical: 10
+  },
+  screenTabItemActive: {
+    backgroundColor: colors.mint,
+    borderColor: colors.borderMint
+  },
+  screenTabLabel: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 16,
+    textAlign: "center"
+  },
+  screenTabLabelActive: {
+    color: colors.greenDark,
+    fontWeight: "800"
+  },
+  choiceChipWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  choiceChipWrapCompact: {
+    alignSelf: "flex-start"
+  },
+  choiceChip: {
+    alignItems: "center",
+    backgroundColor: colors.faint,
+    borderColor: colors.line,
+    borderRadius: 999,
+    borderWidth: 1,
+    justifyContent: "center",
+    minHeight: 44,
+    paddingHorizontal: 16,
+    paddingVertical: 10
+  },
+  choiceChipStretch: {
+    borderRadius: 8,
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 10
+  },
+  choiceChipActive: {
+    backgroundColor: colors.mint,
+    borderColor: colors.borderMint
+  },
+  choiceChipText: {
+    color: colors.muted,
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center"
+  },
+  choiceChipTextActive: {
+    color: colors.greenDark,
+    fontWeight: "800"
+  },
   observationPanel: {
     borderRadius: 8,
     borderWidth: 1,

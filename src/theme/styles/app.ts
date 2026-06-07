@@ -314,6 +314,37 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     fontSize: 11,
     lineHeight: 15
   },
+  captureTypeCompactRow: {
+    flexDirection: "row",
+    gap: 8
+  },
+  captureTypeCompactChip: {
+    alignItems: "center",
+    backgroundColor: colors.faint,
+    borderColor: colors.line,
+    borderRadius: 10,
+    borderWidth: 1,
+    flex: 1,
+    flexDirection: "row",
+    gap: 6,
+    justifyContent: "center",
+    minHeight: 48,
+    paddingHorizontal: 10,
+    paddingVertical: 10
+  },
+  captureTypeCompactChipActive: {
+    backgroundColor: colors.mint,
+    borderColor: colors.borderMint
+  },
+  captureTypeCompactLabel: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: "700"
+  },
+  captureTypeCompactLabelActive: {
+    color: colors.greenDark,
+    fontWeight: "800"
+  },
   currencyPrefix: {
     color: colors.greenDark,
     fontSize: 26,

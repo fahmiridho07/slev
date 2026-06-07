@@ -1,6 +1,6 @@
 import React, { memo, useMemo, useState } from "react";
 import { ScrollView, StyleProp, View, ViewStyle } from "react-native";
-import { ScreenHero, SegmentedControl } from "../components";
+import { ScreenHero, ScreenTabBar } from "../components";
 import { AccountAnalysisPanel } from "../features/analysis/AccountAnalysisPanel";
 import { BreakdownPanel } from "../features/analysis/BreakdownPanel";
 import { PatternOverview } from "../features/analysis/PatternOverview";
@@ -82,14 +82,13 @@ function PatternsScreenComponent({ scrollContentStyle }: PatternsScreenProps) {
     <ScrollView contentContainerStyle={scrollContentStyle} keyboardShouldPersistTaps="handled">
       <ScreenHero hint={hero.hint} kicker={hero.kicker} value={hero.value} valueTone={hero.valueTone} variant={hero.variant} />
 
-      <SegmentedControl
+      <ScreenTabBar
         options={[
-          { label: strings.patterns.tabs.recap, value: "overview" },
-          { label: strings.patterns.tabs.spending, value: "breakdown" },
-          { label: strings.patterns.tabs.accounts, value: "accounts" }
+          { icon: "sparkles-outline", label: strings.patterns.tabs.recap, value: "overview" },
+          { icon: "pie-chart-outline", label: strings.patterns.tabs.spending, value: "breakdown" },
+          { icon: "card-outline", label: strings.patterns.tabs.accounts, value: "accounts" }
         ]}
         selected={activePatternTab}
-        stretch
         onSelect={setActivePatternTab}
       />
 

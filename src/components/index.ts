@@ -14,6 +14,7 @@ export { ObservationPanel } from "./ObservationPanel";
 export { getPatternToneStyle, patternColor, patternIcon } from "./presentation";
 export { ScreenHero } from "./ScreenHero";
 export { SectionHeader } from "./SectionHeader";
+export { ScreenTabBar } from "./ScreenTabBar";
 export { SegmentedControl } from "./SegmentedControl";
 export { SwipeActionRow } from "./SwipeActionRow";
 export { TransferTitle } from "./TransferTitle";
