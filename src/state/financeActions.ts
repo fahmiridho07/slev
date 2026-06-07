@@ -311,6 +311,7 @@ export function createFinanceActions(
     isIncomeHub: boolean;
     kind: MoneyAccount["kind"];
     label: string;
+    tier?: MoneyAccount["tier"];
   }) {
     if (!input.label.trim()) {
       setMessage("Add an account or wallet name.");
