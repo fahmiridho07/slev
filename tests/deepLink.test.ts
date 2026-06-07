@@ -30,6 +30,8 @@ test("parseDeepLink opens home capture focus", () => {
 
 test("parseDeepLink routes settings sub-tabs", () => {
   assertEqual(parseDeepLink("slev://settings/appearance"), { tab: "settings", settingsTab: "appearance" }, "appearance");
+  assertEqual(parseDeepLink("slev://settings/data"), { tab: "settings", settingsTab: "data" }, "data");
+  assertEqual(parseDeepLink("slev://settings/categories"), { tab: "settings", settingsTab: "categories" }, "categories");
   assertEqual(parseDeepLink("slev://settings"), { tab: "settings" }, "settings root");
 });
 

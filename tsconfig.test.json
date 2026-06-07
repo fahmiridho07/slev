@@ -26,6 +26,7 @@
     "src/features/capture/types.ts",
     "src/i18n/**/*.ts",
     "src/lib/formValidation.ts",
+    "src/lib/spendingMemoryPatterns.ts",
     "src/navigation/appNavigation.ts",
     "src/navigation/deepLink.ts",
     "src/state/financeReducer.ts",
