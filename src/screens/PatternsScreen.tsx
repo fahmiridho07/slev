@@ -32,9 +32,8 @@ function PatternsScreenComponent() {
       <SegmentedControl
         options={[
           { label: "Recap", value: "overview" },
-          { label: "Category", value: "breakdown" },
-          { label: "Accounts", value: "accounts" },
-          { label: "Trend", value: "trends" }
+          { label: "Spending", value: "breakdown" },
+          { label: "Accounts", value: "accounts" }
         ]}
         selected={activePatternTab}
         onSelect={setActivePatternTab}
@@ -48,7 +47,12 @@ function PatternsScreenComponent() {
           onAnswer={(patternId, response) => void actions.answerPattern(patternId, response)}
         />
       )}
-      {activePatternTab === "breakdown" && <BreakdownPanel moments={moments} />}
+      {activePatternTab === "breakdown" && (
+        <View style={styles.analyticsBlock}>
+          <BreakdownPanel moments={moments} />
+          <TrendsPanel moments={moments} netWorthTrend={netWorthTrend} />
+        </View>
+      )}
       {activePatternTab === "accounts" && (
         <AccountAnalysisPanel
           accounts={accounts}
@@ -59,7 +63,6 @@ function PatternsScreenComponent() {
           onDeleteTransfer={(id) => void actions.removeTransfer(id)}
         />
       )}
-      {activePatternTab === "trends" && <TrendsPanel moments={moments} netWorthTrend={netWorthTrend} />}
     </ScrollView>
   );
 }
