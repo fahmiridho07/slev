@@ -1,4 +1,6 @@
-import { SpendingPattern, SpendingMoment } from "../features/spendingMemory.types";
+import { PatternGroup, SpendingPattern, SpendingMoment } from "../features/spendingMemory.types";
+import { formatString } from "../i18n/format";
+import { getRuntimeStrings } from "../i18n/runtime";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -20,6 +22,7 @@ export function generateSpendingPatterns(moments: SpendingMoment[]): SpendingPat
     return usefulPatterns.slice(0, 5);
   }
 
+  const strings = getRuntimeStrings().patterns;
   if (recent.length >= 4) {
     return buildGentleFallback(recent);
   }
@@ -28,9 +31,9 @@ export function generateSpendingPatterns(moments: SpendingMoment[]): SpendingPat
     return [
       {
         id: "quiet-start",
-        group: "Repeated lately",
-        title: "A few moments are saved",
-        detail: "Slev will look for changes and repeats as more memory builds up.",
+        group: strings.groups.repeatedLately as PatternGroup,
+        title: strings.generated.quietStartTitle,
+        detail: strings.generated.quietStartDetail,
         tone: "calm"
       }
     ];
@@ -53,6 +56,7 @@ function buildContextChangePatterns(
   thisWeek: SpendingMoment[],
   previousWeek: SpendingMoment[]
 ): SpendingPattern[] {
+  const strings = getRuntimeStrings().patterns;
   const previousByContext = groupByContext(previousWeek);
 
   return Object.entries(groupByContext(thisWeek))
@@ -65,14 +69,19 @@ function buildContextChangePatterns(
     .slice(0, 2)
     .map(({ context, items, previousCount }) => ({
       id: `more-visible-${context.toLowerCase()}`,
-      group: "Stands out this week",
-      title: `${context} is more visible this week`,
+      group: strings.groups.standsOut as PatternGroup,
+      title: formatString(strings.generated.contextMoreVisibleTitle, { context }),
       detail:
         previousCount > 0
-          ? `${items.length} saved moments, up from ${previousCount} last week.`
-          : `${items.length} saved moments appeared this week.`,
+          ? formatString(strings.generated.contextMoreVisibleDetailWithPrevious, {
+              count: items.length,
+              previousCount
+            })
+          : formatString(strings.generated.contextMoreVisibleDetailNoPrevious, { count: items.length }),
       tone: "notice",
-      recapQuestion: `Keep this ${context.toLowerCase()} rhythm?`
+      recapQuestion: formatString(strings.generated.contextMoreVisibleRecap, {
+        context: context.toLowerCase()
+      })
     }));
 }
 
@@ -80,6 +89,7 @@ function buildNewRepeatPatterns(
   thisWeek: SpendingMoment[],
   previousWeek: SpendingMoment[]
 ): SpendingPattern[] {
+  const strings = getRuntimeStrings().patterns;
   const previousLabels = new Set(
     previousWeek
       .map((moment) => normalizedLabel(moment))
@@ -92,11 +102,16 @@ function buildNewRepeatPatterns(
     .slice(0, 1)
     .map(([label, items]) => ({
       id: `new-repeat-${label}`,
-      group: "Repeated lately",
-      title: "A new repeat may be forming",
-      detail: `${displayLabel(items[0])} appeared ${items.length} times this week.`,
+      group: strings.groups.repeatedLately as PatternGroup,
+      title: strings.generated.newRepeatTitle,
+      detail: formatString(strings.generated.newRepeatDetail, {
+        label: displayLabel(items[0]!),
+        count: items.length
+      }),
       tone: "calm",
-      recapQuestion: `Keep ${displayLabel(items[0])} in the rhythm?`
+      recapQuestion: formatString(strings.generated.newRepeatRecap, {
+        label: displayLabel(items[0]!)
+      })
     }));
 }
 
@@ -104,6 +119,7 @@ function buildSmallSpendPattern(
   thisWeek: SpendingMoment[],
   previousWeek: SpendingMoment[]
 ): SpendingPattern[] {
+  const strings = getRuntimeStrings().patterns;
   const currentSmall = thisWeek.filter(isSmallMoment);
   const previousSmall = previousWeek.filter(isSmallMoment);
   if (currentSmall.length < 4) return [];
@@ -116,16 +132,20 @@ function buildSmallSpendPattern(
   return [
     {
       id: "small-spends-change",
-      group: "Small spends adding up",
-      title: "Small spends are more noticeable",
-      detail: `${currentSmall.length} smaller moments add up to ${formatCompactRupiah(currentTotal)} this week.`,
+      group: strings.groups.smallSpends as PatternGroup,
+      title: strings.generated.smallSpendsTitle,
+      detail: formatString(strings.generated.smallSpendsDetail, {
+        count: currentSmall.length,
+        total: formatCompactRupiah(currentTotal)
+      }),
       tone: "warm",
-      recapQuestion: "Keep this small-spend rhythm?"
+      recapQuestion: strings.generated.smallSpendsRecap
     }
   ];
 }
 
 function buildWeekendPattern(moments: SpendingMoment[]): SpendingPattern[] {
+  const strings = getRuntimeStrings().patterns;
   const weekend = moments.filter(isWeekendMoment);
   const weekday = moments.filter((moment) => !isWeekendMoment(moment));
   if (weekend.length < 2 || weekday.length < 2) return [];
@@ -137,11 +157,13 @@ function buildWeekendPattern(moments: SpendingMoment[]): SpendingPattern[] {
   return [
     {
       id: "weekend-shape",
-      group: "Weekend shape",
-      title: "The weekend carried more of the week",
-      detail: `Weekend spending ran about ${(weekendAverage / weekdayAverage).toFixed(1)}x the weekday pace.`,
+      group: strings.groups.weekendShape as PatternGroup,
+      title: strings.generated.weekendShapeTitle,
+      detail: formatString(strings.generated.weekendShapeDetail, {
+        ratio: (weekendAverage / weekdayAverage).toFixed(1)
+      }),
       tone: "notice",
-      recapQuestion: "Keep this weekend rhythm?"
+      recapQuestion: strings.generated.weekendShapeRecap
     }
   ];
 }
@@ -150,6 +172,7 @@ function buildQuietPatterns(
   thisWeek: SpendingMoment[],
   previousWeek: SpendingMoment[]
 ): SpendingPattern[] {
+  const strings = getRuntimeStrings().patterns;
   const currentByContext = groupByContext(thisWeek);
 
   return Object.entries(groupByContext(previousWeek))
@@ -158,22 +181,23 @@ function buildQuietPatterns(
     .slice(0, 1)
     .map(([context]) => ({
       id: `quiet-${context.toLowerCase()}`,
-      group: "Stands out this week",
-      title: `${context} got quieter this week`,
-      detail: "That context showed up often last week and has not appeared in saved memory this week.",
+      group: strings.groups.standsOut as PatternGroup,
+      title: formatString(strings.generated.contextQuieterTitle, { context }),
+      detail: strings.generated.contextQuieterDetail,
       tone: "calm"
     }));
 }
 
 function buildGentleFallback(moments: SpendingMoment[]): SpendingPattern[] {
+  const strings = getRuntimeStrings().patterns;
   const [context, items] = Object.entries(groupByContext(moments)).sort((a, b) => b[1].length - a[1].length)[0] ?? [];
   if (!context || !items || items.length < 3) {
     return [
       {
         id: "memory-building",
-        group: "Repeated lately",
-        title: "Memory is building",
-        detail: `${moments.length} moments saved in the last two weeks.`,
+        group: strings.groups.repeatedLately as PatternGroup,
+        title: strings.generated.memoryBuildingTitle,
+        detail: formatString(strings.generated.memoryBuildingDetail, { count: moments.length }),
         tone: "calm"
       }
     ];
@@ -182,11 +206,13 @@ function buildGentleFallback(moments: SpendingMoment[]): SpendingPattern[] {
   return [
     {
       id: `steady-${context.toLowerCase()}`,
-      group: "Repeated lately",
-      title: `${context} is part of the recent rhythm`,
-      detail: `${items.length} moments in the last two weeks.`,
+      group: strings.groups.repeatedLately as PatternGroup,
+      title: formatString(strings.generated.steadyRhythmTitle, { context }),
+      detail: formatString(strings.generated.steadyRhythmDetail, { count: items.length }),
       tone: "calm",
-      recapQuestion: `Keep this ${context.toLowerCase()} rhythm?`
+      recapQuestion: formatString(strings.generated.steadyRhythmRecap, {
+        context: context.toLowerCase()
+      })
     }
   ];
 }

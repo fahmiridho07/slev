@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { DeleteConfirmDialog, EmptyState, ListActionRow, ListActionsOnboardingTip } from "../../components";
 import { useListActionsHint } from "../../hooks/useListActionsHint";
+import { formatString } from "../../i18n";
 import { getPercentWidthStyle } from "../../lib/analysis";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
@@ -23,6 +24,7 @@ export function SavingsGoalsPanel({
   }) => void;
 }) {
   const { colors, strings, styles } = useTheme();
+  const goalsStrings = strings.budget.goals;
   const [editingGoalId, setEditingGoalId] = useState<string | undefined>(undefined);
   const [goalLabel, setGoalLabel] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
@@ -47,14 +49,37 @@ export function SavingsGoalsPanel({
   return (
     <View style={styles.analyticsBlock}>
       <View style={styles.capturePanel}>
-        <Text style={styles.microLabel}>{editingGoalId ? "Edit savings goal" : "New savings goal"}</Text>
-        <TextInput accessibilityLabel="Goal name" onChangeText={setGoalLabel} placeholder="Goal name" placeholderTextColor={colors.muted} style={styles.input} value={goalLabel} />
-        <TextInput accessibilityLabel="Target amount" keyboardType="number-pad" onChangeText={(value) => setTargetAmount(formatAmountInput(value))} placeholder="Target amount" placeholderTextColor={colors.muted} style={styles.input} value={targetAmount} />
-        <TextInput accessibilityLabel="Saved so far" keyboardType="number-pad" onChangeText={(value) => setSavedAmount(formatAmountInput(value))} placeholder="Saved so far" placeholderTextColor={colors.muted} style={styles.input} value={savedAmount} />
+        <Text style={styles.microLabel}>{editingGoalId ? goalsStrings.editGoal : goalsStrings.newGoal}</Text>
+        <TextInput
+          accessibilityLabel={goalsStrings.goalNameA11y}
+          onChangeText={setGoalLabel}
+          placeholder={goalsStrings.goalNamePlaceholder}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={goalLabel}
+        />
+        <TextInput
+          accessibilityLabel={goalsStrings.targetAmountA11y}
+          keyboardType="number-pad"
+          onChangeText={(value) => setTargetAmount(formatAmountInput(value))}
+          placeholder={goalsStrings.targetAmountPlaceholder}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={targetAmount}
+        />
+        <TextInput
+          accessibilityLabel={goalsStrings.savedSoFarA11y}
+          keyboardType="number-pad"
+          onChangeText={(value) => setSavedAmount(formatAmountInput(value))}
+          placeholder={goalsStrings.savedSoFarPlaceholder}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={savedAmount}
+        />
         <View style={styles.editActions}>
           {editingGoalId && (
             <Pressable onPress={resetDraft} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Cancel</Text>
+              <Text style={styles.secondaryButtonText}>{strings.common.cancel}</Text>
             </Pressable>
           )}
           <Pressable
@@ -64,13 +89,13 @@ export function SavingsGoalsPanel({
             }}
             style={styles.smallPrimaryButton}
           >
-            <Text style={styles.primaryButtonText}>Save</Text>
+            <Text style={styles.primaryButtonText}>{strings.common.save}</Text>
           </Pressable>
         </View>
       </View>
 
       {savingsGoals.length === 0 ? (
-        <EmptyState text="Savings goals can stay simple: target, current amount, and a small note." />
+        <EmptyState text={goalsStrings.emptyGoals} />
       ) : (
         <View style={styles.cardGrid}>
           {showGoalsHint && (
@@ -85,7 +110,7 @@ export function SavingsGoalsPanel({
             return (
               <View key={goal.id} style={styles.goalCard}>
                 <ListActionRow
-                  accessibilityLabel={`Edit goal ${goal.label}`}
+                  accessibilityLabel={formatString(goalsStrings.editGoalA11y, { label: goal.label })}
                   onDelete={() => setPendingDeleteGoal(goal)}
                   onPress={() => editGoal(goal)}
                 >
@@ -105,7 +130,7 @@ export function SavingsGoalsPanel({
       <DeleteConfirmDialog
         body={
           pendingDeleteGoal
-            ? `${pendingDeleteGoal.label} will be removed from your goals. This does not change saved memories or balances.`
+            ? formatString(goalsStrings.deleteGoalBody, { label: pendingDeleteGoal.label })
             : ""
         }
         onCancel={() => setPendingDeleteGoal(null)}
@@ -115,7 +140,7 @@ export function SavingsGoalsPanel({
             setPendingDeleteGoal(null);
           }
         }}
-        title="Delete goal?"
+        title={goalsStrings.deleteGoalTitle}
         visible={Boolean(pendingDeleteGoal)}
       />
     </View>

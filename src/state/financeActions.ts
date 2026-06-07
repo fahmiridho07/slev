@@ -15,8 +15,55 @@ import {
   listRecurringBills,
   saveRecurringBill
 } from "../services/recurringBillsRepository";
+import {
+  getAccountKeepOneToast,
+  getAccountNeedNameToast,
+  getAccountRemovedToast,
+  getAccountSavedToast,
+  getBackupExportFailedToast,
+  getBackupImportedToast,
+  getBackupInvalidJsonToast,
+  getBackupReadyToast,
+  getBalanceNeedFieldsToast,
+  getBalanceSavedToast,
+  getBillInvalidDayToast,
+  getBillLoggedPartialToast,
+  getBillLoggedToast,
+  getBillNeedFieldsToast,
+  getBillRemovedToast,
+  getBillSavedToast,
+  getBillUnavailableToast,
+  getCaptureNeedAmountToast,
+  getCaptureNeedCategoryToast,
+  getCaptureNeedTransferAccountsToast,
+  getCategoryNeedNameToast,
+  getCategoryRemovedToast,
+  getCategorySavedToast,
+  getClearAllToast,
+  getExpenseSavedToast,
+  getGoalNeedFieldsToast,
+  getGoalRemovedToast,
+  getGoalSavedToast,
+  getIncomeSavedToast,
+  getLimitMarkedAsToast,
+  getLimitNeedAmountToast,
+  getLimitRemovedToast,
+  getLimitSavedToast,
+  getMemoryNeedAmountToast,
+  getMemoryRemovedToast,
+  getMemoryUpdatedToast,
+  getPlanSavedToast,
+  getResetFailedToast,
+  getResetSuccessToast,
+  getShortcutNeedLabelToast,
+  getShortcutRemovedToast,
+  getShortcutSavedToast,
+  getShortcutTransferUseChipsToast,
+  getTransferMovedToast,
+  getTransferRemovedToast,
+  getWriteFailureToast
+} from "../i18n/toasts";
 import { parseAmountInput } from "../lib/formatMoney";
-import { formatRupiah } from "../lib/spendingMemoryPatterns";
 import {
   clearAccountsAndTransfers,
   deleteMoneyAccount,
@@ -58,7 +105,6 @@ import { exportAllDataWithReport, importAllData } from "../services/storageBacku
 import {
   formatSkippedExportWarning,
   getStorageKeyLabel,
-  getWriteFailureMessage,
   resetStorageKey
 } from "../services/storageHealth";
 import { runMigrations, STORAGE_KEYS } from "../services/storageSchema";
@@ -141,7 +187,7 @@ export function createFinanceActions(
   }
 
   function notifyWriteFailure(area: string, storageKey: string) {
-    setMessage(getWriteFailureMessage(area, storageKey));
+    setMessage(getWriteFailureToast(area, storageKey));
   }
 
   function setClearConfirmVisible(visible: boolean) {
@@ -151,18 +197,18 @@ export function createFinanceActions(
   async function saveMoment(capture: CaptureFormValues, categoryCount: number) {
     const amount = parseAmountInput(capture.amountText);
     if (!amount) {
-      setMessage("Enter an amount to save this memory.");
+      setMessage(getCaptureNeedAmountToast());
       return { ok: false as const };
     }
 
     if (capture.entryType === "expense" && categoryCount === 0) {
-      setMessage("Add at least one expense category in Settings before saving an expense.");
+      setMessage(getCaptureNeedCategoryToast());
       return { ok: false as const };
     }
 
     if (capture.entryType === "transfer") {
       if (!capture.fromAccount || !capture.toAccount || capture.fromAccount === capture.toAccount) {
-        setMessage("Choose two different accounts for this transfer.");
+        setMessage(getCaptureNeedTransferAccountsToast());
         return { ok: false as const };
       }
 
@@ -177,7 +223,7 @@ export function createFinanceActions(
         return { ok: false as const };
       }
       dispatch({ type: "set_transfers", transfers: updatedTransfers });
-      setMessage(`${formatRupiah(amount)} moved from ${capture.fromAccount} to ${capture.toAccount}.`);
+      setMessage(getTransferMovedToast(amount, capture.fromAccount, capture.toAccount));
       return { ok: true as const, resetNote: true };
     }
 
@@ -197,8 +243,8 @@ export function createFinanceActions(
     dispatch({ type: "prepend_moment", moment: saved });
     setMessage(
       saved.type === "income"
-        ? `${formatRupiah(saved.amount)} income saved${saved.source ? ` from ${saved.source}` : ""}.`
-        : `${formatRupiah(saved.amount)} saved${saved.label ? ` for ${saved.label}` : ""}.`
+        ? getIncomeSavedToast(saved.amount, saved.source)
+        : getExpenseSavedToast(saved.amount, saved.label)
     );
     return {
       ok: true as const,
@@ -213,7 +259,7 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "remove_moment", id });
-    setMessage("Memory removed.");
+    setMessage(getMemoryRemovedToast());
   }
 
   async function updateMoment(
@@ -230,7 +276,7 @@ export function createFinanceActions(
   ) {
     const amount = parseAmountInput(input.amountText);
     if (!amount) {
-      setMessage("Enter an amount before saving changes.");
+      setMessage(getMemoryNeedAmountToast());
       return;
     }
 
@@ -253,19 +299,19 @@ export function createFinanceActions(
     } else {
       dispatch({ type: "set_moments", moments: updated });
     }
-    setMessage("Memory updated.");
+    setMessage(getMemoryUpdatedToast());
   }
 
   async function saveAsTemplate(capture: CaptureFormValues) {
     if (capture.entryType === "transfer") {
-      setMessage("Transfer shortcuts can use the account chips directly.");
+      setMessage(getShortcutTransferUseChipsToast());
       return;
     }
 
     const amount = parseAmountInput(capture.amountText);
     const templateLabel = capture.entryType === "income" ? capture.source.trim() : (capture.label.trim() || capture.context);
     if (!templateLabel) {
-      setMessage("Add a label or source before saving a shortcut.");
+      setMessage(getShortcutNeedLabelToast());
       return;
     }
 
@@ -283,7 +329,7 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_manual_templates", manualTemplates: updated });
-    setMessage(`${templateLabel} shortcut saved.`);
+    setMessage(getShortcutSavedToast(templateLabel));
   }
 
   async function removeManualTemplate(id: string) {
@@ -293,7 +339,7 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_manual_templates", manualTemplates: updated });
-    setMessage("Shortcut removed.");
+    setMessage(getShortcutRemovedToast());
   }
 
   async function removeTransfer(id: string) {
@@ -303,7 +349,7 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_transfers", transfers: updated });
-    setMessage("Transfer removed.");
+    setMessage(getTransferRemovedToast());
   }
 
   async function saveAccount(input: {
@@ -314,7 +360,7 @@ export function createFinanceActions(
     tier?: MoneyAccount["tier"];
   }) {
     if (!input.label.trim()) {
-      setMessage("Add an account or wallet name.");
+      setMessage(getAccountNeedNameToast());
       return;
     }
 
@@ -324,7 +370,7 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_accounts", accounts: updated });
-    setMessage(`${input.label.trim()} account saved.`);
+    setMessage(getAccountSavedToast(input.label.trim()));
   }
 
   async function removeAccount(id: string) {
@@ -334,12 +380,12 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_accounts", accounts: updated });
-    setMessage(updated.some((account) => account.id === id) ? "Keep at least one account for balances." : "Account removed.");
+    setMessage(updated.some((account) => account.id === id) ? getAccountKeepOneToast() : getAccountRemovedToast());
   }
 
   async function saveCategory(input: { id?: string; label: string }) {
     if (!input.label.trim()) {
-      setMessage("Add a category name.");
+      setMessage(getCategoryNeedNameToast());
       return;
     }
 
@@ -349,7 +395,7 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_expense_categories", expenseCategories: updated });
-    setMessage(`${input.label.trim()} category saved.`);
+    setMessage(getCategorySavedToast(input.label.trim()));
   }
 
   async function removeCategory(category: ExpenseCategory) {
@@ -364,13 +410,13 @@ export function createFinanceActions(
     dispatch({ type: "set_expense_categories", expenseCategories: updatedCategories.data });
     dispatch({ type: "set_budget_limits", budgetLimits: updatedLimits.data });
     dispatch({ type: "set_category_modes", categoryModes: updatedModes.data });
-    setMessage(`${category.label} category removed.`);
+    setMessage(getCategoryRemovedToast(category.label));
   }
 
   async function saveCategoryBudget(category: SpendingContext, amountTextValue: string, period: BudgetPeriod) {
     const limitAmount = parseAmountInput(amountTextValue);
     if (!limitAmount) {
-      setMessage("Enter an amount to save this limit.");
+      setMessage(getLimitNeedAmountToast());
       return;
     }
 
@@ -380,7 +426,7 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_budget_limits", budgetLimits: updated });
-    setMessage(`${category} limit saved for ${period === "weekly" ? "the week" : "the month"}.`);
+    setMessage(getLimitSavedToast(category, period));
   }
 
   async function removeCategoryBudget(category: SpendingContext) {
@@ -390,7 +436,7 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_budget_limits", budgetLimits: updated });
-    setMessage(`${category} limit removed.`);
+    setMessage(getLimitRemovedToast(category));
   }
 
   async function changeCategoryMode(category: SpendingContext, mode: CategoryModeValue) {
@@ -400,7 +446,7 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_category_modes", categoryModes: updated });
-    setMessage(`${category} marked as ${mode}.`);
+    setMessage(getLimitMarkedAsToast(category, mode));
   }
 
   async function savePlan(input: {
@@ -424,7 +470,7 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_monthly_plan", monthlyPlan: saved });
-    setMessage("Monthly plan saved.");
+    setMessage(getPlanSavedToast());
   }
 
   async function saveGoal(input: {
@@ -435,7 +481,7 @@ export function createFinanceActions(
   }) {
     const targetAmount = parseAmountInput(input.targetAmount);
     if (!input.label.trim() || !targetAmount) {
-      setMessage("Add a goal name and target amount.");
+      setMessage(getGoalNeedFieldsToast());
       return;
     }
 
@@ -450,7 +496,7 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_savings_goals", savingsGoals: updated });
-    setMessage("Savings goal saved.");
+    setMessage(getGoalSavedToast());
   }
 
   async function removeSavingsGoal(id: string) {
@@ -460,7 +506,7 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_savings_goals", savingsGoals: updated });
-    setMessage("Savings goal removed.");
+    setMessage(getGoalRemovedToast());
   }
 
   async function saveRecurringBillAction(input: {
@@ -476,11 +522,11 @@ export function createFinanceActions(
     const amount = parseAmountInput(input.amount);
     const dayOfMonth = Number.parseInt(input.dayOfMonth, 10);
     if (!input.label.trim() || !amount) {
-      setMessage("Add a bill name and amount.");
+      setMessage(getBillNeedFieldsToast());
       return;
     }
     if (!Number.isFinite(dayOfMonth) || dayOfMonth < 1 || dayOfMonth > 31) {
-      setMessage("Choose a day of month between 1 and 31.");
+      setMessage(getBillInvalidDayToast());
       return;
     }
 
@@ -499,7 +545,7 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_recurring_bills", recurringBills: updated });
-    setMessage("Recurring bill saved.");
+    setMessage(getBillSavedToast());
   }
 
   async function removeRecurringBill(id: string) {
@@ -509,13 +555,13 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_recurring_bills", recurringBills: updated });
-    setMessage("Recurring bill removed.");
+    setMessage(getBillRemovedToast());
   }
 
   async function logRecurringBillPayment(billId: string) {
     const bill = getState().recurringBills.find((item) => item.id === billId);
     if (!bill) {
-      setMessage("That recurring bill is no longer available.");
+      setMessage(getBillUnavailableToast());
       return;
     }
 
@@ -545,17 +591,17 @@ export function createFinanceActions(
     });
     if (!billPersisted) {
       notifyWriteFailure("this recurring bill", STORAGE_KEYS.recurringBills);
-      setMessage(`${formatRupiah(saved.amount)} logged, but the bill cycle could not be updated.`);
+      setMessage(getBillLoggedPartialToast(saved.amount));
       return;
     }
     dispatch({ type: "set_recurring_bills", recurringBills: updatedBills });
-    setMessage(`${formatRupiah(saved.amount)} logged for ${bill.label}.`);
+    setMessage(getBillLoggedToast(saved.amount, bill.label));
   }
 
   async function saveBalance(input: { accountLabel: string; amount: string }) {
     const amount = parseAmountInput(input.amount);
     if (!input.accountLabel.trim() || !amount) {
-      setMessage("Add an account name and balance amount.");
+      setMessage(getBalanceNeedFieldsToast());
       return;
     }
 
@@ -568,7 +614,7 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_balance_snapshots", balanceSnapshots: updated });
-    setMessage("Balance snapshot saved.");
+    setMessage(getBalanceSavedToast());
   }
 
   async function answerPattern(patternId: string, response: PatternFeedbackResponse) {
@@ -592,11 +638,9 @@ export function createFinanceActions(
         title: "Slev finance backup"
       });
       const skipWarning = formatSkippedExportWarning(skipped);
-      setMessage(
-        skipWarning ? `Backup ready to share or save. ${skipWarning}` : "Backup ready to share or save."
-      );
+      setMessage(getBackupReadyToast(skipWarning || undefined));
     } catch {
-      setMessage("Could not export local data.");
+      setMessage(getBackupExportFailedToast());
     }
   }
 
@@ -604,12 +648,12 @@ export function createFinanceActions(
     const label = getStorageKeyLabel(key);
     const reset = await resetStorageKey(key);
     if (!reset) {
-      setMessage(`Could not reset ${label}.`);
+      setMessage(getResetFailedToast(label));
       return;
     }
 
     await reload();
-    setMessage(`${label} reset. You can start fresh in that area.`);
+    setMessage(getResetSuccessToast(label));
   }
 
   async function importLocalBackup(jsonText: string) {
@@ -622,9 +666,9 @@ export function createFinanceActions(
       }
 
       await reload();
-      setMessage("Backup imported.");
+      setMessage(getBackupImportedToast());
     } catch {
-      setMessage("That text is not valid Slev backup JSON.");
+      setMessage(getBackupInvalidJsonToast());
     }
   }
 
@@ -644,7 +688,7 @@ export function createFinanceActions(
       type: "clear_all",
       payload: { accounts: resetAccounts, expenseCategories: resetCategories }
     });
-    setMessage("Local finance memory cleared.");
+    setMessage(getClearAllToast());
   }
 
   return {

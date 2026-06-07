@@ -24,7 +24,7 @@ export function PatternOverview({
   return (
     <>
       {patterns.length === 0 ? (
-        <EmptyState text="Patterns appear after a few saved moments." />
+        <EmptyState text={strings.patterns.recapEmpty} />
       ) : (
         groups.map((group) => (
           <View key={group.title} style={styles.patternGroup}>

@@ -1,13 +1,20 @@
 import {
   BudgetPeriod,
   EntryType,
-  ExpenseCategory,
   ManualTemplate,
   MoneyAccount,
   SpendingContext,
   SpendingMoment,
   SpendingPattern
 } from "../features/spendingMemory.types";
+import { formatString } from "../i18n/format";
+import {
+  formatLocaleMonthShort,
+  formatLocaleShortDate,
+  formatLocaleTime,
+  formatLocaleWeekdayDate
+} from "../i18n/localeDate";
+import { getRuntimeStrings } from "../i18n/runtime";
 import {
   AccountReconciliationRow,
   AllocationPlan,
@@ -54,19 +61,17 @@ export type RepeatSuggestion = {
 };
 
 export function getMomentTitle(moment: SpendingMoment): string {
-  if (moment.type === "income") return moment.source || moment.label || "Income";
+  if (moment.type === "income") {
+    return moment.source || moment.label || getRuntimeStrings().memory.momentTitle.income;
+  }
   return moment.label || moment.context;
 }
 
 export function getTemplateLabel(template: ManualTemplate): string {
-  if (template.type === "income") return template.source || "Income";
+  if (template.type === "income") {
+    return template.source || getRuntimeStrings().memory.momentTitle.income;
+  }
   return template.label || template.context;
-}
-
-export function getCategoryDeleteBody(category: ExpenseCategory): string {
-  return category.isDefault
-    ? `${category.label} will disappear from capture and budget limits. Existing memories stay saved.`
-    : `${category.label} will be removed from capture and budget limits. Existing memories stay saved.`;
 }
 
 export function getAllocationActionCopy(allocation: AllocationPlan): {
@@ -75,42 +80,50 @@ export function getAllocationActionCopy(allocation: AllocationPlan): {
   tone: SpendingPattern["tone"];
 } {
   const amount = allocation.nextAction.amount ?? 0;
+  const strings = getRuntimeStrings().analysis.allocation.action;
 
   switch (allocation.nextAction.kind) {
     case "set_plan":
       return {
-        detail: "Add expected income, fixed costs, flexible spending, and savings target for this month.",
-        title: "Set the monthly envelope",
+        detail: strings.setPlan.detail,
+        title: strings.setPlan.title,
         tone: "calm"
       };
     case "snapshot_balances":
       return {
-        detail: "Add quick snapshots for BRI, Jago, wallets, and cash so pocket funding can be checked.",
-        title: "Snapshot balances first",
+        detail: strings.snapshotBalances.detail,
+        title: strings.snapshotBalances.title,
         tone: "calm"
       };
     case "plan_exceeds_income":
       return {
-        detail: `The plan is ${formatCompactRupiah(amount)} above expected income. Lower one allocation or raise the expected income only if it is realistic.`,
-        title: "Plan is above income",
+        detail: formatString(strings.planExceedsIncome.detail, {
+          amount: formatCompactRupiah(amount)
+        }),
+        title: strings.planExceedsIncome.title,
         tone: "notice"
       };
     case "flexible_over_plan":
       return {
-        detail: `Flexible spending is ${formatCompactRupiah(amount)} over the monthly envelope. Treat the rest of the month as a slower-spend period.`,
-        title: "Flexible budget is already crossed",
+        detail: formatString(strings.flexibleOverPlan.detail, {
+          amount: formatCompactRupiah(amount)
+        }),
+        title: strings.flexibleOverPlan.title,
         tone: "notice"
       };
     case "top_up_pockets":
       return {
-        detail: `Moving up to ${formatCompactRupiah(amount)} from the income hub would fully fund the remaining flexible budget. Hub snapshot shows ${formatCompactRupiah(allocation.hubBalance)}.`,
-        title: "Pocket top-up is visible",
+        detail: formatString(strings.topUpPockets.detail, {
+          amount: formatCompactRupiah(amount),
+          hubBalance: formatCompactRupiah(allocation.hubBalance)
+        }),
+        title: strings.topUpPockets.title,
         tone: "warm"
       };
     case "hold":
       return {
-        detail: "The current pocket balance covers remaining flexible spending. Keep logging normally and update snapshots when balances change.",
-        title: "Allocation is steady",
+        detail: strings.hold.detail,
+        title: strings.hold.title,
         tone: "calm"
       };
   }
@@ -121,64 +134,65 @@ export function getAllocationRowCopy(row: AllocationPlan["rows"][number]): {
   title: string;
 } {
   const remainingAmount = Math.abs(row.remaining);
+  const strings = getRuntimeStrings().analysis.allocation.row;
 
   if (row.key === "income") {
     if (row.planned <= 0) {
       return {
-        detail: "No expected income is set for this month.",
-        title: "Income received"
+        detail: strings.incomeNoPlan,
+        title: strings.incomeTitle
       };
     }
     return {
       detail: row.remaining > 0
-        ? `${formatCompactRupiah(remainingAmount)} expected income is not logged yet.`
-        : `Income is ${formatCompactRupiah(remainingAmount)} above plan.`,
-      title: "Income received"
+        ? formatString(strings.incomeRemaining, { amount: formatCompactRupiah(remainingAmount) })
+        : formatString(strings.incomeAbovePlan, { amount: formatCompactRupiah(remainingAmount) }),
+      title: strings.incomeTitle
     };
   }
 
   if (row.key === "fixed") {
     if (row.planned <= 0) {
       return {
-        detail: "No fixed-cost envelope is set.",
-        title: "Fixed costs"
+        detail: strings.fixedNoPlan,
+        title: strings.fixedTitle
       };
     }
     return {
       detail: row.remaining >= 0
-        ? `${formatCompactRupiah(remainingAmount)} fixed-cost room remains.`
-        : `Fixed costs are ${formatCompactRupiah(remainingAmount)} above plan.`,
-      title: "Fixed costs"
+        ? formatString(strings.fixedRemaining, { amount: formatCompactRupiah(remainingAmount) })
+        : formatString(strings.fixedAbovePlan, { amount: formatCompactRupiah(remainingAmount) }),
+      title: strings.fixedTitle
     };
   }
 
   if (row.key === "flexible") {
     if (row.planned <= 0) {
       return {
-        detail: "No flexible spending envelope is set.",
-        title: "Flexible spending"
+        detail: strings.flexibleNoPlan,
+        title: strings.flexibleTitle
       };
     }
     return {
       detail: row.remaining >= 0
-        ? `${formatCompactRupiah(remainingAmount)} flexible spending remains.`
-        : `Flexible spending is ${formatCompactRupiah(remainingAmount)} above plan.`,
-      title: "Flexible spending"
+        ? formatString(strings.flexibleRemaining, { amount: formatCompactRupiah(remainingAmount) })
+        : formatString(strings.flexibleAbovePlan, { amount: formatCompactRupiah(remainingAmount) }),
+      title: strings.flexibleTitle
     };
   }
 
   if (row.planned <= 0) {
     return {
-      detail: "No savings target is set.",
-      title: "Savings target"
+      detail: strings.savingsNoPlan,
+      title: strings.savingsTitle
     };
   }
 
   return {
     detail: row.remaining > 0
-      ? `${formatCompactRupiah(remainingAmount)} still needed to hit the savings target.`
-      : `Net left is ${formatCompactRupiah(remainingAmount)} above target.`,
-    title: "Savings target"
+      ? formatString(strings.savingsStillNeeded, { amount: formatCompactRupiah(remainingAmount) })
+      : formatString(strings.savingsAboveTarget, { amount: formatCompactRupiah(remainingAmount) }),
+    title: strings.savingsTitle
   };
 }
 
@@ -192,71 +206,83 @@ export function getReconciliationCopy(rows: AccountReconciliationRow[]): {
   const smallGapRows = rows.filter((row) => row.status === "small_gap");
   const historyRows = rows.filter((row) => row.status === "needs_history");
   const totalGap = rows.reduce((sum, row) => sum + Math.abs(row.difference ?? 0), 0);
+  const strings = getRuntimeStrings().analysis.reconciliation.summary;
 
   if (rowsWithSnapshots.length === 0) {
     return {
-      detail: "Add balance snapshots first. Reconciliation becomes useful after two snapshots for the same account.",
-      title: "No balance check yet",
+      detail: strings.noSnapshot.detail,
+      title: strings.noSnapshot.title,
       tone: "calm"
     };
   }
 
   if (reviewRows.length > 0) {
     return {
-      detail: `${reviewRows.length} account${reviewRows.length === 1 ? "" : "s"} need checking. Total visible gap is ${formatCompactRupiah(totalGap)}.`,
-      title: "Some balances need review",
+      detail: formatString(strings.needsReview.detail, {
+        count: reviewRows.length,
+        totalGap: formatCompactRupiah(totalGap)
+      }),
+      title: strings.needsReview.title,
       tone: "notice"
     };
   }
 
   if (smallGapRows.length > 0) {
     return {
-      detail: `${smallGapRows.length} account${smallGapRows.length === 1 ? "" : "s"} have small gaps. They may be fees, rounding, or one missing entry.`,
-      title: "Small balance gaps are visible",
+      detail: formatString(strings.smallGap.detail, { count: smallGapRows.length }),
+      title: strings.smallGap.title,
       tone: "warm"
     };
   }
 
   if (historyRows.length > 0) {
     return {
-      detail: "At least one account has only one snapshot. Add the next snapshot to compare logged movement.",
-      title: "One more snapshot will unlock checks",
+      detail: strings.needsHistory.detail,
+      title: strings.needsHistory.title,
       tone: "calm"
     };
   }
 
   return {
-    detail: "Latest snapshots match the movement logged between balance checks.",
-    title: "Logged movement matches balances",
+    detail: strings.matched.detail,
+    title: strings.matched.title,
     tone: "calm"
   };
 }
 
 export function formatReconciliationDifference(row: AccountReconciliationRow): string {
-  if (row.status === "no_snapshot") return "No snapshot";
-  if (row.status === "needs_history") return "Need 2 snapshots";
-  if (row.difference === null || Math.abs(row.difference) <= 1000) return "Matched";
+  const strings = getRuntimeStrings().analysis.reconciliation.status;
+  if (row.status === "no_snapshot") return strings.noSnapshot;
+  if (row.status === "needs_history") return strings.needsHistory;
+  if (row.difference === null || Math.abs(row.difference) <= 1000) return strings.matched;
   return formatSignedCompactRupiah(row.difference);
 }
 
 export function getReconciliationDetail(row: AccountReconciliationRow): string {
+  const strings = getRuntimeStrings().analysis.reconciliation.detail;
   if (row.status === "no_snapshot") {
-    return "Add a manual balance snapshot for this account.";
+    return strings.noSnapshot;
   }
 
   if (row.status === "needs_history") {
-    return "Add one more snapshot later; Slev will compare the movement between both checks.";
+    return strings.needsHistory;
   }
 
-  const movement = `Logged movement over ${row.daysCovered} day${row.daysCovered === 1 ? "" : "s"}: income ${formatCompactRupiah(row.income)}, spending ${formatCompactRupiah(row.expense)}, transfer in ${formatCompactRupiah(row.transferIn)}, transfer out ${formatCompactRupiah(row.transferOut)}.`;
+  const movement = formatString(strings.movement, {
+    days: row.daysCovered,
+    income: formatCompactRupiah(row.income),
+    expense: formatCompactRupiah(row.expense),
+    transferIn: formatCompactRupiah(row.transferIn),
+    transferOut: formatCompactRupiah(row.transferOut)
+  });
   if (row.difference === null || Math.abs(row.difference) <= 1000) {
     return movement;
   }
 
   const gap = formatCompactRupiah(Math.abs(row.difference));
   const direction = row.difference > 0
-    ? `Actual balance is ${gap} higher than expected. Check missing income, transfer in, or an overstated expense.`
-    : `Actual balance is ${gap} lower than expected. Check missing expense, transfer out, or a balance typo.`;
+    ? formatString(strings.higherThanExpected, { gap })
+    : formatString(strings.lowerThanExpected, { gap });
 
   return `${direction} ${movement}`;
 }
@@ -266,7 +292,7 @@ export function buildAccountActivity(moments: SpendingMoment[]): AccountActivity
   const grouped = moments
     .filter((moment) => isWithinRange(moment.occurredAt, range.start, range.end))
     .reduce<Record<string, AccountActivityRow>>((acc, moment) => {
-      const label = moment.accountLabel || "Unassigned";
+      const label = moment.accountLabel || getRuntimeStrings().analysis.accounts.unassigned;
       const current = acc[label] ?? {
         expense: 0,
         income: 0,
@@ -304,7 +330,7 @@ export function buildCashflowWeeks(moments: SpendingMoment[]): CashflowWeek[] {
       expense,
       income,
       key: dateKey(start),
-      label: start.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      label: formatLocaleShortDate(start),
       net: income - expense
     };
   });
@@ -320,7 +346,7 @@ export function buildSpendingTrend(moments: SpendingMoment[]): SpendingTrend {
     return {
       amount,
       key: dateKey(range.start),
-      label: range.start.toLocaleDateString("en-US", { month: "short" }),
+      label: formatLocaleMonthShort(range.start),
       share: 0
     };
   });
@@ -336,7 +362,7 @@ export function buildSpendingTrend(moments: SpendingMoment[]): SpendingTrend {
   const expectedPace = lastMonth.amount * (dayOfMonth / daysInMonth);
   const midpointMessage =
     dayOfMonth >= Math.ceil(daysInMonth / 2) && lastMonth.amount > 0 && currentMonth.amount > expectedPace
-      ? `${currentMonth.label} is running above last month's pace at this point.`
+      ? formatString(getRuntimeStrings().analysis.trends.midpointPace, { month: currentMonth.label })
       : undefined;
   const currentRange = getMonthRange(today, 0);
   const topCategories = buildMonthlyBreakdown(
@@ -510,7 +536,9 @@ export function getRepeatHint(moment: SpendingMoment, moments: SpendingMoment[])
   const count = moments.filter(
     (item) => item.type === "expense" && item.context === moment.context && Date.parse(item.occurredAt) >= weekAgo
   ).length;
-  return count >= 3 ? `${count} this week` : undefined;
+  return count >= 3
+    ? formatString(getRuntimeStrings().memory.repeatHint, { count })
+    : undefined;
 }
 
 export function buildRepeatHints(moments: SpendingMoment[]): Map<string, string> {
@@ -523,12 +551,13 @@ export function buildRepeatHints(moments: SpendingMoment[]): Map<string, string>
     }
   }
 
+  const repeatHintTemplate = getRuntimeStrings().memory.repeatHint;
   const hints = new Map<string, string>();
   for (const moment of moments) {
     if (moment.type === "income") continue;
     const count = contextCounts.get(moment.context) ?? 0;
     if (count >= 3) {
-      hints.set(moment.id, `${count} this week`);
+      hints.set(moment.id, formatString(repeatHintTemplate, { count }));
     }
   }
 
@@ -542,11 +571,12 @@ export function groupMomentsByRecallRange(moments: SpendingMoment[]) {
   yesterday.setDate(now.getDate() - 1);
   const yesterdayKey = dateKey(yesterday);
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const groupLabels = getRuntimeStrings().memory.groups;
   const groups = [
-    { key: "today", label: "Today", items: [] as SpendingMoment[] },
-    { key: "yesterday", label: "Yesterday", items: [] as SpendingMoment[] },
-    { key: "this-week", label: "This week", items: [] as SpendingMoment[] },
-    { key: "earlier", label: "Earlier", items: [] as SpendingMoment[] }
+    { key: "today", label: groupLabels.today, items: [] as SpendingMoment[] },
+    { key: "yesterday", label: groupLabels.yesterday, items: [] as SpendingMoment[] },
+    { key: "this-week", label: groupLabels.thisWeek, items: [] as SpendingMoment[] },
+    { key: "earlier", label: groupLabels.earlier, items: [] as SpendingMoment[] }
   ];
 
   moments.forEach((moment) => {
@@ -576,11 +606,7 @@ export function groupPatterns(patterns: SpendingPattern[]) {
 }
 
 export function formatDate(key: string): string {
-  return new Date(`${key}T00:00:00`).toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric"
-  });
+  return formatLocaleWeekdayDate(key);
 }
 
 export function dateKey(date: Date): string {
@@ -597,10 +623,7 @@ export function getMonthKey(date: Date): string {
 }
 
 export function formatTime(value: string): string {
-  return new Date(value).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit"
-  });
+  return formatLocaleTime(value);
 }
 
 export function getIncomeHubLabel(accounts: MoneyAccount[]): string {

@@ -10,11 +10,11 @@ type BottomSheetProps = {
 };
 
 function BottomSheetComponent({ children, onClose, title, visible }: BottomSheetProps) {
-  const { componentStyles } = useTheme();
+  const { componentStyles, strings } = useTheme();
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
-      <Pressable accessibilityLabel="Close sheet" accessibilityRole="button" onPress={onClose} style={componentStyles.sheetBackdrop}>
+      <Pressable accessibilityLabel={strings.common.closeSheet} accessibilityRole="button" onPress={onClose} style={componentStyles.sheetBackdrop}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={componentStyles.sheetKeyboard}>
           <Pressable onPress={(event) => event.stopPropagation()}>
             <View style={componentStyles.sheetCard}>

@@ -32,9 +32,13 @@ const MemoryMomentItem = memo(function MemoryMomentItem({
   onStartEdit,
   repeatHint
 }: MemoryMomentItemProps) {
+  const { strings } = useTheme();
+
   return (
     <ListActionRow
-      accessibilityLabel={`Edit ${getMomentTitle(moment)}`}
+      accessibilityLabel={formatString(strings.memory.editSheetTitleNamed, {
+        title: getMomentTitle(moment)
+      })}
       onDelete={() => onDelete(moment)}
       onPress={() => onStartEdit(moment)}
     >

@@ -6,6 +6,7 @@ import { CaptureTypePicker } from "./CaptureTypePicker";
 import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { getTemplateLabel } from "../../lib/analysis";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
+import { formatString } from "../../i18n";
 import { useTheme } from "../../hooks/useTheme";
 import { hapticSuccess } from "../../lib/haptics";
 import { useCaptureForm } from "./useCaptureForm";
@@ -89,7 +90,9 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
               {manualTemplates.slice(0, 6).map((template) => (
                 <View key={template.id} style={styles.templateChip}>
                   <Pressable
-                    accessibilityLabel={`Apply shortcut ${getTemplateLabel(template)}`}
+                    accessibilityLabel={formatString(strings.capture.applyShortcutA11y, {
+                      label: getTemplateLabel(template)
+                    })}
                     accessibilityRole="button"
                     onPress={() => applyTemplate(template)}
                     style={styles.templateMain}
@@ -104,7 +107,9 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
                     </Text>
                   </Pressable>
                   <Pressable
-                    accessibilityLabel={`Remove shortcut ${getTemplateLabel(template)}`}
+                    accessibilityLabel={formatString(strings.capture.removeShortcutA11y, {
+                      label: getTemplateLabel(template)
+                    })}
                     accessibilityRole="button"
                     onPress={() => actions.removeManualTemplate(template.id)}
                     style={styles.templateRemoveButton}
@@ -119,7 +124,7 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
             <View style={styles.suggestionRow}>
               {repeatSuggestions.map((item) => (
                 <Pressable
-                  accessibilityLabel={`Repeat ${item.label}`}
+                  accessibilityLabel={formatString(strings.capture.repeatA11y, { label: item.label })}
                   accessibilityRole="button"
                   key={`${item.label}-${item.context}`}
                   onPress={() => applyRepeat(item)}

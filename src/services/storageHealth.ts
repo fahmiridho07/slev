@@ -1,3 +1,6 @@
+import { formatString } from "../i18n/format";
+import { getRuntimeStrings } from "../i18n/runtime";
+import { getWriteFailureToast } from "../i18n/toasts";
 import { isAccountsStorageCorrupt, isTransfersStorageCorrupt } from "./accountRepository";
 import { isBudgetLimitsStorageCorrupt } from "./budgetRepository";
 import { isExpenseCategoriesStorageCorrupt } from "./categoryRepository";
@@ -10,49 +13,43 @@ export type StorageHealthIssue = {
   label: string;
 };
 
-const CORRUPT_STORAGE_CHECKS: Array<{ check: () => boolean; key: string; label: string }> = [
-  { check: isMomentsStorageCorrupt, key: STORAGE_KEYS.moments, label: "Spending memories" },
-  { check: isPatternFeedbackStorageCorrupt, key: STORAGE_KEYS.patternFeedback, label: "Pattern feedback" },
-  { check: isAccountsStorageCorrupt, key: STORAGE_KEYS.accounts, label: "Accounts" },
-  { check: isTransfersStorageCorrupt, key: STORAGE_KEYS.transfers, label: "Transfers" },
-  { check: isBudgetLimitsStorageCorrupt, key: STORAGE_KEYS.budgetLimits, label: "Budget limits" },
+const CORRUPT_STORAGE_CHECKS: Array<{ check: () => boolean; key: string }> = [
+  { check: isMomentsStorageCorrupt, key: STORAGE_KEYS.moments },
+  { check: isPatternFeedbackStorageCorrupt, key: STORAGE_KEYS.patternFeedback },
+  { check: isAccountsStorageCorrupt, key: STORAGE_KEYS.accounts },
+  { check: isTransfersStorageCorrupt, key: STORAGE_KEYS.transfers },
+  { check: isBudgetLimitsStorageCorrupt, key: STORAGE_KEYS.budgetLimits },
   {
     check: () => isKeyCorrupt(STORAGE_KEYS.monthlyPlans),
-    key: STORAGE_KEYS.monthlyPlans,
-    label: "Monthly plans"
+    key: STORAGE_KEYS.monthlyPlans
   },
   {
     check: () => isKeyCorrupt(STORAGE_KEYS.manualTemplates),
-    key: STORAGE_KEYS.manualTemplates,
-    label: "Shortcuts"
+    key: STORAGE_KEYS.manualTemplates
   },
   {
     check: () => isKeyCorrupt(STORAGE_KEYS.categoryModes),
-    key: STORAGE_KEYS.categoryModes,
-    label: "Category modes"
+    key: STORAGE_KEYS.categoryModes
   },
   {
     check: () => isKeyCorrupt(STORAGE_KEYS.savingsGoals),
-    key: STORAGE_KEYS.savingsGoals,
-    label: "Savings goals"
+    key: STORAGE_KEYS.savingsGoals
   },
   {
     check: () => isKeyCorrupt(STORAGE_KEYS.recurringBills),
-    key: STORAGE_KEYS.recurringBills,
-    label: "Recurring bills"
+    key: STORAGE_KEYS.recurringBills
   },
   {
     check: () => isKeyCorrupt(STORAGE_KEYS.balanceSnapshots),
-    key: STORAGE_KEYS.balanceSnapshots,
-    label: "Balance snapshots"
+    key: STORAGE_KEYS.balanceSnapshots
   },
-  { check: isExpenseCategoriesStorageCorrupt, key: STORAGE_KEYS.expenseCategories, label: "Expense categories" }
+  { check: isExpenseCategoriesStorageCorrupt, key: STORAGE_KEYS.expenseCategories }
 ];
 
 export function listCorruptStorageIssues(): StorageHealthIssue[] {
   return CORRUPT_STORAGE_CHECKS.filter((entry) => entry.check()).map((entry) => ({
     key: entry.key,
-    label: entry.label
+    label: getStorageKeyLabel(entry.key)
   }));
 }
 
@@ -69,7 +66,8 @@ export async function resetStorageKey(key: string): Promise<boolean> {
 }
 
 export function getStorageKeyLabel(key: string): string {
-  return CORRUPT_STORAGE_CHECKS.find((entry) => entry.key === key)?.label ?? key;
+  const collections = getRuntimeStrings().storage.collections;
+  return collections[key] ?? key;
 }
 
 export function formatSkippedExportWarning(skippedKeys: string[]): string {
@@ -77,18 +75,18 @@ export function formatSkippedExportWarning(skippedKeys: string[]): string {
     return "";
   }
 
+  const strings = getRuntimeStrings().storage;
   const labels = skippedKeys.map((key) => getStorageKeyLabel(key));
   if (labels.length === 1) {
-    return `Note: ${labels[0]} looked damaged and was not included.`;
+    return formatString(strings.exportSkippedOne, { label: labels[0]! });
   }
 
-  return `Note: ${labels.slice(0, -1).join(", ")} and ${labels[labels.length - 1]} looked damaged and were not included.`;
+  return formatString(strings.exportSkippedMany, {
+    list: labels.slice(0, -1).join(", "),
+    last: labels[labels.length - 1]!
+  });
 }
 
 export function getWriteFailureMessage(area: string, storageKey?: string): string {
-  if (storageKey && isKeyCorrupt(storageKey)) {
-    return `${area} on this device looks damaged and was left unchanged. Export a backup in Settings, then re-import.`;
-  }
-
-  return `Could not save ${area} to this device. Check storage space or export a backup in Settings.`;
+  return getWriteFailureToast(area, storageKey);
 }

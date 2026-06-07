@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { DeleteConfirmDialog, EmptyState, ListActionRow, SegmentedControl } from "../../components";
 import { CategoryModeValue } from "../app.types";
-import { getCategoryDeleteMessage } from "../../i18n";
+import { formatString, getCategoryDeleteMessage } from "../../i18n";
 import { getMomentsInPeriod, sumExpenseMoments } from "../../lib/analysis";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { getModeByCategory } from "../../lib/financeEngine";
@@ -35,6 +35,8 @@ export function BudgetLimitsPanel({
   onSaveLimit: (category: SpendingContext, amountText: string, period: BudgetPeriod) => void;
 }) {
   const { colors, strings, styles } = useTheme();
+  const limitsStrings = strings.budget.limits;
+  const limitEditAction = strings.settings.categories.edit.split(" ")[0];
   const [editingCategory, setEditingCategory] = useState<SpendingContext | null>(null);
   const [draftAmount, setDraftAmount] = useState("");
   const [draftPeriod, setDraftPeriod] = useState<BudgetPeriod>("weekly");
@@ -71,12 +73,16 @@ export function BudgetLimitsPanel({
     setDraftPeriod(limit?.period ?? "weekly");
   }
 
+  function periodLabel(period: BudgetPeriod) {
+    return period === "weekly" ? limitsStrings.weekly : limitsStrings.monthly;
+  }
+
   if (rows.length === 0) {
     return (
       <EmptyState
-        actionLabel="Open Settings"
+        actionLabel={strings.common.openSettings}
         onAction={onOpenSettings}
-        text="No expense categories are active, so budget limits have nowhere to attach."
+        text={limitsStrings.emptyNoCategories}
       />
     );
   }
@@ -86,7 +92,10 @@ export function BudgetLimitsPanel({
       {rows.map((row) => (
         <View key={row.category} style={styles.budgetRow}>
           <ListActionRow
-            accessibilityLabel={`${row.limit ? "Edit" : "Set"} limit for ${row.category}`}
+            accessibilityLabel={formatString(limitsStrings.editLimitA11y, {
+              action: row.limit ? limitEditAction : limitsStrings.setLimit,
+              category: row.category
+            })}
             onDelete={
               row.categoryMeta
                 ? () => setPendingDeleteCategory(row.categoryMeta!)
@@ -99,8 +108,14 @@ export function BudgetLimitsPanel({
                 <Text style={styles.budgetCategory}>{row.category}</Text>
                 <Text style={styles.budgetMeta}>
                   {row.limit
-                    ? `${formatCompactRupiah(row.spent)} of ${formatCompactRupiah(row.limit.limitAmount)} ${row.period}`
-                    : `No limit set - ${formatCompactRupiah(row.spent)} this month`}
+                    ? formatString(limitsStrings.spentOfLimit, {
+                        spent: formatCompactRupiah(row.spent),
+                        limit: formatCompactRupiah(row.limit.limitAmount),
+                        period: periodLabel(row.period)
+                      })
+                    : formatString(limitsStrings.noLimitSpent, {
+                        spent: formatCompactRupiah(row.spent)
+                      })}
                 </Text>
               </View>
             </View>
@@ -109,8 +124,8 @@ export function BudgetLimitsPanel({
           <SegmentedControl
             compact
             options={[
-              { label: "Fixed", value: "fixed" },
-              { label: "Flexible", value: "flexible" }
+              { label: limitsStrings.fixed, value: "fixed" },
+              { label: limitsStrings.flexible, value: "flexible" }
             ]}
             selected={row.mode}
             onSelect={(mode) => onSaveCategoryMode(row.category, mode)}
@@ -125,10 +140,10 @@ export function BudgetLimitsPanel({
           {editingCategory === row.category && (
             <View style={styles.inlineEditor}>
               <TextInput
-                accessibilityLabel={`Limit amount for ${row.category}`}
+                accessibilityLabel={formatString(limitsStrings.limitAmountA11y, { category: row.category })}
                 keyboardType="number-pad"
                 onChangeText={(value) => setDraftAmount(formatAmountInput(value))}
-                placeholder="Limit amount"
+                placeholder={limitsStrings.limitAmountPlaceholder}
                 placeholderTextColor={colors.muted}
                 style={styles.input}
                 value={draftAmount}
@@ -136,8 +151,8 @@ export function BudgetLimitsPanel({
               <SegmentedControl
                 compact
                 options={[
-                  { label: "Weekly", value: "weekly" },
-                  { label: "Monthly", value: "monthly" }
+                  { label: limitsStrings.weekly, value: "weekly" },
+                  { label: limitsStrings.monthly, value: "monthly" }
                 ]}
                 selected={draftPeriod}
                 onSelect={setDraftPeriod}
@@ -152,11 +167,11 @@ export function BudgetLimitsPanel({
                     }}
                     style={styles.secondaryButton}
                   >
-                    <Text style={styles.deleteText}>Delete limit</Text>
+                    <Text style={styles.deleteText}>{limitsStrings.deleteLimit}</Text>
                   </Pressable>
                 )}
                 <Pressable accessibilityRole="button" onPress={() => setEditingCategory(null)} style={styles.secondaryButton}>
-                  <Text style={styles.secondaryButtonText}>Cancel</Text>
+                  <Text style={styles.secondaryButtonText}>{strings.common.cancel}</Text>
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
@@ -166,7 +181,7 @@ export function BudgetLimitsPanel({
                   }}
                   style={styles.smallPrimaryButton}
                 >
-                  <Text style={styles.primaryButtonText}>Save</Text>
+                  <Text style={styles.primaryButtonText}>{strings.common.save}</Text>
                 </Pressable>
               </View>
             </View>

@@ -1,6 +1,5 @@
 import React, { memo } from "react";
 import { Pressable, Text, View } from "react-native";
-import { CONTEXT_HINTS } from "../data/spendingMemory";
 import { SpendingContext } from "../features/spendingMemory.types";
 import { useTheme } from "../hooks/useTheme";
 
@@ -17,7 +16,12 @@ function ContextPickerComponent({
   selected,
   onSelect
 }: ContextPickerProps) {
-  const { componentStyles } = useTheme();
+  const { componentStyles, strings } = useTheme();
+
+  function getContextHint(context: SpendingContext): string {
+    const hints = strings.capture.contextHints;
+    return hints[context as keyof typeof hints] ?? hints.custom;
+  }
 
   return (
     <View style={componentStyles.contextPickerBlock}>
@@ -42,7 +46,7 @@ function ContextPickerComponent({
       {!compact && (
         <View style={componentStyles.contextHintBox}>
           <Text numberOfLines={2} style={componentStyles.contextHint}>
-            {CONTEXT_HINTS[selected] ?? "Custom spending category"}
+            {getContextHint(selected)}
           </Text>
         </View>
       )}

@@ -1,12 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useMemo, useState } from "react";
-import { FlatList, Pressable, Text, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
 import { AccountTitle, DeleteConfirmDialog, EmptyState, ListActionRow, ObservationPanel, SectionHeader, TransferTitle } from "../../components";
+import { formatString } from "../../i18n";
 import { AccountActivityRow, buildAccountActivity, dateKey, formatDate, formatReconciliationDifference, getReconciliationCopy, getReconciliationDetail, getPercentWidthStyle } from "../../lib/analysis";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
 import { buildAccountReconciliation, getLatestBalanceSnapshots } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
-import { BalanceSnapshot, MoneyAccount, MoneyTransfer, SpendingMoment } from "../spendingMemory.types";
+import { BalanceSnapshot, MoneyAccount, MoneyTransfer, SpendingMoment, type PatternGroup } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 import { getReconciliationAmountStyle } from "../../theme/styles/fillStyles";
 
@@ -25,7 +26,8 @@ export function AccountAnalysisPanel({
   transfers: MoneyTransfer[];
   onDeleteTransfer: (id: string) => void;
 }) {
-  const { colors, styles } = useTheme();
+  const { colors, strings, styles } = useTheme();
+  const accountsStrings = strings.patterns.accounts;
   const currentBalances = useMemo(() => getLatestBalanceSnapshots(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
   const accountActivity = useMemo(() => buildAccountActivity(moments), [moments]);
   const reconciliationRows = useMemo(
@@ -56,12 +58,15 @@ export function AccountAnalysisPanel({
         <Text style={styles.settingCopy}>{getReconciliationDetail(row)}</Text>
         {row.expectedAmount !== null && row.latestAmount !== null && (
           <Text style={styles.settingCopy}>
-            Expected {formatCompactRupiah(row.expectedAmount)} - actual {formatCompactRupiah(row.latestAmount)}
+            {formatString(accountsStrings.expectedActual, {
+              expected: formatCompactRupiah(row.expectedAmount),
+              actual: formatCompactRupiah(row.latestAmount)
+            })}
           </Text>
         )}
       </View>
     ),
-    []
+    [accountsStrings.expectedActual, styles]
   );
 
   const renderActivityItem = useCallback(
@@ -75,17 +80,23 @@ export function AccountAnalysisPanel({
           <View style={[styles.expenseFill, getPercentWidthStyle(row.share)]} />
         </View>
         <Text style={styles.settingCopy}>
-          Income {formatCompactRupiah(row.income)} - net {formatSignedCompactRupiah(row.net)}
+          {formatString(accountsStrings.incomeNetCopy, {
+            income: formatCompactRupiah(row.income),
+            net: formatSignedCompactRupiah(row.net)
+          })}
         </Text>
       </View>
     ),
-    []
+    [accountsStrings.incomeNetCopy, styles]
   );
 
   const renderTransferItem = useCallback(
     ({ item: transfer }: { item: MoneyTransfer }) => (
       <ListActionRow
-        accessibilityLabel={`Delete transfer from ${transfer.fromAccount} to ${transfer.toAccount}`}
+        accessibilityLabel={formatString(accountsStrings.deleteTransferA11y, {
+          from: transfer.fromAccount,
+          to: transfer.toAccount
+        })}
         onDelete={() => setPendingDeleteTransfer(transfer)}
       >
         <View style={styles.analyticsRow}>
@@ -99,7 +110,7 @@ export function AccountAnalysisPanel({
         </View>
       </ListActionRow>
     ),
-    []
+    [accountsStrings.deleteTransferA11y, styles]
   );
 
   const reconciliationKeyExtractor = useCallback((row: (typeof reconciliationRows)[number]) => row.label, []);
@@ -112,20 +123,26 @@ export function AccountAnalysisPanel({
         <View style={styles.settingRow}>
           <Ionicons name="swap-horizontal-outline" size={20} color={colors.greenDark} />
           <View style={styles.settingText}>
-            <Text style={styles.settingTitle}>Hub and pockets</Text>
+            <Text style={styles.settingTitle}>{accountsStrings.hubAndPockets}</Text>
             <Text style={styles.settingCopy}>
-              Hub {formatCompactRupiah(hubBalance)} - daily pockets {formatCompactRupiah(pocketBalance)}.
+              {formatString(accountsStrings.hubPocketsCopy, {
+                hub: formatCompactRupiah(hubBalance),
+                pockets: formatCompactRupiah(pocketBalance)
+              })}
             </Text>
           </View>
         </View>
         <View style={styles.settingRow}>
           <Ionicons name="card-outline" size={20} color={colors.greenDark} />
           <View style={styles.settingText}>
-            <Text style={styles.settingTitle}>Most active spending pocket</Text>
+            <Text style={styles.settingTitle}>{accountsStrings.mostActivePocket}</Text>
             <Text style={styles.settingCopy}>
               {topSpendingAccount
-                ? `${topSpendingAccount.label} has ${formatCompactRupiah(topSpendingAccount.expense)} spending logged this month.`
-              : "Spending by account appears after entries include an account."}
+                ? formatString(accountsStrings.topSpendingCopy, {
+                    label: topSpendingAccount.label,
+                    amount: formatCompactRupiah(topSpendingAccount.expense)
+                  })
+                : accountsStrings.spendingByAccountEmpty}
             </Text>
           </View>
         </View>
@@ -134,7 +151,7 @@ export function AccountAnalysisPanel({
       <ObservationPanel
         pattern={{
           id: "reconciliation-summary",
-          group: "Stands out this week",
+          group: strings.patterns.groups.standsOut as PatternGroup,
           title: reconciliationCopy.title,
           detail: reconciliationCopy.detail,
           tone: reconciliationCopy.tone
@@ -142,10 +159,10 @@ export function AccountAnalysisPanel({
       />
 
       {balanceSnapshots.length === 0 ? (
-        <EmptyState text="Reconciliation starts after the first manual snapshot. Current balance can still be estimated from income and spending." />
+        <EmptyState text={accountsStrings.reconciliationEmpty} />
       ) : (
         <>
-          <SectionHeader title="Balance reconciliation" />
+          <SectionHeader title={accountsStrings.balanceReconciliation} />
           <View style={styles.listPanel}>
             <FlatList
               data={reconciliationRows}
@@ -159,7 +176,7 @@ export function AccountAnalysisPanel({
 
       {accountActivity.length > 0 && (
         <>
-          <SectionHeader title="Account movement this month" />
+          <SectionHeader title={accountsStrings.accountMovement} />
           <View style={styles.listPanel}>
             <FlatList
               data={accountActivity}
@@ -173,7 +190,7 @@ export function AccountAnalysisPanel({
 
       {recentTransfers.length > 0 && (
         <>
-          <SectionHeader title="Recent transfers" />
+          <SectionHeader title={accountsStrings.recentTransfers} />
           <View style={styles.listPanel}>
             <FlatList
               data={recentTransfers}
@@ -187,7 +204,11 @@ export function AccountAnalysisPanel({
       <DeleteConfirmDialog
         body={
           pendingDeleteTransfer
-            ? `${formatCompactRupiah(pendingDeleteTransfer.amount)} from ${pendingDeleteTransfer.fromAccount} to ${pendingDeleteTransfer.toAccount} will be removed.`
+            ? formatString(accountsStrings.deleteTransferBody, {
+                amount: formatCompactRupiah(pendingDeleteTransfer.amount),
+                from: pendingDeleteTransfer.fromAccount,
+                to: pendingDeleteTransfer.toAccount
+              })
             : ""
         }
         onCancel={() => setPendingDeleteTransfer(null)}
@@ -197,7 +218,7 @@ export function AccountAnalysisPanel({
             setPendingDeleteTransfer(null);
           }
         }}
-        title="Delete transfer?"
+        title={accountsStrings.deleteTransferTitle}
         visible={Boolean(pendingDeleteTransfer)}
       />
     </View>

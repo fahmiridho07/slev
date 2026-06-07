@@ -1,3 +1,4 @@
+import { enExtras } from "./complete/enExtras";
 import type { AppStrings } from "./types";
 
 export const en: AppStrings = {
@@ -29,7 +30,8 @@ export const en: AppStrings = {
     amount: "Amount",
     account: "Account",
     income: "Income",
-    expense: "Expense"
+    expense: "Expense",
+    closeSheet: "Close sheet"
   },
   capture: {
     fabLabel: "Quick capture",
@@ -45,6 +47,17 @@ export const en: AppStrings = {
     noCategories: "No expense categories are active. Add one before saving expenses.",
     openSettings: "Open Settings",
     context: "Context",
+    contextHints: {
+      Meal: "Food, snacks, lunch",
+      Coffee: "Coffee or tea runs",
+      Transport: "Ride, fuel, parking",
+      Groceries: "Daily supplies",
+      Bills: "Recurring payments",
+      Treat: "Small nice things",
+      Home: "Household needs",
+      Other: "Anything else",
+      custom: "Custom spending category"
+    },
     notePlaceholder: "Tiny note, optional",
     addNote: "Add a note",
     saveExpense: "Save expense",
@@ -55,6 +68,9 @@ export const en: AppStrings = {
     fewerOptions: "Fewer options",
     moreOptions: "More options",
     amountA11y: "Amount",
+    applyShortcutA11y: "Apply shortcut {label}",
+    removeShortcutA11y: "Remove shortcut {label}",
+    repeatA11y: "Repeat {label}",
     income: "Income",
     type: {
       lead: "What are you logging?",
@@ -106,6 +122,7 @@ export const en: AppStrings = {
     heroValue: "{count} memor(y/ies)",
     categories: {
       edit: "Edit category",
+      editA11y: "Edit category {label}",
       add: "Add expense category",
       nameA11y: "Category name",
       placeholder: "e.g. Health, Subscriptions, Hobby",
@@ -200,7 +217,8 @@ export const en: AppStrings = {
     searchNoResults: "No memory matches that search.",
     editSheetTitle: "Edit memory",
     editSheetTitleNamed: "Edit {title}",
-    deleteTitle: "Delete memory?"
+    deleteTitle: "Delete memory?",
+    ...enExtras.memory
   },
   budget: {
     tabs: {
@@ -224,7 +242,8 @@ export const en: AppStrings = {
     plan: {
       allocationDetails: "Allocation details",
       categoryLimitsOptional: "Category limits (optional)"
-    }
+    },
+    ...enExtras.budget
   },
   patterns: {
     tabs: {
@@ -247,7 +266,8 @@ export const en: AppStrings = {
       feedbackKeep: "Keep",
       feedbackLessOften: "Less often",
       feedbackNotSure: "Not sure"
-    }
+    },
+    ...enExtras.patterns
   },
   dialogs: {
     clearAllTitle: "Clear local finance memory?",
@@ -259,5 +279,8 @@ export const en: AppStrings = {
     categoryDeleteCustom: "{label} will be removed from capture and budget limits. Existing memories stay saved.",
     memoryDeleteTitle: "Delete memory?",
     memoryDeleteBody: "{title} will be removed from Memory. Budget and analysis totals will update automatically."
-  }
+  },
+  toasts: enExtras.toasts,
+  analysis: enExtras.analysis,
+  storage: enExtras.storage
 };

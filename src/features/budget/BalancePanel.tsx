@@ -12,6 +12,7 @@ import {
   SegmentedControl
 } from "../../components";
 import { useListActionsHint } from "../../hooks/useListActionsHint";
+import { formatString, type AppStrings } from "../../i18n";
 import { formatAmountInput, formatSignedCompactRupiah } from "../../lib/formatMoney";
 import {
   AccountDriftRow,
@@ -22,6 +23,19 @@ import {
 import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { AccountTier, BalanceSnapshot, MoneyAccount } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
+
+function getAccountKindLabel(kind: MoneyAccount["kind"], strings: AppStrings) {
+  switch (kind) {
+    case "bank":
+      return strings.budget.balance.accountKindBank;
+    case "wallet":
+      return strings.budget.balance.accountKindWallet;
+    case "cash":
+      return strings.budget.balance.accountKindCash;
+    default:
+      return strings.budget.balance.accountKindOther;
+  }
+}
 
 export function BalancePanel({
   accountDrift,
@@ -47,6 +61,7 @@ export function BalancePanel({
   onSaveBalance: (input: { accountLabel: string; amount: string }) => void;
 }) {
   const { colors, strings, styles } = useTheme();
+  const balanceStrings = strings.budget.balance;
   const [accountLabel, setAccountLabel] = useState(accounts[0]?.label ?? "");
   const [amount, setAmount] = useState("");
   const [editingAccountId, setEditingAccountId] = useState<string | undefined>(undefined);
@@ -98,14 +113,14 @@ export function BalancePanel({
     ({ item: account }: { item: MoneyAccount }) => {
       const balance = balanceByLabel.get(account.label);
       const accountMeta = account.isIncomeHub
-        ? "Income hub"
+        ? balanceStrings.incomeHubMeta
         : account.tier === "ephemeral"
-          ? "Ephemeral pocket"
-          : `${account.kind.charAt(0).toUpperCase()}${account.kind.slice(1)}`;
+          ? balanceStrings.ephemeralPocketMeta
+          : getAccountKindLabel(account.kind, strings);
 
       return (
         <ListActionRow
-          accessibilityLabel={`Edit account ${account.label}`}
+          accessibilityLabel={formatString(balanceStrings.editAccountA11y, { label: account.label })}
           onDelete={() => setPendingDeleteAccount(account)}
           onPress={() => editAccount(account)}
         >
@@ -116,14 +131,14 @@ export function BalancePanel({
                 <Text style={styles.settingCopy}>{accountMeta}</Text>
               </View>
               <Text style={styles.analyticsAmount}>
-                {balance !== undefined ? formatCompactRupiah(balance) : "No activity"}
+                {balance !== undefined ? formatCompactRupiah(balance) : balanceStrings.noActivity}
               </Text>
             </View>
           </View>
         </ListActionRow>
       );
     },
-    [balanceByLabel]
+    [balanceByLabel, balanceStrings, strings, styles]
   );
 
   const renderBalanceItem = useCallback(
@@ -133,10 +148,10 @@ export function BalancePanel({
           <AccountTitle label={snapshot.accountLabel} />
           <Text style={styles.analyticsAmount}>{formatRupiah(snapshot.amount)}</Text>
         </View>
-        <Text style={styles.settingCopy}>Estimated from the latest snapshot and logged movements.</Text>
+        <Text style={styles.settingCopy}>{balanceStrings.estimatedFromSnapshot}</Text>
       </View>
     ),
-    []
+    [balanceStrings.estimatedFromSnapshot, styles]
   );
 
   const accountKeyExtractor = useCallback((account: MoneyAccount) => account.id, []);
@@ -149,13 +164,18 @@ export function BalancePanel({
         <View style={styles.settingRow}>
           <Ionicons name="albums-outline" size={20} color={colors.greenDark} />
           <View style={styles.settingText}>
-            <Text style={styles.settingTitle}>Estimated current balance</Text>
+            <Text style={styles.settingTitle}>{balanceStrings.estimatedCurrentBalance}</Text>
             <Text style={styles.settingCopy}>
-              {formatCompactRupiah(currentBalanceTotal)} from snapshots plus logged income, spending, and transfers.
+              {formatString(balanceStrings.estimatedCurrentBalanceCopy, {
+                total: formatCompactRupiah(currentBalanceTotal)
+              })}
             </Text>
             {tierSummary.ephemeralAccountCount > 0 && tierSummary.ephemeralTotal > 0 ? (
               <Text style={styles.settingCopy}>
-                {`Tracked ${formatCompactRupiah(tierSummary.trackedTotal)} you reconcile · Ephemeral ${formatCompactRupiah(tierSummary.ephemeralTotal)} rough.`}
+                {formatString(balanceStrings.trackedEphemeralCopy, {
+                  tracked: formatCompactRupiah(tierSummary.trackedTotal),
+                  ephemeral: formatCompactRupiah(tierSummary.ephemeralTotal)
+                })}
               </Text>
             ) : null}
           </View>
@@ -167,14 +187,15 @@ export function BalancePanel({
           <View style={styles.settingRow}>
             <Ionicons name="eye-outline" size={20} color={colors.greenDark} />
             <View style={styles.settingText}>
-              <Text style={styles.settingTitle}>Worth a quick look</Text>
-              <Text style={styles.settingCopy}>
-                These balances drifted from what you logged. No rush — reconcile when you have a moment.
-              </Text>
+              <Text style={styles.settingTitle}>{balanceStrings.worthQuickLook}</Text>
+              <Text style={styles.settingCopy}>{balanceStrings.driftCopy}</Text>
               <View style={styles.repeatBlock}>
                 {accountDrift.map((row) => (
                   <Text key={`${row.label}-${row.latestSnapshotDate ?? "drift"}`} style={styles.settingCopy}>
-                    {`${row.label}: off by ${formatSignedCompactRupiah(row.difference)}`}
+                    {formatString(balanceStrings.driftRow, {
+                      label: row.label,
+                      difference: formatSignedCompactRupiah(row.difference)
+                    })}
                   </Text>
                 ))}
               </View>
@@ -188,24 +209,35 @@ export function BalancePanel({
           <View style={styles.settingRow}>
             <Ionicons name="camera-outline" size={20} color={colors.greenDark} />
             <View style={styles.settingText}>
-              <Text style={styles.settingTitle}>Manual snapshot base</Text>
-              <Text style={styles.settingCopy}>{formatCompactRupiah(manualBalanceTotal)} from the latest saved snapshots.</Text>
+              <Text style={styles.settingTitle}>{balanceStrings.manualSnapshotBase}</Text>
+              <Text style={styles.settingCopy}>
+                {formatString(balanceStrings.manualSnapshotCopy, {
+                  total: formatCompactRupiah(manualBalanceTotal)
+                })}
+              </Text>
             </View>
           </View>
         </View>
       )}
 
       <View style={styles.capturePanel}>
-        <Text style={styles.microLabel}>Balance snapshot</Text>
+        <Text style={styles.microLabel}>{balanceStrings.balanceSnapshot}</Text>
         <AccountPicker
           accounts={accounts}
-          label="Account"
+          label={strings.common.account}
           selected={accountLabel}
           onSelect={setAccountLabel}
         />
-        <TextInput keyboardType="number-pad" onChangeText={(value) => setAmount(formatAmountInput(value))} placeholder="Current balance" placeholderTextColor={colors.muted} style={styles.input} value={amount} />
+        <TextInput
+          keyboardType="number-pad"
+          onChangeText={(value) => setAmount(formatAmountInput(value))}
+          placeholder={balanceStrings.currentBalancePlaceholder}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={amount}
+        />
         <Pressable
-          accessibilityLabel="Save balance snapshot"
+          accessibilityLabel={balanceStrings.saveSnapshotA11y}
           accessibilityRole="button"
           onPress={() => {
             onSaveBalance({ accountLabel, amount });
@@ -214,20 +246,28 @@ export function BalancePanel({
           style={styles.primaryButton}
         >
           <Ionicons name="camera-outline" size={18} color={colors.surface} />
-          <Text style={styles.primaryButtonText}>Save snapshot</Text>
+          <Text style={styles.primaryButtonText}>{balanceStrings.saveSnapshot}</Text>
         </Pressable>
       </View>
 
       <View style={styles.capturePanel}>
-        <Text style={styles.microLabel}>{editingAccountId ? "Edit account" : "Add account or wallet"}</Text>
-        <TextInput onChangeText={setAccountDraftLabel} placeholder="BRI, Jago, GoPay, Cash..." placeholderTextColor={colors.muted} style={styles.input} value={accountDraftLabel} />
+        <Text style={styles.microLabel}>
+          {editingAccountId ? balanceStrings.editAccount : balanceStrings.addAccount}
+        </Text>
+        <TextInput
+          onChangeText={setAccountDraftLabel}
+          placeholder={balanceStrings.accountPlaceholder}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={accountDraftLabel}
+        />
         <SegmentedControl
           compact
           options={[
-            { label: "Bank", value: "bank" },
-            { label: "Wallet", value: "wallet" },
-            { label: "Cash", value: "cash" },
-            { label: "Other", value: "other" }
+            { label: balanceStrings.accountKindBank, value: "bank" },
+            { label: balanceStrings.accountKindWallet, value: "wallet" },
+            { label: balanceStrings.accountKindCash, value: "cash" },
+            { label: balanceStrings.accountKindOther, value: "other" }
           ]}
           selected={accountDraftKind}
           onSelect={setAccountDraftKind}
@@ -235,8 +275,8 @@ export function BalancePanel({
         <SegmentedControl
           compact
           options={[
-            { label: "Income hub", value: "hub" },
-            { label: "Pocket", value: "pocket" }
+            { label: balanceStrings.incomeHub, value: "hub" },
+            { label: balanceStrings.pocket, value: "pocket" }
           ]}
           selected={accountDraftHub}
           onSelect={setAccountDraftHub}
@@ -245,20 +285,18 @@ export function BalancePanel({
           <SegmentedControl
             compact
             options={[
-              { label: "Tracked", value: "tracked" },
-              { label: "Ephemeral", value: "ephemeral" }
+              { label: balanceStrings.tracked, value: "tracked" },
+              { label: balanceStrings.ephemeral, value: "ephemeral" }
             ]}
             selected={accountDraftTier}
             onSelect={setAccountDraftTier}
           />
-          <Text style={styles.settingCopy}>
-            Ephemeral = a payment source you don't reconcile closely (small e-wallets).
-          </Text>
+          <Text style={styles.settingCopy}>{balanceStrings.ephemeralHint}</Text>
         </View>
         <View style={styles.editActions}>
           {editingAccountId && (
             <Pressable onPress={resetAccountDraft} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Cancel</Text>
+              <Text style={styles.secondaryButtonText}>{strings.common.cancel}</Text>
             </Pressable>
           )}
           <Pressable
@@ -274,7 +312,7 @@ export function BalancePanel({
             }}
             style={styles.smallPrimaryButton}
           >
-            <Text style={styles.primaryButtonText}>Save account</Text>
+            <Text style={styles.primaryButtonText}>{balanceStrings.saveAccount}</Text>
           </Pressable>
         </View>
       </View>
@@ -286,7 +324,7 @@ export function BalancePanel({
           title={strings.listHints.balance_accounts.title}
         />
       )}
-      <SectionHeader title="Your accounts" />
+      <SectionHeader title={balanceStrings.yourAccounts} />
       <View style={styles.listPanel}>
         <FlatList
           data={accounts}
@@ -297,10 +335,10 @@ export function BalancePanel({
       </View>
 
       {currentBalances.length === 0 ? (
-        <EmptyState text="Income, expenses, transfers, or snapshots will build account balances here." />
+        <EmptyState text={balanceStrings.emptyAccounts} />
       ) : (
         <>
-          <SectionHeader title="Current account balances" />
+          <SectionHeader title={balanceStrings.currentAccountBalances} />
           <View style={styles.listPanel}>
             <FlatList
               data={currentBalances}
@@ -314,7 +352,7 @@ export function BalancePanel({
       <DeleteConfirmDialog
         body={
           pendingDeleteAccount
-            ? `${pendingDeleteAccount.label} will be removed from account pickers. Existing memories stay saved.`
+            ? formatString(balanceStrings.deleteAccountBody, { label: pendingDeleteAccount.label })
             : ""
         }
         onCancel={() => setPendingDeleteAccount(null)}
@@ -324,7 +362,7 @@ export function BalancePanel({
             setPendingDeleteAccount(null);
           }
         }}
-        title="Delete account?"
+        title={balanceStrings.deleteAccountTitle}
         visible={Boolean(pendingDeleteAccount)}
       />
     </View>

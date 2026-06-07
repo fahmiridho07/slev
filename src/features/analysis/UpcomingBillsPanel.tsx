@@ -4,15 +4,9 @@ import { Pressable, Text, View } from "react-native";
 import { EmptyState } from "../../components";
 import { useTheme } from "../../hooks/useTheme";
 import { formatString } from "../../i18n";
+import { formatLocaleShortDate } from "../../i18n/localeDate";
 import { UpcomingBill } from "../../lib/recurringBills";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
-
-function formatDueDate(isoDate: string): string {
-  return new Date(isoDate).toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short"
-  });
-}
 
 export function UpcomingBillsPanel({
   upcomingBills,
@@ -62,7 +56,7 @@ export function UpcomingBillsPanel({
               <Text style={styles.analyticsAmount}>{formatCompactRupiah(item.bill.amount)}</Text>
             </View>
             <Text style={styles.settingCopy}>
-              {formatDueDate(item.dueDate)} · {formatDueHint(item.daysUntil)}
+              {formatLocaleShortDate(item.dueDate)} · {formatDueHint(item.daysUntil)}
             </Text>
             <Pressable
               accessibilityLabel={strings.home.bills.logPayment}

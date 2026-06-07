@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { formatString } from "../../i18n";
 import { MonthlySummary } from "../app.types";
 import { formatAmountInput, formatSignedCompactRupiah, parseAmountInput } from "../../lib/formatMoney";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
@@ -22,7 +23,8 @@ export function MonthlyPlanPanel({
     savingsTarget: string;
   }) => void;
 }) {
-  const { colors, styles } = useTheme();
+  const { colors, strings, styles } = useTheme();
+  const planStrings = strings.budget.monthlyPlan;
   const [expectedIncome, setExpectedIncome] = useState(monthlyPlan ? formatAmountInput(String(monthlyPlan.expectedIncome)) : "");
   const [fixedCosts, setFixedCosts] = useState(monthlyPlan ? formatAmountInput(String(monthlyPlan.fixedCosts)) : "");
   const [savingsTarget, setSavingsTarget] = useState(monthlyPlan ? formatAmountInput(String(monthlyPlan.savingsTarget)) : "");
@@ -47,34 +49,76 @@ export function MonthlyPlanPanel({
   return (
     <View style={styles.analyticsBlock}>
       <View style={styles.capturePanel}>
-        <Text style={styles.microLabel}>Monthly spending plan</Text>
-        <TextInput keyboardType="number-pad" onChangeText={(value) => setExpectedIncome(formatAmountInput(value))} placeholder="Expected income" placeholderTextColor={colors.muted} style={styles.input} value={expectedIncome} />
+        <Text style={styles.microLabel}>{planStrings.title}</Text>
+        <TextInput
+          keyboardType="number-pad"
+          onChangeText={(value) => setExpectedIncome(formatAmountInput(value))}
+          placeholder={planStrings.expectedIncome}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={expectedIncome}
+        />
         {showIncomeSuggestion && (
-          <Pressable accessibilityRole="button" onPress={() => setExpectedIncome(formatAmountInput(String(loggedIncome)))} style={styles.secondaryInlineButton}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setExpectedIncome(formatAmountInput(String(loggedIncome)))}
+            style={styles.secondaryInlineButton}
+          >
             <Ionicons name="sparkles-outline" size={16} color={colors.greenDark} />
-            <Text style={styles.textButtonLabel}>Use logged income ({formatCompactRupiah(loggedIncome)})</Text>
+            <Text style={styles.textButtonLabel}>
+              {formatString(planStrings.useLoggedIncome, { amount: formatCompactRupiah(loggedIncome) })}
+            </Text>
           </Pressable>
         )}
-        <TextInput keyboardType="number-pad" onChangeText={(value) => setFixedCosts(formatAmountInput(value))} placeholder="Fixed costs" placeholderTextColor={colors.muted} style={styles.input} value={fixedCosts} />
-        <TextInput keyboardType="number-pad" onChangeText={(value) => setSavingsTarget(formatAmountInput(value))} placeholder="Savings target" placeholderTextColor={colors.muted} style={styles.input} value={savingsTarget} />
-        <TextInput multiline onChangeText={setNote} placeholder="One adjustment for this month, optional" placeholderTextColor={colors.muted} style={[styles.input, styles.noteInput]} value={note} />
+        <TextInput
+          keyboardType="number-pad"
+          onChangeText={(value) => setFixedCosts(formatAmountInput(value))}
+          placeholder={planStrings.fixedCosts}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={fixedCosts}
+        />
+        <TextInput
+          keyboardType="number-pad"
+          onChangeText={(value) => setSavingsTarget(formatAmountInput(value))}
+          placeholder={planStrings.savingsTarget}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={savingsTarget}
+        />
+        <TextInput
+          multiline
+          onChangeText={setNote}
+          placeholder={planStrings.notePlaceholder}
+          placeholderTextColor={colors.muted}
+          style={[styles.input, styles.noteInput]}
+          value={note}
+        />
         <View style={styles.planSummaryRow}>
-          <Text style={styles.settingCopy}>Flexible budget</Text>
+          <Text style={styles.settingCopy}>{planStrings.flexibleBudget}</Text>
           <Text style={styles.analyticsTitle}>{formatCompactRupiah(flexibleBudget)}</Text>
         </View>
         <View style={styles.planSummaryRow}>
-          <Text style={styles.settingCopy}>Flexible remaining</Text>
-          <Text style={[styles.analyticsTitle, flexibleRemaining < 0 && styles.expenseText]}>{formatSignedCompactRupiah(flexibleRemaining)}</Text>
+          <Text style={styles.settingCopy}>{planStrings.flexibleRemaining}</Text>
+          <Text style={[styles.analyticsTitle, flexibleRemaining < 0 && styles.expenseText]}>
+            {formatSignedCompactRupiah(flexibleRemaining)}
+          </Text>
         </View>
         {overCommitted > 0 && (
           <View style={styles.planSummaryRow}>
-            <Text style={styles.settingCopy}>Over your income by</Text>
+            <Text style={styles.settingCopy}>{planStrings.overIncomeBy}</Text>
             <Text style={[styles.analyticsTitle, styles.expenseText]}>{formatCompactRupiah(overCommitted)}</Text>
           </View>
         )}
-        <Pressable accessibilityRole="button" onPress={() => onSaveMonthlyPlan({ expectedIncome, fixedCosts, flexibleBudget: String(flexibleBudget), note, savingsTarget })} style={styles.primaryButton}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() =>
+            onSaveMonthlyPlan({ expectedIncome, fixedCosts, flexibleBudget: String(flexibleBudget), note, savingsTarget })
+          }
+          style={styles.primaryButton}
+        >
           <Ionicons name="save-outline" size={18} color={colors.surface} />
-          <Text style={styles.primaryButtonText}>Save plan</Text>
+          <Text style={styles.primaryButtonText}>{planStrings.savePlan}</Text>
         </Pressable>
       </View>
     </View>

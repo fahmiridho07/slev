@@ -64,7 +64,11 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
         ]}
       >
         <ListActionRow
-          accessibilityLabel={category.isDefault ? category.label : `Edit category ${category.label}`}
+          accessibilityLabel={
+            category.isDefault
+              ? category.label
+              : formatString(strings.settings.categories.editA11y, { label: category.label })
+          }
           onDelete={() => setPendingDeleteCategory(category)}
           onPress={!category.isDefault ? () => editCategory(category) : undefined}
         >

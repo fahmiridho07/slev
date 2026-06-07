@@ -13,7 +13,7 @@ type MomentRowProps = {
 };
 
 function MomentRowComponent({ moment, repeatHint }: MomentRowProps) {
-  const { colors, componentStyles } = useTheme();
+  const { colors, componentStyles, strings } = useTheme();
   const isIncome = moment.type === "income";
 
   return (
@@ -28,7 +28,7 @@ function MomentRowComponent({ moment, repeatHint }: MomentRowProps) {
       <View style={componentStyles.momentText}>
         <Text style={componentStyles.momentTitle}>{getMomentTitle(moment)}</Text>
         <Text style={componentStyles.momentMeta}>
-          {isIncome ? "Income" : moment.context} - {formatTime(moment.occurredAt)}
+          {isIncome ? strings.common.income : moment.context} - {formatTime(moment.occurredAt)}
           {moment.accountLabel ? ` - ${moment.accountLabel}` : ""}
           {moment.note ? ` - ${moment.note}` : ""}
         </Text>

@@ -1,3 +1,4 @@
+import { idExtras } from "./complete/idExtras";
 import type { AppStrings } from "./types";
 
 export const id: AppStrings = {
@@ -29,7 +30,8 @@ export const id: AppStrings = {
     amount: "Jumlah",
     account: "Akun",
     income: "Pemasukan",
-    expense: "Pengeluaran"
+    expense: "Pengeluaran",
+    closeSheet: "Tutup lembar"
   },
   capture: {
     fabLabel: "Catat cepat",
@@ -45,6 +47,17 @@ export const id: AppStrings = {
     noCategories: "Belum ada kategori pengeluaran aktif. Tambahkan dulu sebelum menyimpan.",
     openSettings: "Buka Pengaturan",
     context: "Konteks",
+    contextHints: {
+      Meal: "Makanan, camilan, makan siang",
+      Coffee: "Kopi atau teh",
+      Transport: "Ojek, bensin, parkir",
+      Groceries: "Kebutuhan harian",
+      Bills: "Pembayaran rutin",
+      Treat: "Hal kecil yang menyenangkan",
+      Home: "Kebutuhan rumah",
+      Other: "Lainnya",
+      custom: "Kategori pengeluaran kustom"
+    },
     notePlaceholder: "Catatan singkat, opsional",
     addNote: "Tambah catatan",
     saveExpense: "Simpan pengeluaran",
@@ -55,6 +68,9 @@ export const id: AppStrings = {
     fewerOptions: "Lebih sedikit opsi",
     moreOptions: "Lebih banyak opsi",
     amountA11y: "Jumlah",
+    applyShortcutA11y: "Terapkan pintasan {label}",
+    removeShortcutA11y: "Hapus pintasan {label}",
+    repeatA11y: "Ulangi {label}",
     income: "Pemasukan",
     type: {
       lead: "Apa yang ingin dicatat?",
@@ -106,6 +122,7 @@ export const id: AppStrings = {
     heroValue: "{count} memori",
     categories: {
       edit: "Edit kategori",
+      editA11y: "Edit kategori {label}",
       add: "Tambah kategori pengeluaran",
       nameA11y: "Nama kategori",
       placeholder: "mis. Kesehatan, Langganan, Hobi",
@@ -200,7 +217,8 @@ export const id: AppStrings = {
     searchNoResults: "Tidak ada memori yang cocok dengan pencarian.",
     editSheetTitle: "Edit memori",
     editSheetTitleNamed: "Edit {title}",
-    deleteTitle: "Hapus memori?"
+    deleteTitle: "Hapus memori?",
+    ...idExtras.memory
   },
   budget: {
     tabs: {
@@ -224,7 +242,8 @@ export const id: AppStrings = {
     plan: {
       allocationDetails: "Detail alokasi",
       categoryLimitsOptional: "Batas kategori (opsional)"
-    }
+    },
+    ...idExtras.budget
   },
   patterns: {
     tabs: {
@@ -247,7 +266,8 @@ export const id: AppStrings = {
       feedbackKeep: "Pertahankan",
       feedbackLessOften: "Lebih jarang",
       feedbackNotSure: "Tidak yakin"
-    }
+    },
+    ...idExtras.patterns
   },
   dialogs: {
     clearAllTitle: "Hapus memori keuangan lokal?",
@@ -259,5 +279,8 @@ export const id: AppStrings = {
     categoryDeleteCustom: "{label} akan dihapus dari pencatatan dan batas anggaran. Memori yang ada tetap tersimpan.",
     memoryDeleteTitle: "Hapus memori?",
     memoryDeleteBody: "{title} akan dihapus dari Memori. Total anggaran dan analisis diperbarui otomatis."
-  }
+  },
+  toasts: idExtras.toasts,
+  analysis: idExtras.analysis,
+  storage: idExtras.storage
 };

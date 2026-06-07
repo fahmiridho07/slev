@@ -1,12 +1,13 @@
 import React, { useMemo } from "react";
 import { Text, View } from "react-native";
 import { EmptyState, ObservationPanel, SectionHeader } from "../../components";
+import { formatString } from "../../i18n";
 import { MonthlySummary } from "../app.types";
 import { getAllocationActionCopy, getAllocationRowCopy } from "../../lib/analysis";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
 import { buildAllocationPlan, getLatestBalanceSnapshots } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
-import { BalanceSnapshot, MoneyAccount, MoneyTransfer, MonthlyPlan } from "../spendingMemory.types";
+import { BalanceSnapshot, MoneyAccount, MoneyTransfer, MonthlyPlan, type PatternGroup } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 import { getAllocationFillStyle } from "../../theme/styles/fillStyles";
 
@@ -27,7 +28,8 @@ export function AllocationPanel({
   transfers: MoneyTransfer[];
   onOpenBalance: () => void;
 }) {
-  const { colors, styles } = useTheme();
+  const { colors, strings, styles } = useTheme();
+  const allocationStrings = strings.budget.allocation;
   const currentBalances = useMemo(() => getLatestBalanceSnapshots(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
   const allocation = useMemo(
     () =>
@@ -47,7 +49,7 @@ export function AllocationPanel({
       <ObservationPanel
         pattern={{
           id: "allocation-next-action",
-          group: "Repeated lately",
+          group: strings.patterns.groups.repeatedLately as PatternGroup,
           title: actionCopy.title,
           detail: actionCopy.detail,
           tone: actionCopy.tone
@@ -55,38 +57,40 @@ export function AllocationPanel({
       />
 
       {!monthlyPlan ? (
-        <EmptyState
-          text="Set a monthly plan to see your allocation."
-        />
+        <EmptyState text={allocationStrings.setPlanEmpty} />
       ) : (
         <>
           <View style={styles.allocationGrid}>
             <View style={styles.allocationMetric}>
-              <Text style={styles.microLabel}>Income</Text>
+              <Text style={styles.microLabel}>{allocationStrings.income}</Text>
               <Text style={styles.allocationValue}>{formatCompactRupiah(allocation.incomeReceived)}</Text>
-              <Text style={styles.settingCopy}>of {formatCompactRupiah(allocation.expectedIncome)}</Text>
+              <Text style={styles.settingCopy}>
+                {formatString(allocationStrings.ofPlanned, { planned: formatCompactRupiah(allocation.expectedIncome) })}
+              </Text>
             </View>
             <View style={styles.allocationMetric}>
-              <Text style={styles.microLabel}>Daily room</Text>
+              <Text style={styles.microLabel}>{allocationStrings.dailyRoom}</Text>
               <Text style={styles.allocationValue}>{formatCompactRupiah(allocation.dailyFlexibleRoom)}</Text>
-              <Text style={styles.settingCopy}>flexible until month end</Text>
+              <Text style={styles.settingCopy}>{allocationStrings.flexibleUntilMonthEnd}</Text>
             </View>
             <View style={styles.allocationMetric}>
-              <Text style={styles.microLabel}>Pocket cash</Text>
+              <Text style={styles.microLabel}>{allocationStrings.pocketCash}</Text>
               <Text style={styles.allocationValue}>{formatCompactRupiah(allocation.pocketBalance)}</Text>
-              <Text style={styles.settingCopy}>{allocation.pocketCoverageDays} day coverage</Text>
+              <Text style={styles.settingCopy}>
+                {formatString(allocationStrings.dayCoverage, { count: allocation.pocketCoverageDays })}
+              </Text>
             </View>
             <View style={styles.allocationMetric}>
-              <Text style={styles.microLabel}>Net left</Text>
+              <Text style={styles.microLabel}>{allocationStrings.netLeft}</Text>
               <Text style={[styles.allocationValue, allocation.savingsGap > 0 && styles.expenseText]}>
                 {formatSignedCompactRupiah(allocation.possibleSavings - (monthlyPlan.savingsTarget ?? 0))}
               </Text>
-              <Text style={styles.settingCopy}>against target</Text>
+              <Text style={styles.settingCopy}>{allocationStrings.againstTarget}</Text>
             </View>
           </View>
 
           <View style={styles.listPanel}>
-            <SectionHeader title="Monthly allocation" />
+            <SectionHeader title={allocationStrings.monthlyAllocation} />
             {allocation.rows.map((row) => {
               const rowCopy = getAllocationRowCopy(row);
               return (
@@ -110,8 +114,8 @@ export function AllocationPanel({
 
           {balanceSnapshots.length === 0 && (
             <EmptyState
-              text="Estimated from your logs. Add a snapshot to calibrate."
-              actionLabel="Open Balance"
+              text={allocationStrings.estimatedFromLogs}
+              actionLabel={allocationStrings.openBalance}
               onAction={onOpenBalance}
             />
           )}

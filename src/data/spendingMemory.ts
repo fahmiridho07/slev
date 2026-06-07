@@ -13,17 +13,6 @@ export const DEFAULT_SPENDING_CONTEXTS: SpendingContext[] = [
 
 export const SPENDING_CONTEXTS = DEFAULT_SPENDING_CONTEXTS;
 
-export const CONTEXT_HINTS: Record<string, string> = {
-  Meal: "Food, snacks, lunch",
-  Coffee: "Coffee or tea runs",
-  Transport: "Ride, fuel, parking",
-  Groceries: "Daily supplies",
-  Bills: "Recurring payments",
-  Treat: "Small nice things",
-  Home: "Household needs",
-  Other: "Anything else"
-};
-
 export function normalizeSpendingContext(value: string | undefined): SpendingContext {
   const normalized = String(value ?? "").trim().toLowerCase();
   const match = DEFAULT_SPENDING_CONTEXTS.find((context) => context.toLowerCase() === normalized);

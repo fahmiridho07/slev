@@ -5,16 +5,10 @@ import { EmptyState, ObservationPanel, SectionHeader } from "../../components";
 import { buildSpendingTrend, getPercentWidthStyle } from "../../lib/analysis";
 import { NetWorthPoint } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
-import { SpendingMoment } from "../spendingMemory.types";
+import { SpendingMoment, type PatternGroup } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
+import { formatLocaleShortDate } from "../../i18n/localeDate";
 import { CashflowPanel } from "./CashflowPanel";
-
-function formatTrendDate(isoDate: string): string {
-  return new Date(isoDate).toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short"
-  });
-}
 
 export function TrendsPanel({
   moments,
@@ -23,7 +17,8 @@ export function TrendsPanel({
   moments: SpendingMoment[];
   netWorthTrend: NetWorthPoint[];
 }) {
-  const { colors, styles } = useTheme();
+  const { colors, strings, styles } = useTheme();
+  const trendsStrings = strings.patterns.trends;
   const trend = useMemo(() => buildSpendingTrend(moments), [moments]);
   const netWorthPeak = useMemo(
     () => netWorthTrend.reduce((peak, point) => Math.max(peak, point.total), 0),
@@ -33,19 +28,19 @@ export function TrendsPanel({
   const hasNetWorthTrend = netWorthTrend.length >= 2;
 
   if (!hasSpendingTrend && !hasNetWorthTrend) {
-    return <EmptyState text="Trends appear after spending builds across months." />;
+    return <EmptyState text={trendsStrings.empty} />;
   }
 
   return (
     <View style={styles.analyticsBlock}>
       {hasNetWorthTrend ? (
         <>
-          <SectionHeader title="Net-worth trend" />
+          <SectionHeader title={trendsStrings.netWorthTrend} />
           <View style={styles.listPanel}>
             {netWorthTrend.map((point) => (
               <View key={point.date} style={styles.analyticsRow}>
                 <View style={styles.analyticsRowHeader}>
-                  <Text style={styles.analyticsTitle}>{formatTrendDate(point.date)}</Text>
+                  <Text style={styles.analyticsTitle}>{formatLocaleShortDate(point.date)}</Text>
                   <Text style={styles.analyticsAmount}>{formatCompactRupiah(point.total)}</Text>
                 </View>
                 <View style={styles.progressTrack}>
@@ -61,10 +56,10 @@ export function TrendsPanel({
           </View>
         </>
       ) : (
-        <EmptyState text="Snapshot your balances to see net-worth trend." />
+        <EmptyState text={trendsStrings.snapshotForNetWorth} />
       )}
 
-      {hasSpendingTrend && <SectionHeader title="Spending trend" />}
+      {hasSpendingTrend && <SectionHeader title={trendsStrings.spendingTrend} />}
       {hasSpendingTrend && <View style={styles.listPanel}>
         {trend.months.map((month) => (
           <View key={month.key} style={styles.analyticsRow}>
@@ -83,8 +78,8 @@ export function TrendsPanel({
         <ObservationPanel
           pattern={{
             id: "midpoint-trend",
-            group: "Stands out this week",
-            title: "Current month pace is visible",
+            group: strings.patterns.groups.standsOut as PatternGroup,
+            title: trendsStrings.currentPaceTitle,
             detail: trend.midpointMessage,
             tone: "warm"
           }}
@@ -95,11 +90,11 @@ export function TrendsPanel({
         <View style={styles.settingRow}>
           <Ionicons name="podium-outline" size={20} color={colors.greenDark} />
           <View style={styles.settingText}>
-            <Text style={styles.settingTitle}>Top categories this month</Text>
+            <Text style={styles.settingTitle}>{trendsStrings.topCategoriesTitle}</Text>
             <Text style={styles.settingCopy}>
               {trend.topCategories.length > 0
                 ? trend.topCategories.map((category) => `${category.label} ${formatCompactRupiah(category.amount)}`).join(" - ")
-                : "No category has stood out yet this month."}
+                : trendsStrings.topCategoriesEmpty}
             </Text>
           </View>
         </View>
@@ -107,7 +102,7 @@ export function TrendsPanel({
 
       {hasSpendingTrend && (
         <>
-          <SectionHeader title="Weekly cashflow" />
+          <SectionHeader title={trendsStrings.weeklyCashflow} />
           <CashflowPanel moments={moments} showEmpty={false} />
         </>
       )}

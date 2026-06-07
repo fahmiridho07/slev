@@ -1,12 +1,14 @@
 import React, { useMemo } from "react";
 import { Text, View } from "react-native";
+import { formatString } from "../../i18n";
 import { getPercentWidthStyle } from "../../lib/analysis";
 import { FinanceBreakdownRow } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { useTheme } from "../../hooks/useTheme";
 
 export function MonthlySpendingChart({ rows }: { rows: FinanceBreakdownRow[] }) {
-  const { colors, styles } = useTheme();
+  const { colors, strings, styles } = useTheme();
+  const chartStrings = strings.patterns.chart;
   const chartColors = useMemo(
     () => [
       colors.greenDark,
@@ -28,8 +30,10 @@ export function MonthlySpendingChart({ rows }: { rows: FinanceBreakdownRow[] }) 
 
   return (
     <View style={styles.capturePanel}>
-      <Text style={styles.microLabel}>This month at a glance</Text>
-      <Text style={styles.settingCopy}>{formatCompactRupiah(total)} across {rows.length} categories</Text>
+      <Text style={styles.microLabel}>{chartStrings.title}</Text>
+      <Text style={styles.settingCopy}>
+        {formatString(chartStrings.totalAcross, { total: formatCompactRupiah(total), count: rows.length })}
+      </Text>
 
       <View style={styles.chartStackTrack}>
         <View style={styles.chartStackRow}>
@@ -59,7 +63,10 @@ export function MonthlySpendingChart({ rows }: { rows: FinanceBreakdownRow[] }) 
               <Text style={styles.chartLegendLabel}>{row.label}</Text>
             </View>
             <Text style={styles.chartLegendValue}>
-              {formatCompactRupiah(row.amount)} · {Math.round(row.share * 100)}%
+              {formatString(chartStrings.legendValue, {
+                amount: formatCompactRupiah(row.amount),
+                percent: Math.round(row.share * 100)
+              })}
             </Text>
           </View>
         ))}

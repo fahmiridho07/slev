@@ -1,3 +1,4 @@
+import { getDefaultToastMessage } from "../i18n/toasts";
 import {
   BalanceSnapshot,
   BudgetLimit,
@@ -40,7 +41,7 @@ export const initialFinanceState: FinanceState = {
   feedback: [],
   isReady: false,
   manualTemplates: [],
-  message: "A spending memory can be as small as an amount.",
+  message: getDefaultToastMessage(),
   moments: [],
   monthlyPlan: null,
   recurringBills: [],

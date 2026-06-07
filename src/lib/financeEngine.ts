@@ -10,6 +10,7 @@ import {
   SpendingMoment
 } from "../features/spendingMemory.types";
 import { DEFAULT_SPENDING_CONTEXTS } from "../data/spendingMemory";
+import { getRuntimeStrings } from "../i18n/runtime";
 
 export type FinanceCategoryModeValue = CategoryMode["mode"];
 
@@ -172,7 +173,10 @@ export function buildMonthlyBreakdown(
   );
   const total = sumMoments(filtered);
   const grouped = filtered.reduce<Record<string, number>>((acc, moment) => {
-    const label = type === "income" ? moment.source || "Income" : moment.context;
+    const label =
+      type === "income"
+        ? moment.source || getRuntimeStrings().memory.momentTitle.income
+        : moment.context;
     acc[label] = (acc[label] ?? 0) + moment.amount;
     return acc;
   }, {});
