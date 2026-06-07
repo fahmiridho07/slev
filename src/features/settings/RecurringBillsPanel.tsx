@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { AccountPicker, ContextPicker, DeleteConfirmDialog, EmptyState, ListActionRow } from "../../components";
+import { AccountPicker, ContextPicker, DeleteConfirmDialog, EmptyState, ListActionRow, ListActionsOnboardingTip } from "../../components";
+import { useListActionsHint } from "../../hooks/useListActionsHint";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { MoneyAccount, RecurringBill, SpendingContext } from "../spendingMemory.types";
@@ -37,6 +38,7 @@ export function RecurringBillsPanel({
   const [dayOfMonth, setDayOfMonth] = useState("1");
   const [active, setActive] = useState(true);
   const [pendingDeleteBill, setPendingDeleteBill] = useState<RecurringBill | null>(null);
+  const { dismiss: dismissBillsHint, visible: showBillsHint } = useListActionsHint("recurring_bills", recurringBills.length > 0);
 
   function editBill(bill: RecurringBill) {
     setEditingBillId(bill.id);
@@ -67,6 +69,7 @@ export function RecurringBillsPanel({
 
       <Text style={styles.microLabel}>{editingBillId ? "Edit bill" : "Add bill"}</Text>
       <TextInput
+        accessibilityLabel="Bill name"
         onChangeText={setLabel}
         placeholder="Bill name, e.g. Internet"
         placeholderTextColor={colors.muted}
@@ -74,6 +77,7 @@ export function RecurringBillsPanel({
         value={label}
       />
       <TextInput
+        accessibilityLabel="Bill amount"
         keyboardType="number-pad"
         onChangeText={(value) => setAmount(formatAmountInput(value))}
         placeholder="Amount"
@@ -95,7 +99,12 @@ export function RecurringBillsPanel({
         style={styles.input}
         value={dayOfMonth}
       />
-      <Pressable onPress={() => setActive((current) => !current)} style={styles.secondaryInlineButton}>
+      <Pressable
+        accessibilityLabel={active ? "Bill active" : "Bill paused"}
+        accessibilityRole="button"
+        onPress={() => setActive((current) => !current)}
+        style={styles.secondaryInlineButton}
+      >
         <Ionicons name={active ? "checkmark-circle-outline" : "ellipse-outline"} size={16} color={colors.greenDark} />
         <Text style={styles.secondaryButtonText}>{active ? "Active" : "Paused"}</Text>
       </Pressable>
@@ -127,7 +136,9 @@ export function RecurringBillsPanel({
       {recurringBills.length === 0 ? (
         <EmptyState text="No recurring bills yet. Add one when you know a fixed monthly payment." />
       ) : (
-        <View style={styles.listPanel}>
+        <>
+          {showBillsHint && <ListActionsOnboardingTip onDismiss={dismissBillsHint} />}
+          <View style={styles.listPanel}>
           {recurringBills.map((bill, index) => (
             <View
               key={bill.id}
@@ -153,7 +164,8 @@ export function RecurringBillsPanel({
               </ListActionRow>
             </View>
           ))}
-        </View>
+          </View>
+        </>
       )}
 
       <DeleteConfirmDialog

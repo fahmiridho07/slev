@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useCallback, useMemo, useState } from "react";
-import { FlatList, Pressable, Text, TextInput, View } from "react-native";
-import { DeleteConfirmDialog, EmptyState, ListActionRow, ScreenHero } from "../components";
+import { FlatList, Pressable, StyleProp, Text, TextInput, View, ViewStyle } from "react-native";
+import { DeleteConfirmDialog, EmptyState, ListActionRow, ListActionsOnboardingTip, ScreenHero, SegmentedControl } from "../components";
+import { useListActionsHint } from "../hooks/useListActionsHint";
 import { ExpenseCategory } from "../features/spendingMemory.types";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
 import { getCategoryDeleteBody } from "../lib/analysis";
@@ -10,7 +11,13 @@ import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../sta
 import { colors } from "../theme/colors";
 import { styles } from "../theme/styles/app";
 
-function SettingsScreenComponent() {
+type SettingsTabKey = "bills" | "categories" | "data";
+
+type SettingsScreenProps = {
+  scrollContentStyle: StyleProp<ViewStyle>;
+};
+
+function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
   const actions = useActions();
   const { categoryLabels } = useDerived();
   const { accounts, expenseCategories, isReady, moments, recurringBills } = useFinanceSelector(
@@ -25,12 +32,17 @@ function SettingsScreenComponent() {
   );
   const momentCount = moments.length;
 
+  const [activeTab, setActiveTab] = useState<SettingsTabKey>("bills");
   const [editingCategoryId, setEditingCategoryId] = useState<string | undefined>(undefined);
   const [categoryDraft, setCategoryDraft] = useState("");
   const [pendingDeleteCategory, setPendingDeleteCategory] = useState<ExpenseCategory | null>(null);
   const [importDraft, setImportDraft] = useState("");
   const [importConfirmVisible, setImportConfirmVisible] = useState(false);
   const [pendingResetIssue, setPendingResetIssue] = useState<StorageHealthIssue | null>(null);
+  const { dismiss: dismissCategoriesHint, visible: showCategoriesHint } = useListActionsHint(
+    "settings_categories",
+    activeTab === "categories" && expenseCategories.length > 0
+  );
 
   function editCategory(category: ExpenseCategory) {
     setEditingCategoryId(category.id);
@@ -52,9 +64,9 @@ function SettingsScreenComponent() {
         ]}
       >
         <ListActionRow
+          accessibilityLabel={category.isDefault ? category.label : `Edit category ${category.label}`}
           onDelete={() => setPendingDeleteCategory(category)}
           onPress={!category.isDefault ? () => editCategory(category) : undefined}
-          accessibilityLabel={category.isDefault ? category.label : `Edit category ${category.label}`}
         >
           <View style={styles.analyticsRow}>
             <View style={styles.analyticsRowHeader}>
@@ -79,14 +91,68 @@ function SettingsScreenComponent() {
           hint={`${accounts.length} account${accounts.length === 1 ? "" : "s"} · ${recurringBills.length} recurring bill${recurringBills.length === 1 ? "" : "s"}`}
           kicker="Settings"
           value={`${momentCount} memor${momentCount === 1 ? "y" : "ies"}`}
+          variant="surface"
         />
 
-        {corruptIssues.length > 0 && (
+        <SegmentedControl
+          options={[
+            { label: "Bills", value: "bills" },
+            { label: "Categories", value: "categories" },
+            { label: "Data", value: "data" }
+          ]}
+          selected={activeTab}
+          stretch
+          onSelect={setActiveTab}
+        />
+
+        {activeTab === "bills" && (
+          <RecurringBillsPanel
+            accounts={accounts}
+            categoryLabels={categoryLabels}
+            recurringBills={recurringBills}
+            onDeleteBill={(id) => void actions.removeRecurringBill(id)}
+            onSaveBill={(input) => void actions.saveRecurringBill(input)}
+          />
+        )}
+
+        {activeTab === "categories" && (
+          <>
+            {showCategoriesHint && <ListActionsOnboardingTip onDismiss={dismissCategoriesHint} />}
+            <View style={styles.capturePanel}>
+              <Text style={styles.microLabel}>{editingCategoryId ? "Edit category" : "Add expense category"}</Text>
+              <TextInput
+                accessibilityLabel="Category name"
+                onChangeText={setCategoryDraft}
+                placeholder="e.g. Health, Subscriptions, Hobby"
+                placeholderTextColor={colors.muted}
+                style={styles.input}
+                value={categoryDraft}
+              />
+              <View style={styles.editActions}>
+                {editingCategoryId && (
+                  <Pressable accessibilityRole="button" onPress={resetCategoryDraft} style={styles.secondaryButton}>
+                    <Text style={styles.secondaryButtonText}>Cancel</Text>
+                  </Pressable>
+                )}
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => {
+                    void actions.saveCategory({ id: editingCategoryId, label: categoryDraft });
+                    resetCategoryDraft();
+                  }}
+                  style={styles.smallPrimaryButton}
+                >
+                  <Text style={styles.primaryButtonText}>Save category</Text>
+                </Pressable>
+              </View>
+            </View>
+          </>
+        )}
+
+        {activeTab === "data" && corruptIssues.length > 0 && (
           <View style={styles.capturePanel}>
             <Text style={styles.microLabel}>Data health</Text>
-            <Text style={styles.settingCopy}>
-              Some data looks damaged. Export a backup before resetting.
-            </Text>
+            <Text style={styles.settingCopy}>Some data looks damaged. Export a backup before resetting.</Text>
             {corruptIssues.map((issue) => (
               <View key={issue.key} style={styles.analyticsRow}>
                 <View style={styles.analyticsRowHeader}>
@@ -105,100 +171,74 @@ function SettingsScreenComponent() {
             ))}
           </View>
         )}
-
-        <RecurringBillsPanel
-          accounts={accounts}
-          categoryLabels={categoryLabels}
-          recurringBills={recurringBills}
-          onDeleteBill={(id) => void actions.removeRecurringBill(id)}
-          onSaveBill={(input) => void actions.saveRecurringBill(input)}
-        />
-
-        <View style={styles.capturePanel}>
-          <Text style={styles.microLabel}>{editingCategoryId ? "Edit category" : "Add expense category"}</Text>
-          <TextInput
-            onChangeText={setCategoryDraft}
-            placeholder="e.g. Health, Subscriptions, Hobby"
-            placeholderTextColor={colors.muted}
-            style={styles.input}
-            value={categoryDraft}
-          />
-          <View style={styles.editActions}>
-            {editingCategoryId && (
-              <Pressable onPress={resetCategoryDraft} style={styles.secondaryButton}>
-                <Text style={styles.secondaryButtonText}>Cancel</Text>
-              </Pressable>
-            )}
-            <Pressable
-              onPress={() => {
-                void actions.saveCategory({ id: editingCategoryId, label: categoryDraft });
-                resetCategoryDraft();
-              }}
-              style={styles.smallPrimaryButton}
-            >
-              <Text style={styles.primaryButtonText}>Save category</Text>
-            </Pressable>
-          </View>
-        </View>
       </>
     );
-  }, [accounts, actions, categoryDraft, categoryLabels, editingCategoryId, isReady, momentCount, recurringBills]);
+  }, [
+    accounts.length,
+    actions,
+    activeTab,
+    categoryDraft,
+    dismissCategoriesHint,
+    editingCategoryId,
+    expenseCategories.length,
+    isReady,
+    momentCount,
+    recurringBills.length,
+    showCategoriesHint
+  ]);
 
-  const listFooter = useMemo(
-    () => (
-      <>
-        <View style={styles.capturePanel}>
-          <Text style={styles.microLabel}>Backup</Text>
-          <Text style={styles.settingCopy}>
-            Export your data as JSON, or paste a backup to restore.
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => void actions.exportLocalBackup()}
-            style={styles.secondaryInlineButton}
-          >
-            <Ionicons name="share-outline" size={16} color={colors.greenDark} />
-            <Text style={styles.secondaryButtonText}>Export JSON backup</Text>
+  const listFooter = useMemo(() => {
+    if (activeTab === "data") {
+      return (
+        <>
+          <View style={styles.capturePanel}>
+            <Text style={styles.microLabel}>Backup</Text>
+            <Text style={styles.settingCopy}>Export your data as JSON, or paste a backup to restore.</Text>
+            <Pressable accessibilityRole="button" onPress={() => void actions.exportLocalBackup()} style={styles.secondaryInlineButton}>
+              <Ionicons name="share-outline" size={16} color={colors.greenDark} />
+              <Text style={styles.secondaryButtonText}>Export JSON backup</Text>
+            </Pressable>
+            <TextInput
+              accessibilityLabel="Backup JSON"
+              multiline
+              onChangeText={setImportDraft}
+              placeholder="Paste a Slev backup JSON here"
+              placeholderTextColor={colors.muted}
+              style={[styles.input, { minHeight: 120, textAlignVertical: "top" }]}
+              value={importDraft}
+            />
+            <Pressable
+              accessibilityRole="button"
+              disabled={!importDraft.trim()}
+              onPress={() => setImportConfirmVisible(true)}
+              style={[styles.smallPrimaryButton, !importDraft.trim() ? { opacity: 0.5 } : undefined]}
+            >
+              <Text style={styles.primaryButtonText}>Import backup</Text>
+            </Pressable>
+          </View>
+
+          <Pressable accessibilityRole="button" onPress={() => actions.clearAll()} style={styles.dangerButton}>
+            <Ionicons name="trash-outline" size={18} color={colors.coral} />
+            <Text style={styles.dangerButtonText}>Clear local finance memory</Text>
           </Pressable>
-          <TextInput
-            multiline
-            onChangeText={setImportDraft}
-            placeholder="Paste a Slev backup JSON here"
-            placeholderTextColor={colors.muted}
-            style={[styles.input, { minHeight: 120, textAlignVertical: "top" }]}
-            value={importDraft}
-          />
-          <Pressable
-            accessibilityRole="button"
-            disabled={!importDraft.trim()}
-            onPress={() => setImportConfirmVisible(true)}
-            style={[styles.smallPrimaryButton, !importDraft.trim() ? { opacity: 0.5 } : undefined]}
-          >
-            <Text style={styles.primaryButtonText}>Import backup</Text>
-          </Pressable>
-        </View>
+        </>
+      );
+    }
+    return null;
+  }, [actions, activeTab, importDraft]);
 
-        <Pressable accessibilityRole="button" onPress={() => actions.clearAll()} style={styles.dangerButton}>
-          <Ionicons name="trash-outline" size={18} color={colors.coral} />
-          <Text style={styles.dangerButtonText}>Clear local finance memory</Text>
-        </Pressable>
-      </>
-    ),
-    [actions, importDraft]
-  );
-
-  const listEmpty = useMemo(
-    () => (
-      <EmptyState text="No active categories. Add a category above to start assigning expenses again." />
-    ),
-    []
-  );
+  const listEmpty = useMemo(() => {
+    if (activeTab !== "categories") {
+      return null;
+    }
+    return <EmptyState text="No active categories. Add a category above to start assigning expenses again." />;
+  }, [activeTab]);
 
   return (
     <>
       <FlatList
-        contentContainerStyle={styles.scrollContent}
-        data={expenseCategories}
+        contentContainerStyle={scrollContentStyle}
+        data={activeTab === "categories" ? expenseCategories : []}
         keyExtractor={categoryKeyExtractor}
         ListEmptyComponent={listEmpty}
         ListFooterComponent={listFooter}

@@ -1,7 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
-import { AccountPicker, AccountTitle, DeleteConfirmDialog, EmptyState, ListActionRow, SectionHeader, SegmentedControl } from "../../components";
+import {
+  AccountPicker,
+  AccountTitle,
+  DeleteConfirmDialog,
+  EmptyState,
+  ListActionRow,
+  ListActionsOnboardingTip,
+  SectionHeader,
+  SegmentedControl
+} from "../../components";
+import { useListActionsHint } from "../../hooks/useListActionsHint";
 import { formatAmountInput, formatSignedCompactRupiah } from "../../lib/formatMoney";
 import {
   AccountDriftRow,
@@ -131,6 +141,7 @@ export function BalancePanel({
 
   const accountKeyExtractor = useCallback((account: MoneyAccount) => account.id, []);
   const balanceKeyExtractor = useCallback((snapshot: BalanceSnapshot) => snapshot.id, []);
+  const { dismiss: dismissAccountsHint, visible: showAccountsHint } = useListActionsHint("balance_accounts", accounts.length > 0);
 
   return (
     <View style={styles.analyticsBlock}>
@@ -194,6 +205,8 @@ export function BalancePanel({
         />
         <TextInput keyboardType="number-pad" onChangeText={(value) => setAmount(formatAmountInput(value))} placeholder="Current balance" placeholderTextColor={colors.muted} style={styles.input} value={amount} />
         <Pressable
+          accessibilityLabel="Save balance snapshot"
+          accessibilityRole="button"
           onPress={() => {
             onSaveBalance({ accountLabel, amount });
             setAmount("");
@@ -266,6 +279,7 @@ export function BalancePanel({
         </View>
       </View>
 
+      {showAccountsHint && <ListActionsOnboardingTip onDismiss={dismissAccountsHint} />}
       <SectionHeader title="Your accounts" />
       <View style={styles.listPanel}>
         <FlatList

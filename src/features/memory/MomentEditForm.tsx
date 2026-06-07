@@ -53,7 +53,7 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
   }, [accountLabel, actions, amountText, context, label, moment.id, note, onSaved, source, type]);
 
   return (
-    <View style={styles.editPanel}>
+    <View style={styles.repeatBlock}>
       <TextInput
         keyboardType="number-pad"
         onChangeText={(value) => setAmountText(formatAmountInput(value))}
@@ -96,10 +96,10 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
         value={note}
       />
       <View style={styles.editActions}>
-        <Pressable onPress={onCancel} style={styles.secondaryButton}>
+        <Pressable accessibilityRole="button" onPress={onCancel} style={styles.secondaryButton}>
           <Text style={styles.secondaryButtonText}>Cancel</Text>
         </Pressable>
-        <Pressable onPress={() => void save()} style={styles.smallPrimaryButton}>
+        <Pressable accessibilityRole="button" onPress={() => void save()} style={styles.smallPrimaryButton}>
           <Text style={styles.primaryButtonText}>Save</Text>
         </Pressable>
       </View>

@@ -234,7 +234,7 @@ export const componentStyles = StyleSheet.create({
     color: colors.ink,
     flex: 1,
     fontSize: 14,
-    fontWeight: "900",
+    fontWeight: "700",
     letterSpacing: 0
   },
   contextPickerBlock: {
@@ -336,6 +336,11 @@ export const componentStyles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20
   },
+  feedbackRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
   feedbackButton: {
     backgroundColor: colors.surface,
     borderColor: colors.line,
@@ -351,7 +356,7 @@ export const componentStyles = StyleSheet.create({
   feedbackText: {
     color: colors.greenDark,
     fontSize: 13,
-    fontWeight: "800"
+    fontWeight: "700"
   },
   feedbackTextActive: {
     color: colors.surface
@@ -503,6 +508,40 @@ export const componentStyles = StyleSheet.create({
   onboardingTipActionText: {
     color: colors.greenDark,
     fontSize: 13,
+    fontWeight: "700"
+  },
+  sheetBackdrop: {
+    backgroundColor: "rgba(24, 32, 28, 0.36)",
+    flex: 1,
+    justifyContent: "flex-end"
+  },
+  sheetKeyboard: {
+    justifyContent: "flex-end",
+    width: "100%"
+  },
+  sheetCard: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    borderWidth: 1,
+    gap: 12,
+    maxHeight: "88%",
+    paddingBottom: 24,
+    paddingHorizontal: 20,
+    paddingTop: 10
+  },
+  sheetHandle: {
+    alignSelf: "center",
+    backgroundColor: colors.line,
+    borderRadius: 999,
+    height: 4,
+    marginBottom: 4,
+    width: 40
+  },
+  sheetTitle: {
+    color: colors.ink,
+    fontSize: 17,
     fontWeight: "700"
   }
 });

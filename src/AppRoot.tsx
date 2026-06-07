@@ -5,16 +5,18 @@ import { Image, KeyboardAvoidingView, Platform, Pressable, Text, View } from "re
 import { SafeAreaView } from "react-native-safe-area-context";
 import { DeleteConfirmDialog } from "./components";
 import { BRAND } from "./data/brand";
+import { useLayoutInsets } from "./hooks/useLayoutInsets";
+import { BudgetTabKey } from "./features/app.types";
+import { AppNavigation, AppTabKey } from "./navigation/appNavigation";
 import { BudgetScreen, HomeScreen, MemoryScreen, PatternsScreen, SettingsScreen } from "./screens";
+import { initialFinanceState } from "./state/financeReducer";
 import { shallowEqual, useActions, useFinanceSelector } from "./state/useFinance";
 import { colors } from "./theme/colors";
 import { styles } from "./theme/styles/app";
 
 const SLEV_MARK = require("../assets/brand/slev-mark-transparent.png");
 
-type TabKey = "home" | "memory" | "budget" | "patterns" | "settings";
-
-const tabs: { key: TabKey; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+const tabs: { key: AppTabKey; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { key: "home", label: "Home", icon: "home-outline" },
   { key: "memory", label: "Memory", icon: "albums-outline" },
   { key: "budget", label: "Budget", icon: "wallet-outline" },
@@ -39,8 +41,12 @@ export function AppRoot() {
     }),
     shallowEqual
   );
-  const [activeTab, setActiveTab] = useState<TabKey>("home");
-  const [returnTab, setReturnTab] = useState<TabKey>("home");
+  const { scrollContentStyle, tabBarStyle } = useLayoutInsets();
+  const [activeTab, setActiveTab] = useState<AppTabKey>("home");
+  const [returnTab, setReturnTab] = useState<AppTabKey>("home");
+  const [budgetTab, setBudgetTab] = useState<BudgetTabKey>("plan");
+  const [toastMessage, setToastMessage] = useState("");
+
   const openSettings = () => {
     if (activeTab !== "settings") {
       setReturnTab(activeTab);
@@ -49,6 +55,35 @@ export function AppRoot() {
   };
   const closeSettings = () => setActiveTab(returnTab);
   const inSettings = activeTab === "settings";
+
+  const navigation: AppNavigation = {
+    openBudgetPlan: () => {
+      setBudgetTab("plan");
+      setActiveTab("budget");
+    },
+    openHome: () => setActiveTab("home"),
+    openMemory: () => setActiveTab("memory"),
+    openSettings: () => {
+      if (activeTab !== "settings") {
+        setReturnTab(activeTab);
+      }
+      setActiveTab("settings");
+    }
+  };
+
+  useEffect(() => {
+    if (!isReady) {
+      setToastMessage("");
+      return;
+    }
+    if (!message || message === initialFinanceState.message) {
+      setToastMessage("");
+      return;
+    }
+    setToastMessage(message);
+    const timer = setTimeout(() => setToastMessage(""), 4000);
+    return () => clearTimeout(timer);
+  }, [isReady, message]);
 
   return (
     <>
@@ -81,7 +116,7 @@ export function AppRoot() {
                 />
               </Pressable>
             </View>
-            <Text style={styles.headerMessage}>{message}</Text>
+            {toastMessage ? <Text style={styles.headerMessage}>{toastMessage}</Text> : null}
           </View>
 
           <View style={styles.content}>
@@ -90,14 +125,25 @@ export function AppRoot() {
                 <Text style={styles.bootText}>Preparing local memory...</Text>
               </View>
             )}
-            {isReady && activeTab === "home" && <HomeScreen onOpenSettings={openSettings} />}
-            {isReady && activeTab === "memory" && <MemoryScreen />}
-            {isReady && activeTab === "budget" && <BudgetScreen onOpenSettings={openSettings} />}
-            {isReady && activeTab === "patterns" && <PatternsScreen />}
-            {isReady && activeTab === "settings" && <SettingsScreen />}
+            {isReady && activeTab === "home" && (
+              <HomeScreen navigation={navigation} onOpenSettings={openSettings} scrollContentStyle={scrollContentStyle} />
+            )}
+            {isReady && activeTab === "memory" && (
+              <MemoryScreen navigation={navigation} scrollContentStyle={scrollContentStyle} />
+            )}
+            {isReady && activeTab === "budget" && (
+              <BudgetScreen
+                activeBudgetTab={budgetTab}
+                onBudgetTabChange={setBudgetTab}
+                onOpenSettings={openSettings}
+                scrollContentStyle={scrollContentStyle}
+              />
+            )}
+            {isReady && activeTab === "patterns" && <PatternsScreen scrollContentStyle={scrollContentStyle} />}
+            {isReady && activeTab === "settings" && <SettingsScreen scrollContentStyle={scrollContentStyle} />}
           </View>
 
-          <View style={styles.tabBar}>
+          <View style={tabBarStyle}>
             {tabs.map((tab) => {
               const isActive = !inSettings && activeTab === tab.key;
               return (

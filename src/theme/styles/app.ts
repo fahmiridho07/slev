@@ -75,9 +75,9 @@ const screenStyles = StyleSheet.create({
     letterSpacing: 0
   },
   scrollContent: {
+    gap: 18,
     padding: 20,
-    paddingBottom: 112,
-    gap: 18
+    paddingBottom: 98
   },
   capturePanel: {
     backgroundColor: colors.surface,
@@ -568,6 +568,32 @@ const screenStyles = StyleSheet.create({
     gap: 6,
     padding: 18
   },
+  heroPanelInfo: {
+    backgroundColor: colors.surfaceInfo,
+    borderColor: colors.borderInfo,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 6,
+    padding: 18
+  },
+  heroPanelSurface: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 6,
+    padding: 18
+  },
+  heroActionButton: {
+    alignSelf: "flex-start",
+    minHeight: 36,
+    justifyContent: "center"
+  },
+  heroActionText: {
+    color: colors.greenDark,
+    fontSize: 13,
+    fontWeight: "700"
+  },
   heroValue: {
     color: colors.ink,
     fontSize: 28,
@@ -659,7 +685,7 @@ const screenStyles = StyleSheet.create({
   budgetCategory: {
     color: colors.ink,
     fontSize: 15,
-    fontWeight: "900",
+    fontWeight: "700",
     letterSpacing: 0
   },
   budgetMeta: {
@@ -716,31 +742,6 @@ const screenStyles = StyleSheet.create({
     fontWeight: "800",
     lineHeight: 19
   },
-  feedbackRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8
-  },
-  feedbackButton: {
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 8
-  },
-  feedbackButtonActive: {
-    backgroundColor: colors.greenDark,
-    borderColor: colors.greenDark
-  },
-  feedbackText: {
-    color: colors.greenDark,
-    fontSize: 13,
-    fontWeight: "800"
-  },
-  feedbackTextActive: {
-    color: colors.surface
-  },
   analyticsBlock: {
     gap: 14
   },
@@ -760,13 +761,13 @@ const screenStyles = StyleSheet.create({
     color: colors.ink,
     flex: 1,
     fontSize: 14,
-    fontWeight: "900",
+    fontWeight: "700",
     letterSpacing: 0
   },
   analyticsAmount: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: "800",
+    fontWeight: "600",
     letterSpacing: 0,
     textAlign: "right"
   },
@@ -950,7 +951,7 @@ const screenStyles = StyleSheet.create({
   tabLabel: {
     color: colors.muted,
     fontSize: 11,
-    fontWeight: "800",
+    fontWeight: "700",
     letterSpacing: 0
   },
   tabLabelActive: {

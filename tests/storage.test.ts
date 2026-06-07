@@ -17,7 +17,7 @@ import {
   runMigrations,
   STORAGE_KEYS
 } from "../src/services/storageSchema";
-import { hasSeenMemoryListHint, markMemoryListHintSeen } from "../src/services/uiPreferences";
+import { hasSeenListActionsHint, markListActionsHintSeen } from "../src/services/uiPreferences";
 
 declare const process: {
   exitCode?: number;
@@ -313,19 +313,20 @@ test("exportAllData and importAllData round-trip finance collections", async () 
   assertEqual(moments[0]?.amount, 25000, "imported amount preserved");
 });
 
-test("memory list hint defaults to unseen", async () => {
+test("list actions hint defaults to unseen", async () => {
   const driver = createMemoryDriver();
   setStorageDriver(driver);
 
-  assertEqual(await hasSeenMemoryListHint(), false, "hint starts unseen");
+  assertEqual(await hasSeenListActionsHint("memory"), false, "hint starts unseen");
 });
 
-test("memory list hint persists after dismiss", async () => {
+test("list actions hint persists after dismiss", async () => {
   const driver = createMemoryDriver();
   setStorageDriver(driver);
 
-  await markMemoryListHintSeen();
-  assertEqual(await hasSeenMemoryListHint(), true, "hint marked seen");
+  await markListActionsHintSeen("goals");
+  assertEqual(await hasSeenListActionsHint("goals"), true, "hint marked seen");
+  assertEqual(await hasSeenListActionsHint("memory"), false, "other hints stay unseen");
 });
 
 async function runTests(): Promise<void> {

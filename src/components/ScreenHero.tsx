@@ -1,17 +1,31 @@
 import React, { memo } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { styles } from "../theme/styles/app";
 
 type ScreenHeroProps = {
+  actionLabel?: string;
   hint?: string;
   kicker: string;
+  onAction?: () => void;
   value?: string;
   valueTone?: "balance" | "danger" | "default" | "income";
+  variant?: "info" | "mint" | "surface";
 };
 
-function ScreenHeroComponent({ hint, kicker, value, valueTone = "default" }: ScreenHeroProps) {
+function ScreenHeroComponent({
+  actionLabel,
+  hint,
+  kicker,
+  onAction,
+  value,
+  valueTone = "default",
+  variant = "mint"
+}: ScreenHeroProps) {
+  const panelStyle =
+    variant === "info" ? styles.heroPanelInfo : variant === "surface" ? styles.heroPanelSurface : styles.heroPanel;
+
   return (
-    <View style={styles.heroPanel}>
+    <View style={panelStyle}>
       <Text style={styles.kicker}>{kicker}</Text>
       {value ? (
         <Text
@@ -26,6 +40,11 @@ function ScreenHeroComponent({ hint, kicker, value, valueTone = "default" }: Scr
         </Text>
       ) : null}
       {hint ? <Text style={styles.heroHint}>{hint}</Text> : null}
+      {actionLabel && onAction ? (
+        <Pressable accessibilityLabel={actionLabel} accessibilityRole="button" onPress={onAction} style={styles.heroActionButton}>
+          <Text style={styles.heroActionText}>{actionLabel}</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

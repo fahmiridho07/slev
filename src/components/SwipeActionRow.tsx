@@ -35,7 +35,8 @@ function SwipeActionRowComponent({
     () =>
       PanResponder.create({
         onMoveShouldSetPanResponder: (_, gesture) =>
-          canDelete && Math.abs(gesture.dx) > 10 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+          canDelete && gesture.dx < -12 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2,
+        onStartShouldSetPanResponder: () => false,
         onPanResponderMove: (_, gesture) => {
           const base = isOpenRef.current ? -SWIPE_DELETE_ACTION_WIDTH : 0;
           const nextPosition = Math.max(

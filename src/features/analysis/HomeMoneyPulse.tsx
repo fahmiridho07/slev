@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { MonthlyPlan, SavingsGoal } from "../spendingMemory.types";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
@@ -14,6 +14,7 @@ type HomeMoneyPulseProps = {
   latestBalanceTotal: number;
   monthlyPlan: MonthlyPlan | null;
   monthlySummary: MonthlySummary;
+  onOpenBudgetPlan?: () => void;
   runwayMonths: number | null;
   savingsGoals: SavingsGoal[];
 };
@@ -24,6 +25,7 @@ export function HomeMoneyPulse({
   latestBalanceTotal,
   monthlyPlan,
   monthlySummary,
+  onOpenBudgetPlan,
   runwayMonths,
   savingsGoals
 }: HomeMoneyPulseProps) {
@@ -47,6 +49,10 @@ export function HomeMoneyPulse({
         </View>
         {showSafeToSpend ? (
           <Text style={styles.pulseHeroValue}>{formatCompactRupiah(dailyFlexibleRoom)}</Text>
+        ) : onOpenBudgetPlan ? (
+          <Pressable accessibilityLabel="Set a monthly plan" accessibilityRole="button" onPress={onOpenBudgetPlan}>
+            <Text style={styles.heroActionText}>Set a monthly plan</Text>
+          </Pressable>
         ) : (
           <Text style={styles.pulseHeroHint}>Set a monthly plan to see this</Text>
         )}

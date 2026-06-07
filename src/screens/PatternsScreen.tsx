@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, StyleProp, View, ViewStyle } from "react-native";
 import { ScreenHero, SegmentedControl } from "../components";
 import { AccountAnalysisPanel } from "../features/analysis/AccountAnalysisPanel";
 import { BreakdownPanel } from "../features/analysis/BreakdownPanel";
@@ -10,7 +10,11 @@ import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
 import { styles } from "../theme/styles/app";
 
-function PatternsScreenComponent() {
+type PatternsScreenProps = {
+  scrollContentStyle: StyleProp<ViewStyle>;
+};
+
+function PatternsScreenComponent({ scrollContentStyle }: PatternsScreenProps) {
   const actions = useActions();
   const { feedbackByPattern, latestBalanceTotal, monthlySummary, netWorthTrend, patterns, projectedBalanceSnapshots } =
     useDerived();
@@ -31,7 +35,8 @@ function PatternsScreenComponent() {
         hint: `${formatCompactRupiah(monthlySummary.income)} income logged this month`,
         kicker: "Spending this month",
         value: formatCompactRupiah(monthlySummary.expense),
-        valueTone: "danger" as const
+        valueTone: "danger" as const,
+        variant: "info" as const
       };
     }
     if (activePatternTab === "accounts") {
@@ -39,20 +44,22 @@ function PatternsScreenComponent() {
         hint: netWorthTrend.length >= 2 ? "Net-worth trend available below" : "Add balance snapshots for trends",
         kicker: "Estimated balance",
         value: formatCompactRupiah(latestBalanceTotal),
-        valueTone: "balance" as const
+        valueTone: "balance" as const,
+        variant: "info" as const
       };
     }
     return {
       hint: patterns.length > 0 ? "Tap a pattern to leave quick feedback" : "Patterns appear after a few saved moments",
       kicker: "Spending recap",
       value: patterns.length > 0 ? `${patterns.length} pattern${patterns.length === 1 ? "" : "s"}` : undefined,
-      valueTone: "default" as const
+      valueTone: "default" as const,
+      variant: "surface" as const
     };
   }, [activePatternTab, latestBalanceTotal, monthlySummary.expense, monthlySummary.income, netWorthTrend.length, patterns.length]);
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      <ScreenHero hint={hero.hint} kicker={hero.kicker} value={hero.value} valueTone={hero.valueTone} />
+    <ScrollView contentContainerStyle={scrollContentStyle}>
+      <ScreenHero hint={hero.hint} kicker={hero.kicker} value={hero.value} valueTone={hero.valueTone} variant={hero.variant} />
 
       <SegmentedControl
         options={[

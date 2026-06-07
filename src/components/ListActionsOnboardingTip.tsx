@@ -4,22 +4,26 @@ import { Pressable, Text, View } from "react-native";
 import { colors } from "../theme/colors";
 import { componentStyles } from "../theme/styles/components";
 
-type MemoryOnboardingTipProps = {
+type ListActionsOnboardingTipProps = {
+  body?: string;
   onDismiss: () => void;
+  title?: string;
 };
 
-function MemoryOnboardingTipComponent({ onDismiss }: MemoryOnboardingTipProps) {
+function ListActionsOnboardingTipComponent({
+  body = "Tap any row to edit. Swipe left on a row to delete.",
+  onDismiss,
+  title = "How list actions work"
+}: ListActionsOnboardingTipProps) {
   return (
     <View style={componentStyles.onboardingTip}>
       <View style={componentStyles.onboardingTipTitleRow}>
         <Ionicons name="hand-left-outline" size={18} color={colors.blue} />
-        <Text style={componentStyles.onboardingTipTitle}>How list actions work</Text>
+        <Text style={componentStyles.onboardingTipTitle}>{title}</Text>
       </View>
-      <Text style={componentStyles.onboardingTipBody}>
-        Tap any row to edit. Swipe left on a row to delete.
-      </Text>
+      <Text style={componentStyles.onboardingTipBody}>{body}</Text>
       <Pressable
-        accessibilityLabel="Dismiss memory list tip"
+        accessibilityLabel="Dismiss list actions tip"
         accessibilityRole="button"
         onPress={onDismiss}
         style={componentStyles.onboardingTipAction}
@@ -30,4 +34,4 @@ function MemoryOnboardingTipComponent({ onDismiss }: MemoryOnboardingTipProps) {
   );
 }
 
-export const MemoryOnboardingTip = memo(MemoryOnboardingTipComponent);
+export const ListActionsOnboardingTip = memo(ListActionsOnboardingTipComponent);

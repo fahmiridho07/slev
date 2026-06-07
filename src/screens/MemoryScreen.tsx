@@ -1,46 +1,45 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
-import { SectionList, Text, TextInput, View } from "react-native";
-import { DeleteConfirmDialog, EmptyState, ListActionRow, MemoryOnboardingTip, MomentRow, ScreenHero } from "../components";
-import { hasSeenMemoryListHint, markMemoryListHintSeen } from "../services/uiPreferences";
+import React, { memo, useCallback, useMemo, useState } from "react";
+import { SectionList, StyleProp, Text, TextInput, View, ViewStyle } from "react-native";
+import {
+  BottomSheet,
+  DeleteConfirmDialog,
+  EmptyState,
+  ListActionRow,
+  ListActionsOnboardingTip,
+  MomentRow,
+  ScreenHero
+} from "../components";
+import { useListActionsHint } from "../hooks/useListActionsHint";
 import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { MomentEditForm } from "../features/memory/MomentEditForm";
 import { SpendingMoment } from "../features/spendingMemory.types";
 import { buildRepeatHints, filterMoments, getMomentTitle, groupMomentsByRecallRange } from "../lib/analysis";
+import { AppNavigation } from "../navigation/appNavigation";
 import { useActions, useFinanceSelector } from "../state/useFinance";
 import { colors } from "../theme/colors";
 import { styles } from "../theme/styles/app";
 
 type MemoryMomentItemProps = {
-  isEditing: boolean;
   moment: SpendingMoment;
-  onCancelEdit: () => void;
   onDelete: (moment: SpendingMoment) => void;
-  onSaved: () => void;
   onStartEdit: (moment: SpendingMoment) => void;
   repeatHint?: string;
 };
 
 const MemoryMomentItem = memo(function MemoryMomentItem({
-  isEditing,
   moment,
-  onCancelEdit,
   onDelete,
-  onSaved,
   onStartEdit,
   repeatHint
 }: MemoryMomentItemProps) {
   return (
-    <View>
-      <ListActionRow
-        accessibilityLabel={`Edit ${getMomentTitle(moment)}`}
-        onDelete={() => onDelete(moment)}
-        onPress={() => onStartEdit(moment)}
-      >
-        <MomentRow moment={moment} repeatHint={repeatHint} />
-      </ListActionRow>
-
-      {isEditing && <MomentEditForm moment={moment} onCancel={onCancelEdit} onSaved={onSaved} />}
-    </View>
+    <ListActionRow
+      accessibilityLabel={`Edit ${getMomentTitle(moment)}`}
+      onDelete={() => onDelete(moment)}
+      onPress={() => onStartEdit(moment)}
+    >
+      <MomentRow moment={moment} repeatHint={repeatHint} />
+    </ListActionRow>
   );
 });
 
@@ -50,33 +49,19 @@ type MemorySection = {
   title: string;
 };
 
-function MemoryScreenComponent() {
+type MemoryScreenProps = {
+  navigation: AppNavigation;
+  scrollContentStyle: StyleProp<ViewStyle>;
+};
+
+function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenProps) {
   const actions = useActions();
   const moments = useFinanceSelector((state) => state.moments);
 
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingMoment, setEditingMoment] = useState<SpendingMoment | null>(null);
   const [query, setQuery] = useState("");
   const [pendingDeleteMoment, setPendingDeleteMoment] = useState<SpendingMoment | null>(null);
-  const [showListHint, setShowListHint] = useState(false);
-
-  useEffect(() => {
-    if (moments.length === 0) {
-      setShowListHint(false);
-      return;
-    }
-
-    let active = true;
-    void (async () => {
-      const seen = await hasSeenMemoryListHint();
-      if (active) {
-        setShowListHint(!seen);
-      }
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [moments.length]);
+  const { dismiss: dismissListHint, visible: showListHint } = useListActionsHint("memory", moments.length > 0);
 
   const repeatHints = useMemo(() => buildRepeatHints(moments), [moments]);
   const filteredMoments = useMemo(() => filterMoments(moments, query), [moments, query]);
@@ -101,17 +86,12 @@ function MemoryScreenComponent() {
   );
 
   const startEditing = useCallback((moment: SpendingMoment) => {
-    setEditingId(moment.id);
+    setEditingMoment(moment);
   }, []);
 
-  const cancelEdit = useCallback(() => setEditingId(null), []);
+  const cancelEdit = useCallback(() => setEditingMoment(null), []);
 
-  const handleSaved = useCallback(() => setEditingId(null), []);
-
-  const dismissListHint = useCallback(() => {
-    setShowListHint(false);
-    void markMemoryListHintSeen();
-  }, []);
+  const handleSaved = useCallback(() => setEditingMoment(null), []);
 
   const renderItem = useCallback(
     ({ item, index, section }: { item: SpendingMoment; index: number; section: MemorySection }) => (
@@ -123,17 +103,14 @@ function MemoryScreenComponent() {
         ]}
       >
         <MemoryMomentItem
-          isEditing={editingId === item.id}
           moment={item}
-          onCancelEdit={cancelEdit}
           onDelete={setPendingDeleteMoment}
-          onSaved={handleSaved}
           onStartEdit={startEditing}
           repeatHint={repeatHints.get(item.id)}
         />
       </View>
     ),
-    [cancelEdit, editingId, handleSaved, repeatHints, startEditing]
+    [repeatHints, startEditing]
   );
 
   const keyExtractor = useCallback((item: SpendingMoment) => item.id, []);
@@ -159,10 +136,12 @@ function MemoryScreenComponent() {
           kicker="Spending memory"
           value={thisMonthExpense > 0 ? formatCompactRupiah(thisMonthExpense) : undefined}
           valueTone="danger"
+          variant="surface"
         />
-        {showListHint && <MemoryOnboardingTip onDismiss={dismissListHint} />}
+        {showListHint && <ListActionsOnboardingTip onDismiss={dismissListHint} />}
         {moments.length > 0 && (
           <TextInput
+            accessibilityLabel="Search memories"
             onChangeText={setQuery}
             placeholder="Search label, context, or amount"
             placeholderTextColor={colors.muted}
@@ -177,18 +156,24 @@ function MemoryScreenComponent() {
 
   const listEmpty = useMemo(() => {
     if (moments.length === 0) {
-      return <EmptyState text="No saved spending memory yet." />;
+      return (
+        <EmptyState
+          actionLabel="Go to Home"
+          onAction={navigation.openHome}
+          text="No saved spending memory yet."
+        />
+      );
     }
     if (filteredMoments.length === 0) {
       return <EmptyState text="No memory matches that search." />;
     }
     return null;
-  }, [filteredMoments.length, moments.length]);
+  }, [filteredMoments.length, moments.length, navigation.openHome]);
 
   return (
     <>
       <SectionList
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={scrollContentStyle}
         keyboardShouldPersistTaps="handled"
         keyExtractor={keyExtractor}
         ListEmptyComponent={listEmpty}
@@ -198,6 +183,15 @@ function MemoryScreenComponent() {
         sections={sections}
         stickySectionHeadersEnabled={false}
       />
+      <BottomSheet
+        onClose={cancelEdit}
+        title={editingMoment ? `Edit ${getMomentTitle(editingMoment)}` : "Edit memory"}
+        visible={Boolean(editingMoment)}
+      >
+        {editingMoment ? (
+          <MomentEditForm moment={editingMoment} onCancel={cancelEdit} onSaved={handleSaved} />
+        ) : null}
+      </BottomSheet>
       <DeleteConfirmDialog
         body={
           pendingDeleteMoment
