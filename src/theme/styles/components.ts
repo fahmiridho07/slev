@@ -468,5 +468,41 @@ export const componentStyles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
     justifyContent: "flex-end"
+  },
+  onboardingTip: {
+    backgroundColor: colors.surfaceInfo,
+    borderColor: colors.borderInfo,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+    padding: 14
+  },
+  onboardingTipTitleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8
+  },
+  onboardingTipTitle: {
+    color: colors.ink,
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 19
+  },
+  onboardingTipBody: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18
+  },
+  onboardingTipAction: {
+    alignSelf: "flex-start",
+    minHeight: 36,
+    justifyContent: "center",
+    paddingHorizontal: 2
+  },
+  onboardingTipActionText: {
+    color: colors.greenDark,
+    fontSize: 13,
+    fontWeight: "700"
   }
 });

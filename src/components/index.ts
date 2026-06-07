@@ -5,6 +5,7 @@ export { ContextPicker } from "./ContextPicker";
 export { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 export { EmptyState } from "./EmptyState";
 export { ListActionRow } from "./ListActionRow";
+export { MemoryOnboardingTip } from "./MemoryOnboardingTip";
 export { FeedbackButton } from "./FeedbackButton";
 export { MomentRow } from "./MomentRow";
 export { ObservationPanel } from "./ObservationPanel";

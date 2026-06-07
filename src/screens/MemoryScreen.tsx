@@ -1,6 +1,7 @@
-import React, { memo, useCallback, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { SectionList, Text, TextInput, View } from "react-native";
-import { DeleteConfirmDialog, EmptyState, ListActionRow, MomentRow, ScreenHero } from "../components";
+import { DeleteConfirmDialog, EmptyState, ListActionRow, MemoryOnboardingTip, MomentRow, ScreenHero } from "../components";
+import { hasSeenMemoryListHint, markMemoryListHintSeen } from "../services/uiPreferences";
 import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { MomentEditForm } from "../features/memory/MomentEditForm";
 import { SpendingMoment } from "../features/spendingMemory.types";
@@ -56,6 +57,26 @@ function MemoryScreenComponent() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [pendingDeleteMoment, setPendingDeleteMoment] = useState<SpendingMoment | null>(null);
+  const [showListHint, setShowListHint] = useState(false);
+
+  useEffect(() => {
+    if (moments.length === 0) {
+      setShowListHint(false);
+      return;
+    }
+
+    let active = true;
+    void (async () => {
+      const seen = await hasSeenMemoryListHint();
+      if (active) {
+        setShowListHint(!seen);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [moments.length]);
 
   const repeatHints = useMemo(() => buildRepeatHints(moments), [moments]);
   const filteredMoments = useMemo(() => filterMoments(moments, query), [moments, query]);
@@ -86,6 +107,11 @@ function MemoryScreenComponent() {
   const cancelEdit = useCallback(() => setEditingId(null), []);
 
   const handleSaved = useCallback(() => setEditingId(null), []);
+
+  const dismissListHint = useCallback(() => {
+    setShowListHint(false);
+    void markMemoryListHintSeen();
+  }, []);
 
   const renderItem = useCallback(
     ({ item, index, section }: { item: SpendingMoment; index: number; section: MemorySection }) => (
@@ -127,13 +153,14 @@ function MemoryScreenComponent() {
         <ScreenHero
           hint={
             moments.length > 0
-              ? `Tap a row to edit · swipe to delete · ${thisMonthCount} moment${thisMonthCount === 1 ? "" : "s"} this month`
+              ? `${thisMonthCount} moment${thisMonthCount === 1 ? "" : "s"} saved this month`
               : "Saved spending appears here after capture"
           }
           kicker="Spending memory"
           value={thisMonthExpense > 0 ? formatCompactRupiah(thisMonthExpense) : undefined}
           valueTone="danger"
         />
+        {showListHint && <MemoryOnboardingTip onDismiss={dismissListHint} />}
         {moments.length > 0 && (
           <TextInput
             onChangeText={setQuery}
@@ -145,7 +172,7 @@ function MemoryScreenComponent() {
         )}
       </>
     ),
-    [moments.length, query, thisMonthCount, thisMonthExpense]
+    [dismissListHint, moments.length, query, showListHint, thisMonthCount, thisMonthExpense]
   );
 
   const listEmpty = useMemo(() => {
