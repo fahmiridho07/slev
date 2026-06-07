@@ -51,7 +51,7 @@ export function AccountAnalysisPanel({
       <View style={styles.analyticsRow}>
         <View style={styles.analyticsRowHeader}>
           <AccountTitle label={row.label} />
-          <Text style={[styles.analyticsAmount, getReconciliationAmountStyle(row)]}>
+          <Text style={[styles.analyticsAmount, getReconciliationAmountStyle(row, colors)]}>
             {formatReconciliationDifference(row)}
           </Text>
         </View>
@@ -66,7 +66,7 @@ export function AccountAnalysisPanel({
         )}
       </View>
     ),
-    [accountsStrings.expectedActual, styles]
+    [accountsStrings.expectedActual, colors, styles]
   );
 
   const renderActivityItem = useCallback(

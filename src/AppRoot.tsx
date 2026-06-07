@@ -101,6 +101,9 @@ export function AppRoot() {
       if (target.tab === "budget" && target.budgetTab) {
         setBudgetTab(target.budgetTab);
       }
+      if (target.tab === "home" && target.openCapture) {
+        setCaptureFocusRequest((current) => current + 1);
+      }
     },
     [openSettings]
   );

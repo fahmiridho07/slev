@@ -22,37 +22,6 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     gap: 3,
     padding: 4
   },
-  segmentButton: {
-    alignItems: "center",
-    borderColor: "transparent",
-    borderWidth: 1,
-    borderRadius: 6,
-    flexGrow: 0,
-    flexShrink: 0,
-    justifyContent: "center",
-    minHeight: 40,
-    minWidth: 88,
-    paddingHorizontal: 10
-  },
-  segmentButtonCompact: {
-    minHeight: 40,
-    minWidth: 84
-  },
-  segmentButtonActive: {
-    backgroundColor: colors.surface,
-    borderColor: colors.line
-  },
-  segmentButtonText: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 0,
-    textAlign: "center"
-  },
-  segmentButtonTextActive: {
-    color: colors.greenDark,
-    fontWeight: "700"
-  },
   swipeRowShell: {
     backgroundColor: colors.surface,
     overflow: "hidden",
@@ -296,11 +265,6 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     alignItems: "stretch",
     flex: 1,
     width: "100%"
-  },
-  segmentButtonStretch: {
-    flex: 1,
-    minWidth: 0,
-    paddingHorizontal: 6
   },
   screenTabBar: {
     flexDirection: "row",
@@ -547,6 +511,12 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
   },
   deleteText: {
     color: colors.coral
+  },
+  fieldErrorText: {
+    color: colors.coral,
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 4
   },
   editActions: {
     flexDirection: "row",

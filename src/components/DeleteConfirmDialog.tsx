@@ -21,7 +21,7 @@ function DeleteConfirmDialogComponent({
   title,
   visible
 }: DeleteConfirmDialogProps) {
-  const { colors, componentStyles, strings } = useTheme();
+  const { colors, componentStyles, reduceMotion, strings } = useTheme();
   const resolvedConfirmLabel = confirmLabel ?? strings.common.delete;
 
   function handleConfirm() {
@@ -32,7 +32,7 @@ function DeleteConfirmDialogComponent({
   return (
     <Modal
       accessibilityViewIsModal
-      animationType="fade"
+      animationType={reduceMotion ? "none" : "fade"}
       onRequestClose={onCancel}
       transparent
       visible={visible}

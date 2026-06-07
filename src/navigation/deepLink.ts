@@ -2,7 +2,7 @@ import { BudgetTabKey, PatternTabKey, SettingsTabKey } from "../features/app.typ
 import { AppTabKey } from "./appNavigation";
 
 export type DeepLinkTarget =
-  | { tab: "home" }
+  | { tab: "home"; openCapture?: boolean }
   | { tab: "memory" }
   | { tab: "budget"; budgetTab?: BudgetTabKey }
   | { tab: "patterns"; patternTab?: PatternTabKey }
@@ -17,7 +17,12 @@ export function parseDeepLink(url: string): DeepLinkTarget | null {
   const parts = normalized.split("/").filter(Boolean);
   const root = parts[0]?.toLowerCase();
 
-  if (root === "home") return { tab: "home" };
+  if (root === "home") {
+    if (parts[1]?.toLowerCase() === "capture") {
+      return { tab: "home", openCapture: true };
+    }
+    return { tab: "home" };
+  }
   if (root === "memory") return { tab: "memory" };
   if (root === "settings") {
     const sub = parts[1]?.toLowerCase() as SettingsTabKey | undefined;

@@ -44,6 +44,7 @@ function CapturePanelComponent({
     shallowEqual
   );
   const {
+    fieldError,
     form,
     patch,
     changeAmountText,
@@ -168,7 +169,11 @@ function CapturePanelComponent({
         <Text style={styles.currencyPrefix}>{strings.capture.currencyPrefix}</Text>
         <TextInput
           ref={amountInputRef}
-          accessibilityLabel={strings.capture.amountA11y}
+          accessibilityLabel={
+            fieldError?.field === "amount"
+              ? `${strings.capture.amountA11y}. ${fieldError.message}`
+              : strings.capture.amountA11y
+          }
           keyboardType="number-pad"
           onChangeText={changeAmountText}
           placeholder={strings.capture.amountPlaceholder}
@@ -177,6 +182,11 @@ function CapturePanelComponent({
           value={form.amountText}
         />
       </View>
+      {fieldError?.field === "amount" && (
+        <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+          {fieldError.message}
+        </Text>
+      )}
 
       {expanded && form.entryType === "transfer" ? (
         <View style={styles.transferPickerBlock}>
@@ -192,6 +202,11 @@ function CapturePanelComponent({
             selected={form.toAccount === form.fromAccount ? "" : form.toAccount}
             onSelect={(value) => patch({ toAccount: value })}
           />
+          {fieldError?.field === "transferAccounts" && (
+            <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+              {fieldError.message}
+            </Text>
+          )}
         </View>
       ) : expanded && form.entryType === "income" ? (
         <TextInput
@@ -224,11 +239,18 @@ function CapturePanelComponent({
 
       {form.entryType === "expense" && (
         categoryLabels.length === 0 ? (
-          <EmptyState
-            text={strings.capture.noCategories}
-            actionLabel={strings.capture.openSettings}
-            onAction={onOpenSettings}
-          />
+          <>
+            <EmptyState
+              text={strings.capture.noCategories}
+              actionLabel={strings.capture.openSettings}
+              onAction={onOpenSettings}
+            />
+            {fieldError?.field === "category" && (
+              <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+                {fieldError.message}
+              </Text>
+            )}
+          </>
         ) : (
           <>
             <View style={styles.contextHeaderRow}>

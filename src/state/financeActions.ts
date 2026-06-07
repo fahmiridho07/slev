@@ -1,6 +1,7 @@
 import { Share } from "react-native";
 import { hapticSelection, hapticSuccess } from "../lib/haptics";
 import { CategoryModeValue } from "../features/app.types";
+import { getCaptureValidationError } from "../features/capture/captureValidation";
 import { CaptureFormValues } from "../features/capture/types";
 import {
   BudgetPeriod,
@@ -34,9 +35,7 @@ import {
   getBillRemovedToast,
   getBillSavedToast,
   getBillUnavailableToast,
-  getCaptureNeedAmountToast,
-  getCaptureNeedCategoryToast,
-  getCaptureNeedTransferAccountsToast,
+
   getCategoryNeedNameToast,
   getCategoryRemovedToast,
   getCategorySavedToast,
@@ -206,23 +205,17 @@ export function createFinanceActions(
   }
 
   async function saveMoment(capture: CaptureFormValues, categoryCount: number) {
-    const amount = parseAmountInput(capture.amountText);
-    if (!amount) {
-      setMessage(getCaptureNeedAmountToast());
-      return { ok: false as const };
+    const validationError = getCaptureValidationError(capture, categoryCount);
+    if (validationError) {
+      return { ok: false as const, validation: validationError };
     }
 
-    if (capture.entryType === "expense" && categoryCount === 0) {
-      setMessage(getCaptureNeedCategoryToast());
+    const amount = parseAmountInput(capture.amountText);
+    if (!amount) {
       return { ok: false as const };
     }
 
     if (capture.entryType === "transfer") {
-      if (!capture.fromAccount || !capture.toAccount || capture.fromAccount === capture.toAccount) {
-        setMessage(getCaptureNeedTransferAccountsToast());
-        return { ok: false as const };
-      }
-
       const { data: updatedTransfers, persisted } = await saveMoneyTransfer({
         amount,
         fromAccount: capture.fromAccount,

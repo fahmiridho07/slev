@@ -3,8 +3,6 @@ import { clampPercent, getPercentWidthStyle } from "../../lib/analysis";
 import { AccountReconciliationRow, AllocationPlan } from "../../lib/financeEngine";
 import { lightColors } from "../palettes";
 import type { ColorTokens } from "../types";
-import { styles } from "./app";
-import { componentStyles } from "./components";
 
 export function getAllocationFillStyle(
   row: AllocationPlan["rows"][number],
@@ -25,9 +23,12 @@ export function getAllocationFillStyle(
   };
 }
 
-export function getReconciliationAmountStyle(row: AccountReconciliationRow): Pick<TextStyle, "color"> | undefined {
+export function getReconciliationAmountStyle(
+  row: AccountReconciliationRow,
+  colors: ColorTokens
+): Pick<TextStyle, "color"> | undefined {
   if (row.difference === null || Math.abs(row.difference) <= 1000) return undefined;
-  return row.difference > 0 ? componentStyles.incomeText : styles.expenseText;
+  return { color: row.difference > 0 ? colors.blue : colors.coral };
 }
 
 export function getProgressFillStyle(
