@@ -19,6 +19,11 @@ function SwipeActionRowComponent({
   const { colors, componentStyles, strings } = useTheme();
   const translateX = useRef(new Animated.Value(0)).current;
   const isOpenRef = useRef(false);
+  const dragStartX = useRef(0);
+
+  const clampOffset = useCallback((value: number) => {
+    return Math.max(-SWIPE_DELETE_ACTION_WIDTH, Math.min(0, value));
+  }, []);
 
   const animateTo = useCallback(
     (isOpen: boolean) => {
@@ -42,29 +47,54 @@ function SwipeActionRowComponent({
   const panResponder = useMemo(
     () =>
       PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gesture) =>
-          canDelete && gesture.dx < -12 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2,
-        onStartShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponderCapture: (_, gesture) => {
+          if (!canDelete || !isOpenRef.current) {
+            return false;
+          }
+
+          const horizontal = Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2;
+          return horizontal && Math.abs(gesture.dx) > 8;
+        },
+        onMoveShouldSetPanResponder: (_, gesture) => {
+          if (!canDelete) {
+            return false;
+          }
+
+          const horizontal = Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2;
+          if (!horizontal) {
+            return false;
+          }
+
+          if (isOpenRef.current) {
+            return Math.abs(gesture.dx) > 8;
+          }
+
+          return gesture.dx < -12;
+        },
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderGrant: () => {
+          dragStartX.current = isOpenRef.current ? -SWIPE_DELETE_ACTION_WIDTH : 0;
+        },
         onPanResponderMove: (_, gesture) => {
-          const base = isOpenRef.current ? -SWIPE_DELETE_ACTION_WIDTH : 0;
-          const nextPosition = Math.max(
-            -SWIPE_DELETE_ACTION_WIDTH,
-            Math.min(0, base + gesture.dx)
-          );
-          translateX.setValue(nextPosition);
+          translateX.setValue(clampOffset(dragStartX.current + gesture.dx));
         },
         onPanResponderRelease: (_, gesture) => {
-          const base = isOpenRef.current ? -SWIPE_DELETE_ACTION_WIDTH : 0;
-          const nextPosition = Math.max(
-            -SWIPE_DELETE_ACTION_WIDTH,
-            Math.min(0, base + gesture.dx)
-          );
-          const shouldOpen = nextPosition < -SWIPE_DELETE_ACTION_WIDTH / 2 || gesture.vx < -0.35;
+          const nextPosition = clampOffset(dragStartX.current + gesture.dx);
+
+          let shouldOpen: boolean;
+          if (gesture.vx > 0.35) {
+            shouldOpen = false;
+          } else if (gesture.vx < -0.35) {
+            shouldOpen = true;
+          } else {
+            shouldOpen = nextPosition < -SWIPE_DELETE_ACTION_WIDTH / 2;
+          }
+
           animateTo(shouldOpen);
         },
         onPanResponderTerminate: () => animateTo(isOpenRef.current)
       }),
-    [animateTo, canDelete, translateX]
+    [animateTo, canDelete, clampOffset, translateX]
   );
 
   const foregroundStyle = {
