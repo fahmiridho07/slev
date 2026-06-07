@@ -125,33 +125,34 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
         />
       )}
 
-      {form.entryType !== "transfer" && (
-        <>
-          <View style={styles.repeatBlock}>
-            <Text style={styles.microLabel}>Quick source</Text>
-            <View style={styles.suggestionRow}>
-              {quickSources.map((label) => {
-                const selected = form.accountLabel === label;
-                return (
-                  <Pressable
-                    key={label}
-                    accessibilityRole="button"
-                    onPress={() => patch({ accountLabel: label })}
-                    style={[styles.repeatChip, selected && styles.accountChipActive]}
-                  >
-                    <Text style={[styles.repeatText, selected && styles.accountChipTextActive]}>{label}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+      {form.entryType !== "transfer" && quickSources.length > 0 && (
+        <View style={styles.repeatBlock}>
+          <Text style={styles.microLabel}>Quick source</Text>
+          <View style={styles.suggestionRow}>
+            {quickSources.map((label) => {
+              const selected = form.accountLabel === label;
+              return (
+                <Pressable
+                  key={label}
+                  accessibilityRole="button"
+                  onPress={() => patch({ accountLabel: label })}
+                  style={[styles.repeatChip, selected && styles.accountChipActive]}
+                >
+                  <Text style={[styles.repeatText, selected && styles.accountChipTextActive]}>{label}</Text>
+                </Pressable>
+              );
+            })}
           </View>
-          <AccountPicker
-            accounts={accounts}
-            label={form.entryType === "income" ? "Received in" : "Paid from"}
-            selected={form.accountLabel}
-            onSelect={(value) => patch({ accountLabel: value })}
-          />
-        </>
+        </View>
+      )}
+
+      {form.entryType !== "transfer" && (
+        <AccountPicker
+          accounts={accounts}
+          label={form.entryType === "income" ? "Received in" : "Paid from"}
+          selected={form.accountLabel}
+          onSelect={(value) => patch({ accountLabel: value })}
+        />
       )}
 
       {form.entryType === "expense" && repeatSuggestions.length > 0 && (
