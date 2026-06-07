@@ -10,6 +10,7 @@ import {
   getGoalValidationError,
   getLimitValidationError
 } from "../features/budget/budgetValidation";
+import { getImportJsonValidationError } from "../features/settings/dataValidation";
 import { getBillValidationError, getCategoryValidationError } from "../features/settings/settingsValidation";
 import { FormActionResult } from "../lib/formValidation";
 import {
@@ -33,7 +34,7 @@ import {
   getAccountSavedToast,
   getBackupExportFailedToast,
   getBackupImportedToast,
-  getBackupInvalidJsonToast,
+
   getBackupReadyToast,
 
   getBalanceSavedToast,
@@ -723,21 +724,28 @@ export function createFinanceActions(
     setMessage(getResetSuccessToast(label));
   }
 
-  async function importLocalBackup(jsonText: string) {
-    try {
-      const parsed = JSON.parse(jsonText) as unknown;
-      const result = await importAllData(parsed);
-      if (!result.ok) {
-        setMessage(getImportErrorToast(result.code, result.key));
-        return;
-      }
-
-      await reload();
-      hapticSuccess();
-      setMessage(getBackupImportedToast());
-    } catch {
-      setMessage(getBackupInvalidJsonToast());
+  async function importLocalBackup(jsonText: string): Promise<FormActionResult<"importJson">> {
+    const validationError = getImportJsonValidationError(jsonText);
+    if (validationError) {
+      return { ok: false, validation: validationError };
     }
+
+    const parsed = JSON.parse(jsonText) as unknown;
+    const result = await importAllData(parsed);
+    if (!result.ok) {
+      return {
+        ok: false,
+        validation: {
+          field: "importJson",
+          message: getImportErrorToast(result.code, result.key)
+        }
+      };
+    }
+
+    await reload();
+    hapticSuccess();
+    setMessage(getBackupImportedToast());
+    return { ok: true };
   }
 
   async function confirmClearAll() {

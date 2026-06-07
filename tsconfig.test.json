@@ -19,6 +19,7 @@
     "src/services/**/*.ts",
     "src/features/app.types.ts",
     "src/features/budget/budgetValidation.ts",
+    "src/features/settings/dataValidation.ts",
     "src/features/settings/settingsValidation.ts",
     "src/features/memory/memoryValidation.ts",
     "src/features/capture/captureValidation.ts",

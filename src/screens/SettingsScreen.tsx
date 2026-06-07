@@ -19,6 +19,7 @@ import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
 import { formatString, getCategoryDeleteMessage } from "../i18n";
 import { hapticWarning } from "../lib/haptics";
 import { FormValidationError } from "../lib/formValidation";
+import { ImportFieldError } from "../features/settings/dataValidation";
 import { CategoryFieldError } from "../features/settings/settingsValidation";
 import { listCorruptStorageIssues, StorageHealthIssue } from "../services/storageHealth";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
@@ -70,6 +71,7 @@ function SettingsScreenComponent({
   const [categoryFieldError, setCategoryFieldError] = useState<FormValidationError<CategoryFieldError> | null>(null);
   const [pendingDeleteCategory, setPendingDeleteCategory] = useState<ExpenseCategory | null>(null);
   const [importDraft, setImportDraft] = useState("");
+  const [importFieldError, setImportFieldError] = useState<FormValidationError<ImportFieldError> | null>(null);
   const [importConfirmVisible, setImportConfirmVisible] = useState(false);
   const [pendingResetIssue, setPendingResetIssue] = useState<StorageHealthIssue | null>(null);
   const { dismiss: dismissCategoriesHint, visible: showCategoriesHint } = useListActionsHint(
@@ -291,14 +293,26 @@ function SettingsScreenComponent({
             <Text style={componentStyles.secondaryButtonText}>{strings.settings.data.export}</Text>
           </Pressable>
           <TextInput
-            accessibilityLabel={strings.settings.data.importA11y}
+            accessibilityLabel={
+              importFieldError?.field === "importJson"
+                ? `${strings.settings.data.importA11y}. ${importFieldError.message}`
+                : strings.settings.data.importA11y
+            }
             multiline
-            onChangeText={setImportDraft}
+            onChangeText={(value) => {
+              setImportFieldError((current) => (current?.field === "importJson" ? null : current));
+              setImportDraft(value);
+            }}
             placeholder={strings.settings.data.importPlaceholder}
             placeholderTextColor={colors.muted}
             style={[styles.input, { minHeight: 120, textAlignVertical: "top" }]}
             value={importDraft}
           />
+          {importFieldError?.field === "importJson" && (
+            <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+              {importFieldError.message}
+            </Text>
+          )}
           <Pressable
             accessibilityLabel={strings.settings.data.import}
             accessibilityRole="button"
@@ -322,6 +336,7 @@ function SettingsScreenComponent({
     activeTab,
     capturePanelPreference,
     categoryDraft,
+    categoryFieldError,
     categoryLabels,
     colorScheme,
     colors.coral,
@@ -333,6 +348,7 @@ function SettingsScreenComponent({
     editingCategoryId,
     expenseCategories,
     importDraft,
+    importFieldError,
     locale,
     recurringBills,
     reduceMotionPreference,
@@ -400,9 +416,19 @@ function SettingsScreenComponent({
         confirmLabel={strings.settings.importConfirm}
         onCancel={() => setImportConfirmVisible(false)}
         onConfirm={() => {
-          void actions.importLocalBackup(importDraft);
-          setImportDraft("");
-          setImportConfirmVisible(false);
+          void (async () => {
+            const result = await actions.importLocalBackup(importDraft);
+            setImportConfirmVisible(false);
+            if (!result.ok) {
+              hapticWarning();
+              if (result.validation) {
+                setImportFieldError(result.validation);
+              }
+              return;
+            }
+            setImportFieldError(null);
+            setImportDraft("");
+          })();
         }}
         title={strings.settings.importTitle}
         visible={importConfirmVisible}

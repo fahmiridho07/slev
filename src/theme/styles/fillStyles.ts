@@ -1,12 +1,11 @@
 import { TextStyle, ViewStyle } from "react-native";
 import { clampPercent, getPercentWidthStyle } from "../../lib/analysis";
 import { AccountReconciliationRow, AllocationPlan } from "../../lib/financeEngine";
-import { lightColors } from "../palettes";
 import type { ColorTokens } from "../types";
 
 export function getAllocationFillStyle(
   row: AllocationPlan["rows"][number],
-  colors: ColorTokens = lightColors
+  colors: ColorTokens
 ): Pick<ViewStyle, "backgroundColor" | "width"> {
   const isSpendingRow = row.key === "fixed" || row.key === "flexible";
   const backgroundColor = isSpendingRow
@@ -33,7 +32,7 @@ export function getReconciliationAmountStyle(
 
 export function getProgressFillStyle(
   progress: number,
-  colors: ColorTokens = lightColors
+  colors: ColorTokens
 ): Pick<ViewStyle, "backgroundColor" | "width"> {
   const clampedProgress = clampPercent(progress);
   const backgroundColor = progress > 1 ? colors.coral : progress >= 0.8 ? colors.amber : colors.green;
