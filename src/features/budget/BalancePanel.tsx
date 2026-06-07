@@ -175,18 +175,20 @@ export function BalancePanel({
           selected={accountDraftHub}
           onSelect={setAccountDraftHub}
         />
-        <SegmentedControl
-          compact
-          options={[
-            { label: "Tracked", value: "tracked" },
-            { label: "Ephemeral", value: "ephemeral" }
-          ]}
-          selected={accountDraftTier}
-          onSelect={setAccountDraftTier}
-        />
-        <Text style={styles.settingCopy}>
-          Ephemeral = a payment source you don't reconcile closely (small e-wallets).
-        </Text>
+        <View style={styles.repeatBlock}>
+          <SegmentedControl
+            compact
+            options={[
+              { label: "Tracked", value: "tracked" },
+              { label: "Ephemeral", value: "ephemeral" }
+            ]}
+            selected={accountDraftTier}
+            onSelect={setAccountDraftTier}
+          />
+          <Text style={styles.settingCopy}>
+            Ephemeral = a payment source you don't reconcile closely (small e-wallets).
+          </Text>
+        </View>
         <View style={styles.editActions}>
           {editingAccountId && (
             <Pressable onPress={resetAccountDraft} style={styles.secondaryButton}>
