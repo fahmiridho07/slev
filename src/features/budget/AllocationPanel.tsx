@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Text, View } from "react-native";
-import { EmptyState, ObservationPanel, SectionHeader } from "../../components";
+import { EmptyState, ObservationPanel, ProgressBar, SectionHeader } from "../../components";
 import { formatString } from "../../i18n";
 import { MonthlySummary } from "../app.types";
 import { getAllocationActionCopy, getAllocationRowCopy } from "../../lib/analysis";
@@ -28,7 +28,7 @@ export function AllocationPanel({
   transfers: MoneyTransfer[];
   onOpenBalance: () => void;
 }) {
-  const { colors, strings, styles } = useTheme();
+  const { colors, componentStyles, strings, styles } = useTheme();
   const allocationStrings = strings.budget.allocation;
   const currentBalances = useMemo(() => getLatestBalanceSnapshots(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
   const allocation = useMemo(
@@ -62,26 +62,26 @@ export function AllocationPanel({
         <>
           <View style={styles.allocationGrid}>
             <View style={styles.allocationMetric}>
-              <Text style={styles.microLabel}>{allocationStrings.income}</Text>
+              <Text style={componentStyles.microLabel}>{allocationStrings.income}</Text>
               <Text style={styles.allocationValue}>{formatCompactRupiah(allocation.incomeReceived)}</Text>
               <Text style={styles.settingCopy}>
                 {formatString(allocationStrings.ofPlanned, { planned: formatCompactRupiah(allocation.expectedIncome) })}
               </Text>
             </View>
             <View style={styles.allocationMetric}>
-              <Text style={styles.microLabel}>{allocationStrings.dailyRoom}</Text>
+              <Text style={componentStyles.microLabel}>{allocationStrings.dailyRoom}</Text>
               <Text style={styles.allocationValue}>{formatCompactRupiah(allocation.dailyFlexibleRoom)}</Text>
               <Text style={styles.settingCopy}>{allocationStrings.flexibleUntilMonthEnd}</Text>
             </View>
             <View style={styles.allocationMetric}>
-              <Text style={styles.microLabel}>{allocationStrings.pocketCash}</Text>
+              <Text style={componentStyles.microLabel}>{allocationStrings.pocketCash}</Text>
               <Text style={styles.allocationValue}>{formatCompactRupiah(allocation.pocketBalance)}</Text>
               <Text style={styles.settingCopy}>
                 {formatString(allocationStrings.dayCoverage, { count: allocation.pocketCoverageDays })}
               </Text>
             </View>
             <View style={styles.allocationMetric}>
-              <Text style={styles.microLabel}>{allocationStrings.netLeft}</Text>
+              <Text style={componentStyles.microLabel}>{allocationStrings.netLeft}</Text>
               <Text style={[styles.allocationValue, allocation.savingsGap > 0 && styles.expenseText]}>
                 {formatSignedCompactRupiah(allocation.possibleSavings - (monthlyPlan.savingsTarget ?? 0))}
               </Text>
@@ -96,15 +96,16 @@ export function AllocationPanel({
               return (
                 <View key={row.key} style={styles.analyticsRow}>
                   <View style={styles.analyticsRowHeader}>
-                    <Text style={styles.analyticsTitle}>{rowCopy.title}</Text>
+                    <Text style={componentStyles.analyticsTitle}>{rowCopy.title}</Text>
                     <Text style={styles.analyticsAmount}>
                       {formatCompactRupiah(row.actual)} / {formatCompactRupiah(row.planned)}
                     </Text>
                   </View>
                   {row.planned > 0 && (
-                    <View style={styles.progressTrack}>
-                      <View style={[styles.progressFill, getAllocationFillStyle(row, colors)]} />
-                    </View>
+                    <ProgressBar
+                      fillStyle={[styles.progressFill, getAllocationFillStyle(row, colors)]}
+                      value={row.planned > 0 ? row.actual / row.planned : 0}
+                    />
                   )}
                   <Text style={styles.settingCopy}>{rowCopy.detail}</Text>
                 </View>

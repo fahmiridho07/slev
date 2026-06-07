@@ -23,7 +23,7 @@ export function MonthlyPlanPanel({
     savingsTarget: string;
   }) => void;
 }) {
-  const { colors, strings, styles } = useTheme();
+  const { colors, componentStyles, strings, styles } = useTheme();
   const planStrings = strings.budget.monthlyPlan;
   const [expectedIncome, setExpectedIncome] = useState(monthlyPlan ? formatAmountInput(String(monthlyPlan.expectedIncome)) : "");
   const [fixedCosts, setFixedCosts] = useState(monthlyPlan ? formatAmountInput(String(monthlyPlan.fixedCosts)) : "");
@@ -48,7 +48,7 @@ export function MonthlyPlanPanel({
 
   return (
       <View style={styles.capturePanel}>
-        <Text style={styles.microLabel}>{planStrings.title}</Text>
+        <Text style={componentStyles.microLabel}>{planStrings.title}</Text>
         <TextInput
           accessibilityLabel={planStrings.expectedIncome}
           keyboardType="number-pad"
@@ -65,7 +65,7 @@ export function MonthlyPlanPanel({
             style={styles.secondaryInlineButton}
           >
             <Ionicons name="sparkles-outline" size={16} color={colors.greenDark} />
-            <Text style={styles.textButtonLabel}>
+            <Text style={componentStyles.textButtonLabel}>
               {formatString(planStrings.useLoggedIncome, { amount: formatCompactRupiah(loggedIncome) })}
             </Text>
           </Pressable>
@@ -99,18 +99,18 @@ export function MonthlyPlanPanel({
         />
         <View style={styles.planSummaryRow}>
           <Text style={styles.settingCopy}>{planStrings.flexibleBudget}</Text>
-          <Text style={styles.analyticsTitle}>{formatCompactRupiah(flexibleBudget)}</Text>
+          <Text style={componentStyles.analyticsTitle}>{formatCompactRupiah(flexibleBudget)}</Text>
         </View>
         <View style={styles.planSummaryRow}>
           <Text style={styles.settingCopy}>{planStrings.flexibleRemaining}</Text>
-          <Text style={[styles.analyticsTitle, flexibleRemaining < 0 && styles.expenseText]}>
+          <Text style={[componentStyles.analyticsTitle, flexibleRemaining < 0 && styles.expenseText]}>
             {formatSignedCompactRupiah(flexibleRemaining)}
           </Text>
         </View>
         {overCommitted > 0 && (
           <View style={styles.planSummaryRow}>
             <Text style={styles.settingCopy}>{planStrings.overIncomeBy}</Text>
-            <Text style={[styles.analyticsTitle, styles.expenseText]}>{formatCompactRupiah(overCommitted)}</Text>
+            <Text style={[componentStyles.analyticsTitle, styles.expenseText]}>{formatCompactRupiah(overCommitted)}</Text>
           </View>
         )}
         <Pressable

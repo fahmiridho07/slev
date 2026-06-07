@@ -15,7 +15,7 @@ export function CashflowPanel({
   moments: SpendingMoment[];
   showEmpty?: boolean;
 }) {
-  const { strings, styles } = useTheme();
+  const { componentStyles, strings, styles } = useTheme();
   const cashflowStrings = strings.patterns.cashflow;
   const weeks = useMemo(() => buildCashflowWeeks(moments), [moments]);
   const maxWeeklyAmount = useMemo(
@@ -32,8 +32,8 @@ export function CashflowPanel({
       {weeks.map((week, index) => (
         <View key={week.key} style={[styles.cashflowRow, index === weeks.length - 1 && styles.cashflowRowRecent]}>
           <View style={styles.analyticsRowHeader}>
-            <Text style={styles.analyticsTitle}>{week.label}</Text>
-            <Text style={[styles.analyticsAmount, week.net >= 0 ? styles.incomeText : styles.expenseText]}>
+            <Text style={componentStyles.analyticsTitle}>{week.label}</Text>
+            <Text style={[styles.analyticsAmount, week.net >= 0 ? componentStyles.incomeText : styles.expenseText]}>
               {formatString(cashflowStrings.net, { amount: formatSignedCompactRupiah(week.net) })}
             </Text>
           </View>

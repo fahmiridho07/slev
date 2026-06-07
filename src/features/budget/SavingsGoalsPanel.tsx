@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { DeleteConfirmDialog, EmptyState, ListActionRow, ListActionsOnboardingTip } from "../../components";
+import { DeleteConfirmDialog, EmptyState, ListActionRow, ListActionsOnboardingTip, ProgressBar } from "../../components";
 import { useListActionsHint } from "../../hooks/useListActionsHint";
 import { formatString } from "../../i18n";
 import { getPercentWidthStyle } from "../../lib/analysis";
@@ -23,7 +23,7 @@ export function SavingsGoalsPanel({
     targetAmount: string;
   }) => void;
 }) {
-  const { colors, strings, styles } = useTheme();
+  const { colors, componentStyles, strings, styles } = useTheme();
   const goalsStrings = strings.budget.goals;
   const [editingGoalId, setEditingGoalId] = useState<string | undefined>(undefined);
   const [goalLabel, setGoalLabel] = useState("");
@@ -49,7 +49,7 @@ export function SavingsGoalsPanel({
   return (
     <View style={styles.cardStack}>
       <View style={styles.capturePanel}>
-        <Text style={styles.microLabel}>{editingGoalId ? goalsStrings.editGoal : goalsStrings.newGoal}</Text>
+        <Text style={componentStyles.microLabel}>{editingGoalId ? goalsStrings.editGoal : goalsStrings.newGoal}</Text>
         <TextInput
           accessibilityLabel={goalsStrings.goalNameA11y}
           onChangeText={setGoalLabel}
@@ -76,10 +76,10 @@ export function SavingsGoalsPanel({
           style={styles.input}
           value={savedAmount}
         />
-        <View style={styles.editActions}>
+        <View style={componentStyles.editActions}>
           {editingGoalId && (
             <Pressable onPress={resetDraft} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>{strings.common.cancel}</Text>
+              <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
             </Pressable>
           )}
           <Pressable
@@ -115,12 +115,13 @@ export function SavingsGoalsPanel({
                   onPress={() => editGoal(goal)}
                 >
                   <View style={styles.analyticsRowHeader}>
-                    <Text style={styles.analyticsTitle}>{goal.label}</Text>
+                    <Text style={componentStyles.analyticsTitle}>{goal.label}</Text>
                     <Text style={styles.analyticsAmount}>{formatRupiah(goal.savedAmount)} / {formatRupiah(goal.targetAmount)}</Text>
                   </View>
-                  <View style={styles.progressTrack}>
-                    <View style={[styles.trendFill, getPercentWidthStyle(progress)]} />
-                  </View>
+                  <ProgressBar
+                    fillStyle={[styles.trendFill, getPercentWidthStyle(progress)]}
+                    value={progress}
+                  />
                 </ListActionRow>
               </View>
             );

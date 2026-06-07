@@ -36,8 +36,6 @@ export const id: AppStrings = {
     swipeOrLongPressDelete: "Geser kiri atau tekan lama untuk menghapus"
   },
   capture: {
-    fabLabel: "Catat cepat",
-    sheetTitle: "Catat cepat",
     kicker: "Catat cepat",
     quickAdd: "Tambah cepat",
     from: "Dari",

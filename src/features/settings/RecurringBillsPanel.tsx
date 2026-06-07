@@ -30,7 +30,7 @@ export function RecurringBillsPanel({
     active: boolean;
   }) => void;
 }) {
-  const { colors, strings, styles } = useTheme();
+  const { colors, componentStyles, strings, styles } = useTheme();
   const [editingBillId, setEditingBillId] = useState<string | undefined>(undefined);
   const [label, setLabel] = useState("");
   const [amount, setAmount] = useState("");
@@ -64,10 +64,10 @@ export function RecurringBillsPanel({
   return (
     <View style={styles.cardStack}>
       <View style={styles.capturePanel}>
-      <Text style={styles.microLabel}>{strings.settings.bills.title}</Text>
+      <Text style={componentStyles.microLabel}>{strings.settings.bills.title}</Text>
       <Text style={styles.settingCopy}>{strings.settings.bills.intro}</Text>
 
-      <Text style={styles.microLabel}>{editingBillId ? strings.settings.bills.edit : strings.settings.bills.add}</Text>
+      <Text style={componentStyles.microLabel}>{editingBillId ? strings.settings.bills.edit : strings.settings.bills.add}</Text>
       <TextInput
         accessibilityLabel={strings.settings.bills.nameA11y}
         onChangeText={setLabel}
@@ -106,12 +106,12 @@ export function RecurringBillsPanel({
         style={styles.secondaryInlineButton}
       >
         <Ionicons name={active ? "checkmark-circle-outline" : "ellipse-outline"} size={16} color={colors.greenDark} />
-        <Text style={styles.secondaryButtonText}>{active ? strings.settings.bills.active : strings.settings.bills.paused}</Text>
+        <Text style={componentStyles.secondaryButtonText}>{active ? strings.settings.bills.active : strings.settings.bills.paused}</Text>
       </Pressable>
-      <View style={styles.editActions}>
+      <View style={componentStyles.editActions}>
         {editingBillId && (
           <Pressable onPress={resetDraft} style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonText}>{strings.common.cancel}</Text>
+            <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
           </Pressable>
         )}
         <Pressable
@@ -161,7 +161,7 @@ export function RecurringBillsPanel({
               >
                 <View style={styles.analyticsRow}>
                   <View style={styles.analyticsRowHeader}>
-                    <Text style={styles.analyticsTitle}>{bill.label}</Text>
+                    <Text style={componentStyles.analyticsTitle}>{bill.label}</Text>
                     <Text style={styles.analyticsAmount}>{formatRupiah(bill.amount)}</Text>
                   </View>
                   <Text style={styles.settingCopy}>

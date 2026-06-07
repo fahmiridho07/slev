@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { DeleteConfirmDialog, EmptyState, ListActionRow, SegmentedControl } from "../../components";
+import { DeleteConfirmDialog, EmptyState, ListActionRow, ProgressBar, SegmentedControl } from "../../components";
 import { CategoryModeValue } from "../app.types";
 import { formatString, getCategoryDeleteMessage } from "../../i18n";
 import { getMomentsInPeriod, sumExpenseMoments } from "../../lib/analysis";
@@ -34,7 +34,7 @@ export function BudgetLimitsPanel({
   onSaveCategoryMode: (category: SpendingContext, mode: CategoryModeValue) => void;
   onSaveLimit: (category: SpendingContext, amountText: string, period: BudgetPeriod) => void;
 }) {
-  const { colors, strings, styles } = useTheme();
+  const { colors, componentStyles, strings, styles } = useTheme();
   const limitsStrings = strings.budget.limits;
   const limitEditAction = strings.settings.categories.edit.split(" ")[0];
   const [editingCategory, setEditingCategory] = useState<SpendingContext | null>(null);
@@ -132,9 +132,10 @@ export function BudgetLimitsPanel({
           />
 
           {row.limit && (
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, getProgressFillStyle(row.progress, colors)]} />
-            </View>
+            <ProgressBar
+              fillStyle={[styles.progressFill, getProgressFillStyle(row.progress, colors)]}
+              value={row.progress}
+            />
           )}
 
           {editingCategory === row.category && (
@@ -157,7 +158,7 @@ export function BudgetLimitsPanel({
                 selected={draftPeriod}
                 onSelect={setDraftPeriod}
               />
-              <View style={styles.editActions}>
+              <View style={componentStyles.editActions}>
                 {row.limit && (
                   <Pressable
                     accessibilityRole="button"
@@ -167,11 +168,11 @@ export function BudgetLimitsPanel({
                     }}
                     style={styles.secondaryButton}
                   >
-                    <Text style={styles.deleteText}>{limitsStrings.deleteLimit}</Text>
+                    <Text style={componentStyles.deleteText}>{limitsStrings.deleteLimit}</Text>
                   </Pressable>
                 )}
                 <Pressable accessibilityRole="button" onPress={() => setEditingCategory(null)} style={styles.secondaryButton}>
-                  <Text style={styles.secondaryButtonText}>{strings.common.cancel}</Text>
+                  <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"

@@ -60,7 +60,7 @@ export function BalancePanel({
   }) => void;
   onSaveBalance: (input: { accountLabel: string; amount: string }) => void;
 }) {
-  const { colors, strings, styles } = useTheme();
+  const { colors, componentStyles, strings, styles } = useTheme();
   const balanceStrings = strings.budget.balance;
   const [accountLabel, setAccountLabel] = useState(accounts[0]?.label ?? "");
   const [amount, setAmount] = useState("");
@@ -221,7 +221,7 @@ export function BalancePanel({
       )}
 
       <View style={styles.capturePanel}>
-        <Text style={styles.microLabel}>{balanceStrings.balanceSnapshot}</Text>
+        <Text style={componentStyles.microLabel}>{balanceStrings.balanceSnapshot}</Text>
         <AccountPicker
           accounts={accounts}
           label={strings.common.account}
@@ -252,7 +252,7 @@ export function BalancePanel({
       </View>
 
       <View style={styles.capturePanel}>
-        <Text style={styles.microLabel}>
+        <Text style={componentStyles.microLabel}>
           {editingAccountId ? balanceStrings.editAccount : balanceStrings.addAccount}
         </Text>
         <TextInput
@@ -295,10 +295,10 @@ export function BalancePanel({
           />
           <Text style={styles.settingCopy}>{balanceStrings.ephemeralHint}</Text>
         </View>
-        <View style={styles.editActions}>
+        <View style={componentStyles.editActions}>
           {editingAccountId && (
             <Pressable onPress={resetAccountDraft} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>{strings.common.cancel}</Text>
+              <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
             </Pressable>
           )}
           <Pressable

@@ -27,6 +27,10 @@ export type ColorTokens = {
   sheetBackdrop: string;
   tabBar: string;
   recapDivider: string;
+  chartSage: string;
+  chartLilac: string;
+  chartSlate: string;
+  chartCopper: string;
 };
 
 export type ShadowTokens = {

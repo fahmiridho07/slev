@@ -15,7 +15,7 @@ export function UpcomingBillsPanel({
   upcomingBills: UpcomingBill[];
   onLogPayment: (billId: string) => void;
 }) {
-  const { colors, strings, styles } = useTheme();
+  const { colors, componentStyles, strings, styles } = useTheme();
   const horizonTotal = upcomingBills.reduce((sum, item) => sum + item.bill.amount, 0);
 
   function formatDueHint(daysUntil: number): string {
@@ -27,7 +27,7 @@ export function UpcomingBillsPanel({
   if (upcomingBills.length === 0) {
     return (
       <View style={styles.capturePanel}>
-        <Text style={styles.microLabel}>{strings.home.bills.comingUp}</Text>
+        <Text style={componentStyles.microLabel}>{strings.home.bills.comingUp}</Text>
         <EmptyState text={strings.home.bills.empty} />
       </View>
     );
@@ -37,7 +37,7 @@ export function UpcomingBillsPanel({
     <View style={styles.cardStack}>
       <View style={styles.capturePanel}>
         <View style={styles.analyticsRowHeader}>
-          <Text style={styles.microLabel}>{strings.home.bills.comingUp}</Text>
+          <Text style={componentStyles.microLabel}>{strings.home.bills.comingUp}</Text>
           <Text style={styles.settingCopy}>
             {formatString(strings.home.bills.horizonTotal, { amount: formatCompactRupiah(horizonTotal) })}
           </Text>
@@ -47,7 +47,7 @@ export function UpcomingBillsPanel({
         {upcomingBills.map((item) => (
           <View key={`${item.bill.id}-${item.dueDate}`} style={styles.analyticsRow}>
             <View style={styles.analyticsRowHeader}>
-              <Text style={styles.analyticsTitle}>{item.bill.label}</Text>
+              <Text style={componentStyles.analyticsTitle}>{item.bill.label}</Text>
               <Text style={styles.analyticsAmount}>{formatCompactRupiah(item.bill.amount)}</Text>
             </View>
             <Text style={styles.settingCopy}>
@@ -61,10 +61,10 @@ export function UpcomingBillsPanel({
               })}
               accessibilityRole="button"
               onPress={() => onLogPayment(item.bill.id)}
-              style={styles.textButton}
+              style={componentStyles.textButton}
             >
               <Ionicons name="checkmark-circle-outline" size={16} color={colors.greenDark} />
-              <Text style={styles.textButtonLabel}>{strings.home.bills.logPayment}</Text>
+              <Text style={componentStyles.textButtonLabel}>{strings.home.bills.logPayment}</Text>
             </Pressable>
           </View>
         ))}

@@ -266,13 +266,13 @@ export function AppRoot() {
             )}
           </View>
 
-          <View style={tabBarStyle}>
+          <View accessibilityRole="tablist" style={tabBarStyle}>
             {tabs.map((tab) => {
               const isActive = !inSettings && activeTab === tab.key;
               return (
                 <Pressable
                   accessibilityLabel={tab.label}
-                  accessibilityRole="button"
+                  accessibilityRole="tab"
                   accessibilityState={{ selected: isActive }}
                   key={tab.key}
                   onPress={() => selectTab(tab.key)}

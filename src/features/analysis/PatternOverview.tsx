@@ -43,11 +43,11 @@ export function PatternOverview({
             <SectionHeader title={group.title} />
             {group.items.map((pattern) => (
               <View key={pattern.id} style={[styles.patternCard, getPatternToneStyle(pattern.tone, componentStyles)]}>
-                <View style={styles.patternTitleRow}>
+                <View style={componentStyles.patternTitleRow}>
                   <Ionicons name={patternIcon(pattern.tone)} size={18} color={patternColor(pattern.tone, colors)} />
-                  <Text style={styles.patternTitle}>{pattern.title}</Text>
+                  <Text style={componentStyles.patternTitle}>{pattern.title}</Text>
                 </View>
-                <Text style={styles.patternDetail}>{pattern.detail}</Text>
+                <Text style={componentStyles.patternDetail}>{pattern.detail}</Text>
 
                 {pattern.recapQuestion && (
                   <View style={styles.recapBlock}>
@@ -60,7 +60,7 @@ export function PatternOverview({
                         <Text style={styles.settingCopy}>{strings.patterns.recap.feedbackLockedHint}</Text>
                       </>
                     )}
-                    <View style={styles.feedbackRow}>
+                    <View style={componentStyles.feedbackRow}>
                       <FeedbackButton
                         active={feedbackByPattern.get(pattern.id) === "keep"}
                         disabled={!enoughForRecap}

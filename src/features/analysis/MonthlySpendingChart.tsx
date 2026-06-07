@@ -7,7 +7,7 @@ import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { useTheme } from "../../hooks/useTheme";
 
 export function MonthlySpendingChart({ rows }: { rows: FinanceBreakdownRow[] }) {
-  const { colors, strings, styles } = useTheme();
+  const { colors, componentStyles, strings, styles } = useTheme();
   const chartStrings = strings.patterns.chart;
   const chartColors = useMemo(
     () => [
@@ -15,12 +15,21 @@ export function MonthlySpendingChart({ rows }: { rows: FinanceBreakdownRow[] }) 
       colors.blue,
       colors.amber,
       colors.coral,
-      "#7a9e7e",
-      "#9b7bb8",
-      "#6f8ea8",
-      "#c58b5a"
+      colors.chartSage,
+      colors.chartLilac,
+      colors.chartSlate,
+      colors.chartCopper
     ],
-    [colors.amber, colors.blue, colors.coral, colors.greenDark]
+    [
+      colors.amber,
+      colors.blue,
+      colors.chartCopper,
+      colors.chartLilac,
+      colors.chartSage,
+      colors.chartSlate,
+      colors.coral,
+      colors.greenDark
+    ]
   );
   const total = useMemo(() => rows.reduce((sum, row) => sum + row.amount, 0), [rows]);
 
@@ -47,7 +56,7 @@ export function MonthlySpendingChart({ rows }: { rows: FinanceBreakdownRow[] }) 
       accessible
       style={styles.capturePanel}
     >
-      <Text style={styles.microLabel}>{chartStrings.title}</Text>
+      <Text style={componentStyles.microLabel}>{chartStrings.title}</Text>
       <Text style={styles.settingCopy}>
         {formatString(chartStrings.totalAcross, { total: formatCompactRupiah(total), count: rows.length })}
       </Text>

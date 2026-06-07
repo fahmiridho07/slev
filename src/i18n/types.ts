@@ -234,7 +234,6 @@ export type AppStrings = {
       Transport: string;
       Treat: string;
     };
-    fabLabel: string;
     fewerOptions: string;
     from: string;
     income: string;
@@ -254,7 +253,6 @@ export type AppStrings = {
     saveExpense: string;
     saveIncome: string;
     saveTransfer: string;
-    sheetTitle: string;
     sourcePlaceholder: string;
     to: string;
     type: {

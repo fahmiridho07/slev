@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Text, View } from "react-native";
-import { EmptyState, SectionHeader, SegmentedControl } from "../../components";
+import { EmptyState, ProgressBar, SectionHeader, SegmentedControl } from "../../components";
 import { formatString } from "../../i18n";
 import { getPercentWidthStyle } from "../../lib/analysis";
 import { buildMonthlyBreakdown } from "../../lib/financeEngine";
@@ -10,7 +10,7 @@ import { useTheme } from "../../hooks/useTheme";
 import { MonthlySpendingChart } from "./MonthlySpendingChart";
 
 export function BreakdownPanel({ moments }: { moments: SpendingMoment[] }) {
-  const { strings, styles } = useTheme();
+  const { componentStyles, strings, styles } = useTheme();
   const breakdownStrings = strings.patterns.breakdown;
   const [breakdownType, setBreakdownType] = useState<EntryType>("expense");
   const rows = useMemo(() => buildMonthlyBreakdown(moments, breakdownType), [breakdownType, moments]);
@@ -40,7 +40,7 @@ export function BreakdownPanel({ moments }: { moments: SpendingMoment[] }) {
             {rows.map((row) => (
               <View key={row.key} style={styles.analyticsRow}>
                 <View style={styles.analyticsRowHeader}>
-                  <Text style={styles.analyticsTitle}>{row.label}</Text>
+                  <Text style={componentStyles.analyticsTitle}>{row.label}</Text>
                   <Text style={styles.analyticsAmount}>
                     {formatString(breakdownStrings.amountShare, {
                       amount: formatCompactRupiah(row.amount),
@@ -48,9 +48,10 @@ export function BreakdownPanel({ moments }: { moments: SpendingMoment[] }) {
                     })}
                   </Text>
                 </View>
-                <View style={styles.progressTrack}>
-                  <View style={[styles.breakdownFill, getPercentWidthStyle(row.share)]} />
-                </View>
+                <ProgressBar
+                  fillStyle={[styles.breakdownFill, getPercentWidthStyle(row.share)]}
+                  value={row.share}
+                />
               </View>
             ))}
           </View>

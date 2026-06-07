@@ -17,7 +17,6 @@ type CapturePanelProps = {
   focusAmountToken?: number;
   onOpenSettings: () => void;
   onSaved?: () => void;
-  sheet?: boolean;
 };
 
 function CapturePanelComponent({
@@ -25,10 +24,9 @@ function CapturePanelComponent({
   defaultExpanded = false,
   focusAmountToken = 0,
   onOpenSettings,
-  onSaved,
-  sheet = false
+  onSaved
 }: CapturePanelProps) {
-  const { colors, strings, styles } = useTheme();
+  const { colors, componentStyles, strings, styles } = useTheme();
   const amountInputRef = useRef<TextInput>(null);
 
   function getSaveLabel(entryType: "expense" | "income" | "transfer") {
@@ -56,14 +54,8 @@ function CapturePanelComponent({
     saveTemplate
   } = useCaptureForm();
 
-  const [expanded, setExpanded] = useState(sheet || defaultExpanded);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const [noteOpen, setNoteOpen] = useState(Boolean(form.note));
-
-  useEffect(() => {
-    if (sheet) {
-      setExpanded(true);
-    }
-  }, [sheet]);
 
   useEffect(() => {
     if (form.note) {
@@ -102,11 +94,11 @@ function CapturePanelComponent({
   const showQuickAdd = expanded && (manualTemplates.length > 0 || showRepeatSuggestions);
 
   return (
-    <View style={sheet ? undefined : styles.capturePanel}>
-      {!sheet && <Text style={styles.kicker}>{strings.capture.kicker}</Text>}
+    <View style={styles.capturePanel}>
+      <Text style={styles.kicker}>{strings.capture.kicker}</Text>
       {showQuickAdd && (
         <View style={styles.repeatBlock}>
-          <Text style={styles.microLabel}>{strings.capture.quickAdd}</Text>
+          <Text style={componentStyles.microLabel}>{strings.capture.quickAdd}</Text>
           {manualTemplates.length > 0 && (
             <View style={styles.templateGrid}>
               {manualTemplates.slice(0, 6).map((template) => (
@@ -236,7 +228,7 @@ function CapturePanelComponent({
         ) : (
           <>
             <View style={styles.contextHeaderRow}>
-              <Text style={styles.microLabel}>{strings.capture.context}</Text>
+              <Text style={componentStyles.microLabel}>{strings.capture.context}</Text>
             </View>
             <ContextPicker
               categories={categoryLabels}
@@ -284,9 +276,9 @@ function CapturePanelComponent({
             style={styles.secondaryInlineButton}
           >
             <Ionicons name="bookmark-outline" size={16} color={colors.greenDark} />
-            <Text style={styles.textButtonLabel}>{strings.capture.saveAsShortcut}</Text>
+            <Text style={componentStyles.textButtonLabel}>{strings.capture.saveAsShortcut}</Text>
           </Pressable>
-          {!sheet && form.entryType === "expense" && (
+          {form.entryType === "expense" && (
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ expanded: true }}
@@ -299,17 +291,15 @@ function CapturePanelComponent({
           )}
         </>
       ) : (
-        !sheet && (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ expanded: false }}
-            onPress={() => setExpanded(true)}
-            style={styles.captureExpandRow}
-          >
-            <Text style={styles.captureExpandText}>{strings.capture.moreOptions}</Text>
-            <Ionicons name="chevron-down-outline" size={16} color={colors.greenDark} />
-          </Pressable>
-        )
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ expanded: false }}
+          onPress={() => setExpanded(true)}
+          style={styles.captureExpandRow}
+        >
+          <Text style={styles.captureExpandText}>{strings.capture.moreOptions}</Text>
+          <Ionicons name="chevron-down-outline" size={16} color={colors.greenDark} />
+        </Pressable>
       )}
     </View>
   );

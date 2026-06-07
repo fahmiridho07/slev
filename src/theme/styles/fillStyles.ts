@@ -4,6 +4,7 @@ import { AccountReconciliationRow, AllocationPlan } from "../../lib/financeEngin
 import { lightColors } from "../palettes";
 import type { ColorTokens } from "../types";
 import { styles } from "./app";
+import { componentStyles } from "./components";
 
 export function getAllocationFillStyle(
   row: AllocationPlan["rows"][number],
@@ -26,7 +27,7 @@ export function getAllocationFillStyle(
 
 export function getReconciliationAmountStyle(row: AccountReconciliationRow): Pick<TextStyle, "color"> | undefined {
   if (row.difference === null || Math.abs(row.difference) <= 1000) return undefined;
-  return row.difference > 0 ? styles.incomeText : styles.expenseText;
+  return row.difference > 0 ? componentStyles.incomeText : styles.expenseText;
 }
 
 export function getProgressFillStyle(

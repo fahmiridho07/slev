@@ -22,13 +22,13 @@ function ScreenTabBarComponent<T extends string>({
   const { colors, componentStyles } = useTheme();
 
   return (
-    <View style={componentStyles.screenTabBar}>
+    <View accessibilityRole="tablist" style={componentStyles.screenTabBar}>
       {options.map((option) => {
         const active = option.value === selected;
         return (
           <Pressable
             accessibilityLabel={option.label}
-            accessibilityRole="button"
+            accessibilityRole="tab"
             accessibilityState={{ selected: active }}
             key={option.value}
             onPress={() => {

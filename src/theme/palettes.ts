@@ -28,7 +28,11 @@ export const lightColors: ColorTokens = {
   iconInfo: "#d9edf6",
   sheetBackdrop: "rgba(24, 32, 28, 0.36)",
   tabBar: "rgba(247, 248, 244, 0.96)",
-  recapDivider: "rgba(24, 32, 28, 0.08)"
+  recapDivider: "rgba(24, 32, 28, 0.08)",
+  chartSage: "#7a9e7e",
+  chartLilac: "#9b7bb8",
+  chartSlate: "#6f8ea8",
+  chartCopper: "#c58b5a"
 };
 
 export const darkColors: ColorTokens = {
@@ -59,7 +63,11 @@ export const darkColors: ColorTokens = {
   iconInfo: "#243640",
   sheetBackdrop: "rgba(0, 0, 0, 0.55)",
   tabBar: "rgba(20, 26, 23, 0.96)",
-  recapDivider: "rgba(255, 255, 255, 0.08)"
+  recapDivider: "rgba(255, 255, 255, 0.08)",
+  chartSage: "#8fb892",
+  chartLilac: "#b094c9",
+  chartSlate: "#8aa8c0",
+  chartCopper: "#d9a06e"
 };
 
 export const lightShadows: ShadowTokens = {

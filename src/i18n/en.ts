@@ -36,8 +36,6 @@ export const en: AppStrings = {
     swipeOrLongPressDelete: "Swipe left or long press to delete"
   },
   capture: {
-    fabLabel: "Quick capture",
-    sheetTitle: "Quick capture",
     kicker: "Quick capture",
     quickAdd: "Quick add",
     from: "From",

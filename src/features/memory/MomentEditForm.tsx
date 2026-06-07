@@ -26,7 +26,7 @@ function buildEditForm(moment: SpendingMoment, accounts: MoneyAccount[]) {
 }
 
 function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormProps) {
-  const { colors, strings, styles } = useTheme();
+  const { colors, componentStyles, strings, styles } = useTheme();
   const actions = useActions();
   const { categoryLabels } = useDerived();
   const accounts = useFinanceSelector((state) => state.accounts);
@@ -98,9 +98,9 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
         style={[styles.input, styles.noteInput]}
         value={note}
       />
-      <View style={styles.editActions}>
+      <View style={componentStyles.editActions}>
         <Pressable accessibilityRole="button" onPress={onCancel} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>{strings.common.cancel}</Text>
+          <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
         </Pressable>
         <Pressable accessibilityLabel={strings.memory.edit.save} accessibilityRole="button" onPress={() => void save()} style={styles.smallPrimaryButton}>
           <Text style={styles.primaryButtonText}>{strings.memory.edit.save}</Text>

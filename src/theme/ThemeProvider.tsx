@@ -9,7 +9,7 @@ import {
   setColorSchemePreference,
   setLocalePreference
 } from "../services/uiPreferences";
-import { createAppStyles } from "./styles/app";
+import { createScreenStyles } from "./styles/app";
 import { createComponentStyles } from "./styles/components";
 import type { ColorScheme, ColorTokens, ShadowTokens } from "./types";
 
@@ -24,7 +24,7 @@ export type AppTheme = {
   setLocale: (locale: Locale) => void;
   shadows: ShadowTokens;
   strings: AppStrings;
-  styles: ReturnType<typeof createAppStyles>;
+  styles: ReturnType<typeof createScreenStyles>;
 };
 
 export const ThemeContext = createContext<AppTheme | null>(null);
@@ -119,7 +119,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = useMemo<AppTheme>(() => {
     const { colors, shadows } = paletteForScheme(resolvedScheme);
     const componentStyles = createComponentStyles(colors, shadows);
-    const styles = createAppStyles(colors, shadows);
+    const styles = createScreenStyles(colors, shadows);
     const strings = getStrings(locale);
 
     return {

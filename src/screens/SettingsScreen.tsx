@@ -30,7 +30,7 @@ function SettingsScreenComponent({
   onSettingsTabChange,
   scrollContentStyle
 }: SettingsScreenProps) {
-  const { colorScheme, colors, locale, setColorScheme, setLocale, strings, styles } = useTheme();
+  const { colorScheme, colors, componentStyles, locale, setColorScheme, setLocale, strings, styles } = useTheme();
   const actions = useActions();
   const { categoryLabels } = useDerived();
   const { accounts, expenseCategories, isReady, moments, recurringBills } = useFinanceSelector(
@@ -87,7 +87,7 @@ function SettingsScreenComponent({
         >
           <View style={styles.analyticsRow}>
             <View style={styles.analyticsRowHeader}>
-              <Text style={styles.analyticsTitle}>{category.label}</Text>
+              <Text style={componentStyles.analyticsTitle}>{category.label}</Text>
               <Text style={styles.analyticsAmount}>
                 {category.isDefault ? strings.settings.categories.default : strings.settings.categories.custom}
               </Text>
@@ -118,7 +118,7 @@ function SettingsScreenComponent({
 
         {activeTab === "appearance" && (
           <View style={styles.capturePanel}>
-            <Text style={styles.microLabel}>{strings.appearance.label}</Text>
+            <Text style={componentStyles.microLabel}>{strings.appearance.label}</Text>
             <SegmentedControl
               options={[
                 { label: strings.appearance.light, value: "light" },
@@ -129,7 +129,7 @@ function SettingsScreenComponent({
               stretch
               onSelect={setColorScheme}
             />
-            <Text style={styles.microLabel}>{strings.locale.label}</Text>
+            <Text style={componentStyles.microLabel}>{strings.locale.label}</Text>
             <SegmentedControl
               options={[
                 { label: strings.locale.english, value: "en" },
@@ -152,7 +152,7 @@ function SettingsScreenComponent({
               />
             )}
             <View style={styles.capturePanel}>
-              <Text style={styles.microLabel}>
+              <Text style={componentStyles.microLabel}>
                 {editingCategoryId ? strings.settings.categories.edit : strings.settings.categories.add}
               </Text>
               <TextInput
@@ -163,10 +163,10 @@ function SettingsScreenComponent({
                 style={styles.input}
                 value={categoryDraft}
               />
-              <View style={styles.editActions}>
+              <View style={componentStyles.editActions}>
                 {editingCategoryId && (
                   <Pressable accessibilityRole="button" onPress={resetCategoryDraft} style={styles.secondaryButton}>
-                    <Text style={styles.secondaryButtonText}>{strings.common.cancel}</Text>
+                    <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
                   </Pressable>
                 )}
                 <Pressable
@@ -186,21 +186,21 @@ function SettingsScreenComponent({
 
         {activeTab === "data" && corruptIssues.length > 0 && (
           <View style={styles.capturePanel}>
-            <Text style={styles.microLabel}>{strings.settings.data.healthTitle}</Text>
+            <Text style={componentStyles.microLabel}>{strings.settings.data.healthTitle}</Text>
             <Text style={styles.settingCopy}>{strings.settings.data.healthCopy}</Text>
             {corruptIssues.map((issue) => (
               <View key={issue.key} style={styles.analyticsRow}>
                 <View style={styles.analyticsRowHeader}>
                   <Ionicons name="warning-outline" size={16} color={colors.coral} />
-                  <Text style={styles.analyticsTitle}>{issue.label}</Text>
+                  <Text style={componentStyles.analyticsTitle}>{issue.label}</Text>
                 </View>
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => setPendingResetIssue(issue)}
-                  style={styles.textButton}
+                  style={componentStyles.textButton}
                 >
                   <Ionicons name="refresh-outline" size={16} color={colors.coral} />
-                  <Text style={[styles.textButtonLabel, { color: colors.coral }]}>
+                  <Text style={[componentStyles.textButtonLabel, { color: colors.coral }]}>
                     {strings.settings.data.resetThis}
                   </Text>
                 </Pressable>
@@ -234,11 +234,11 @@ function SettingsScreenComponent({
       return (
         <View style={styles.cardStack}>
           <View style={styles.capturePanel}>
-            <Text style={styles.microLabel}>{strings.settings.data.backupTitle}</Text>
+            <Text style={componentStyles.microLabel}>{strings.settings.data.backupTitle}</Text>
             <Text style={styles.settingCopy}>{strings.settings.data.backupCopy}</Text>
             <Pressable accessibilityRole="button" onPress={() => void actions.exportLocalBackup()} style={styles.secondaryInlineButton}>
               <Ionicons name="share-outline" size={16} color={colors.greenDark} />
-              <Text style={styles.secondaryButtonText}>{strings.settings.data.export}</Text>
+              <Text style={componentStyles.secondaryButtonText}>{strings.settings.data.export}</Text>
             </Pressable>
             <TextInput
               accessibilityLabel={strings.settings.data.importA11y}

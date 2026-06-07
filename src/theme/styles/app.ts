@@ -1,8 +1,6 @@
 import { StyleSheet } from "react-native";
 import { lightColors, lightShadows } from "../palettes";
 import type { ColorTokens, ShadowTokens } from "../types";
-import { createComponentStyles } from "./components";
-
 export const CARD_STACK_GAP = 12;
 
 export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
@@ -402,23 +400,6 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   transferPickerBlock: {
     gap: 12
   },
-  accountPickerBlock: {
-    gap: 8
-  },
-  accountTitleRow: {
-    alignItems: "center",
-    flex: 1,
-    flexDirection: "row",
-    gap: 8,
-    minWidth: 0
-  },
-  transferTitleRow: {
-    alignItems: "center",
-    flex: 1,
-    flexDirection: "row",
-    gap: 6,
-    minWidth: 0
-  },
   noteInput: {
     minHeight: 64,
     textAlignVertical: "top"
@@ -494,56 +475,11 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     fontSize: 13,
     fontWeight: "700"
   },
-  contextWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8
-  },
-  contextWrapCompact: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6
-  },
   contextHeaderRow: {
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 10
-  },
-  contextDefault: {
-    color: colors.muted,
-    flexShrink: 1,
-    fontSize: 12,
-    fontWeight: "700",
-    textAlign: "right"
-  },
-  contextChip: {
-    backgroundColor: colors.canvas,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    minHeight: 42,
-    minWidth: "30%",
-    paddingHorizontal: 12,
-    paddingVertical: 9
-  },
-  contextChipActive: {
-    backgroundColor: colors.mint,
-    borderColor: colors.green
-  },
-  contextChipText: {
-    color: colors.ink,
-    fontSize: 14,
-    fontWeight: "800",
-    letterSpacing: 0
-  },
-  contextChipTextActive: {
-    color: colors.greenDark
-  },
-  contextHint: {
-    color: colors.muted,
-    fontSize: 11,
-    marginTop: 2
   },
   addNoteButton: {
     alignItems: "center",
@@ -591,11 +527,6 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     minHeight: 44,
     paddingHorizontal: 18
   },
-  secondaryButtonText: {
-    color: colors.greenDark,
-    fontSize: 14,
-    fontWeight: "800"
-  },
   secondaryInlineButton: {
     alignItems: "center",
     alignSelf: "flex-start",
@@ -603,12 +534,6 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     gap: 6,
     minHeight: 44,
     paddingHorizontal: 2
-  },
-  observationPanel: {
-    borderRadius: 8,
-    borderWidth: 1,
-    padding: 16,
-    gap: 8
   },
   heroPanel: {
     backgroundColor: colors.mint,
@@ -662,12 +587,6 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     fontWeight: "800",
     letterSpacing: 0,
     lineHeight: 30
-  },
-  sectionTitle: {
-    color: colors.ink,
-    fontSize: 17,
-    fontWeight: "800",
-    letterSpacing: 0
   },
   listPanel: {
     backgroundColor: colors.surface,
@@ -822,13 +741,6 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     flexDirection: "row",
     gap: 12,
     justifyContent: "space-between"
-  },
-  analyticsTitle: {
-    color: colors.ink,
-    flex: 1,
-    fontSize: 14,
-    fontWeight: "700",
-    letterSpacing: 0
   },
   analyticsAmount: {
     color: colors.muted,
@@ -1022,25 +934,8 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   },
   tabLabelActive: {
     color: colors.greenDark
-  },
-  captureFab: {
-    alignItems: "center",
-    backgroundColor: colors.greenDark,
-    borderRadius: 28,
-    height: 56,
-    justifyContent: "center",
-    position: "absolute",
-    right: 20,
-    width: 56,
-    ...shadows.soft
   }
   });
 }
 
-export function createAppStyles(colors: ColorTokens, shadows: ShadowTokens) {
-  const componentStyles = createComponentStyles(colors, shadows);
-  const screenStyles = createScreenStyles(colors, shadows);
-  return { ...componentStyles, ...screenStyles };
-}
-
-export const styles = createAppStyles(lightColors, lightShadows);
+export const styles = createScreenStyles(lightColors, lightShadows);

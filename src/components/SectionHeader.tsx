@@ -11,7 +11,9 @@ function SectionHeaderComponent({ title }: SectionHeaderProps) {
 
   return (
     <View style={componentStyles.sectionHeaderBlock}>
-      <Text style={componentStyles.sectionTitle}>{title}</Text>
+      <Text accessibilityRole="header" style={componentStyles.sectionTitle}>
+        {title}
+      </Text>
     </View>
   );
 }

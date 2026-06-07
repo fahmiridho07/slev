@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useMemo, useState } from "react";
 import { FlatList, Text, View } from "react-native";
-import { AccountTitle, DeleteConfirmDialog, EmptyState, ListActionRow, ObservationPanel, SectionHeader, TransferTitle } from "../../components";
+import { AccountTitle, DeleteConfirmDialog, EmptyState, ListActionRow, ObservationPanel, ProgressBar, SectionHeader, TransferTitle } from "../../components";
 import { formatString } from "../../i18n";
 import { AccountActivityRow, buildAccountActivity, dateKey, formatDate, formatReconciliationDifference, getReconciliationCopy, getReconciliationDetail, getPercentWidthStyle } from "../../lib/analysis";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
@@ -26,7 +26,7 @@ export function AccountAnalysisPanel({
   transfers: MoneyTransfer[];
   onDeleteTransfer: (id: string) => void;
 }) {
-  const { colors, strings, styles } = useTheme();
+  const { colors, componentStyles, strings, styles } = useTheme();
   const accountsStrings = strings.patterns.accounts;
   const currentBalances = useMemo(() => getLatestBalanceSnapshots(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
   const accountActivity = useMemo(() => buildAccountActivity(moments), [moments]);
@@ -76,9 +76,10 @@ export function AccountAnalysisPanel({
           <AccountTitle label={row.label} />
           <Text style={styles.analyticsAmount}>{formatCompactRupiah(row.expense)}</Text>
         </View>
-        <View style={styles.progressTrack}>
-          <View style={[styles.expenseFill, getPercentWidthStyle(row.share)]} />
-        </View>
+        <ProgressBar
+          fillStyle={[styles.expenseFill, getPercentWidthStyle(row.share)]}
+          value={row.share}
+        />
         <Text style={styles.settingCopy}>
           {formatString(accountsStrings.incomeNetCopy, {
             income: formatCompactRupiah(row.income),

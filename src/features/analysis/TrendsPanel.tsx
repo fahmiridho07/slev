@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { Text, View } from "react-native";
-import { EmptyState, ObservationPanel, SectionHeader } from "../../components";
+import { EmptyState, ObservationPanel, ProgressBar, SectionHeader } from "../../components";
 import { buildSpendingTrend, getPercentWidthStyle } from "../../lib/analysis";
 import { NetWorthPoint } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
@@ -17,7 +17,7 @@ export function TrendsPanel({
   moments: SpendingMoment[];
   netWorthTrend: NetWorthPoint[];
 }) {
-  const { colors, strings, styles } = useTheme();
+  const { colors, componentStyles, strings, styles } = useTheme();
   const trendsStrings = strings.patterns.trends;
   const trend = useMemo(() => buildSpendingTrend(moments), [moments]);
   const netWorthPeak = useMemo(
@@ -40,17 +40,16 @@ export function TrendsPanel({
             {netWorthTrend.map((point) => (
               <View key={point.date} style={styles.analyticsRow}>
                 <View style={styles.analyticsRowHeader}>
-                  <Text style={styles.analyticsTitle}>{formatLocaleShortDate(point.date)}</Text>
+                  <Text style={componentStyles.analyticsTitle}>{formatLocaleShortDate(point.date)}</Text>
                   <Text style={styles.analyticsAmount}>{formatCompactRupiah(point.total)}</Text>
                 </View>
-                <View style={styles.progressTrack}>
-                  <View
-                    style={[
-                      styles.trendFill,
-                      getPercentWidthStyle(netWorthPeak > 0 ? point.total / netWorthPeak : 0)
-                    ]}
-                  />
-                </View>
+                <ProgressBar
+                  fillStyle={[
+                    styles.trendFill,
+                    getPercentWidthStyle(netWorthPeak > 0 ? point.total / netWorthPeak : 0)
+                  ]}
+                  value={netWorthPeak > 0 ? point.total / netWorthPeak : 0}
+                />
               </View>
             ))}
           </View>
@@ -64,12 +63,13 @@ export function TrendsPanel({
         {trend.months.map((month) => (
           <View key={month.key} style={styles.analyticsRow}>
             <View style={styles.analyticsRowHeader}>
-              <Text style={styles.analyticsTitle}>{month.label}</Text>
+              <Text style={componentStyles.analyticsTitle}>{month.label}</Text>
               <Text style={styles.analyticsAmount}>{formatCompactRupiah(month.amount)}</Text>
             </View>
-            <View style={styles.progressTrack}>
-              <View style={[styles.trendFill, getPercentWidthStyle(month.share)]} />
-            </View>
+            <ProgressBar
+              fillStyle={[styles.trendFill, getPercentWidthStyle(month.share)]}
+              value={month.share}
+            />
           </View>
         ))}
       </View>}
