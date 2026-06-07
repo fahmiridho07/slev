@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { memo, useCallback, useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { AccountPicker, ContextPicker, EmptyState } from "../../components";
 import { CaptureTypePicker } from "./CaptureTypePicker";
 import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
-import { getTemplateLabel } from "../../lib/analysis";
+import { getFrequentAccountLabels, getTemplateLabel } from "../../lib/analysis";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
 import { colors } from "../../theme/colors";
 import { styles } from "../../theme/styles/app";
@@ -17,12 +17,17 @@ type CapturePanelProps = {
 function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
   const actions = useActions();
   const { categoryLabels, repeatSuggestions } = useDerived();
-  const { accounts, manualTemplates } = useFinanceSelector(
+  const { accounts, manualTemplates, moments } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
-      manualTemplates: state.manualTemplates
+      manualTemplates: state.manualTemplates,
+      moments: state.moments
     }),
     shallowEqual
+  );
+  const quickSources = useMemo(
+    () => getFrequentAccountLabels(moments, accounts),
+    [moments, accounts]
   );
   const {
     form,
@@ -121,12 +126,32 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
       )}
 
       {form.entryType !== "transfer" && (
-        <AccountPicker
-          accounts={accounts}
-          label={form.entryType === "income" ? "Received in" : "Paid from"}
-          selected={form.accountLabel}
-          onSelect={(value) => patch({ accountLabel: value })}
-        />
+        <>
+          <View style={styles.repeatBlock}>
+            <Text style={styles.microLabel}>Quick source</Text>
+            <View style={styles.suggestionRow}>
+              {quickSources.map((label) => {
+                const selected = form.accountLabel === label;
+                return (
+                  <Pressable
+                    key={label}
+                    accessibilityRole="button"
+                    onPress={() => patch({ accountLabel: label })}
+                    style={[styles.repeatChip, selected && styles.accountChipActive]}
+                  >
+                    <Text style={[styles.repeatText, selected && styles.accountChipTextActive]}>{label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+          <AccountPicker
+            accounts={accounts}
+            label={form.entryType === "income" ? "Received in" : "Paid from"}
+            selected={form.accountLabel}
+            onSelect={(value) => patch({ accountLabel: value })}
+          />
+        </>
       )}
 
       {form.entryType === "expense" && repeatSuggestions.length > 0 && (
