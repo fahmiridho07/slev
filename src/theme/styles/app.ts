@@ -183,6 +183,35 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18
   },
+  pulseHero: {
+    backgroundColor: colors.mint,
+    borderColor: "#c3e3cc",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexBasis: "100%",
+    gap: 8,
+    padding: 18
+  },
+  pulseHeroLabel: {
+    color: colors.greenDark,
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 0,
+    textTransform: "uppercase"
+  },
+  pulseHeroValue: {
+    color: colors.ink,
+    fontSize: 34,
+    fontWeight: "900",
+    letterSpacing: 0,
+    lineHeight: 40
+  },
+  pulseHeroHint: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20
+  },
   allocationGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
