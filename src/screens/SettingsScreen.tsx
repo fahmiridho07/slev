@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { memo, useEffect, useMemo, useState } from "react";
+import React, { memo, useMemo, useState } from "react";
 import { Pressable, StyleProp, Text, TextInput, View, ViewStyle } from "react-native";
 import {
+  BottomSheet,
   DeleteConfirmDialog,
   EmptyState,
-  FormScrollAnchor,
   ListActionRow,
   ListActionsOnboardingTip,
   ScreenHero,
@@ -12,11 +12,11 @@ import {
   SegmentedControl,
   StickyTabScreen
 } from "../components";
-import { useScrollToForm } from "../hooks/scrollToForm";
 import { useListActionsHint } from "../hooks/useListActionsHint";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { SettingsTabKey } from "../features/app.types";
 import { ExpenseCategory } from "../features/spendingMemory.types";
+import { CategoryEditForm } from "../features/settings/CategoryEditForm";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
 import { formatString, getCategoryDeleteMessage } from "../i18n";
 import { hapticSelection, hapticWarning } from "../lib/haptics";
@@ -68,7 +68,7 @@ function SettingsScreenComponent({
   const momentCount = moments.length;
 
   const activeTab = activeSettingsTab;
-  const [editingCategoryId, setEditingCategoryId] = useState<string | undefined>(undefined);
+  const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
   const [categoryDraft, setCategoryDraft] = useState("");
   const [categoryFieldError, setCategoryFieldError] = useState<FormValidationError<CategoryFieldError> | null>(null);
   const [pendingDeleteCategory, setPendingDeleteCategory] = useState<ExpenseCategory | null>(null);
@@ -81,23 +81,12 @@ function SettingsScreenComponent({
     "settings_categories",
     activeTab === "categories" && expenseCategories.length > 0
   );
-  const scrollToForm = useScrollToForm();
-
-  useEffect(() => {
-    if (editingCategoryId) {
-      requestAnimationFrame(() => scrollToForm());
-    }
-  }, [editingCategoryId, scrollToForm]);
-
   function editCategory(category: ExpenseCategory) {
     hapticSelection();
-    setEditingCategoryId(category.id);
-    setCategoryDraft(category.label);
-    setCategoryFieldError(null);
+    setEditingCategory(category);
   }
 
-  function resetCategoryDraft() {
-    setEditingCategoryId(undefined);
+  function resetAddCategoryDraft() {
     setCategoryDraft("");
     setCategoryFieldError(null);
   }
@@ -176,11 +165,8 @@ function SettingsScreenComponent({
               title={strings.listHints.settings_categories.title}
             />
           )}
-          <FormScrollAnchor>
           <View style={styles.capturePanel}>
-            <Text style={componentStyles.microLabel}>
-              {editingCategoryId ? strings.settings.categories.edit : strings.settings.categories.add}
-            </Text>
+            <Text style={componentStyles.microLabel}>{strings.settings.categories.add}</Text>
             <TextInput
               accessibilityLabel={
                 categoryFieldError?.field === "label"
@@ -202,16 +188,11 @@ function SettingsScreenComponent({
               </Text>
             )}
             <View style={componentStyles.editActions}>
-              {editingCategoryId && (
-                <Pressable accessibilityRole="button" onPress={resetCategoryDraft} style={styles.secondaryButton}>
-                  <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
-                </Pressable>
-              )}
               <Pressable
                 accessibilityRole="button"
                 onPress={() => {
                   void (async () => {
-                    const result = await actions.saveCategory({ id: editingCategoryId, label: categoryDraft });
+                    const result = await actions.saveCategory({ label: categoryDraft });
                     if (!result.ok) {
                       hapticWarning();
                       if (result.validation) {
@@ -219,7 +200,7 @@ function SettingsScreenComponent({
                       }
                       return;
                     }
-                    resetCategoryDraft();
+                    resetAddCategoryDraft();
                   })();
                 }}
                 style={styles.smallPrimaryButton}
@@ -228,7 +209,6 @@ function SettingsScreenComponent({
               </Pressable>
             </View>
           </View>
-          </FormScrollAnchor>
           {expenseCategories.length === 0 ? (
             <EmptyState text={strings.settings.categories.empty} />
           ) : (
@@ -359,7 +339,7 @@ function SettingsScreenComponent({
     componentStyles,
     corruptIssues,
     dismissCategoriesHint,
-    editingCategoryId,
+    editingCategory,
     expenseCategories,
     importDraft,
     importFieldError,
@@ -406,14 +386,32 @@ function SettingsScreenComponent({
       >
         {tabContent}
       </StickyTabScreen>
+      <BottomSheet
+        onClose={() => setEditingCategory(null)}
+        title={
+          editingCategory
+            ? formatString(strings.settings.categories.editA11y, { label: editingCategory.label })
+            : strings.settings.categories.edit
+        }
+        visible={Boolean(editingCategory)}
+      >
+        {editingCategory ? (
+          <CategoryEditForm
+            key={editingCategory.id}
+            category={editingCategory}
+            onCancel={() => setEditingCategory(null)}
+            onSaved={() => setEditingCategory(null)}
+          />
+        ) : null}
+      </BottomSheet>
       <DeleteConfirmDialog
         body={pendingDeleteCategory ? getCategoryDeleteMessage(pendingDeleteCategory) : ""}
         onCancel={() => setPendingDeleteCategory(null)}
         onConfirm={() => {
           if (pendingDeleteCategory) {
             void actions.removeCategory(pendingDeleteCategory);
-            if (editingCategoryId === pendingDeleteCategory.id) {
-              resetCategoryDraft();
+            if (editingCategory?.id === pendingDeleteCategory.id) {
+              setEditingCategory(null);
             }
             setPendingDeleteCategory(null);
           }

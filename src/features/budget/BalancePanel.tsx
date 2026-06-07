@@ -4,15 +4,14 @@ import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 import {
   AccountPicker,
   AccountTitle,
+  BottomSheet,
   DeleteConfirmDialog,
   EmptyState,
-  FormScrollAnchor,
   ListActionRow,
   ListActionsOnboardingTip,
   SectionHeader,
   SegmentedControl
 } from "../../components";
-import { useScrollToForm } from "../../hooks/scrollToForm";
 import { useListActionsHint } from "../../hooks/useListActionsHint";
 import { formatString, type AppStrings } from "../../i18n";
 import { formatAmountInput, formatSignedCompactRupiah } from "../../lib/formatMoney";
@@ -28,6 +27,7 @@ import { hapticSelection, hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
 import { useTheme } from "../../hooks/useTheme";
 import { AccountFieldError, BalanceFieldError } from "./budgetValidation";
+import { AccountEditForm } from "./AccountEditForm";
 
 function getAccountKindLabel(kind: MoneyAccount["kind"], strings: AppStrings) {
   switch (kind) {
@@ -72,7 +72,7 @@ export function BalancePanel({
   const balanceStrings = strings.budget.balance;
   const [accountLabel, setAccountLabel] = useState(accounts[0]?.label ?? "");
   const [amount, setAmount] = useState("");
-  const [editingAccountId, setEditingAccountId] = useState<string | undefined>(undefined);
+  const [editingAccount, setEditingAccount] = useState<MoneyAccount | null>(null);
   const [accountDraftLabel, setAccountDraftLabel] = useState("");
   const [accountDraftKind, setAccountDraftKind] = useState<MoneyAccount["kind"]>("bank");
   const [accountDraftHub, setAccountDraftHub] = useState<"hub" | "pocket">("pocket");
@@ -93,14 +93,6 @@ export function BalancePanel({
     currentBalances.forEach((snapshot) => map.set(snapshot.accountLabel, snapshot.amount));
     return map;
   }, [currentBalances]);
-  const scrollToForm = useScrollToForm();
-
-  useEffect(() => {
-    if (editingAccountId) {
-      requestAnimationFrame(() => scrollToForm());
-    }
-  }, [editingAccountId, scrollToForm]);
-
   useEffect(() => {
     const labels = accounts.map((account) => account.label);
     if (labels.length === 0) {
@@ -112,16 +104,10 @@ export function BalancePanel({
 
   function editAccount(account: MoneyAccount) {
     hapticSelection();
-    setEditingAccountId(account.id);
-    setAccountDraftLabel(account.label);
-    setAccountDraftKind(account.kind);
-    setAccountDraftHub(account.isIncomeHub ? "hub" : "pocket");
-    setAccountDraftTier(account.tier ?? "tracked");
-    setAccountFieldError(null);
+    setEditingAccount(account);
   }
 
-  function resetAccountDraft() {
-    setEditingAccountId(undefined);
+  function resetAddAccountDraft() {
     setAccountDraftLabel("");
     setAccountDraftKind("bank");
     setAccountDraftHub("pocket");
@@ -313,11 +299,8 @@ export function BalancePanel({
         </Pressable>
       </View>
 
-      <FormScrollAnchor>
       <View style={styles.capturePanel}>
-        <Text style={componentStyles.microLabel}>
-          {editingAccountId ? balanceStrings.editAccount : balanceStrings.addAccount}
-        </Text>
+        <Text style={componentStyles.microLabel}>{balanceStrings.addAccount}</Text>
         <TextInput
           accessibilityLabel={
             accountFieldError?.field === "label"
@@ -371,16 +354,10 @@ export function BalancePanel({
           <Text style={styles.settingCopy}>{balanceStrings.ephemeralHint}</Text>
         </View>
         <View style={componentStyles.editActions}>
-          {editingAccountId && (
-            <Pressable onPress={resetAccountDraft} style={styles.secondaryButton}>
-              <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
-            </Pressable>
-          )}
           <Pressable
             onPress={() => {
               void (async () => {
                 const result = await onSaveAccount({
-                  id: editingAccountId,
                   isIncomeHub: accountDraftHub === "hub",
                   kind: accountDraftKind,
                   label: accountDraftLabel,
@@ -393,7 +370,7 @@ export function BalancePanel({
                   }
                   return;
                 }
-                resetAccountDraft();
+                resetAddAccountDraft();
               })();
             }}
             style={styles.smallPrimaryButton}
@@ -402,7 +379,6 @@ export function BalancePanel({
           </Pressable>
         </View>
       </View>
-      </FormScrollAnchor>
 
       {showAccountsHint && (
         <ListActionsOnboardingTip
@@ -436,6 +412,24 @@ export function BalancePanel({
           </View>
         </>
       )}
+      <BottomSheet
+        onClose={() => setEditingAccount(null)}
+        title={
+          editingAccount
+            ? formatString(balanceStrings.editAccountA11y, { label: editingAccount.label })
+            : balanceStrings.editAccount
+        }
+        visible={Boolean(editingAccount)}
+      >
+        {editingAccount ? (
+          <AccountEditForm
+            key={editingAccount.id}
+            account={editingAccount}
+            onCancel={() => setEditingAccount(null)}
+            onSaved={() => setEditingAccount(null)}
+          />
+        ) : null}
+      </BottomSheet>
       <DeleteConfirmDialog
         body={
           pendingDeleteAccount
@@ -446,8 +440,8 @@ export function BalancePanel({
         onConfirm={() => {
           if (pendingDeleteAccount) {
             onDeleteAccount(pendingDeleteAccount.id);
-            if (editingAccountId === pendingDeleteAccount.id) {
-              resetAccountDraft();
+            if (editingAccount?.id === pendingDeleteAccount.id) {
+              setEditingAccount(null);
             }
             setPendingDeleteAccount(null);
           }

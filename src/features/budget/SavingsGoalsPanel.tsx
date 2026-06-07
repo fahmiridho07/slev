@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { DeleteConfirmDialog, EmptyState, FormScrollAnchor, ListActionRow, ListActionsOnboardingTip, ProgressBar } from "../../components";
-import { useScrollToForm } from "../../hooks/scrollToForm";
+import { BottomSheet, DeleteConfirmDialog, EmptyState, ListActionRow, ListActionsOnboardingTip, ProgressBar } from "../../components";
 import { useListActionsHint } from "../../hooks/useListActionsHint";
 import { formatString } from "../../i18n";
 import { getPercentWidthStyle } from "../../lib/analysis";
@@ -12,6 +11,7 @@ import { hapticSelection, hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
 import { useTheme } from "../../hooks/useTheme";
 import { GoalFieldError } from "./budgetValidation";
+import { GoalEditForm } from "./GoalEditForm";
 
 export function SavingsGoalsPanel({
   savingsGoals,
@@ -29,32 +29,20 @@ export function SavingsGoalsPanel({
 }) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const goalsStrings = strings.budget.goals;
-  const [editingGoalId, setEditingGoalId] = useState<string | undefined>(undefined);
+  const [editingGoal, setEditingGoal] = useState<SavingsGoal | null>(null);
   const [goalLabel, setGoalLabel] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
   const [savedAmount, setSavedAmount] = useState("");
   const [pendingDeleteGoal, setPendingDeleteGoal] = useState<SavingsGoal | null>(null);
   const [fieldError, setFieldError] = useState<FormValidationError<GoalFieldError> | null>(null);
   const { dismiss: dismissGoalsHint, visible: showGoalsHint } = useListActionsHint("goals", savingsGoals.length > 0);
-  const scrollToForm = useScrollToForm();
-
-  useEffect(() => {
-    if (editingGoalId) {
-      requestAnimationFrame(() => scrollToForm());
-    }
-  }, [editingGoalId, scrollToForm]);
 
   function editGoal(goal: SavingsGoal) {
     hapticSelection();
-    setEditingGoalId(goal.id);
-    setGoalLabel(goal.label);
-    setTargetAmount(formatAmountInput(String(goal.targetAmount)));
-    setSavedAmount(formatAmountInput(String(goal.savedAmount)));
-    setFieldError(null);
+    setEditingGoal(goal);
   }
 
-  function resetDraft() {
-    setEditingGoalId(undefined);
+  function resetAddDraft() {
     setGoalLabel("");
     setTargetAmount("");
     setSavedAmount("");
@@ -75,9 +63,8 @@ export function SavingsGoalsPanel({
 
   return (
     <View style={styles.cardStack}>
-      <FormScrollAnchor>
       <View style={styles.capturePanel}>
-        <Text style={componentStyles.microLabel}>{editingGoalId ? goalsStrings.editGoal : goalsStrings.newGoal}</Text>
+        <Text style={componentStyles.microLabel}>{goalsStrings.newGoal}</Text>
         <TextInput
           accessibilityLabel={
             fieldError?.field === "label"
@@ -129,16 +116,10 @@ export function SavingsGoalsPanel({
           value={savedAmount}
         />
         <View style={componentStyles.editActions}>
-          {editingGoalId && (
-            <Pressable onPress={resetDraft} style={styles.secondaryButton}>
-              <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
-            </Pressable>
-          )}
           <Pressable
             onPress={() => {
               void (async () => {
                 const result = await onSaveGoal({
-                  id: editingGoalId,
                   label: goalLabel,
                   savedAmount,
                   targetAmount
@@ -150,7 +131,7 @@ export function SavingsGoalsPanel({
                   }
                   return;
                 }
-                resetDraft();
+                resetAddDraft();
               })();
             }}
             style={styles.smallPrimaryButton}
@@ -159,7 +140,6 @@ export function SavingsGoalsPanel({
           </Pressable>
         </View>
       </View>
-      </FormScrollAnchor>
 
       {savingsGoals.length === 0 ? (
         <EmptyState text={goalsStrings.emptyGoals} />
@@ -199,6 +179,19 @@ export function SavingsGoalsPanel({
           })}
         </View>
       )}
+      <BottomSheet
+        onClose={() => setEditingGoal(null)}
+        title={
+          editingGoal
+            ? formatString(goalsStrings.editGoalA11y, { label: editingGoal.label })
+            : goalsStrings.editGoal
+        }
+        visible={Boolean(editingGoal)}
+      >
+        {editingGoal ? (
+          <GoalEditForm key={editingGoal.id} goal={editingGoal} onCancel={() => setEditingGoal(null)} onSaved={() => setEditingGoal(null)} />
+        ) : null}
+      </BottomSheet>
       <DeleteConfirmDialog
         body={
           pendingDeleteGoal
@@ -209,6 +202,9 @@ export function SavingsGoalsPanel({
         onConfirm={() => {
           if (pendingDeleteGoal) {
             onDeleteGoal(pendingDeleteGoal.id);
+            if (editingGoal?.id === pendingDeleteGoal.id) {
+              setEditingGoal(null);
+            }
             setPendingDeleteGoal(null);
           }
         }}
