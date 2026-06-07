@@ -315,7 +315,9 @@ export type AppStrings = {
       dueTomorrow: string;
       empty: string;
       emptyAction: string;
-      horizonTotal: string;
+      horizonMultiple: string;
+      horizonSingle: string;
+      horizonWindow: string;
       logPayment: string;
       logPaymentA11y: string;
     };

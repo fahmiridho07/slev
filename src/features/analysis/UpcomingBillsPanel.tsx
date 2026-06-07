@@ -18,12 +18,27 @@ export function UpcomingBillsPanel({
   onLogPayment: (billId: string) => void;
 }) {
   const { colors, componentStyles, strings, styles } = useTheme();
-  const horizonTotal = upcomingBills.reduce((sum, item) => sum + item.bill.amount, 0);
-
   function formatDueHint(daysUntil: number): string {
     if (daysUntil === 0) return strings.home.bills.dueToday;
     if (daysUntil === 1) return strings.home.bills.dueTomorrow;
     return formatString(strings.home.bills.dueInDays, { count: daysUntil });
+  }
+
+  function formatHorizonSummary(): string {
+    const total = upcomingBills.reduce((sum, item) => sum + item.bill.amount, 0);
+    const amount = formatCompactRupiah(total);
+
+    if (upcomingBills.length === 1) {
+      return formatString(strings.home.bills.horizonSingle, {
+        amount,
+        due: formatDueHint(upcomingBills[0].daysUntil)
+      });
+    }
+
+    return formatString(strings.home.bills.horizonMultiple, {
+      amount,
+      count: upcomingBills.length
+    });
   }
 
   if (upcomingBills.length === 0) {
@@ -43,10 +58,11 @@ export function UpcomingBillsPanel({
     <View style={styles.cardStack}>
       <View style={styles.capturePanel}>
         <View style={styles.analyticsRowHeader}>
-          <Text style={componentStyles.microLabel}>{strings.home.bills.comingUp}</Text>
-          <Text style={styles.settingCopy}>
-            {formatString(strings.home.bills.horizonTotal, { amount: formatCompactRupiah(horizonTotal) })}
-          </Text>
+          <View>
+            <Text style={componentStyles.microLabel}>{strings.home.bills.comingUp}</Text>
+            <Text style={styles.settingCopy}>{strings.home.bills.horizonWindow}</Text>
+          </View>
+          <Text style={styles.settingCopy}>{formatHorizonSummary()}</Text>
         </View>
       </View>
       <View style={styles.listPanel}>
