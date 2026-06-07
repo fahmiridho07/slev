@@ -78,7 +78,10 @@ export async function importAllData(raw: unknown): Promise<ImportResult> {
     return { ok: false, code: "invalid_backup" };
   }
 
+  const snapshot = await exportAllData();
+  const touchedKeys: (typeof EXPORTABLE_STORAGE_KEYS)[number][] = [];
   let importedAny = false;
+
   for (const key of EXPORTABLE_STORAGE_KEYS) {
     const value = backup.data[key];
     if (value === undefined) {
@@ -86,14 +89,17 @@ export async function importAllData(raw: unknown): Promise<ImportResult> {
     }
 
     if (!isImportableValue(value)) {
+      await restoreImportSnapshot(snapshot, touchedKeys);
       return { ok: false, code: "invalid_collection", key };
     }
 
     clearCorruptFlag(key);
     const written = await writeJson(key, value);
     if (!written) {
+      await restoreImportSnapshot(snapshot, touchedKeys, key);
       return { ok: false, code: "restore_failed", key };
     }
+    touchedKeys.push(key);
     importedAny = true;
   }
 
@@ -103,16 +109,46 @@ export async function importAllData(raw: unknown): Promise<ImportResult> {
 
   const normalized = await normalizeImportedData();
   if (!normalized) {
+    await restoreImportSnapshot(snapshot, touchedKeys);
     return { ok: false, code: "normalize_failed" };
   }
 
   if (backup.schemaVersion < SCHEMA_VERSION) {
     await runMigrations();
   } else {
-    await writeJson(STORAGE_KEYS.schemaVersion, String(SCHEMA_VERSION));
+    const versionWritten = await writeJson(STORAGE_KEYS.schemaVersion, String(SCHEMA_VERSION));
+    if (!versionWritten) {
+      await restoreImportSnapshot(snapshot, touchedKeys);
+      return { ok: false, code: "restore_failed", key: STORAGE_KEYS.schemaVersion };
+    }
   }
 
   return { ok: true };
+}
+
+async function restoreImportSnapshot(
+  snapshot: StorageBackup,
+  touchedKeys: (typeof EXPORTABLE_STORAGE_KEYS)[number][],
+  failedKey?: string
+): Promise<void> {
+  const keysToRestore = new Set<typeof EXPORTABLE_STORAGE_KEYS[number]>(touchedKeys);
+  if (failedKey && EXPORTABLE_STORAGE_KEYS.includes(failedKey as (typeof EXPORTABLE_STORAGE_KEYS)[number])) {
+    keysToRestore.add(failedKey as (typeof EXPORTABLE_STORAGE_KEYS)[number]);
+  }
+
+  for (const key of keysToRestore) {
+    const value = snapshot.data[key];
+    if (value === undefined) {
+      continue;
+    }
+    if (isImportableValue(value)) {
+      await writeJson(key, value);
+    }
+  }
+
+  if (typeof snapshot.schemaVersion === "number") {
+    await writeJson(STORAGE_KEYS.schemaVersion, String(snapshot.schemaVersion));
+  }
 }
 
 function parseBackup(raw: unknown): StorageBackup | null {

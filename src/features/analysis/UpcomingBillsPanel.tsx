@@ -9,9 +9,11 @@ import { UpcomingBill } from "../../lib/recurringBills";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 
 export function UpcomingBillsPanel({
+  onOpenSettings,
   upcomingBills,
   onLogPayment
 }: {
+  onOpenSettings: () => void;
   upcomingBills: UpcomingBill[];
   onLogPayment: (billId: string) => void;
 }) {
@@ -28,7 +30,11 @@ export function UpcomingBillsPanel({
     return (
       <View style={styles.capturePanel}>
         <Text style={componentStyles.microLabel}>{strings.home.bills.comingUp}</Text>
-        <EmptyState text={strings.home.bills.empty} />
+        <EmptyState
+          actionLabel={strings.home.bills.emptyAction}
+          onAction={onOpenSettings}
+          text={strings.home.bills.empty}
+        />
       </View>
     );
   }

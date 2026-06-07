@@ -13,10 +13,12 @@ import { CashflowPanel } from "./CashflowPanel";
 
 export function TrendsPanel({
   moments,
-  netWorthTrend
+  netWorthTrend,
+  onOpenBalance
 }: {
   moments: SpendingMoment[];
   netWorthTrend: NetWorthPoint[];
+  onOpenBalance: () => void;
 }) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const trendsStrings = strings.patterns.trends;
@@ -62,7 +64,11 @@ export function TrendsPanel({
           </View>
         </>
       ) : (
-        <EmptyState text={trendsStrings.snapshotForNetWorth} />
+        <EmptyState
+          actionLabel={trendsStrings.snapshotAction}
+          onAction={onOpenBalance}
+          text={trendsStrings.snapshotForNetWorth}
+        />
       )}
 
       {hasSpendingTrend && <SectionHeader title={trendsStrings.spendingTrend} />}

@@ -3,6 +3,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { MonthlyPlan, SavingsGoal } from "../spendingMemory.types";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
+import { sumSavingsGoals } from "../../lib/savingsGoalsTotals";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { MonthlySummary } from "../app.types";
 import { useTheme } from "../../hooks/useTheme";
@@ -32,8 +33,7 @@ export function HomeMoneyPulse({
   const { colors, strings, styles } = useTheme();
   const savingsTarget = monthlyPlan?.savingsTarget ?? 0;
   const netIsNegative = monthlySummary.net < 0;
-  const goalsSavedTotal = savingsGoals.reduce((sum, goal) => sum + goal.savedAmount, 0);
-  const goalsTargetTotal = savingsGoals.reduce((sum, goal) => sum + goal.targetAmount, 0);
+  const { saved: goalsSavedTotal, target: goalsTargetTotal } = sumSavingsGoals(savingsGoals);
   const showGoalProgress = savingsGoals.length > 0;
   const showMonthlySavingsTarget = !showGoalProgress && savingsTarget > 0;
   const hasFlexibleBudget = (monthlyPlan?.flexibleBudget ?? 0) > 0;

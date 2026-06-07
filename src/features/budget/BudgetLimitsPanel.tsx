@@ -8,7 +8,7 @@ import { formatAmountInput } from "../../lib/formatMoney";
 import { getModeByCategory } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { BudgetLimit, BudgetPeriod, CategoryMode, ExpenseCategory, SpendingContext, SpendingMoment } from "../spendingMemory.types";
-import { hapticWarning } from "../../lib/haptics";
+import { hapticSelection, hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
 import { useTheme } from "../../hooks/useTheme";
 import { getProgressFillStyle } from "../../theme/styles/fillStyles";
@@ -43,7 +43,7 @@ export function BudgetLimitsPanel({
 }) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const limitsStrings = strings.budget.limits;
-  const limitEditAction = strings.settings.categories.edit.split(" ")[0];
+  const limitEditAction = strings.common.edit;
   const [editingCategory, setEditingCategory] = useState<SpendingContext | null>(null);
   const [draftAmount, setDraftAmount] = useState("");
   const [draftPeriod, setDraftPeriod] = useState<BudgetPeriod>("weekly");
@@ -75,8 +75,9 @@ export function BudgetLimitsPanel({
   );
 
   function startEditing(category: SpendingContext) {
+    hapticSelection();
     const limit = limitByCategory.get(category);
-    setEditingCategory((current) => (current === category ? null : category));
+    setEditingCategory(category);
     setDraftAmount(limit ? formatAmountInput(String(limit.limitAmount)) : "");
     setDraftPeriod(limit?.period ?? "weekly");
     setLimitFieldError(null);

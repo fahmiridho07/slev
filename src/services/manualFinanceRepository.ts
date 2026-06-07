@@ -120,8 +120,7 @@ export async function deleteManualTemplate(id: string): Promise<WriteResult<Manu
 
 export async function listCategoryModes(): Promise<CategoryMode[]> {
   const result = await readJson<unknown>(CATEGORY_MODES_KEY);
-  if (result.status === "empty") return getDefaultCategoryModes();
-  if (result.status === "corrupt") return getDefaultCategoryModes();
+  if (result.status !== "ok") return getDefaultCategoryModes();
   if (!Array.isArray(result.value)) return getDefaultCategoryModes();
   return mergeCategoryModes(result.value.map(normalizeCategoryMode).filter(isCategoryMode));
 }

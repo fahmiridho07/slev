@@ -13,7 +13,9 @@ export const id: AppStrings = {
     settings: "Pengaturan"
   },
   boot: {
-    preparing: "Menyiapkan memori lokal..."
+    preparing: "Menyiapkan memori lokal...",
+    loadingFinance: "Memuat data keuangan...",
+    failed: "Tidak bisa memuat data lokal. Tarik untuk memuat ulang atau mulai ulang aplikasi."
   },
   common: {
     back: "Kembali",
@@ -35,8 +37,10 @@ export const id: AppStrings = {
     income: "Pemasukan",
     expense: "Pengeluaran",
     closeSheet: "Tutup lembar",
+    edit: "Ubah",
     selectAccount: "Pilih akun {label}",
-    swipeOrLongPressDelete: "Geser kiri atau tekan lama untuk menghapus"
+    swipeOrLongPressDelete: "Geser kiri atau tekan lama untuk menghapus",
+    swipeToDelete: "Geser kiri untuk menghapus"
   },
   capture: {
     kicker: "Catat cepat",
@@ -213,6 +217,7 @@ export const id: AppStrings = {
     bills: {
       comingUp: "Akan datang",
       empty: "Tidak ada tagihan dalam dua minggu ke depan. Tagihan rutin bisa ditambahkan di Pengaturan.",
+      emptyAction: "Tambah tagihan rutin",
       horizonTotal: "{amount} dalam 14 hari",
       dueToday: "jatuh tempo hari ini",
       dueTomorrow: "jatuh tempo besok",
@@ -298,6 +303,7 @@ export const id: AppStrings = {
       feedbackNotSure: "Tidak yakin",
       feedbackSaved: "Terima kasih — kami akan mengingatnya."
     },
+    recapEmptyAction: "Catat pengeluaran",
     ...idExtras.patterns
   },
   dialogs: {

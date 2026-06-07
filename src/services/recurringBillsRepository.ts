@@ -1,6 +1,6 @@
 import { RecurringBill, SpendingContext } from "../features/spendingMemory.types";
 import { normalizeSpendingContext } from "../data/spendingMemory";
-import { readJson, WriteResult, writeJson } from "./storage";
+import { readJson, removeKeys, WriteResult, writeJson } from "./storage";
 import { STORAGE_KEYS } from "./storageSchema";
 
 const RECURRING_BILLS_KEY = STORAGE_KEYS.recurringBills;
@@ -40,6 +40,10 @@ export async function saveRecurringBill(input: RecurringBillInput): Promise<Writ
   ].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
   const persisted = await writeJson(RECURRING_BILLS_KEY, updated);
   return { data: updated, persisted };
+}
+
+export async function clearRecurringBills(): Promise<boolean> {
+  return removeKeys([RECURRING_BILLS_KEY]);
 }
 
 export async function deleteRecurringBill(id: string): Promise<WriteResult<RecurringBill[]>> {

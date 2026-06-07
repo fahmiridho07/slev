@@ -48,6 +48,19 @@ test("getMemoryEditValidationError requires an amount", () => {
   assertField(getMemoryEditValidationError(""), "amount", "empty memory amount");
 });
 
+test("getMemoryEditValidationError requires a label or source", () => {
+  assertField(
+    getMemoryEditValidationError({
+      amountText: "10000",
+      label: "",
+      source: "",
+      type: "expense"
+    }),
+    "label",
+    "missing expense label"
+  );
+});
+
 let passed = 0;
 
 for (const { name, run } of tests) {

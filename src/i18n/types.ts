@@ -22,6 +22,8 @@ export type AppStrings = {
     system: string;
   };
   boot: {
+    failed: string;
+    loadingFinance: string;
     preparing: string;
   };
   brand: {
@@ -143,6 +145,7 @@ export type AppStrings = {
       editGoal: string;
       editGoalA11y: string;
       emptyGoals: string;
+      emptyGoalsAction: string;
       goalNameA11y: string;
       goalNamePlaceholder: string;
       newGoal: string;
@@ -282,6 +285,7 @@ export type AppStrings = {
     clear: string;
     closeSheet: string;
     delete: string;
+    edit: string;
     expense: string;
     gotIt: string;
     import: string;
@@ -295,6 +299,7 @@ export type AppStrings = {
     save: string;
     selectAccount: string;
     swipeOrLongPressDelete: string;
+    swipeToDelete: string;
   };
   dialogs: {
     categoryDeleteCustom: string;
@@ -314,6 +319,7 @@ export type AppStrings = {
       dueToday: string;
       dueTomorrow: string;
       empty: string;
+      emptyAction: string;
       horizonTotal: string;
       logPayment: string;
       logPaymentA11y: string;
@@ -458,6 +464,7 @@ export type AppStrings = {
       feedbackNotSure: string;
     };
     recapEmpty: string;
+    recapEmptyAction: string;
     tabs: {
       accounts: string;
       recap: string;
@@ -467,6 +474,7 @@ export type AppStrings = {
       currentPaceTitle: string;
       empty: string;
       netWorthTrend: string;
+      snapshotAction: string;
       snapshotForNetWorth: string;
       spendingTrend: string;
       topCategoriesEmpty: string;
@@ -609,11 +617,18 @@ export type AppStrings = {
       savedMonth: string;
       savedWeek: string;
     };
+    boot: {
+      failed: string;
+    };
     memory: {
       needAmount: string;
+      notFound: string;
       removed: string;
       restored: string;
       updated: string;
+    };
+    refresh: {
+      failed: string;
     };
     plan: {
       saved: string;

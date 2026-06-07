@@ -23,6 +23,7 @@ import {
 } from "../features/spendingMemory.types";
 import { getMonthKey } from "../lib/analysis";
 import {
+  clearRecurringBills,
   deleteRecurringBill,
   listRecurringBills,
   saveRecurringBill
@@ -38,7 +39,7 @@ import {
   getBackupReadyToast,
 
   getBalanceSavedToast,
-  getBillLoggedPartialToast,
+  getBootFailedToast,
   getBillLoggedToast,
   getBillRemovedToast,
   getBillSavedToast,
@@ -56,10 +57,13 @@ import {
 
   getLimitRemovedToast,
   getLimitSavedToast,
+  getMemoryNeedAmountToast,
+  getMemoryNotFoundToast,
   getMemoryRemovedToast,
   getMemoryRestoredToast,
   getPatternFeedbackSavedToast,
   getMemoryUpdatedToast,
+  getRefreshFailedToast,
   getPlanSavedToast,
   getResetFailedToast,
   getResetSuccessToast,
@@ -136,7 +140,9 @@ export function createFinanceActions(
   dispatch: FinanceDispatch,
   getState: () => FinanceState
 ) {
-  async function reload() {
+  let reloadPromise: Promise<void> | null = null;
+
+  async function performReload() {
     const currentMonthKey = getMonthKey(new Date());
     const [
       storedMoments,
@@ -185,10 +191,36 @@ export function createFinanceActions(
     });
   }
 
+  async function reload() {
+    if (reloadPromise) {
+      return reloadPromise;
+    }
+
+    reloadPromise = performReload().finally(() => {
+      reloadPromise = null;
+    });
+
+    return reloadPromise;
+  }
+
+  async function reloadOrNotify() {
+    try {
+      await reload();
+    } catch {
+      setMessage(getRefreshFailedToast());
+    }
+  }
+
   async function boot() {
-    await runMigrations();
-    await reload();
-    dispatch({ type: "set_ready", ready: true });
+    try {
+      await runMigrations();
+      await reload();
+      dispatch({ type: "set_boot_error", error: null });
+    } catch {
+      dispatch({ type: "set_boot_error", error: getBootFailedToast() });
+    } finally {
+      dispatch({ type: "set_ready", ready: true });
+    }
   }
 
   function setMessage(message: string) {
@@ -309,17 +341,14 @@ export function createFinanceActions(
       accountLabel: string;
     }
   ) {
-    const validationError = getMemoryEditValidationError(input.amountText);
+    const validationError = getMemoryEditValidationError(input);
     if (validationError) {
       return { ok: false as const, validation: validationError };
     }
 
-    const amount = parseAmountInput(input.amountText);
-    if (!amount) {
-      return { ok: false as const };
-    }
+    const amount = parseAmountInput(input.amountText)!;
 
-    const { data: updated, persisted } = await updateSpendingMoment(id, {
+    const { data: updated, persisted, found } = await updateSpendingMoment(id, {
       amount,
       label: input.type === "expense" ? input.label : undefined,
       context: input.type === "expense" ? input.context : "Other",
@@ -328,9 +357,17 @@ export function createFinanceActions(
       source: input.type === "income" ? input.source : undefined,
       accountLabel: input.accountLabel
     });
+    if (!found) {
+      return {
+        ok: false as const,
+        validation: { field: "amount" as const, message: getMemoryNotFoundToast() }
+      };
+    }
     if (!persisted) {
-      notifyWriteFailure(STORAGE_KEYS.moments);
-      return { ok: false as const };
+      return {
+        ok: false as const,
+        validation: { field: "amount" as const, message: getWriteFailureToast(STORAGE_KEYS.moments) }
+      };
     }
     const moment = updated.find((item) => item.id === id);
     if (moment) {
@@ -443,13 +480,26 @@ export function createFinanceActions(
 
   async function removeCategory(category: ExpenseCategory) {
     const updatedCategories = await deleteExpenseCategory(category.id);
-    const updatedLimits = await deleteBudgetLimit(category.label);
-    const updatedModes = await deleteCategoryMode(category.label);
-    if (!updatedCategories.persisted || !updatedLimits.persisted || !updatedModes.persisted) {
+    if (!updatedCategories.persisted) {
       notifyWriteFailure(STORAGE_KEYS.expenseCategories);
       await reload();
       return;
     }
+
+    const updatedLimits = await deleteBudgetLimit(category.label);
+    if (!updatedLimits.persisted) {
+      notifyWriteFailure(STORAGE_KEYS.budgetLimits);
+      await reload();
+      return;
+    }
+
+    const updatedModes = await deleteCategoryMode(category.label);
+    if (!updatedModes.persisted) {
+      notifyWriteFailure(STORAGE_KEYS.categoryModes);
+      await reload();
+      return;
+    }
+
     dispatch({ type: "set_expense_categories", expenseCategories: updatedCategories.data });
     dispatch({ type: "set_budget_limits", budgetLimits: updatedLimits.data });
     dispatch({ type: "set_category_modes", categoryModes: updatedModes.data });
@@ -623,19 +673,6 @@ export function createFinanceActions(
       return;
     }
 
-    const { data: saved, persisted } = await saveSpendingMoment({
-      amount: bill.amount,
-      label: bill.label,
-      context: bill.context,
-      accountLabel: bill.accountLabel,
-      type: "expense"
-    });
-    if (!persisted) {
-      notifyWriteFailure(STORAGE_KEYS.moments);
-      return;
-    }
-    dispatch({ type: "prepend_moment", moment: saved });
-
     const currentMonthKey = getMonthKey(new Date());
     const { data: updatedBills, persisted: billPersisted } = await saveRecurringBill({
       id: bill.id,
@@ -649,10 +686,37 @@ export function createFinanceActions(
     });
     if (!billPersisted) {
       notifyWriteFailure(STORAGE_KEYS.recurringBills);
-      setMessage(getBillLoggedPartialToast(saved.amount));
       return;
     }
     dispatch({ type: "set_recurring_bills", recurringBills: updatedBills });
+
+    const { data: saved, persisted } = await saveSpendingMoment({
+      amount: bill.amount,
+      label: bill.label,
+      context: bill.context,
+      accountLabel: bill.accountLabel,
+      type: "expense"
+    });
+    if (!persisted) {
+      const { data: revertedBills, persisted: revertPersisted } = await saveRecurringBill({
+        id: bill.id,
+        label: bill.label,
+        amount: bill.amount,
+        context: bill.context,
+        accountLabel: bill.accountLabel,
+        dayOfMonth: bill.dayOfMonth,
+        active: bill.active,
+        lastPaidMonth: bill.lastPaidMonth
+      });
+      if (revertPersisted) {
+        dispatch({ type: "set_recurring_bills", recurringBills: revertedBills });
+      } else {
+        await reload();
+      }
+      notifyWriteFailure(STORAGE_KEYS.moments);
+      return;
+    }
+    dispatch({ type: "prepend_moment", moment: saved });
     setMessage(getBillLoggedToast(saved.amount, bill.label));
   }
 
@@ -742,6 +806,7 @@ export function createFinanceActions(
       };
     }
 
+    dispatch({ type: "set_undo_toast", moment: null });
     await reload();
     hapticSuccess();
     setMessage(getBackupImportedToast());
@@ -749,13 +814,21 @@ export function createFinanceActions(
   }
 
   async function confirmClearAll() {
-    await Promise.all([
+    const cleared = await Promise.all([
       clearSpendingMemory(),
       clearBudgetLimits(),
       clearManualFinance(),
+      clearRecurringBills(),
       clearAccountsAndTransfers(),
       clearExpenseCategories()
     ]);
+    if (!cleared.every(Boolean)) {
+      notifyWriteFailure(STORAGE_KEYS.moments);
+      await reload();
+      setClearConfirmVisible(false);
+      return;
+    }
+
     const [resetAccounts, resetCategories] = await Promise.all([
       listMoneyAccounts(),
       listExpenseCategories()
@@ -777,6 +850,7 @@ export function createFinanceActions(
     exportLocalBackup,
     importLocalBackup,
     reload,
+    reloadOrNotify,
     resetDamagedCollection,
     removeAccount,
     removeCategory,

@@ -7,7 +7,7 @@ import { formatAmountInput } from "../../lib/formatMoney";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { MoneyAccount, RecurringBill, SpendingContext } from "../spendingMemory.types";
 import { formatString } from "../../i18n";
-import { hapticWarning } from "../../lib/haptics";
+import { hapticSelection, hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
 import { useTheme } from "../../hooks/useTheme";
 import { BillFieldError } from "./settingsValidation";
@@ -46,6 +46,7 @@ export function RecurringBillsPanel({
   const { dismiss: dismissBillsHint, visible: showBillsHint } = useListActionsHint("recurring_bills", recurringBills.length > 0);
 
   function editBill(bill: RecurringBill) {
+    hapticSelection();
     setEditingBillId(bill.id);
     setLabel(bill.label);
     setAmount(formatAmountInput(String(bill.amount)));
@@ -53,6 +54,7 @@ export function RecurringBillsPanel({
     setAccountLabel(bill.accountLabel ?? accounts[0]?.label ?? "");
     setDayOfMonth(String(bill.dayOfMonth));
     setActive(bill.active);
+    setFieldError(null);
   }
 
   function resetDraft() {

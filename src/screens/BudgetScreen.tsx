@@ -9,13 +9,10 @@ import { BudgetLimitsPanel } from "../features/budget/BudgetLimitsPanel";
 import { MonthlyPlanPanel } from "../features/budget/MonthlyPlanPanel";
 import { SavingsGoalsPanel } from "../features/budget/SavingsGoalsPanel";
 import { BudgetTabKey } from "../features/app.types";
-import { formatSignedCompactRupiah } from "../lib/formatMoney";
-import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
+import { buildBudgetTabHero } from "../lib/tabHero";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { useTheme } from "../hooks/useTheme";
-import { formatString } from "../i18n";
-
 type BudgetScreenProps = {
   activeBudgetTab: BudgetTabKey;
   onBudgetTabChange: (tab: BudgetTabKey) => void;
@@ -74,68 +71,29 @@ function BudgetScreenComponent({
     }
   }, [hasMonthlyPlan]);
 
-  const goalsSavedTotal = savingsGoals.reduce((sum, goal) => sum + goal.savedAmount, 0);
-  const goalsTargetTotal = savingsGoals.reduce((sum, goal) => sum + goal.targetAmount, 0);
-
-  const hero = useMemo(() => {
-    if (activeBudgetTab === "balance") {
-      return {
-        hint: strings.budget.hero.balanceHint,
-        kicker: strings.budget.hero.balanceKicker,
-        value: formatCompactRupiah(latestBalanceTotal),
-        valueTone: "balance" as const,
-        variant: "info" as const
-      };
-    }
-    if (activeBudgetTab === "goals") {
-      return savingsGoals.length > 0
-        ? {
-            hint: formatString(strings.budget.hero.goalsHint, { count: savingsGoals.length }),
-            kicker: strings.budget.hero.goalsKicker,
-            value: `${formatCompactRupiah(goalsSavedTotal)} / ${formatCompactRupiah(goalsTargetTotal)}`,
-            valueTone: "income" as const,
-            variant: "surface" as const
-          }
-        : {
-            hint: strings.budget.hero.goalsEmptyHint,
-            kicker: strings.budget.hero.goalsEmptyKicker,
-            value: undefined,
-            valueTone: "default" as const,
-            variant: "surface" as const
-          };
-    }
-    if (hasMonthlyPlan) {
-      return {
-        hint: formatString(strings.budget.hero.flexibleSpent, {
-          amount: formatCompactRupiah(monthlySummary.flexibleExpense)
-        }),
-        kicker: strings.budget.hero.flexibleRemaining,
-        value: formatSignedCompactRupiah(allocationPlan.flexibleRemaining),
-        valueTone: allocationPlan.flexibleRemaining < 0 ? ("danger" as const) : ("income" as const),
-        variant: "mint" as const
-      };
-    }
-    return {
-      actionLabel: strings.budget.hero.noPlanAction,
-      hint: strings.budget.hero.noPlanHint,
-      kicker: strings.budget.hero.noPlanKicker,
-      onAction: () => onBudgetTabChange("plan"),
-      value: undefined,
-      valueTone: "default" as const,
-      variant: "mint" as const
-    };
-  }, [
-    activeBudgetTab,
-    allocationPlan.flexibleRemaining,
-    goalsSavedTotal,
-    goalsTargetTotal,
-    hasMonthlyPlan,
-    latestBalanceTotal,
-    monthlySummary.flexibleExpense,
-    onBudgetTabChange,
-    savingsGoals.length,
-    strings.budget.hero
-  ]);
+  const hero = useMemo(
+    () =>
+      buildBudgetTabHero({
+        activeTab: activeBudgetTab,
+        allocationFlexibleRemaining: allocationPlan.flexibleRemaining,
+        hasMonthlyPlan,
+        latestBalanceTotal,
+        monthlyFlexibleExpense: monthlySummary.flexibleExpense,
+        onOpenPlan: () => onBudgetTabChange("plan"),
+        savingsGoals,
+        strings
+      }),
+    [
+      activeBudgetTab,
+      allocationPlan.flexibleRemaining,
+      hasMonthlyPlan,
+      latestBalanceTotal,
+      monthlySummary.flexibleExpense,
+      onBudgetTabChange,
+      savingsGoals,
+      strings
+    ]
+  );
 
   return (
     <StickyTabScreen

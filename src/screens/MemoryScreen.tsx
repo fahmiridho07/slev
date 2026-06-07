@@ -15,6 +15,7 @@ import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { MomentEditForm } from "../features/memory/MomentEditForm";
 import { SpendingMoment } from "../features/spendingMemory.types";
 import { buildRepeatHints, filterMoments, getMomentTitle, groupMomentsByRecallRange } from "../lib/analysis";
+import { getMonthStartMs } from "../lib/monthBounds";
 import { hapticSelection } from "../lib/haptics";
 import { AppNavigation } from "../navigation/appNavigation";
 import { useActions, useFinanceSelector } from "../state/useFinance";
@@ -38,9 +39,8 @@ const MemoryMomentItem = memo(function MemoryMomentItem({
 
   return (
     <ListActionRow
-      accessibilityLabel={formatString(strings.memory.editSheetTitleNamed, {
-        title: getMomentTitle(moment)
-      })}
+      accessibilityHint={strings.common.swipeToDelete}
+      accessibilityLabel={getMomentTitle(moment)}
       onDelete={() => onDelete(moment)}
       onPress={() => onStartEdit(moment)}
     >
@@ -52,6 +52,7 @@ const MemoryMomentItem = memo(function MemoryMomentItem({
 type MemorySection = {
   data: SpendingMoment[];
   key: string;
+  sectionIndex: number;
   title: string;
 };
 
@@ -73,20 +74,23 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
 
   const repeatHints = useMemo(() => buildRepeatHints(moments), [moments]);
   const filteredMoments = useMemo(() => filterMoments(moments, query), [moments, query]);
-  const thisMonthCount = useMemo(() => {
-    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
-    return moments.filter((moment) => Date.parse(moment.occurredAt) >= monthStart).length;
-  }, [moments]);
-  const thisMonthExpense = useMemo(() => {
-    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
-    return moments
-      .filter((moment) => moment.type === "expense" && Date.parse(moment.occurredAt) >= monthStart)
-      .reduce((sum, moment) => sum + moment.amount, 0);
-  }, [moments]);
+  const monthStart = useMemo(() => getMonthStartMs(), []);
+  const thisMonthCount = useMemo(
+    () => moments.filter((moment) => Date.parse(moment.occurredAt) >= monthStart).length,
+    [moments, monthStart]
+  );
+  const thisMonthExpense = useMemo(
+    () =>
+      moments
+        .filter((moment) => moment.type === "expense" && Date.parse(moment.occurredAt) >= monthStart)
+        .reduce((sum, moment) => sum + moment.amount, 0),
+    [moments, monthStart]
+  );
   const sections = useMemo<MemorySection[]>(
     () =>
-      groupMomentsByRecallRange(filteredMoments).map((group) => ({
+      groupMomentsByRecallRange(filteredMoments).map((group, sectionIndex) => ({
         key: group.key,
+        sectionIndex,
         title: group.label,
         data: group.items
       })),
@@ -119,22 +123,20 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
         />
       </View>
     ),
-    [repeatHints, startEditing]
+    [repeatHints, startEditing, styles]
   );
 
   const keyExtractor = useCallback((item: SpendingMoment) => item.id, []);
 
   const renderSectionHeader = useCallback(
     ({ section }: { section: MemorySection }) => {
-      const sectionIndex = sections.findIndex((entry) => entry.key === section.key);
-
       return (
-        <View style={[styles.memoryGroup, sectionIndex > 0 && styles.memorySectionLead]}>
+        <View style={[styles.memoryGroup, section.sectionIndex > 0 && styles.memorySectionLead]}>
           <Text style={styles.groupTitle}>{section.title}</Text>
         </View>
       );
     },
-    [sections]
+    [styles.memoryGroup, styles.memorySectionLead, styles.groupTitle]
   );
 
   const listHeader = useMemo(
@@ -177,8 +179,11 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
       moments.length,
       query,
       showListHint,
+      colors.muted,
       strings.listHints.memory,
       strings.memory,
+      styles.cardStack,
+      styles.input,
       thisMonthCount,
       thisMonthExpense
     ]

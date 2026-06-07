@@ -20,11 +20,13 @@ function countRecentExpenses(moments: SpendingMoment[]) {
 export function PatternOverview({
   feedbackByPattern,
   moments,
+  onOpenCapture,
   patterns,
   onAnswer
 }: {
   feedbackByPattern: Map<string, PatternFeedbackResponse>;
   moments: SpendingMoment[];
+  onOpenCapture: () => void;
   patterns: SpendingPattern[];
   onAnswer: (patternId: string, response: PatternFeedbackResponse) => void;
 }) {
@@ -36,7 +38,11 @@ export function PatternOverview({
   return (
     <View style={styles.cardStack}>
       {patterns.length === 0 ? (
-        <EmptyState text={strings.patterns.recapEmpty} />
+        <EmptyState
+          actionLabel={strings.patterns.recapEmptyAction}
+          onAction={onOpenCapture}
+          text={strings.patterns.recapEmpty}
+        />
       ) : (
         groups.map((group) => (
           <View key={group.title} style={styles.patternGroup}>

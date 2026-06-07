@@ -13,7 +13,9 @@ export const en: AppStrings = {
     settings: "Settings"
   },
   boot: {
-    preparing: "Preparing local memory..."
+    preparing: "Preparing local memory...",
+    loadingFinance: "Loading your finance data...",
+    failed: "Could not load local data. Pull to refresh or restart the app."
   },
   common: {
     back: "Back",
@@ -35,8 +37,10 @@ export const en: AppStrings = {
     income: "Income",
     expense: "Expense",
     closeSheet: "Close sheet",
+    edit: "Edit",
     selectAccount: "Select account {label}",
-    swipeOrLongPressDelete: "Swipe left or long press to delete"
+    swipeOrLongPressDelete: "Swipe left or long press to delete",
+    swipeToDelete: "Swipe left to delete"
   },
   capture: {
     kicker: "Quick capture",
@@ -213,6 +217,7 @@ export const en: AppStrings = {
     bills: {
       comingUp: "Coming up",
       empty: "No bills due in the next two weeks. Recurring bills can be added in Settings.",
+      emptyAction: "Add recurring bills",
       horizonTotal: "{amount} in 14 days",
       dueToday: "due today",
       dueTomorrow: "due tomorrow",
@@ -298,6 +303,7 @@ export const en: AppStrings = {
       feedbackNotSure: "Not sure",
       feedbackSaved: "Thanks — we'll remember that."
     },
+    recapEmptyAction: "Log spending",
     ...enExtras.patterns
   },
   dialogs: {

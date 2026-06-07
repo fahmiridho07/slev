@@ -17,7 +17,7 @@ import { SettingsTabKey } from "../features/app.types";
 import { ExpenseCategory } from "../features/spendingMemory.types";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
 import { formatString, getCategoryDeleteMessage } from "../i18n";
-import { hapticWarning } from "../lib/haptics";
+import { hapticSelection, hapticWarning } from "../lib/haptics";
 import { FormValidationError } from "../lib/formValidation";
 import { ImportFieldError } from "../features/settings/dataValidation";
 import { CategoryFieldError } from "../features/settings/settingsValidation";
@@ -73,6 +73,7 @@ function SettingsScreenComponent({
   const [importDraft, setImportDraft] = useState("");
   const [importFieldError, setImportFieldError] = useState<FormValidationError<ImportFieldError> | null>(null);
   const [importConfirmVisible, setImportConfirmVisible] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [pendingResetIssue, setPendingResetIssue] = useState<StorageHealthIssue | null>(null);
   const { dismiss: dismissCategoriesHint, visible: showCategoriesHint } = useListActionsHint(
     "settings_categories",
@@ -80,8 +81,10 @@ function SettingsScreenComponent({
   );
 
   function editCategory(category: ExpenseCategory) {
+    hapticSelection();
     setEditingCategoryId(category.id);
     setCategoryDraft(category.label);
+    setCategoryFieldError(null);
   }
 
   function resetCategoryDraft() {
@@ -316,10 +319,10 @@ function SettingsScreenComponent({
           <Pressable
             accessibilityLabel={strings.settings.data.import}
             accessibilityRole="button"
-            accessibilityState={{ disabled: !importDraft.trim() }}
-            disabled={!importDraft.trim()}
+            accessibilityState={{ disabled: !importDraft.trim() || importing }}
+            disabled={!importDraft.trim() || importing}
             onPress={() => setImportConfirmVisible(true)}
-            style={[styles.smallPrimaryButton, !importDraft.trim() ? { opacity: 0.5 } : undefined]}
+            style={[styles.smallPrimaryButton, !importDraft.trim() || importing ? { opacity: 0.5 } : undefined]}
           >
             <Text style={styles.primaryButtonText}>{strings.settings.data.import}</Text>
           </Pressable>
@@ -417,17 +420,22 @@ function SettingsScreenComponent({
         onCancel={() => setImportConfirmVisible(false)}
         onConfirm={() => {
           void (async () => {
-            const result = await actions.importLocalBackup(importDraft);
-            setImportConfirmVisible(false);
-            if (!result.ok) {
-              hapticWarning();
-              if (result.validation) {
-                setImportFieldError(result.validation);
+            setImporting(true);
+            try {
+              const result = await actions.importLocalBackup(importDraft);
+              setImportConfirmVisible(false);
+              if (!result.ok) {
+                hapticWarning();
+                if (result.validation) {
+                  setImportFieldError(result.validation);
+                }
+                return;
               }
-              return;
+              setImportFieldError(null);
+              setImportDraft("");
+            } finally {
+              setImporting(false);
             }
-            setImportFieldError(null);
-            setImportDraft("");
           })();
         }}
         title={strings.settings.importTitle}

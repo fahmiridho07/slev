@@ -78,6 +78,7 @@ function HomeScreenComponent({
         savingsGoals={savingsGoals}
       />
       <UpcomingBillsPanel
+        onOpenSettings={onOpenSettings}
         upcomingBills={upcomingBills}
         onLogPayment={(billId) => void actions.logRecurringBillPayment(billId)}
       />

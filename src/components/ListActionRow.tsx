@@ -21,7 +21,8 @@ function ListActionRowComponent({
   style
 }: ListActionRowProps) {
   const { componentStyles, strings } = useTheme();
-  const resolvedHint = accessibilityHint ?? (onDelete ? strings.common.swipeOrLongPressDelete : undefined);
+  const resolvedHint =
+    accessibilityHint ?? (onDelete ? (onPress ? strings.common.swipeToDelete : strings.common.swipeToDelete) : undefined);
 
   if (!onDelete) {
     if (!onPress) {
@@ -48,7 +49,7 @@ function ListActionRowComponent({
       canDelete
       foregroundStyle={style}
       onDelete={onDelete}
-      onLongPress={onDelete}
+      onLongPress={onPress ? undefined : onDelete}
       onPress={onPress}
     >
       {children}

@@ -147,6 +147,20 @@ test("clear_all resets finance memory but keeps default accounts and categories"
   assertEqual(next.message, "Busy", "message preserved");
 });
 
+test("clear_all clears undo toast snapshot", () => {
+  const moment = buildMoment({ amount: 12000, occurredAt: "2026-06-01T01:00:00.000Z" });
+  const state: FinanceState = {
+    ...initialFinanceState,
+    undoToast: moment
+  };
+  const next = financeReducer(state, {
+    type: "clear_all",
+    payload: { accounts: [], expenseCategories: [] }
+  });
+
+  assertEqual(next.undoToast, null, "undo toast cleared");
+});
+
 for (const testCase of tests) {
   try {
     testCase.run();

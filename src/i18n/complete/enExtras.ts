@@ -14,11 +14,18 @@ export const enExtras: AppStringsExtras = {
       expenseSavedFor: "{amount} saved for {label}.",
       templateReady: "{label} ready to save."
     },
+    boot: {
+      failed: "Could not load local data. Pull to refresh or restart the app."
+    },
     memory: {
       removed: "Memory removed.",
       restored: "Memory restored.",
       needAmount: "Enter an amount before saving changes.",
+      notFound: "That memory is no longer available.",
       updated: "Memory updated."
+    },
+    refresh: {
+      failed: "Could not refresh. Try again."
     },
     shortcut: {
       transferUseChips: "Transfer shortcuts can use the account chips directly.",
@@ -274,6 +281,7 @@ export const enExtras: AppStringsExtras = {
       savedSoFarPlaceholder: "Saved so far",
       emptyGoals:
         "Savings goals can stay simple: target, current amount, and a small note.",
+      emptyGoalsAction: "Use the form above to add your first goal",
       editGoalA11y: "Edit goal {label}",
       deleteGoalTitle: "Delete goal?",
       deleteGoalBody:
@@ -344,6 +352,7 @@ export const enExtras: AppStringsExtras = {
       empty: "Trends appear after spending builds across months.",
       netWorthTrend: "Net-worth trend",
       snapshotForNetWorth: "Snapshot your balances to see net-worth trend.",
+      snapshotAction: "Open balance",
       spendingTrend: "Spending trend",
       currentPaceTitle: "Current month pace is visible",
       topCategoriesTitle: "Top categories this month",

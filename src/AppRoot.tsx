@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useState } from "react";
-import { Image, KeyboardAvoidingView, Linking, Platform, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Image, KeyboardAvoidingView, Linking, Platform, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppToast, DeleteConfirmDialog } from "./components";
 import { BRAND } from "./data/brand";
@@ -36,9 +36,10 @@ function FinanceInitializer() {
 
 export function AppRoot() {
   const actions = useActions();
-  const { colors, isDark, strings, styles } = useTheme();
-  const { clearConfirmVisible, isReady, message, undoToast } = useFinanceSelector(
+  const { colors, componentStyles, isDark, strings, styles } = useTheme();
+  const { bootError, clearConfirmVisible, isReady, message, undoToast } = useFinanceSelector(
     (state) => ({
+      bootError: state.bootError,
       clearConfirmVisible: state.clearConfirmVisible,
       isReady: state.isReady,
       message: state.message,
@@ -250,7 +251,25 @@ export function AppRoot() {
           </View>
 
           <View style={styles.content}>
-            {isReady && activeTab === "home" && (
+            {!isReady ? (
+              <View style={styles.bootState}>
+                <ActivityIndicator color={colors.greenDark} size="large" />
+                <Text style={styles.bootStateText}>{strings.boot.loadingFinance}</Text>
+              </View>
+            ) : bootError ? (
+              <View style={styles.bootState}>
+                <Text style={styles.bootStateText}>{bootError}</Text>
+                <Pressable
+                  accessibilityLabel={strings.common.pullToRefresh}
+                  accessibilityRole="button"
+                  onPress={() => void actions.reloadOrNotify()}
+                  style={styles.secondaryButton}
+                >
+                  <Text style={componentStyles.secondaryButtonText}>{strings.common.pullToRefresh}</Text>
+                </Pressable>
+              </View>
+            ) : null}
+            {isReady && !bootError && activeTab === "home" && (
               <HomeScreen
                 captureFocusRequest={captureFocusRequest}
                 navigation={navigation}
@@ -258,10 +277,10 @@ export function AppRoot() {
                 scrollContentStyle={scrollContentStyle}
               />
             )}
-            {isReady && activeTab === "memory" && (
+            {isReady && !bootError && activeTab === "memory" && (
               <MemoryScreen navigation={navigation} scrollContentStyle={scrollContentStyle} />
             )}
-            {isReady && activeTab === "budget" && (
+            {isReady && !bootError && activeTab === "budget" && (
               <BudgetScreen
                 activeBudgetTab={budgetTab}
                 onBudgetTabChange={setBudgetTab}
@@ -269,14 +288,19 @@ export function AppRoot() {
                 scrollContentStyle={scrollContentStyle}
               />
             )}
-            {isReady && activeTab === "patterns" && (
+            {isReady && !bootError && activeTab === "patterns" && (
               <PatternsScreen
                 activePatternTab={patternTab}
+                onOpenBalance={() => {
+                  setBudgetTab("balance");
+                  setActiveTab("budget");
+                }}
+                onOpenCapture={navigation.openCapture}
                 onPatternTabChange={setPatternTab}
                 scrollContentStyle={scrollContentStyle}
               />
             )}
-            {isReady && activeTab === "settings" && (
+            {isReady && !bootError && activeTab === "settings" && (
               <SettingsScreen
                 activeSettingsTab={settingsTab}
                 onSettingsTabChange={setSettingsTab}

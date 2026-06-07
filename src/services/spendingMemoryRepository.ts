@@ -60,8 +60,13 @@ export async function saveSpendingMoment(input: MomentInput): Promise<WriteResul
 export async function updateSpendingMoment(
   id: string,
   input: MomentInput
-): Promise<WriteResult<SpendingMoment[]>> {
+): Promise<WriteResult<SpendingMoment[]> & { found: boolean }> {
   const moments = await listSpendingMoments();
+  const exists = moments.some((moment) => moment.id === id);
+  if (!exists) {
+    return { data: moments, persisted: true, found: false };
+  }
+
   const updated = moments.map((moment) =>
     moment.id === id
       ? normalizeMoment({
@@ -74,7 +79,7 @@ export async function updateSpendingMoment(
   );
 
   const persisted = await persistSpendingMoments(updated);
-  return { data: sortMoments(updated), persisted };
+  return { data: sortMoments(updated), persisted, found: true };
 }
 
 export async function deleteSpendingMoment(id: string): Promise<WriteResult<SpendingMoment[]>> {
@@ -115,6 +120,7 @@ export async function listPatternFeedback(): Promise<PatternFeedback[]> {
     return migrated;
   }
 
+  if (result.status !== "ok") return [];
   return parsePatternFeedbackList(result.value);
 }
 

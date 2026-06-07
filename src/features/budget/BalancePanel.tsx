@@ -22,7 +22,7 @@ import {
 } from "../../lib/financeEngine";
 import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { AccountTier, BalanceSnapshot, MoneyAccount } from "../spendingMemory.types";
-import { hapticWarning } from "../../lib/haptics";
+import { hapticSelection, hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
 import { useTheme } from "../../hooks/useTheme";
 import { AccountFieldError, BalanceFieldError } from "./budgetValidation";
@@ -102,11 +102,13 @@ export function BalancePanel({
   }, [accountLabel, accounts]);
 
   function editAccount(account: MoneyAccount) {
+    hapticSelection();
     setEditingAccountId(account.id);
     setAccountDraftLabel(account.label);
     setAccountDraftKind(account.kind);
     setAccountDraftHub(account.isIncomeHub ? "hub" : "pocket");
     setAccountDraftTier(account.tier ?? "tracked");
+    setAccountFieldError(null);
   }
 
   function resetAccountDraft() {
@@ -433,6 +435,9 @@ export function BalancePanel({
         onConfirm={() => {
           if (pendingDeleteAccount) {
             onDeleteAccount(pendingDeleteAccount.id);
+            if (editingAccountId === pendingDeleteAccount.id) {
+              resetAccountDraft();
+            }
             setPendingDeleteAccount(null);
           }
         }}

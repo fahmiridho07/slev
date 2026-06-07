@@ -14,11 +14,18 @@ export const idExtras: AppStringsExtras = {
       expenseSavedFor: "{amount} tersimpan untuk {label}.",
       templateReady: "{label} siap disimpan."
     },
+    boot: {
+      failed: "Tidak bisa memuat data lokal. Tarik untuk memuat ulang atau mulai ulang aplikasi."
+    },
     memory: {
       removed: "Memori dihapus.",
       restored: "Memori dipulihkan.",
       needAmount: "Masukkan jumlah sebelum menyimpan perubahan.",
+      notFound: "Memori itu sudah tidak tersedia.",
       updated: "Memori diperbarui."
+    },
+    refresh: {
+      failed: "Tidak bisa memuat ulang. Coba lagi."
     },
     shortcut: {
       transferUseChips: "Pintasan transfer bisa memakai chip akun langsung.",
@@ -274,6 +281,7 @@ export const idExtras: AppStringsExtras = {
       savedSoFarPlaceholder: "Sudah disimpan",
       emptyGoals:
         "Target tabungan bisa sederhana: target, jumlah saat ini, dan catatan singkat.",
+      emptyGoalsAction: "Gunakan formulir di atas untuk menambah target pertama",
       editGoalA11y: "Edit target {label}",
       deleteGoalTitle: "Hapus target?",
       deleteGoalBody:
@@ -344,6 +352,7 @@ export const idExtras: AppStringsExtras = {
       empty: "Tren muncul setelah pengeluaran terbentuk lintas bulan.",
       netWorthTrend: "Tren kekayaan bersih",
       snapshotForNetWorth: "Snapshot saldo untuk melihat tren kekayaan bersih.",
+      snapshotAction: "Buka saldo",
       spendingTrend: "Tren pengeluaran",
       currentPaceTitle: "Ritme bulan ini terlihat",
       topCategoriesTitle: "Kategori teratas bulan ini",

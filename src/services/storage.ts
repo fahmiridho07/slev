@@ -11,7 +11,8 @@ export type StorageDriver = {
 export type ReadJsonResult<T = unknown> =
   | { status: "empty" }
   | { status: "ok"; value: T }
-  | { status: "corrupt"; raw: string };
+  | { status: "corrupt"; raw: string }
+  | { status: "read_error" };
 
 export type WriteResult<T> = {
   data: T;
@@ -85,7 +86,13 @@ export async function removeKeys(keys: string[]): Promise<boolean> {
 }
 
 export async function readJson<T = unknown>(key: string): Promise<ReadJsonResult<T>> {
-  const raw = await readRaw(key);
+  let raw: string | null;
+  try {
+    raw = await activeDriver.getItem(key);
+  } catch {
+    return { status: "read_error" };
+  }
+
   if (raw === null) {
     corruptKeys.delete(key);
     return { status: "empty" };

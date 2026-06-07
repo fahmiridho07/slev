@@ -11,7 +11,7 @@ export function usePullToRefresh() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await actions.reload();
+      await actions.reloadOrNotify();
     } finally {
       setRefreshing(false);
     }

@@ -33,15 +33,31 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
   const actions = useActions();
   const { categoryLabels } = useDerived();
   const accounts = useFinanceSelector((state) => state.accounts);
+  const initial = buildEditForm(moment, accounts);
 
-  const [amountText, setAmountText] = useState(() => buildEditForm(moment, accounts).amountText);
-  const [label, setLabel] = useState(() => buildEditForm(moment, accounts).label);
-  const [context, setContext] = useState<SpendingContext>(() => buildEditForm(moment, accounts).context);
-  const [note, setNote] = useState(() => buildEditForm(moment, accounts).note);
-  const [type, setType] = useState<EntryType>(() => buildEditForm(moment, accounts).type);
-  const [source, setSource] = useState(() => buildEditForm(moment, accounts).source);
-  const [accountLabel, setAccountLabel] = useState(() => buildEditForm(moment, accounts).accountLabel);
+  const [amountText, setAmountText] = useState(initial.amountText);
+  const [label, setLabel] = useState(initial.label);
+  const [context, setContext] = useState<SpendingContext>(initial.context);
+  const [note, setNote] = useState(initial.note);
+  const [type, setType] = useState<EntryType>(initial.type);
+  const [source, setSource] = useState(initial.source);
+  const [accountLabel, setAccountLabel] = useState(initial.accountLabel);
   const [fieldError, setFieldError] = useState<FormValidationError<MemoryFieldError> | null>(null);
+
+  const handleTypeChange = useCallback((nextType: EntryType) => {
+    if (nextType === type) {
+      return;
+    }
+    if (nextType === "income") {
+      setSource((current) => current.trim() || label.trim());
+      setLabel("");
+    } else {
+      setLabel((current) => current.trim() || source.trim());
+      setSource("");
+    }
+    setType(nextType);
+    setFieldError((current) => (current?.field === "label" ? null : current));
+  }, [label, source, type]);
 
   const save = useCallback(async () => {
     const result = await actions.updateMoment(moment.id, {
@@ -94,13 +110,31 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
           </Text>
         )}
         <TextInput
-          onChangeText={type === "income" ? setSource : setLabel}
-          accessibilityLabel={type === "income" ? strings.memory.edit.source : strings.memory.edit.label}
+          onChangeText={(value) => {
+            setFieldError((current) => (current?.field === "label" ? null : current));
+            if (type === "income") {
+              setSource(value);
+            } else {
+              setLabel(value);
+            }
+          }}
+          accessibilityLabel={
+            fieldError?.field === "label"
+              ? `${type === "income" ? strings.memory.edit.source : strings.memory.edit.label}. ${fieldError.message}`
+              : type === "income"
+                ? strings.memory.edit.source
+                : strings.memory.edit.label
+          }
           placeholder={type === "income" ? strings.memory.edit.source : strings.memory.edit.label}
           placeholderTextColor={colors.muted}
           style={styles.input}
           value={type === "income" ? source : label}
         />
+        {fieldError?.field === "label" && (
+          <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+            {fieldError.message}
+          </Text>
+        )}
         <SegmentedControl
           compact
           options={[
@@ -108,7 +142,7 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
             { label: strings.common.income, value: "income" }
           ]}
           selected={type}
-          onSelect={setType}
+          onSelect={handleTypeChange}
         />
         {type === "expense" && (
           <ContextPicker categories={categoryLabels} selected={context} onSelect={setContext} compact />
@@ -131,7 +165,12 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
       </ScrollView>
       <View style={componentStyles.sheetFooter}>
         <View style={componentStyles.editActions}>
-          <Pressable accessibilityRole="button" onPress={onCancel} style={styles.secondaryButton}>
+          <Pressable
+            accessibilityLabel={strings.common.cancel}
+            accessibilityRole="button"
+            onPress={onCancel}
+            style={styles.secondaryButton}
+          >
             <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
           </Pressable>
           <Pressable

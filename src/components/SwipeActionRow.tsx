@@ -3,6 +3,7 @@ import React, { memo, useCallback, useMemo, useRef } from "react";
 import { Animated, PanResponder, Pressable, Text, View, ViewStyle } from "react-native";
 import { useTheme } from "../hooks/useTheme";
 import { hapticLight } from "../lib/haptics";
+import { releaseSwipeOpen, requestSwipeOpen } from "../lib/swipeRowCoordinator";
 import { shouldCaptureSwipeGesture } from "../lib/swipeGesture";
 import { SWIPE_DELETE_ACTION_WIDTH } from "../theme/styles/components";
 
@@ -36,10 +37,31 @@ function SwipeActionRowComponent({
     return Math.max(-SWIPE_DELETE_ACTION_WIDTH, Math.min(0, value));
   }, []);
 
+  const closeRow = useCallback(() => {
+    isOpenRef.current = false;
+    releaseSwipeOpen(closeRow);
+    const toValue = 0;
+    if (reduceMotion) {
+      translateX.setValue(toValue);
+      return;
+    }
+    Animated.spring(translateX, {
+      friction: 8,
+      tension: 90,
+      toValue,
+      useNativeDriver: true
+    }).start();
+  }, [reduceMotion, translateX]);
+
   const animateTo = useCallback(
     (isOpen: boolean) => {
       isOpenRef.current = isOpen;
       const toValue = isOpen ? -SWIPE_DELETE_ACTION_WIDTH : 0;
+      if (isOpen) {
+        requestSwipeOpen(closeRow);
+      } else {
+        releaseSwipeOpen(closeRow);
+      }
       if (reduceMotion) {
         translateX.setValue(toValue);
         return;
@@ -51,7 +73,7 @@ function SwipeActionRowComponent({
         useNativeDriver: true
       }).start();
     },
-    [reduceMotion, translateX]
+    [closeRow, reduceMotion, translateX]
   );
 
   const handleDelete = useCallback(() => {
@@ -91,7 +113,8 @@ function SwipeActionRowComponent({
           }
           return shouldCaptureSwipeGesture(gesture.dx, gesture.dy, isOpenRef.current);
         },
-        onPanResponderTerminationRequest: () => false,
+        onPanResponderTerminationRequest: (_, gesture) =>
+          !isOpenRef.current && Math.abs(gesture.dy) > Math.abs(gesture.dx),
         onPanResponderGrant: () => {
           dragStartX.current = isOpenRef.current ? -SWIPE_DELETE_ACTION_WIDTH : 0;
         },

@@ -12,6 +12,19 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   appShell: {
     flex: 1
   },
+  bootState: {
+    alignItems: "center",
+    flex: 1,
+    gap: 16,
+    justifyContent: "center",
+    paddingHorizontal: 28
+  },
+  bootStateText: {
+    color: colors.muted,
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: "center"
+  },
   header: {
     paddingHorizontal: 20,
     paddingTop: 12,
@@ -84,18 +97,6 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   },
   content: {
     flex: 1
-  },
-  bootState: {
-    alignItems: "center",
-    flex: 1,
-    gap: 12,
-    justifyContent: "center",
-    padding: 24
-  },
-  bootText: {
-    color: colors.muted,
-    fontSize: 14,
-    letterSpacing: 0
   },
   scrollContent: {
     gap: CARD_STACK_GAP,

@@ -6,20 +6,22 @@ import { BreakdownPanel } from "../features/analysis/BreakdownPanel";
 import { PatternOverview } from "../features/analysis/PatternOverview";
 import { TrendsPanel } from "../features/analysis/TrendsPanel";
 import { PatternTabKey } from "../features/app.types";
-import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
+import { buildPatternsTabHero } from "../lib/tabHero";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { useTheme } from "../hooks/useTheme";
-import { formatString } from "../i18n";
-
 type PatternsScreenProps = {
   activePatternTab: PatternTabKey;
+  onOpenBalance: () => void;
+  onOpenCapture: () => void;
   onPatternTabChange: (tab: PatternTabKey) => void;
   scrollContentStyle: StyleProp<ViewStyle>;
 };
 
 function PatternsScreenComponent({
   activePatternTab,
+  onOpenBalance,
+  onOpenCapture,
   onPatternTabChange,
   scrollContentStyle
 }: PatternsScreenProps) {
@@ -37,52 +39,18 @@ function PatternsScreenComponent({
     }),
     shallowEqual
   );
-  const hero = useMemo(() => {
-    if (activePatternTab === "breakdown") {
-      return {
-        hint: formatString(strings.patterns.hero.breakdownHint, {
-          amount: formatCompactRupiah(monthlySummary.income)
-        }),
-        kicker: strings.patterns.hero.breakdownKicker,
-        value: formatCompactRupiah(monthlySummary.expense),
-        valueTone: "danger" as const,
-        variant: "info" as const
-      };
-    }
-    if (activePatternTab === "accounts") {
-      return {
-        hint:
-          netWorthTrend.length >= 2
-            ? strings.patterns.hero.accountsHintWithTrend
-            : strings.patterns.hero.accountsHintNoTrend,
-        kicker: strings.patterns.hero.accountsKicker,
-        value: formatCompactRupiah(latestBalanceTotal),
-        valueTone: "balance" as const,
-        variant: "info" as const
-      };
-    }
-    return {
-      hint:
-        patterns.length > 0
-          ? strings.patterns.hero.recapHintWithPatterns
-          : strings.patterns.hero.recapHintEmpty,
-      kicker: strings.patterns.hero.recapKicker,
-      value:
-        patterns.length > 0
-          ? formatString(strings.patterns.hero.recapValue, { count: patterns.length })
-          : undefined,
-      valueTone: "default" as const,
-      variant: "surface" as const
-    };
-  }, [
-    activePatternTab,
-    latestBalanceTotal,
-    monthlySummary.expense,
-    monthlySummary.income,
-    netWorthTrend.length,
-    patterns.length,
-    strings.patterns.hero
-  ]);
+  const hero = useMemo(
+    () =>
+      buildPatternsTabHero({
+        activeTab: activePatternTab,
+        latestBalanceTotal,
+        monthlySummary,
+        netWorthTrendLength: netWorthTrend.length,
+        patternCount: patterns.length,
+        strings
+      }),
+    [activePatternTab, latestBalanceTotal, monthlySummary, netWorthTrend.length, patterns.length, strings]
+  );
 
   return (
     <StickyTabScreen
@@ -113,6 +81,7 @@ function PatternsScreenComponent({
         <PatternOverview
           feedbackByPattern={feedbackByPattern}
           moments={moments}
+          onOpenCapture={onOpenCapture}
           patterns={patterns}
           onAnswer={(patternId, response) => void actions.answerPattern(patternId, response)}
         />
@@ -120,7 +89,7 @@ function PatternsScreenComponent({
       {activePatternTab === "breakdown" && (
         <View style={styles.cardStack}>
           <BreakdownPanel moments={moments} />
-          <TrendsPanel moments={moments} netWorthTrend={netWorthTrend} />
+          <TrendsPanel moments={moments} netWorthTrend={netWorthTrend} onOpenBalance={onOpenBalance} />
         </View>
       )}
       {activePatternTab === "accounts" && (

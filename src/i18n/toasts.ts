@@ -96,8 +96,20 @@ export function getPatternFeedbackSavedToast(): string {
   return getRuntimeStrings().patterns.recap.feedbackSaved;
 }
 
+export function getBootFailedToast(): string {
+  return getRuntimeStrings().toasts.boot.failed;
+}
+
+export function getRefreshFailedToast(): string {
+  return getRuntimeStrings().toasts.refresh.failed;
+}
+
 export function getMemoryNeedAmountToast(): string {
   return getRuntimeStrings().toasts.memory.needAmount;
+}
+
+export function getMemoryNotFoundToast(): string {
+  return getRuntimeStrings().toasts.memory.notFound;
 }
 
 export function getMemoryUpdatedToast(): string {

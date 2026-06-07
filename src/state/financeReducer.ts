@@ -16,6 +16,7 @@ import {
 
 export type FinanceState = {
   balanceSnapshots: BalanceSnapshot[];
+  bootError: string | null;
   budgetLimits: BudgetLimit[];
   categoryModes: CategoryMode[];
   clearConfirmVisible: boolean;
@@ -35,6 +36,7 @@ export type FinanceState = {
 
 export const initialFinanceState: FinanceState = {
   balanceSnapshots: [],
+  bootError: null,
   budgetLimits: [],
   categoryModes: [],
   clearConfirmVisible: false,
@@ -53,8 +55,12 @@ export const initialFinanceState: FinanceState = {
 };
 
 export type FinanceAction =
-  | { type: "hydrate"; payload: Omit<FinanceState, "clearConfirmVisible" | "isReady" | "message" | "undoToast"> }
+  | {
+      type: "hydrate";
+      payload: Omit<FinanceState, "bootError" | "clearConfirmVisible" | "isReady" | "message" | "undoToast">;
+    }
   | { type: "set_ready"; ready: boolean }
+  | { type: "set_boot_error"; error: string | null }
   | { type: "set_message"; message: string }
   | { type: "set_clear_confirm_visible"; visible: boolean }
   | { type: "set_moments"; moments: SpendingMoment[] }
@@ -87,6 +93,8 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       return { ...state, ...action.payload };
     case "set_ready":
       return { ...state, isReady: action.ready };
+    case "set_boot_error":
+      return { ...state, bootError: action.error };
     case "set_message":
       return { ...state, message: action.message };
     case "set_clear_confirm_visible":
@@ -143,7 +151,8 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
         savingsGoals: [],
         accounts: action.payload.accounts,
         transfers: [],
-        expenseCategories: action.payload.expenseCategories
+        expenseCategories: action.payload.expenseCategories,
+        undoToast: null
       };
     default:
       return state;

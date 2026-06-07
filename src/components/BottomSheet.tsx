@@ -38,7 +38,8 @@ function BottomSheetComponent({ children, onClose, title, visible }: BottomSheet
           style={componentStyles.sheetBackdropPressable}
         />
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={Platform.OS === "ios" ? bottomInset : 0}
           style={componentStyles.sheetKeyboard}
         >
           <View style={[componentStyles.sheetCard, { paddingBottom: bottomInset }]}>

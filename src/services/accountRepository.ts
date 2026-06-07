@@ -29,8 +29,7 @@ const DEFAULT_ACCOUNTS: MoneyAccount[] = [
 
 export async function listMoneyAccounts(): Promise<MoneyAccount[]> {
   const result = await readJson<unknown>(ACCOUNTS_KEY);
-  if (result.status === "empty") return DEFAULT_ACCOUNTS;
-  if (result.status === "corrupt") return DEFAULT_ACCOUNTS;
+  if (result.status !== "ok") return DEFAULT_ACCOUNTS;
 
   if (!Array.isArray(result.value)) return DEFAULT_ACCOUNTS;
   const accounts = result.value.map(normalizeMoneyAccount).filter(isMoneyAccount);

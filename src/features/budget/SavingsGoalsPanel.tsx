@@ -7,7 +7,7 @@ import { getPercentWidthStyle } from "../../lib/analysis";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { SavingsGoal } from "../spendingMemory.types";
-import { hapticWarning } from "../../lib/haptics";
+import { hapticSelection, hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
 import { useTheme } from "../../hooks/useTheme";
 import { GoalFieldError } from "./budgetValidation";
@@ -37,10 +37,12 @@ export function SavingsGoalsPanel({
   const { dismiss: dismissGoalsHint, visible: showGoalsHint } = useListActionsHint("goals", savingsGoals.length > 0);
 
   function editGoal(goal: SavingsGoal) {
+    hapticSelection();
     setEditingGoalId(goal.id);
     setGoalLabel(goal.label);
     setTargetAmount(formatAmountInput(String(goal.targetAmount)));
     setSavedAmount(formatAmountInput(String(goal.savedAmount)));
+    setFieldError(null);
   }
 
   function resetDraft() {
