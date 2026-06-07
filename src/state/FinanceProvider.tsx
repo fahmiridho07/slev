@@ -1,6 +1,5 @@
 import React, { createContext, useEffect, useMemo, useReducer, useRef } from "react";
 import { PatternFeedbackResponse } from "../features/spendingMemory.types";
-import { getRepeatSuggestions } from "../lib/analysis";
 import { getUpcomingBills, UpcomingBill } from "../lib/recurringBills";
 import {
   AccountDriftRow,
@@ -32,7 +31,6 @@ export type FinanceDerived = {
   monthlySummary: ReturnType<typeof buildCurrentMonthSummary>;
   patterns: ReturnType<typeof generateSpendingPatterns>;
   projectedBalanceSnapshots: ReturnType<typeof getProjectedBalanceSnapshots>;
-  repeatSuggestions: ReturnType<typeof getRepeatSuggestions>;
   upcomingBills: UpcomingBill[];
   netWorthTrend: ReturnType<typeof buildNetWorthTrend>;
 };
@@ -62,10 +60,6 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
 
   const patterns = useMemo(
     () => generateSpendingPatterns(state.moments),
-    [state.moments]
-  );
-  const repeatSuggestions = useMemo(
-    () => getRepeatSuggestions(state.moments),
     [state.moments]
   );
   const monthlySummary = useMemo(
@@ -170,7 +164,6 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       monthlySummary,
       patterns,
       projectedBalanceSnapshots,
-      repeatSuggestions,
       upcomingBills,
       netWorthTrend
     }),
@@ -186,7 +179,6 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       monthlySummary,
       patterns,
       projectedBalanceSnapshots,
-      repeatSuggestions,
       upcomingBills
     ]
   );

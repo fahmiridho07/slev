@@ -6,8 +6,7 @@ import {
   getDailyPocketLabel,
   getDefaultMomentAccount,
   getIncomeHubLabel,
-  getTemplateLabel,
-  RepeatSuggestion
+  getTemplateLabel
 } from "../../lib/analysis";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { ManualTemplate, MoneyAccount, SpendingContext } from "../spendingMemory.types";
@@ -188,20 +187,6 @@ export function useCaptureForm() {
     [accounts, clearFieldError, clearShortcutFieldError]
   );
 
-  const applyRepeat = useCallback(
-    (suggestion: RepeatSuggestion) => {
-      setForm((current) => ({
-        ...current,
-        entryType: "expense",
-        label: suggestion.label,
-        context: suggestion.context,
-        accountLabel: suggestion.accountLabel ?? getDailyPocketLabel(accounts),
-        amountText: current.amountText.trim() ? current.amountText : formatAmountInput(String(suggestion.amount))
-      }));
-    },
-    [accounts]
-  );
-
   const applyTemplate = useCallback(
     (template: ManualTemplate) => {
       setForm({
@@ -298,7 +283,6 @@ export function useCaptureForm() {
     patch,
     changeAmountText,
     changeEntryType,
-    applyRepeat,
     applyTemplate,
     save,
     saveTemplate,

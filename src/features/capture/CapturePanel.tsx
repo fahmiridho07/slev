@@ -3,7 +3,7 @@ import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { AccountPicker, ContextPicker, EmptyState } from "../../components";
 import { CaptureTypePicker } from "./CaptureTypePicker";
-import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { getTemplateLabel } from "../../lib/analysis";
 import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../../state/useFinance";
 import { formatString } from "../../i18n";
@@ -33,13 +33,7 @@ function CapturePanelComponent({
     return strings.capture.saveExpense;
   }
   const actions = useActions();
-  const { categoryLabels, repeatSuggestions } = useFinanceDerived(
-    (derived) => ({
-      categoryLabels: derived.categoryLabels,
-      repeatSuggestions: derived.repeatSuggestions
-    }),
-    shallowEqual
-  );
+  const categoryLabels = useFinanceDerived((derived) => derived.categoryLabels);
   const { accounts, manualTemplates } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
@@ -54,7 +48,6 @@ function CapturePanelComponent({
     patch,
     changeAmountText,
     changeEntryType,
-    applyRepeat,
     applyTemplate,
     save,
     saveTemplate
@@ -87,66 +80,45 @@ function CapturePanelComponent({
     }
   }, [onSaved, save]);
 
-  const showRepeatSuggestions = form.entryType === "expense" && repeatSuggestions.length > 0;
-  const showQuickAdd = manualTemplates.length > 0 || showRepeatSuggestions;
-
   return (
     <View style={styles.capturePanel}>
       <Text style={styles.kicker}>{strings.capture.kicker}</Text>
-      {showQuickAdd && (
+      {manualTemplates.length > 0 && (
         <View style={styles.repeatBlock}>
           <Text style={componentStyles.microLabel}>{strings.capture.quickAdd}</Text>
-          {manualTemplates.length > 0 && (
-            <View style={styles.templateGrid}>
-              {manualTemplates.slice(0, 6).map((template) => (
-                <View key={template.id} style={styles.templateChip}>
-                  <Pressable
-                    accessibilityLabel={formatString(strings.capture.applyShortcutA11y, {
-                      label: getTemplateLabel(template)
-                    })}
-                    accessibilityRole="button"
-                    onPress={() => applyTemplate(template)}
-                    style={styles.templateMain}
-                  >
-                    <Text style={styles.repeatText}>{getTemplateLabel(template)}</Text>
-                    <Text style={styles.repeatAmount}>
-                      {template.amount > 0
-                        ? formatRupiah(template.amount)
-                        : template.type === "income"
-                          ? strings.capture.income
-                          : template.context}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    accessibilityLabel={formatString(strings.capture.removeShortcutA11y, {
-                      label: getTemplateLabel(template)
-                    })}
-                    accessibilityRole="button"
-                    onPress={() => actions.removeManualTemplate(template.id)}
-                    style={styles.templateRemoveButton}
-                  >
-                    <Ionicons name="close-outline" size={14} color={colors.muted} />
-                  </Pressable>
-                </View>
-              ))}
-            </View>
-          )}
-          {showRepeatSuggestions && (
-            <View style={styles.suggestionRow}>
-              {repeatSuggestions.map((item) => (
+          <View style={styles.templateGrid}>
+            {manualTemplates.slice(0, 6).map((template) => (
+              <View key={template.id} style={styles.templateChip}>
                 <Pressable
-                  accessibilityLabel={formatString(strings.capture.repeatA11y, { label: item.label })}
+                  accessibilityLabel={formatString(strings.capture.applyShortcutA11y, {
+                    label: getTemplateLabel(template)
+                  })}
                   accessibilityRole="button"
-                  key={`${item.label}-${item.context}`}
-                  onPress={() => applyRepeat(item)}
-                  style={styles.repeatChip}
+                  onPress={() => applyTemplate(template)}
+                  style={styles.templateMain}
                 >
-                  <Text style={styles.repeatText}>{item.label}</Text>
-                  <Text style={styles.repeatAmount}>{formatCompactRupiah(item.amount)}</Text>
+                  <Text style={styles.repeatText}>{getTemplateLabel(template)}</Text>
+                  <Text style={styles.repeatAmount}>
+                    {template.amount > 0
+                      ? formatRupiah(template.amount)
+                      : template.type === "income"
+                        ? strings.capture.income
+                        : template.context}
+                  </Text>
                 </Pressable>
-              ))}
-            </View>
-          )}
+                <Pressable
+                  accessibilityLabel={formatString(strings.capture.removeShortcutA11y, {
+                    label: getTemplateLabel(template)
+                  })}
+                  accessibilityRole="button"
+                  onPress={() => actions.removeManualTemplate(template.id)}
+                  style={styles.templateRemoveButton}
+                >
+                  <Ionicons name="close-outline" size={14} color={colors.muted} />
+                </Pressable>
+              </View>
+            ))}
+          </View>
         </View>
       )}
       <CaptureTypePicker compact={compactTypePicker} onSelect={changeEntryType} selected={form.entryType} />
