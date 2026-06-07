@@ -122,11 +122,11 @@ export function BalancePanel({
             <Text style={styles.settingCopy}>
               {formatCompactRupiah(currentBalanceTotal)} from snapshots plus logged income, spending, and transfers.
             </Text>
-            {tierSummary.ephemeralAccountCount > 0 && (
+            {tierSummary.ephemeralAccountCount > 0 && tierSummary.ephemeralTotal > 0 ? (
               <Text style={styles.settingCopy}>
                 {`Tracked ${formatCompactRupiah(tierSummary.trackedTotal)} you reconcile · Ephemeral ${formatCompactRupiah(tierSummary.ephemeralTotal)} rough.`}
               </Text>
-            )}
+            ) : null}
           </View>
         </View>
         {latestSnapshots.length > 0 && (
