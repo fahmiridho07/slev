@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { AccountPicker, AccountTitle, DeleteConfirmDialog, EmptyState, SectionHeader, SegmentedControl } from "../../components";
 import { formatAmountInput } from "../../lib/formatMoney";
-import { getLatestBalanceSnapshots, getLatestBalanceTotal } from "../../lib/financeEngine";
+import { getLatestBalanceSnapshots, getLatestBalanceTotal, summarizeBalanceByTier } from "../../lib/financeEngine";
 import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { AccountTier, BalanceSnapshot, MoneyAccount } from "../spendingMemory.types";
 import { colors } from "../../theme/colors";
@@ -42,6 +42,10 @@ export function BalancePanel({
   const manualBalanceTotal = useMemo(() => getLatestBalanceTotal(balanceSnapshots), [balanceSnapshots]);
   const currentBalances = useMemo(() => getLatestBalanceSnapshots(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
   const latestSnapshots = useMemo(() => getLatestBalanceSnapshots(balanceSnapshots), [balanceSnapshots]);
+  const tierSummary = useMemo(
+    () => summarizeBalanceByTier({ accounts, snapshots: projectedBalanceSnapshots }),
+    [accounts, projectedBalanceSnapshots]
+  );
 
   useEffect(() => {
     const labels = accounts.map((account) => account.label);
@@ -118,6 +122,11 @@ export function BalancePanel({
             <Text style={styles.settingCopy}>
               {formatCompactRupiah(currentBalanceTotal)} from snapshots plus logged income, spending, and transfers.
             </Text>
+            {tierSummary.ephemeralAccountCount > 0 && (
+              <Text style={styles.settingCopy}>
+                {`Tracked ${formatCompactRupiah(tierSummary.trackedTotal)} you reconcile · Ephemeral ${formatCompactRupiah(tierSummary.ephemeralTotal)} rough.`}
+              </Text>
+            )}
           </View>
         </View>
         {latestSnapshots.length > 0 && (
