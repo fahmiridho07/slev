@@ -3,7 +3,9 @@ import { PatternFeedbackResponse } from "../features/spendingMemory.types";
 import { getRepeatSuggestions } from "../lib/analysis";
 import { getUpcomingBills, UpcomingBill } from "../lib/recurringBills";
 import {
+  AccountDriftRow,
   AllocationPlan,
+  buildAccountDriftAlerts,
   buildAllocationPlan,
   buildCurrentMonthSummary,
   buildNetWorthTrend,
@@ -19,6 +21,7 @@ import { financeReducer, initialFinanceState } from "./financeReducer";
 import { createFinanceStore, FinanceStore } from "./financeStore";
 
 export type FinanceDerived = {
+  accountDrift: AccountDriftRow[];
   allocationPlan: AllocationPlan;
   categoryLabels: ReturnType<typeof getCategoryLabels>;
   feedbackByPattern: Map<string, PatternFeedbackResponse>;
@@ -71,6 +74,16 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   const projectedBalanceSnapshots = useMemo(
     () =>
       getProjectedBalanceSnapshots({
+        accounts: state.accounts,
+        balanceSnapshots: state.balanceSnapshots,
+        moments: state.moments,
+        transfers: state.transfers
+      }),
+    [state.accounts, state.balanceSnapshots, state.moments, state.transfers]
+  );
+  const accountDrift = useMemo(
+    () =>
+      buildAccountDriftAlerts({
         accounts: state.accounts,
         balanceSnapshots: state.balanceSnapshots,
         moments: state.moments,
@@ -141,6 +154,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   );
   const derived = useMemo<FinanceDerived>(
     () => ({
+      accountDrift,
       allocationPlan,
       categoryLabels,
       feedbackByPattern,
@@ -155,6 +169,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       netWorthTrend
     }),
     [
+      accountDrift,
       allocationPlan,
       categoryLabels,
       feedbackByPattern,
