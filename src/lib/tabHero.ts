@@ -5,8 +5,6 @@ import { sumSavingsGoals } from "./savingsGoalsTotals";
 import type { BudgetTabKey, PatternTabKey } from "../features/app.types";
 import type { SavingsGoal } from "../features/spendingMemory.types";
 import type { MonthlySummary } from "../features/app.types";
-import type { NetWorthPoint } from "./financeEngine";
-import type { SpendingPattern } from "../features/spendingMemory.types";
 import { formatString } from "../i18n";
 
 type HeroConfig = {

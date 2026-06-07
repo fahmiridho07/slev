@@ -14,7 +14,6 @@ import {
 import {
   AccountTier,
   BalanceSnapshot,
-  CategoryMode,
   EntryType,
   MoneyAccount,
   MoneyTransfer,

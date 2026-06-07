@@ -39,7 +39,7 @@ export function BudgetLimitsPanel({
     period: BudgetPeriod
   ) => Promise<{ ok: boolean; validation?: FormValidationError<LimitFieldError> }>;
 }) {
-  const { colors, componentStyles, strings, styles } = useTheme();
+  const { colors, strings, styles } = useTheme();
   const limitsStrings = strings.budget.limits;
   const limitEditAction = strings.common.edit;
   const [editingCategory, setEditingCategory] = useState<SpendingContext | null>(null);

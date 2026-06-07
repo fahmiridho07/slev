@@ -26,7 +26,7 @@ export function AccountAnalysisPanel({
   transfers: MoneyTransfer[];
   onDeleteTransfer: (id: string) => void;
 }) {
-  const { colors, componentStyles, strings, styles } = useTheme();
+  const { colors, strings, styles } = useTheme();
   const accountsStrings = strings.patterns.accounts;
   const currentBalances = useMemo(() => getLatestBalanceSnapshots(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
   const accountActivity = useMemo(() => buildAccountActivity(moments), [moments]);

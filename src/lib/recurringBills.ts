@@ -16,7 +16,6 @@ export function getUpcomingBills({
   referenceDate?: Date;
   horizonDays?: number;
 }): UpcomingBill[] {
-  const todayKey = dateKey(referenceDate);
   const upcoming = bills
     .filter((bill) => bill.active)
     .map((bill) => {

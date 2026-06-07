@@ -60,7 +60,6 @@ import {
 
   getLimitRemovedToast,
   getLimitSavedToast,
-  getMemoryNeedAmountToast,
   getMemoryNotFoundToast,
   getMemoryRemovedToast,
   getMemoryRestoredToast,
