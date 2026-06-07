@@ -78,26 +78,24 @@ function BudgetScreenComponent({ onOpenSettings }: BudgetScreenProps) {
             monthlySummary={monthlySummary}
             onSaveMonthlyPlan={(input) => void actions.savePlan(input)}
           />
-          <View>
+          <View style={styles.cardGrid}>
             <Pressable onPress={() => setShowCategoryLimits((prev) => !prev)} style={styles.planSummaryRow}>
               <Text style={styles.settingTitle}>Category limits (optional)</Text>
               <Ionicons name={showCategoryLimits ? "chevron-up" : "chevron-down"} size={18} color={colors.muted} />
             </Pressable>
             {showCategoryLimits && (
-              <View style={{ marginTop: 12 }}>
-                <BudgetLimitsPanel
-                  budgetLimits={budgetLimits}
-                  categoryLabels={categoryLabels}
-                  categoryModes={categoryModes}
-                  expenseCategories={expenseCategories}
-                  moments={moments}
-                  onDeleteCategory={(category) => void actions.removeCategory(category)}
-                  onDeleteLimit={(category) => void actions.removeCategoryBudget(category)}
-                  onOpenSettings={onOpenSettings}
-                  onSaveCategoryMode={(category, mode) => void actions.changeCategoryMode(category, mode)}
-                  onSaveLimit={(category, amountText, period) => void actions.saveCategoryBudget(category, amountText, period)}
-                />
-              </View>
+              <BudgetLimitsPanel
+                budgetLimits={budgetLimits}
+                categoryLabels={categoryLabels}
+                categoryModes={categoryModes}
+                expenseCategories={expenseCategories}
+                moments={moments}
+                onDeleteCategory={(category) => void actions.removeCategory(category)}
+                onDeleteLimit={(category) => void actions.removeCategoryBudget(category)}
+                onOpenSettings={onOpenSettings}
+                onSaveCategoryMode={(category, mode) => void actions.changeCategoryMode(category, mode)}
+                onSaveLimit={(category, amountText, period) => void actions.saveCategoryBudget(category, amountText, period)}
+              />
             )}
           </View>
         </View>
