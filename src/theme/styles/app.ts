@@ -781,6 +781,12 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     height: 18,
     overflow: "hidden"
   },
+  chartStackTrackHero: {
+    backgroundColor: colors.faint,
+    borderRadius: 8,
+    height: 32,
+    overflow: "hidden"
+  },
   chartStackRow: {
     flexDirection: "row",
     height: "100%",

@@ -347,18 +347,23 @@ export const enExtras: AppStringsExtras = {
       incomeBySource: "Income by source",
       expense: "Expense",
       income: "Income",
-      amountShare: "{amount} - {percent}%"
+      amountShare: "{amount} - {percent}%",
+      viewAll: "View all categories",
+      viewLess: "Show fewer categories"
     },
     trends: {
       empty: "Trends appear after spending builds across months.",
+      advancedTrends: "More trends",
+      expandAdvancedTrends: "Show more trends",
+      collapseAdvancedTrends: "Hide more trends",
       netWorthTrend: "Net-worth trend",
       snapshotForNetWorth: "Snapshot your balances to see net-worth trend.",
       snapshotAction: "Open balance",
       spendingTrend: "Spending trend",
       currentPaceTitle: "Current month pace is visible",
-      topCategoriesTitle: "Top categories this month",
-      topCategoriesEmpty: "No category has stood out yet this month.",
-      weeklyCashflow: "Weekly cashflow"
+      weeklyCashflow: "Weekly cashflow",
+      showFullCashflow: "Show last 8 weeks",
+      hideFullCashflow: "Show this month only"
     },
     cashflow: {
       empty: "Cashflow appears after income or spending entries.",
@@ -367,6 +372,8 @@ export const enExtras: AppStringsExtras = {
       expense: "Expense"
     },
     accounts: {
+      intro: "See where money lives and whether balances match your logs.",
+      openBalanceAction: "Manage balances in Budget",
       hubAndPockets: "Hub and pockets",
       hubPocketsCopy: "Hub {hub} - daily pockets {pockets}.",
       mostActivePocket: "Most active spending pocket",
@@ -374,9 +381,11 @@ export const enExtras: AppStringsExtras = {
       spendingByAccountEmpty:
         "Spending by account appears after entries include an account.",
       reconciliationEmpty:
-        "Reconciliation starts after the first manual snapshot. Current balance can still be estimated from income and spending.",
+        "Reconciliation starts after the first manual snapshot.",
       balanceReconciliation: "Balance reconciliation",
       accountMovement: "Account movement this month",
+      showAccountMovement: "Show account movement",
+      hideAccountMovement: "Hide account movement",
       incomeNetCopy: "Income {income} - net {net}",
       recentTransfers: "Recent transfers",
       expectedActual: "Expected {expected} - actual {actual}",
@@ -399,27 +408,26 @@ export const enExtras: AppStringsExtras = {
     },
     generated: {
       quietStartTitle: "A few moments are saved",
-      quietStartDetail: "Slev will look for changes and repeats as more memory builds up.",
+      quietStartDetail: "More patterns appear as you log.",
       contextMoreVisibleTitle: "{context} is more visible this week",
-      contextMoreVisibleDetailWithPrevious: "{count} saved moments, up from {previousCount} last week.",
-      contextMoreVisibleDetailNoPrevious: "{count} saved moments appeared this week.",
+      contextMoreVisibleDetailWithPrevious: "{count} moments, up from {previousCount} last week.",
+      contextMoreVisibleDetailNoPrevious: "{count} moments this week.",
       contextMoreVisibleRecap: "Keep this {context} rhythm?",
       newRepeatTitle: "A new repeat may be forming",
       newRepeatDetail: "{label} appeared {count} times this week.",
       newRepeatRecap: "Keep {label} in the rhythm?",
-      smallSpendsTitle: "Small spends are more noticeable",
-      smallSpendsDetail: "{count} smaller moments add up to {total} this week.",
+      smallSpendsTitle: "Small spends are adding up",
+      smallSpendsDetail: "{count} small moments total {total} this week.",
       smallSpendsRecap: "Keep this small-spend rhythm?",
-      weekendShapeTitle: "The weekend carried more of the week",
-      weekendShapeDetail: "Weekend spending ran about {ratio}x the weekday pace.",
+      weekendShapeTitle: "Weekend spending stood out",
+      weekendShapeDetail: "About {ratio}x weekday pace.",
       weekendShapeRecap: "Keep this weekend rhythm?",
-      contextQuieterTitle: "{context} got quieter this week",
-      contextQuieterDetail:
-        "That context showed up often last week and has not appeared in saved memory this week.",
+      contextQuieterTitle: "{context} got quieter",
+      contextQuieterDetail: "Common last week, none saved this week.",
       memoryBuildingTitle: "Memory is building",
-      memoryBuildingDetail: "{count} moments saved in the last two weeks.",
-      steadyRhythmTitle: "{context} is part of the recent rhythm",
-      steadyRhythmDetail: "{count} moments in the last two weeks.",
+      memoryBuildingDetail: "{count} moments in the last two weeks.",
+      steadyRhythmTitle: "{context} is part of your rhythm",
+      steadyRhythmDetail: "{count} moments recently.",
       steadyRhythmRecap: "Keep this {context} rhythm?"
     }
   },

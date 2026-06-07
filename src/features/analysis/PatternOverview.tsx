@@ -57,35 +57,32 @@ export function PatternOverview({
 
                 {pattern.recapQuestion && (
                   <View style={styles.recapBlock}>
-                    <Text style={styles.recapQuestion}>{pattern.recapQuestion}</Text>
-                    {!enoughForRecap && (
+                    {enoughForRecap ? (
                       <>
-                        <Text style={styles.settingCopy}>
-                          {formatString(strings.patterns.recap.expensesProgress, { count: recentExpenseCount })}
-                        </Text>
-                        <Text style={styles.settingCopy}>{strings.patterns.recap.feedbackLockedHint}</Text>
+                        <Text style={styles.recapQuestion}>{pattern.recapQuestion}</Text>
+                        <View style={componentStyles.feedbackRow}>
+                          <FeedbackButton
+                            active={feedbackByPattern.get(pattern.id) === "keep"}
+                            label={strings.patterns.recap.feedbackKeep}
+                            onPress={() => onAnswer(pattern.id, "keep")}
+                          />
+                          <FeedbackButton
+                            active={feedbackByPattern.get(pattern.id) === "less_often"}
+                            label={strings.patterns.recap.feedbackLessOften}
+                            onPress={() => onAnswer(pattern.id, "less_often")}
+                          />
+                          <FeedbackButton
+                            active={feedbackByPattern.get(pattern.id) === "not_sure"}
+                            label={strings.patterns.recap.feedbackNotSure}
+                            onPress={() => onAnswer(pattern.id, "not_sure")}
+                          />
+                        </View>
                       </>
+                    ) : (
+                      <Text style={styles.settingCopy}>
+                        {formatString(strings.patterns.recap.expensesProgress, { count: recentExpenseCount })}
+                      </Text>
                     )}
-                    <View style={componentStyles.feedbackRow}>
-                      <FeedbackButton
-                        active={feedbackByPattern.get(pattern.id) === "keep"}
-                        disabled={!enoughForRecap}
-                        label={strings.patterns.recap.feedbackKeep}
-                        onPress={() => onAnswer(pattern.id, "keep")}
-                      />
-                      <FeedbackButton
-                        active={feedbackByPattern.get(pattern.id) === "less_often"}
-                        disabled={!enoughForRecap}
-                        label={strings.patterns.recap.feedbackLessOften}
-                        onPress={() => onAnswer(pattern.id, "less_often")}
-                      />
-                      <FeedbackButton
-                        active={feedbackByPattern.get(pattern.id) === "not_sure"}
-                        disabled={!enoughForRecap}
-                        label={strings.patterns.recap.feedbackNotSure}
-                        onPress={() => onAnswer(pattern.id, "not_sure")}
-                      />
-                    </View>
                   </View>
                 )}
               </View>

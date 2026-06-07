@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { Text, View } from "react-native";
 import { EmptyState } from "../../components";
 import { formatString } from "../../i18n";
-import { buildCashflowWeeks, getPercentWidthStyle } from "../../lib/analysis";
+import { buildCashflowWeeks, CashflowWeeksMode, getPercentWidthStyle } from "../../lib/analysis";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { SpendingMoment } from "../spendingMemory.types";
@@ -10,14 +10,16 @@ import { useTheme } from "../../hooks/useTheme";
 
 export function CashflowPanel({
   moments,
+  mode = "default",
   showEmpty = true
 }: {
   moments: SpendingMoment[];
+  mode?: CashflowWeeksMode;
   showEmpty?: boolean;
 }) {
   const { componentStyles, strings, styles } = useTheme();
   const cashflowStrings = strings.patterns.cashflow;
-  const weeks = useMemo(() => buildCashflowWeeks(moments), [moments]);
+  const weeks = useMemo(() => buildCashflowWeeks(moments, { mode }), [mode, moments]);
   const maxWeeklyAmount = useMemo(
     () => Math.max(1, ...weeks.flatMap((week) => [week.income, week.expense])),
     [weeks]

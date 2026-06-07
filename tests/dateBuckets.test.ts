@@ -92,10 +92,13 @@ test("week bucketing places Sunday night and Monday morning into the correct Mon
     "Sunday night is not in Monday's week"
   );
 
-  const weeks = buildCashflowWeeks([
-    moment({ amount: 11_000, occurredAt: sundayNight.toISOString(), id: "sun" }),
-    moment({ amount: 22_000, occurredAt: mondayMorning.toISOString(), id: "mon" })
-  ]);
+  const weeks = buildCashflowWeeks(
+    [
+      moment({ amount: 11_000, occurredAt: sundayNight.toISOString(), id: "sun" }),
+      moment({ amount: 22_000, occurredAt: mondayMorning.toISOString(), id: "mon" })
+    ],
+    { mode: "full" }
+  );
   const sundayWeekKey = dateKey(sundayWeek.start);
   const mondayWeekKey = dateKey(mondayWeek.start);
   const sundayBucket = weeks.find((week) => week.key === sundayWeekKey);

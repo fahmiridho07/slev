@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { EmptyState, ProgressBar, SectionHeader, SegmentedControl } from "../../components";
 import { formatString } from "../../i18n";
 import { getPercentWidthStyle } from "../../lib/analysis";
@@ -8,12 +8,18 @@ import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { EntryType, SpendingMoment } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 import { MonthlySpendingChart } from "./MonthlySpendingChart";
+import { SpendingTrendsSection } from "./SpendingTrendsSection";
+
+const TOP_CATEGORY_LIMIT = 5;
 
 export function BreakdownPanel({ moments }: { moments: SpendingMoment[] }) {
   const { componentStyles, strings, styles } = useTheme();
   const breakdownStrings = strings.patterns.breakdown;
   const [breakdownType, setBreakdownType] = useState<EntryType>("expense");
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const rows = useMemo(() => buildMonthlyBreakdown(moments, breakdownType), [breakdownType, moments]);
+  const visibleRows = showAllCategories ? rows : rows.slice(0, TOP_CATEGORY_LIMIT);
+  const hasHiddenRows = rows.length > TOP_CATEGORY_LIMIT;
 
   return (
     <View style={styles.analyticsBlock}>
@@ -32,12 +38,12 @@ export function BreakdownPanel({ moments }: { moments: SpendingMoment[] }) {
         />
       ) : (
         <>
-          {breakdownType === "expense" && <MonthlySpendingChart rows={rows} />}
+          {breakdownType === "expense" && <MonthlySpendingChart compactLegend hero rows={rows} />}
           <SectionHeader
             title={breakdownType === "income" ? breakdownStrings.incomeBySource : breakdownStrings.spendingByCategory}
           />
           <View style={styles.listPanel}>
-            {rows.map((row) => (
+            {visibleRows.map((row) => (
               <View key={row.key} style={styles.analyticsRow}>
                 <View style={styles.analyticsRowHeader}>
                   <Text style={componentStyles.analyticsTitle}>{row.label}</Text>
@@ -59,6 +65,19 @@ export function BreakdownPanel({ moments }: { moments: SpendingMoment[] }) {
               </View>
             ))}
           </View>
+          {hasHiddenRows && (
+            <Pressable
+              accessibilityLabel={showAllCategories ? breakdownStrings.viewLess : breakdownStrings.viewAll}
+              accessibilityRole="button"
+              onPress={() => setShowAllCategories((prev) => !prev)}
+              style={styles.accordionCard}
+            >
+              <Text style={styles.settingTitle}>
+                {showAllCategories ? breakdownStrings.viewLess : breakdownStrings.viewAll}
+              </Text>
+            </Pressable>
+          )}
+          {breakdownType === "expense" && <SpendingTrendsSection moments={moments} />}
         </>
       )}
     </View>

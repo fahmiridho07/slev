@@ -3,6 +3,7 @@ import {
   buildCashflowWeeks,
   buildRepeatHints,
   buildSpendingTrend,
+  getDataMaturity,
   dateKey,
   filterMoments,
   getAllocationActionCopy,
@@ -234,29 +235,57 @@ test("buildAccountActivity groups current-month spending by account", () => {
   assertEqual(rows[1]?.net, 80000, "BRI net income minus expense");
 });
 
-test("buildCashflowWeeks returns eight weekly buckets with net totals", () => {
-  const weeks = buildCashflowWeeks([
-    moment({ amount: 30000, occurredAt: new Date().toISOString() }),
-    moment({ amount: 100000, type: "income", source: "Salary", occurredAt: new Date().toISOString() })
-  ]);
+test("buildCashflowWeeks full mode returns filtered weekly buckets with net totals", () => {
+  const weeks = buildCashflowWeeks(
+    [
+      moment({ amount: 30000, occurredAt: new Date().toISOString() }),
+      moment({ amount: 100000, type: "income", source: "Salary", occurredAt: new Date().toISOString() })
+    ],
+    { mode: "full" }
+  );
 
-  assertEqual(weeks.length, 8, "eight weeks");
+  assertEqual(weeks.length >= 1, true, "at least current week");
   const currentWeek = weeks[weeks.length - 1];
   assertEqual(currentWeek?.income, 100000, "current week income");
   assertEqual(currentWeek?.expense, 30000, "current week expense");
   assertEqual(currentWeek?.net, 70000, "current week net");
 });
 
-test("buildSpendingTrend returns three months and top categories", () => {
+test("buildCashflowWeeks default mode skips empty weeks outside current month", () => {
+  const referenceDate = new Date("2026-06-15T08:00:00.000Z");
+  const weeks = buildCashflowWeeks(
+    [moment({ amount: 30000, occurredAt: "2026-06-10T08:00:00.000Z" })],
+    { mode: "default", referenceDate }
+  );
+
+  assertEqual(weeks.every((week) => week.income > 0 || week.expense > 0 || week === weeks[weeks.length - 1]), true, "only active or current weeks");
+  assertEqual(weeks.length <= 5, true, "default mode stays within current month");
+});
+
+test("buildSpendingTrend hides empty prior months", () => {
   const trend = buildSpendingTrend([
     moment({ amount: 600000, context: "Meal", occurredAt: "2026-06-04T01:00:00.000Z" }),
     moment({ amount: 400000, context: "Transport", occurredAt: "2026-06-05T01:00:00.000Z" }),
     moment({ amount: 500000, context: "Meal", occurredAt: "2026-05-20T01:00:00.000Z" })
   ]);
 
-  assertEqual(trend.months.length, 3, "three months");
-  assertEqual(trend.months[2]?.amount, 1000000, "current month expense total");
-  assertEqual(trend.topCategories[0]?.label, "Meal", "top category");
+  assertEqual(trend.months.length, 2, "current and prior month with data");
+  assertEqual(trend.months[trend.months.length - 1]?.amount, 1000000, "current month expense total");
+});
+
+test("getDataMaturity classifies sparse new users", () => {
+  const referenceDate = new Date("2026-06-15T08:00:00.000Z");
+  assertEqual(
+    getDataMaturity(
+      [
+        moment({ amount: 10000, occurredAt: "2026-06-14T08:00:00.000Z" }),
+        moment({ amount: 12000, occurredAt: "2026-06-13T08:00:00.000Z" })
+      ],
+      referenceDate
+    ),
+    "new",
+    "few recent entries"
+  );
 });
 
 test("getAllocationActionCopy returns steady hold messaging", () => {

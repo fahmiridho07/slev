@@ -1,10 +1,10 @@
 import React, { memo, useMemo } from "react";
-import { StyleProp, View, ViewStyle } from "react-native";
+import { StyleProp, ViewStyle } from "react-native";
 import { ScreenHero, ScreenTabBar, StickyTabScreen } from "../components";
 import { AccountAnalysisPanel } from "../features/analysis/AccountAnalysisPanel";
 import { BreakdownPanel } from "../features/analysis/BreakdownPanel";
 import { PatternOverview } from "../features/analysis/PatternOverview";
-import { TrendsPanel } from "../features/analysis/TrendsPanel";
+
 import { PatternTabKey } from "../features/app.types";
 import { buildPatternsTabHero } from "../lib/tabHero";
 import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../state/useFinance";
@@ -25,7 +25,7 @@ function PatternsScreenComponent({
   onPatternTabChange,
   scrollContentStyle
 }: PatternsScreenProps) {
-  const { strings, styles } = useTheme();
+  const { strings } = useTheme();
   const { refreshControl } = usePullToRefresh();
   const actions = useActions();
   const { feedbackByPattern, latestBalanceTotal, monthlySummary, netWorthTrend, patterns, projectedBalanceSnapshots } =
@@ -96,20 +96,17 @@ function PatternsScreenComponent({
           onAnswer={(patternId, response) => void actions.answerPattern(patternId, response)}
         />
       )}
-      {activePatternTab === "breakdown" && (
-        <View style={styles.cardStack}>
-          <BreakdownPanel moments={moments} />
-          <TrendsPanel moments={moments} netWorthTrend={netWorthTrend} onOpenBalance={onOpenBalance} />
-        </View>
-      )}
+      {activePatternTab === "breakdown" && <BreakdownPanel moments={moments} />}
       {activePatternTab === "accounts" && (
         <AccountAnalysisPanel
           accounts={accounts}
           balanceSnapshots={balanceSnapshots}
           moments={moments}
+          netWorthTrend={netWorthTrend}
+          onDeleteTransfer={(id) => void actions.removeTransfer(id)}
+          onOpenBalance={onOpenBalance}
           projectedBalanceSnapshots={projectedBalanceSnapshots}
           transfers={transfers}
-          onDeleteTransfer={(id) => void actions.removeTransfer(id)}
         />
       )}
     </StickyTabScreen>

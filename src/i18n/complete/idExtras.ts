@@ -347,18 +347,23 @@ export const idExtras: AppStringsExtras = {
       incomeBySource: "Pemasukan per sumber",
       expense: "Pengeluaran",
       income: "Pemasukan",
-      amountShare: "{amount} - {percent}%"
+      amountShare: "{amount} - {percent}%",
+      viewAll: "Lihat semua kategori",
+      viewLess: "Tampilkan lebih sedikit"
     },
     trends: {
       empty: "Tren muncul setelah pengeluaran terbentuk lintas bulan.",
+      advancedTrends: "Tren lanjutan",
+      expandAdvancedTrends: "Tampilkan tren lanjutan",
+      collapseAdvancedTrends: "Sembunyikan tren lanjutan",
       netWorthTrend: "Tren kekayaan bersih",
       snapshotForNetWorth: "Snapshot saldo untuk melihat tren kekayaan bersih.",
       snapshotAction: "Buka saldo",
       spendingTrend: "Tren pengeluaran",
       currentPaceTitle: "Ritme bulan ini terlihat",
-      topCategoriesTitle: "Kategori teratas bulan ini",
-      topCategoriesEmpty: "Belum ada kategori yang menonjol bulan ini.",
-      weeklyCashflow: "Arus kas mingguan"
+      weeklyCashflow: "Arus kas mingguan",
+      showFullCashflow: "Tampilkan 8 minggu terakhir",
+      hideFullCashflow: "Tampilkan bulan ini saja"
     },
     cashflow: {
       empty: "Arus kas muncul setelah ada entri pemasukan atau pengeluaran.",
@@ -367,6 +372,8 @@ export const idExtras: AppStringsExtras = {
       expense: "Pengeluaran"
     },
     accounts: {
+      intro: "Lihat di mana uang berada dan apakah saldo cocok dengan catatan.",
+      openBalanceAction: "Kelola saldo di Anggaran",
       hubAndPockets: "Hub dan saku",
       hubPocketsCopy: "Hub {hub} - saku harian {pockets}.",
       mostActivePocket: "Saku pengeluaran paling aktif",
@@ -374,9 +381,11 @@ export const idExtras: AppStringsExtras = {
       spendingByAccountEmpty:
         "Pengeluaran per akun muncul setelah entri menyertakan akun.",
       reconciliationEmpty:
-        "Rekonsiliasi dimulai setelah snapshot manual pertama. Saldo saat ini masih bisa diestimasi dari pemasukan dan pengeluaran.",
+        "Rekonsiliasi dimulai setelah snapshot manual pertama.",
       balanceReconciliation: "Rekonsiliasi saldo",
       accountMovement: "Pergerakan akun bulan ini",
+      showAccountMovement: "Tampilkan pergerakan akun",
+      hideAccountMovement: "Sembunyikan pergerakan akun",
       incomeNetCopy: "Pemasukan {income} - bersih {net}",
       recentTransfers: "Transfer terbaru",
       expectedActual: "Perkiraan {expected} - aktual {actual}",
@@ -399,27 +408,26 @@ export const idExtras: AppStringsExtras = {
     },
     generated: {
       quietStartTitle: "Beberapa momen tersimpan",
-      quietStartDetail: "Slev akan mencari perubahan dan pengulangan seiring memori bertambah.",
+      quietStartDetail: "Lebih banyak pola muncul seiring kamu mencatat.",
       contextMoreVisibleTitle: "{context} lebih terlihat minggu ini",
-      contextMoreVisibleDetailWithPrevious: "{count} momen tersimpan, naik dari {previousCount} minggu lalu.",
-      contextMoreVisibleDetailNoPrevious: "{count} momen tersimpan muncul minggu ini.",
+      contextMoreVisibleDetailWithPrevious: "{count} momen, naik dari {previousCount} minggu lalu.",
+      contextMoreVisibleDetailNoPrevious: "{count} momen minggu ini.",
       contextMoreVisibleRecap: "Pertahankan ritme {context} ini?",
       newRepeatTitle: "Pengulangan baru mungkin terbentuk",
       newRepeatDetail: "{label} muncul {count} kali minggu ini.",
       newRepeatRecap: "Pertahankan {label} dalam ritme?",
-      smallSpendsTitle: "Pengeluaran kecil lebih terasa",
-      smallSpendsDetail: "{count} momen kecil berjumlah {total} minggu ini.",
+      smallSpendsTitle: "Pengeluaran kecil menumpuk",
+      smallSpendsDetail: "{count} momen kecil total {total} minggu ini.",
       smallSpendsRecap: "Pertahankan ritme pengeluaran kecil ini?",
-      weekendShapeTitle: "Akhir pekan membawa lebih banyak minggu ini",
-      weekendShapeDetail: "Pengeluaran akhir pekan sekitar {ratio}x ritme hari kerja.",
+      weekendShapeTitle: "Pengeluaran akhir pekan menonjol",
+      weekendShapeDetail: "Sekitar {ratio}x ritme hari kerja.",
       weekendShapeRecap: "Pertahankan ritme akhir pekan ini?",
-      contextQuieterTitle: "{context} lebih tenang minggu ini",
-      contextQuieterDetail:
-        "Konteks itu sering muncul minggu lalu dan belum muncul di memori tersimpan minggu ini.",
+      contextQuieterTitle: "{context} lebih tenang",
+      contextQuieterDetail: "Sering minggu lalu, belum ada minggu ini.",
       memoryBuildingTitle: "Memori sedang terbentuk",
-      memoryBuildingDetail: "{count} momen tersimpan dalam dua minggu terakhir.",
-      steadyRhythmTitle: "{context} bagian dari ritme terkini",
-      steadyRhythmDetail: "{count} momen dalam dua minggu terakhir.",
+      memoryBuildingDetail: "{count} momen dalam dua minggu terakhir.",
+      steadyRhythmTitle: "{context} bagian dari ritmemu",
+      steadyRhythmDetail: "{count} momen belakangan ini.",
       steadyRhythmRecap: "Pertahankan ritme {context} ini?"
     }
   },

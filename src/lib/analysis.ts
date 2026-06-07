@@ -17,8 +17,7 @@ import {
 import { getRuntimeStrings } from "../i18n/runtime";
 import {
   AccountReconciliationRow,
-  AllocationPlan,
-  buildMonthlyBreakdown
+  AllocationPlan
 } from "./financeEngine";
 import { formatSignedCompactRupiah } from "./formatMoney";
 import { formatCompactRupiah } from "./spendingMemoryPatterns";
@@ -31,6 +30,10 @@ export type CashflowWeek = {
   net: number;
 };
 
+export type DataMaturity = "building" | "established" | "new";
+
+export type CashflowWeeksMode = "default" | "full";
+
 export type SpendingTrend = {
   midpointMessage?: string;
   months: {
@@ -38,10 +41,6 @@ export type SpendingTrend = {
     key: string;
     label: string;
     share: number;
-  }[];
-  topCategories: {
-    amount: number;
-    label: string;
   }[];
 };
 
@@ -318,22 +317,91 @@ export function buildAccountActivity(moments: SpendingMoment[]): AccountActivity
   }));
 }
 
-export function buildCashflowWeeks(moments: SpendingMoment[]): CashflowWeek[] {
-  const currentWeekStart = getStartOfWeek(new Date());
-  return Array.from({ length: 8 }, (_, index) => {
-    const start = new Date(currentWeekStart.getTime() - (7 - index) * 7 * 24 * 60 * 60 * 1000);
-    const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const weekMoments = moments.filter((moment) => isWithinRange(moment.occurredAt, start, end));
-    const income = sumMoments(weekMoments.filter((moment) => moment.type === "income"));
-    const expense = sumExpenseMoments(weekMoments);
-    return {
-      expense,
-      income,
-      key: dateKey(start),
-      label: formatLocaleShortDate(start),
-      net: income - expense
-    };
+function buildCashflowWeekBucket(moments: SpendingMoment[], start: Date): CashflowWeek {
+  const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const weekMoments = moments.filter((moment) => isWithinRange(moment.occurredAt, start, end));
+  const income = sumMoments(weekMoments.filter((moment) => moment.type === "income"));
+  const expense = sumExpenseMoments(weekMoments);
+  return {
+    expense,
+    income,
+    key: dateKey(start),
+    label: formatLocaleShortDate(start),
+    net: income - expense
+  };
+}
+
+function filterCashflowWeeks(weeks: CashflowWeek[]): CashflowWeek[] {
+  if (weeks.length === 0) {
+    return weeks;
+  }
+
+  return weeks.filter((week, index, arr) => {
+    const isCurrentWeek = index === arr.length - 1;
+    return week.income > 0 || week.expense > 0 || isCurrentWeek;
   });
+}
+
+export function buildCashflowWeeks(
+  moments: SpendingMoment[],
+  options?: { mode?: CashflowWeeksMode; referenceDate?: Date }
+): CashflowWeek[] {
+  const mode = options?.mode ?? "default";
+  const referenceDate = options?.referenceDate ?? new Date();
+  const currentWeekStart = getStartOfWeek(referenceDate);
+
+  if (mode === "full") {
+    const weeks = Array.from({ length: 8 }, (_, index) => {
+      const start = new Date(currentWeekStart.getTime() - (7 - index) * 7 * 24 * 60 * 60 * 1000);
+      return buildCashflowWeekBucket(moments, start);
+    });
+    return filterCashflowWeeks(weeks);
+  }
+
+  const monthStart = getMonthRange(referenceDate, 0).start;
+  let weekStart = getStartOfWeek(monthStart);
+  const weeks: CashflowWeek[] = [];
+
+  while (weekStart.getTime() <= currentWeekStart.getTime()) {
+    weeks.push(buildCashflowWeekBucket(moments, weekStart));
+    weekStart = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+  }
+
+  return filterCashflowWeeks(weeks);
+}
+
+export function getDataMaturity(moments: SpendingMoment[], referenceDate = new Date()): DataMaturity {
+  if (moments.length === 0) {
+    return "new";
+  }
+
+  const timestamps = moments
+    .map((moment) => Date.parse(moment.occurredAt))
+    .filter((time) => !Number.isNaN(time));
+
+  if (timestamps.length === 0) {
+    return "new";
+  }
+
+  const minTs = Math.min(...timestamps);
+  const maxTs = Math.max(...timestamps);
+  const spanDays = (maxTs - minTs) / (24 * 60 * 60 * 1000);
+  const expenseMonthKeys = new Set(
+    moments
+      .filter((moment) => moment.type === "expense")
+      .map((moment) => getMonthKey(new Date(moment.occurredAt)))
+  );
+  const currentMonthKey = getMonthKey(referenceDate);
+
+  if (spanDays >= 30 || expenseMonthKeys.size >= 2) {
+    return "established";
+  }
+
+  if (moments.length < 5 && spanDays < 7 && expenseMonthKeys.size <= 1 && expenseMonthKeys.has(currentMonthKey)) {
+    return "new";
+  }
+
+  return "building";
 }
 
 export function buildSpendingTrend(moments: SpendingMoment[]): SpendingTrend {
@@ -350,32 +418,25 @@ export function buildSpendingTrend(moments: SpendingMoment[]): SpendingTrend {
       share: 0
     };
   });
-  const maxAmount = Math.max(1, ...months.map((month) => month.amount));
-  const monthsWithShare = months.map((month) => ({
+  const visibleMonths = months.filter((month, index) => month.amount > 0 || index === months.length - 1);
+  const maxAmount = Math.max(1, ...visibleMonths.map((month) => month.amount));
+  const monthsWithShare = visibleMonths.map((month) => ({
     ...month,
     share: month.amount / maxAmount
   }));
-  const currentMonth = monthsWithShare[2];
-  const lastMonth = monthsWithShare[1];
+  const currentMonth = monthsWithShare[monthsWithShare.length - 1];
+  const lastMonth = months[months.length - 2];
   const dayOfMonth = today.getDate();
   const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
   const expectedPace = lastMonth.amount * (dayOfMonth / daysInMonth);
   const midpointMessage =
-    dayOfMonth >= Math.ceil(daysInMonth / 2) && lastMonth.amount > 0 && currentMonth.amount > expectedPace
+    dayOfMonth >= 15 && lastMonth.amount > 0 && currentMonth && currentMonth.amount > expectedPace
       ? formatString(getRuntimeStrings().analysis.trends.midpointPace, { month: currentMonth.label })
       : undefined;
-  const currentRange = getMonthRange(today, 0);
-  const topCategories = buildMonthlyBreakdown(
-    moments.filter((moment) => isWithinRange(moment.occurredAt, currentRange.start, currentRange.end)),
-    "expense"
-  )
-    .slice(0, 2)
-    .map((row) => ({ amount: row.amount, label: row.label }));
 
   return {
     midpointMessage,
-    months: monthsWithShare,
-    topCategories
+    months: monthsWithShare
   };
 }
 

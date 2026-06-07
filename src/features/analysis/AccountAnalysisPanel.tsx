@@ -1,30 +1,37 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useMemo, useState } from "react";
-import { FlatList, Text, View } from "react-native";
+import { FlatList, Pressable, Text, View } from "react-native";
 import { AccountTitle, DeleteConfirmDialog, EmptyState, ListActionRow, ObservationPanel, ProgressBar, SectionHeader, TransferTitle } from "../../components";
 import { formatString } from "../../i18n";
 import { AccountActivityRow, buildAccountActivity, dateKey, formatDate, formatReconciliationDifference, getReconciliationCopy, getReconciliationDetail, getPercentWidthStyle } from "../../lib/analysis";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
-import { buildAccountReconciliation, getLatestBalanceSnapshots } from "../../lib/financeEngine";
+import { buildAccountReconciliation, getLatestBalanceSnapshots, NetWorthPoint } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { BalanceSnapshot, MoneyAccount, MoneyTransfer, SpendingMoment, type PatternGroup } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 import { getReconciliationAmountStyle } from "../../theme/styles/fillStyles";
+import { NetWorthTrendSection } from "./NetWorthTrendSection";
+
+const RECENT_TRANSFER_LIMIT = 3;
 
 export function AccountAnalysisPanel({
   accounts,
   balanceSnapshots,
   moments,
+  netWorthTrend,
+  onDeleteTransfer,
+  onOpenBalance,
   projectedBalanceSnapshots,
-  transfers,
-  onDeleteTransfer
+  transfers
 }: {
   accounts: MoneyAccount[];
   balanceSnapshots: BalanceSnapshot[];
   moments: SpendingMoment[];
+  netWorthTrend: NetWorthPoint[];
+  onDeleteTransfer: (id: string) => void;
+  onOpenBalance: () => void;
   projectedBalanceSnapshots: BalanceSnapshot[];
   transfers: MoneyTransfer[];
-  onDeleteTransfer: (id: string) => void;
 }) {
   const { colors, strings, styles } = useTheme();
   const accountsStrings = strings.patterns.accounts;
@@ -34,8 +41,9 @@ export function AccountAnalysisPanel({
     () => buildAccountReconciliation({ accounts, balanceSnapshots, moments, transfers }),
     [accounts, balanceSnapshots, moments, transfers]
   );
-  const recentTransfers = useMemo(() => transfers.slice(0, 6), [transfers]);
+  const recentTransfers = useMemo(() => transfers.slice(0, RECENT_TRANSFER_LIMIT), [transfers]);
   const [pendingDeleteTransfer, setPendingDeleteTransfer] = useState<MoneyTransfer | null>(null);
+  const [showAccountMovement, setShowAccountMovement] = useState(accountActivity.length >= 2);
   const reconciliationCopy = getReconciliationCopy(reconciliationRows);
   const incomeHub = accounts.find((account) => account.isIncomeHub);
   const hubBalance = incomeHub
@@ -45,6 +53,7 @@ export function AccountAnalysisPanel({
     .filter((snapshot) => snapshot.accountLabel !== incomeHub?.label)
     .reduce((sum, snapshot) => sum + snapshot.amount, 0);
   const topSpendingAccount = accountActivity.find((row) => row.expense > 0);
+  const hasSnapshots = balanceSnapshots.length > 0;
 
   const renderReconciliationItem = useCallback(
     ({ item: row }: { item: (typeof reconciliationRows)[number] }) => (
@@ -124,6 +133,18 @@ export function AccountAnalysisPanel({
 
   return (
     <View style={styles.cardStack}>
+      <Text style={styles.settingCopy}>{accountsStrings.intro}</Text>
+
+      <Pressable
+        accessibilityLabel={accountsStrings.openBalanceAction}
+        accessibilityRole="button"
+        onPress={onOpenBalance}
+        style={styles.accordionCard}
+      >
+        <Text style={styles.settingTitle}>{accountsStrings.openBalanceAction}</Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+      </Pressable>
+
       <View style={styles.settingsPanel}>
         <View style={styles.settingRow}>
           <Ionicons name="swap-horizontal-outline" size={20} color={colors.greenDark} />
@@ -153,20 +174,19 @@ export function AccountAnalysisPanel({
         </View>
       </View>
 
-      <ObservationPanel
-        pattern={{
-          id: "reconciliation-summary",
-          group: strings.patterns.groups.standsOut as PatternGroup,
-          title: reconciliationCopy.title,
-          detail: reconciliationCopy.detail,
-          tone: reconciliationCopy.tone
-        }}
-      />
+      <NetWorthTrendSection netWorthTrend={netWorthTrend} onOpenBalance={onOpenBalance} />
 
-      {balanceSnapshots.length === 0 ? (
-        <EmptyState text={accountsStrings.reconciliationEmpty} />
-      ) : (
+      {hasSnapshots && (
         <>
+          <ObservationPanel
+            pattern={{
+              id: "reconciliation-summary",
+              group: strings.patterns.groups.standsOut as PatternGroup,
+              title: reconciliationCopy.title,
+              detail: reconciliationCopy.detail,
+              tone: reconciliationCopy.tone
+            }}
+          />
           <SectionHeader title={accountsStrings.balanceReconciliation} />
           <View style={styles.listPanel}>
             <FlatList
@@ -179,17 +199,42 @@ export function AccountAnalysisPanel({
         </>
       )}
 
+      {!hasSnapshots && <EmptyState text={accountsStrings.reconciliationEmpty} />}
+
       {accountActivity.length > 0 && (
         <>
-          <SectionHeader title={accountsStrings.accountMovement} />
-          <View style={styles.listPanel}>
-            <FlatList
-              data={accountActivity}
-              keyExtractor={activityKeyExtractor}
-              renderItem={renderActivityItem}
-              scrollEnabled={false}
-            />
-          </View>
+          {accountActivity.length >= 2 && (
+            <Pressable
+              accessibilityLabel={
+                showAccountMovement
+                  ? accountsStrings.hideAccountMovement
+                  : accountsStrings.showAccountMovement
+              }
+              accessibilityRole="button"
+              onPress={() => setShowAccountMovement((prev) => !prev)}
+              style={styles.accordionCard}
+            >
+              <Text style={styles.settingTitle}>{accountsStrings.accountMovement}</Text>
+              <Ionicons
+                name={showAccountMovement ? "chevron-up" : "chevron-down"}
+                size={18}
+                color={colors.muted}
+              />
+            </Pressable>
+          )}
+          {(accountActivity.length < 2 || showAccountMovement) && (
+            <>
+              {accountActivity.length < 2 && <SectionHeader title={accountsStrings.accountMovement} />}
+              <View style={styles.listPanel}>
+                <FlatList
+                  data={accountActivity}
+                  keyExtractor={activityKeyExtractor}
+                  renderItem={renderActivityItem}
+                  scrollEnabled={false}
+                />
+              </View>
+            </>
+          )}
         </>
       )}
 

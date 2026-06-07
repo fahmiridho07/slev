@@ -379,13 +379,17 @@ export type AppStrings = {
       deleteTransferBody: string;
       deleteTransferTitle: string;
       expectedActual: string;
+      hideAccountMovement: string;
       hubAndPockets: string;
       hubPocketsCopy: string;
       incomeNetCopy: string;
+      intro: string;
       mostActivePocket: string;
       accountMovement: string;
+      openBalanceAction: string;
       recentTransfers: string;
       reconciliationEmpty: string;
+      showAccountMovement: string;
       spendingByAccountEmpty: string;
       topSpendingCopy: string;
     };
@@ -397,6 +401,8 @@ export type AppStrings = {
       incomeBySource: string;
       incomeEmpty: string;
       spendingByCategory: string;
+      viewAll: string;
+      viewLess: string;
     };
     cashflow: {
       empty: string;
@@ -467,14 +473,17 @@ export type AppStrings = {
       spending: string;
     };
     trends: {
+      advancedTrends: string;
+      collapseAdvancedTrends: string;
       currentPaceTitle: string;
       empty: string;
+      expandAdvancedTrends: string;
+      hideFullCashflow: string;
       netWorthTrend: string;
+      showFullCashflow: string;
       snapshotAction: string;
       snapshotForNetWorth: string;
       spendingTrend: string;
-      topCategoriesEmpty: string;
-      topCategoriesTitle: string;
       weeklyCashflow: string;
     };
   };

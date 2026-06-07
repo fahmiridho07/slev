@@ -6,7 +6,13 @@ import { FinanceBreakdownRow } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { useTheme } from "../../hooks/useTheme";
 
-export function MonthlySpendingChart({ rows }: { rows: FinanceBreakdownRow[] }) {
+type MonthlySpendingChartProps = {
+  compactLegend?: boolean;
+  hero?: boolean;
+  rows: FinanceBreakdownRow[];
+};
+
+export function MonthlySpendingChart({ compactLegend = false, hero = false, rows }: MonthlySpendingChartProps) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const chartStrings = strings.patterns.chart;
   const chartColors = useMemo(
@@ -32,12 +38,13 @@ export function MonthlySpendingChart({ rows }: { rows: FinanceBreakdownRow[] }) 
     ]
   );
   const total = useMemo(() => rows.reduce((sum, row) => sum + row.amount, 0), [rows]);
+  const legendRows = compactLegend ? rows.slice(0, 5) : rows;
 
   if (rows.length === 0 || total <= 0) {
     return null;
   }
 
-  const breakdownSummary = rows
+  const breakdownSummary = legendRows
     .map((row) =>
       formatString(chartStrings.legendValue, {
         amount: formatCompactRupiah(row.amount),
@@ -61,7 +68,7 @@ export function MonthlySpendingChart({ rows }: { rows: FinanceBreakdownRow[] }) 
         {formatString(chartStrings.totalAcross, { total: formatCompactRupiah(total), count: rows.length })}
       </Text>
 
-      <View style={styles.chartStackTrack}>
+      <View style={hero ? styles.chartStackTrackHero : styles.chartStackTrack}>
         <View style={styles.chartStackRow}>
           {rows.map((row, index) => (
             <View
@@ -76,27 +83,29 @@ export function MonthlySpendingChart({ rows }: { rows: FinanceBreakdownRow[] }) 
         </View>
       </View>
 
-      <View style={styles.chartLegend}>
-        {rows.map((row, index) => (
-          <View key={row.key} style={styles.chartLegendRow}>
-            <View style={styles.chartLegendLabelRow}>
-              <View
-                style={[
-                  styles.chartLegendSwatch,
-                  { backgroundColor: chartColors[index % chartColors.length] }
-                ]}
-              />
-              <Text style={styles.chartLegendLabel}>{row.label}</Text>
+      {!compactLegend && (
+        <View style={styles.chartLegend}>
+          {rows.map((row, index) => (
+            <View key={row.key} style={styles.chartLegendRow}>
+              <View style={styles.chartLegendLabelRow}>
+                <View
+                  style={[
+                    styles.chartLegendSwatch,
+                    { backgroundColor: chartColors[index % chartColors.length] }
+                  ]}
+                />
+                <Text style={styles.chartLegendLabel}>{row.label}</Text>
+              </View>
+              <Text style={styles.chartLegendValue}>
+                {formatString(chartStrings.legendValue, {
+                  amount: formatCompactRupiah(row.amount),
+                  percent: Math.round(row.share * 100)
+                })}
+              </Text>
             </View>
-            <Text style={styles.chartLegendValue}>
-              {formatString(chartStrings.legendValue, {
-                amount: formatCompactRupiah(row.amount),
-                percent: Math.round(row.share * 100)
-              })}
-            </Text>
-          </View>
-        ))}
-      </View>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
