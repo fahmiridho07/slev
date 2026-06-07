@@ -1,5 +1,6 @@
 import {
   AccountReconciliationRow,
+  buildAccountDriftAlerts,
   buildAccountReconciliation,
   buildAllocationPlan,
   buildCurrentMonthSummary,
@@ -156,6 +157,89 @@ test("reconciliation matches logged movements between two snapshots", () => {
   assertEqual(jago.status, "matched", "Jago should match transfer in");
   assertEqual(jago.transferIn, 750_000, "Jago transfer in should be counted");
   assertEqual(cash.status, "needs_history", "Cash should need another snapshot");
+});
+
+test("buildAccountDriftAlerts surfaces needs_review drift with signed difference", () => {
+  const alerts = buildAccountDriftAlerts({
+    accounts: [account("BRI", "bank", true)],
+    balanceSnapshots: [
+      snapshot("BRI", 5_000_000, "2026-06-01T00:00:00.000Z"),
+      snapshot("BRI", 5_730_000, "2026-06-10T00:00:00.000Z")
+    ],
+    moments: [
+      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
+      moment({ accountLabel: "BRI", amount: 500_000, occurredAt: "2026-06-04T00:00:00.000Z" })
+    ],
+    toleranceAmount: 1_000,
+    transfers: [
+      transfer("BRI", "Jago", 750_000, "2026-06-05T00:00:00.000Z")
+    ]
+  });
+
+  assertEqual(alerts.length, 1, "one drift alert");
+  assertEqual(alerts[0]?.label, "BRI", "drift label");
+  assertEqual(alerts[0]?.difference, -20_000, "signed drift difference");
+  assertEqual(alerts[0]?.latestSnapshotDate, "2026-06-10T00:00:00.000Z", "latest snapshot date");
+});
+
+test("buildAccountDriftAlerts stays empty when balances reconcile", () => {
+  const alerts = buildAccountDriftAlerts({
+    accounts: [
+      account("BRI", "bank", true),
+      account("Jago", "bank", false),
+      account("Cash", "cash", false)
+    ],
+    balanceSnapshots: [
+      snapshot("BRI", 5_000_000, "2026-06-01T00:00:00.000Z"),
+      snapshot("BRI", 5_750_000, "2026-06-10T00:00:00.000Z"),
+      snapshot("Jago", 100_000, "2026-06-01T00:00:00.000Z"),
+      snapshot("Jago", 850_000, "2026-06-10T00:00:00.000Z"),
+      snapshot("Cash", 200_000, "2026-06-10T00:00:00.000Z")
+    ],
+    moments: [
+      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
+      moment({ accountLabel: "BRI", amount: 500_000, occurredAt: "2026-06-04T00:00:00.000Z" })
+    ],
+    transfers: [
+      transfer("BRI", "Jago", 750_000, "2026-06-05T00:00:00.000Z")
+    ]
+  });
+
+  assertEqual(alerts.length, 0, "no drift alerts when reconciliation is clean");
+});
+
+test("buildAccountDriftAlerts ignores small_gap mismatches", () => {
+  const alerts = buildAccountDriftAlerts({
+    accounts: [account("BRI", "bank", true)],
+    balanceSnapshots: [
+      snapshot("BRI", 5_000_000, "2026-06-01T00:00:00.000Z"),
+      snapshot("BRI", 5_744_000, "2026-06-10T00:00:00.000Z")
+    ],
+    moments: [
+      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
+      moment({ accountLabel: "BRI", amount: 500_000, occurredAt: "2026-06-04T00:00:00.000Z" })
+    ],
+    transfers: [
+      transfer("BRI", "Jago", 750_000, "2026-06-05T00:00:00.000Z")
+    ]
+  });
+  const rows = buildAccountReconciliation({
+    accounts: [account("BRI", "bank", true)],
+    balanceSnapshots: [
+      snapshot("BRI", 5_000_000, "2026-06-01T00:00:00.000Z"),
+      snapshot("BRI", 5_744_000, "2026-06-10T00:00:00.000Z")
+    ],
+    moments: [
+      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
+      moment({ accountLabel: "BRI", amount: 500_000, occurredAt: "2026-06-04T00:00:00.000Z" })
+    ],
+    transfers: [
+      transfer("BRI", "Jago", 750_000, "2026-06-05T00:00:00.000Z")
+    ]
+  });
+
+  assertEqual(findReconciliation(rows, "BRI").status, "small_gap", "fixture should stay a small gap");
+  assertEqual(alerts.length, 0, "small gaps stay hidden");
 });
 
 test("reconciliation flags material gaps for review", () => {

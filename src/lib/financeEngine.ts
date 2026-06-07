@@ -496,6 +496,28 @@ export function buildAccountReconciliation({
     .sort(sortReconciliationRows);
 }
 
+export type AccountDriftRow = {
+  label: string;
+  difference: number;
+  latestSnapshotDate?: string;
+};
+
+export function buildAccountDriftAlerts(args: {
+  accounts: MoneyAccount[];
+  balanceSnapshots: BalanceSnapshot[];
+  moments: SpendingMoment[];
+  transfers: MoneyTransfer[];
+  toleranceAmount?: number;
+}): AccountDriftRow[] {
+  return buildAccountReconciliation(args)
+    .filter((row) => row.status === "needs_review" && row.difference !== null)
+    .map((row) => ({
+      label: row.label,
+      difference: row.difference!,
+      latestSnapshotDate: row.latestSnapshotDate
+    }));
+}
+
 function buildAllocationRow(
   key: AllocationRow["key"],
   planned: number,
