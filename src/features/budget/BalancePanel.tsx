@@ -5,7 +5,7 @@ import { AccountPicker, AccountTitle, DeleteConfirmDialog, EmptyState, SectionHe
 import { formatAmountInput } from "../../lib/formatMoney";
 import { getLatestBalanceSnapshots, getLatestBalanceTotal } from "../../lib/financeEngine";
 import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
-import { BalanceSnapshot, MoneyAccount } from "../spendingMemory.types";
+import { AccountTier, BalanceSnapshot, MoneyAccount } from "../spendingMemory.types";
 import { colors } from "../../theme/colors";
 import { styles } from "../../theme/styles/app";
 
@@ -26,6 +26,7 @@ export function BalancePanel({
     isIncomeHub: boolean;
     kind: MoneyAccount["kind"];
     label: string;
+    tier?: MoneyAccount["tier"];
   }) => void;
   onSaveBalance: (input: { accountLabel: string; amount: string }) => void;
 }) {
@@ -35,6 +36,7 @@ export function BalancePanel({
   const [accountDraftLabel, setAccountDraftLabel] = useState("");
   const [accountDraftKind, setAccountDraftKind] = useState<MoneyAccount["kind"]>("bank");
   const [accountDraftHub, setAccountDraftHub] = useState<"hub" | "pocket">("pocket");
+  const [accountDraftTier, setAccountDraftTier] = useState<AccountTier>("tracked");
   const [pendingDeleteAccount, setPendingDeleteAccount] = useState<MoneyAccount | null>(null);
   const currentBalanceTotal = useMemo(() => getLatestBalanceTotal(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
   const manualBalanceTotal = useMemo(() => getLatestBalanceTotal(balanceSnapshots), [balanceSnapshots]);
@@ -55,6 +57,7 @@ export function BalancePanel({
     setAccountDraftLabel(account.label);
     setAccountDraftKind(account.kind);
     setAccountDraftHub(account.isIncomeHub ? "hub" : "pocket");
+    setAccountDraftTier(account.tier ?? "tracked");
   }
 
   function resetAccountDraft() {
@@ -62,6 +65,7 @@ export function BalancePanel({
     setAccountDraftLabel("");
     setAccountDraftKind("bank");
     setAccountDraftHub("pocket");
+    setAccountDraftTier("tracked");
   }
 
   const renderAccountItem = useCallback(
@@ -69,7 +73,9 @@ export function BalancePanel({
       <View style={styles.analyticsRow}>
         <View style={styles.analyticsRowHeader}>
           <AccountTitle kind={account.kind} label={account.label} />
-          <Text style={styles.analyticsAmount}>{account.isIncomeHub ? "Income hub" : account.kind}</Text>
+          <Text style={styles.analyticsAmount}>
+            {account.isIncomeHub ? "Income hub" : account.tier === "ephemeral" ? "Ephemeral" : account.kind}
+          </Text>
         </View>
         <View style={styles.editActions}>
           <Pressable onPress={() => editAccount(account)} style={styles.textButton}>
@@ -169,6 +175,18 @@ export function BalancePanel({
           selected={accountDraftHub}
           onSelect={setAccountDraftHub}
         />
+        <SegmentedControl
+          compact
+          options={[
+            { label: "Tracked", value: "tracked" },
+            { label: "Ephemeral", value: "ephemeral" }
+          ]}
+          selected={accountDraftTier}
+          onSelect={setAccountDraftTier}
+        />
+        <Text style={styles.settingCopy}>
+          Ephemeral = a payment source you don't reconcile closely (small e-wallets).
+        </Text>
         <View style={styles.editActions}>
           {editingAccountId && (
             <Pressable onPress={resetAccountDraft} style={styles.secondaryButton}>
@@ -181,7 +199,8 @@ export function BalancePanel({
                 id: editingAccountId,
                 isIncomeHub: accountDraftHub === "hub",
                 kind: accountDraftKind,
-                label: accountDraftLabel
+                label: accountDraftLabel,
+                tier: accountDraftTier
               });
               resetAccountDraft();
             }}
