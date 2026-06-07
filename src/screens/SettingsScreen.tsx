@@ -88,7 +88,7 @@ function SettingsScreenComponent() {
           <View style={styles.capturePanel}>
             <Text style={styles.microLabel}>Data health</Text>
             <Text style={styles.settingCopy}>
-              These collections look damaged on disk. Export a backup first, then reset only what you need to recover.
+              Some data looks damaged. Export a backup before resetting.
             </Text>
             {corruptIssues.map((issue) => (
               <View key={issue.key} style={styles.analyticsRow}>
@@ -153,7 +153,7 @@ function SettingsScreenComponent() {
         <View style={styles.capturePanel}>
           <Text style={styles.microLabel}>Backup</Text>
           <Text style={styles.settingCopy}>
-            Export all local finance data as JSON, or paste a previous backup to restore it on this device.
+            Export your data as JSON, or paste a backup to restore.
           </Text>
           <Pressable
             accessibilityRole="button"

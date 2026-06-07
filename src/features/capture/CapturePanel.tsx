@@ -154,7 +154,6 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
           <>
             <View style={styles.contextHeaderRow}>
               <Text style={styles.microLabel}>Context</Text>
-              <Text style={styles.contextDefault}>Defaults to last used</Text>
             </View>
             <ContextPicker
               categories={categoryLabels}
@@ -177,7 +176,7 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
       ) : (
         <Pressable accessibilityRole="button" onPress={() => setNoteOpen(true)} style={styles.addNoteButton}>
           <Ionicons name="create-outline" size={16} color={colors.muted} />
-          <Text style={styles.addNoteText}>Add note only if it helps recall</Text>
+          <Text style={styles.addNoteText}>Add a note</Text>
         </Pressable>
       )}
 

@@ -55,7 +55,7 @@ export function AllocationPanel({
 
       {!monthlyPlan ? (
         <EmptyState
-          text="Set expected income, fixed costs, flexible budget, and savings target to make allocation useful."
+          text="Set a monthly plan to see your allocation."
         />
       ) : (
         <>
@@ -109,7 +109,7 @@ export function AllocationPanel({
 
           {balanceSnapshots.length === 0 && (
             <EmptyState
-              text="Balance is estimated from logged income and spending. Add a snapshot to calibrate the real account balance."
+              text="Estimated from your logs. Add a snapshot to calibrate."
               actionLabel="Open Balance"
               onAction={onOpenBalance}
             />
