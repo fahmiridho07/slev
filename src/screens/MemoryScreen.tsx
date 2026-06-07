@@ -15,6 +15,7 @@ import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { MomentEditForm } from "../features/memory/MomentEditForm";
 import { SpendingMoment } from "../features/spendingMemory.types";
 import { buildRepeatHints, filterMoments, getMomentTitle, groupMomentsByRecallRange } from "../lib/analysis";
+import { hapticSelection } from "../lib/haptics";
 import { AppNavigation } from "../navigation/appNavigation";
 import { useActions, useFinanceSelector } from "../state/useFinance";
 import { useTheme } from "../hooks/useTheme";
@@ -93,6 +94,7 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
   );
 
   const startEditing = useCallback((moment: SpendingMoment) => {
+    hapticSelection();
     setEditingMoment(moment);
   }, []);
 
@@ -222,7 +224,12 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
         visible={Boolean(editingMoment)}
       >
         {editingMoment ? (
-          <MomentEditForm moment={editingMoment} onCancel={cancelEdit} onSaved={handleSaved} />
+          <MomentEditForm
+            key={editingMoment.id}
+            moment={editingMoment}
+            onCancel={cancelEdit}
+            onSaved={handleSaved}
+          />
         ) : null}
       </BottomSheet>
       <DeleteConfirmDialog

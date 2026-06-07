@@ -4,10 +4,10 @@ import {
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   Text,
   View
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../hooks/useTheme";
 
 type BottomSheetProps = {
@@ -19,6 +19,8 @@ type BottomSheetProps = {
 
 function BottomSheetComponent({ children, onClose, title, visible }: BottomSheetProps) {
   const { componentStyles, reduceMotion, strings } = useTheme();
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 12);
 
   return (
     <Modal
@@ -28,33 +30,26 @@ function BottomSheetComponent({ children, onClose, title, visible }: BottomSheet
       transparent
       visible={visible}
     >
-      <Pressable
-        accessibilityLabel={strings.common.closeSheet}
-        accessibilityRole="button"
-        onPress={onClose}
-        style={componentStyles.sheetBackdrop}
-      >
+      <View style={componentStyles.sheetBackdrop}>
+        <Pressable
+          accessibilityLabel={strings.common.closeSheet}
+          accessibilityRole="button"
+          onPress={onClose}
+          style={componentStyles.sheetBackdropPressable}
+        />
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={componentStyles.sheetKeyboard}
         >
-          <Pressable onPress={(event) => event.stopPropagation()}>
-            <View style={componentStyles.sheetCard}>
-              <View style={componentStyles.sheetHandle} />
-              <Text accessibilityRole="header" style={componentStyles.sheetTitle}>
-                {title}
-              </Text>
-              <ScrollView
-                keyboardShouldPersistTaps="handled"
-                nestedScrollEnabled
-                showsVerticalScrollIndicator={false}
-              >
-                {children}
-              </ScrollView>
-            </View>
-          </Pressable>
+          <View style={[componentStyles.sheetCard, { paddingBottom: bottomInset }]}>
+            <View style={componentStyles.sheetHandle} />
+            <Text accessibilityRole="header" style={componentStyles.sheetTitle}>
+              {title}
+            </Text>
+            {children}
+          </View>
         </KeyboardAvoidingView>
-      </Pressable>
+      </View>
     </Modal>
   );
 }

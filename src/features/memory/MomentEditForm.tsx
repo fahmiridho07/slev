@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { AccountPicker, ContextPicker, SegmentedControl } from "../../components";
 import { EntryType, MoneyAccount, SpendingContext, SpendingMoment } from "../spendingMemory.types";
 import { getDefaultMomentAccount } from "../../lib/analysis";
@@ -65,70 +65,84 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
   }, [accountLabel, actions, amountText, context, label, moment.id, note, onSaved, source, type]);
 
   return (
-    <View style={styles.repeatBlock}>
-      <TextInput
-        keyboardType="number-pad"
-        onChangeText={(value) => {
-          setFieldError((current) => (current?.field === "amount" ? null : current));
-          setAmountText(formatAmountInput(value));
-        }}
-        accessibilityLabel={
-          fieldError?.field === "amount"
-            ? `${strings.memory.edit.amount}. ${fieldError.message}`
-            : strings.memory.edit.amount
-        }
-        placeholder={strings.memory.edit.amount}
-        placeholderTextColor={colors.muted}
-        style={styles.input}
-        value={amountText}
-      />
-      {fieldError?.field === "amount" && (
-        <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
-          {fieldError.message}
-        </Text>
-      )}
-      <TextInput
-        onChangeText={type === "income" ? setSource : setLabel}
-        accessibilityLabel={type === "income" ? strings.memory.edit.source : strings.memory.edit.label}
-        placeholder={type === "income" ? strings.memory.edit.source : strings.memory.edit.label}
-        placeholderTextColor={colors.muted}
-        style={styles.input}
-        value={type === "income" ? source : label}
-      />
-      <SegmentedControl
-        compact
-        options={[
-          { label: strings.common.expense, value: "expense" },
-          { label: strings.common.income, value: "income" }
-        ]}
-        selected={type}
-        onSelect={setType}
-      />
-      {type === "expense" && (
-        <ContextPicker categories={categoryLabels} selected={context} onSelect={setContext} compact />
-      )}
-      <AccountPicker
-        accounts={accounts}
-        label={type === "income" ? strings.memory.edit.receivedIn : strings.memory.edit.paidFrom}
-        selected={accountLabel}
-        onSelect={setAccountLabel}
-      />
-      <TextInput
-        multiline
-        onChangeText={setNote}
-        accessibilityLabel={strings.memory.edit.note}
-        placeholder={strings.memory.edit.note}
-        placeholderTextColor={colors.muted}
-        style={[styles.input, styles.noteInput]}
-        value={note}
-      />
-      <View style={componentStyles.editActions}>
-        <Pressable accessibilityRole="button" onPress={onCancel} style={styles.secondaryButton}>
-          <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
-        </Pressable>
-        <Pressable accessibilityLabel={strings.memory.edit.save} accessibilityRole="button" onPress={() => void save()} style={styles.smallPrimaryButton}>
-          <Text style={styles.primaryButtonText}>{strings.memory.edit.save}</Text>
-        </Pressable>
+    <View style={componentStyles.sheetForm}>
+      <ScrollView
+        contentContainerStyle={styles.repeatBlock}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        style={componentStyles.sheetScroll}
+      >
+        <TextInput
+          keyboardType="number-pad"
+          onChangeText={(value) => {
+            setFieldError((current) => (current?.field === "amount" ? null : current));
+            setAmountText(formatAmountInput(value));
+          }}
+          accessibilityLabel={
+            fieldError?.field === "amount"
+              ? `${strings.memory.edit.amount}. ${fieldError.message}`
+              : strings.memory.edit.amount
+          }
+          placeholder={strings.memory.edit.amount}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={amountText}
+        />
+        {fieldError?.field === "amount" && (
+          <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+            {fieldError.message}
+          </Text>
+        )}
+        <TextInput
+          onChangeText={type === "income" ? setSource : setLabel}
+          accessibilityLabel={type === "income" ? strings.memory.edit.source : strings.memory.edit.label}
+          placeholder={type === "income" ? strings.memory.edit.source : strings.memory.edit.label}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={type === "income" ? source : label}
+        />
+        <SegmentedControl
+          compact
+          options={[
+            { label: strings.common.expense, value: "expense" },
+            { label: strings.common.income, value: "income" }
+          ]}
+          selected={type}
+          onSelect={setType}
+        />
+        {type === "expense" && (
+          <ContextPicker categories={categoryLabels} selected={context} onSelect={setContext} compact />
+        )}
+        <AccountPicker
+          accounts={accounts}
+          label={type === "income" ? strings.memory.edit.receivedIn : strings.memory.edit.paidFrom}
+          selected={accountLabel}
+          onSelect={setAccountLabel}
+        />
+        <TextInput
+          multiline
+          onChangeText={setNote}
+          accessibilityLabel={strings.memory.edit.note}
+          placeholder={strings.memory.edit.note}
+          placeholderTextColor={colors.muted}
+          style={[styles.input, styles.noteInput]}
+          value={note}
+        />
+      </ScrollView>
+      <View style={componentStyles.sheetFooter}>
+        <View style={componentStyles.editActions}>
+          <Pressable accessibilityRole="button" onPress={onCancel} style={styles.secondaryButton}>
+            <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel={strings.memory.edit.save}
+            accessibilityRole="button"
+            onPress={() => void save()}
+            style={styles.smallPrimaryButton}
+          >
+            <Text style={styles.primaryButtonText}>{strings.memory.edit.save}</Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );

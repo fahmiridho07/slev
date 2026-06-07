@@ -564,8 +564,12 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     flex: 1,
     justifyContent: "flex-end"
   },
+  sheetBackdropPressable: {
+    ...StyleSheet.absoluteFillObject
+  },
   sheetKeyboard: {
     justifyContent: "flex-end",
+    maxWidth: "100%",
     width: "100%"
   },
   sheetCard: {
@@ -576,9 +580,23 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     borderWidth: 1,
     gap: 12,
     maxHeight: "88%",
-    paddingBottom: 24,
+    overflow: "hidden",
     paddingHorizontal: 20,
-    paddingTop: 10
+    paddingTop: 10,
+    ...shadows.soft
+  },
+  sheetForm: {
+    flexShrink: 1,
+    minHeight: 0
+  },
+  sheetScroll: {
+    flexShrink: 1
+  },
+  sheetFooter: {
+    borderTopColor: colors.line,
+    borderTopWidth: 1,
+    marginTop: 4,
+    paddingTop: 12
   },
   sheetHandle: {
     alignSelf: "center",
