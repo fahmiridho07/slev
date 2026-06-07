@@ -155,12 +155,12 @@ function CapturePanelComponent({
       )}
 
       <View style={styles.amountRow}>
-        <Text style={styles.currencyPrefix}>Rp</Text>
+        <Text style={styles.currencyPrefix}>{strings.capture.currencyPrefix}</Text>
         <TextInput
           accessibilityLabel={strings.capture.amountA11y}
           keyboardType="number-pad"
           onChangeText={changeAmountText}
-          placeholder="0"
+          placeholder={strings.capture.amountPlaceholder}
           placeholderTextColor={colors.muted}
           style={styles.amountInput}
           value={form.amountText}

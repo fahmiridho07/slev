@@ -80,6 +80,8 @@ export const id: AppStrings = {
     fewerOptions: "Lebih sedikit opsi",
     moreOptions: "Lebih banyak opsi",
     amountA11y: "Jumlah",
+    amountPlaceholder: "0",
+    currencyPrefix: "Rp",
     applyShortcutA11y: "Terapkan pintasan {label}",
     removeShortcutA11y: "Hapus pintasan {label}",
     repeatA11y: "Ulangi {label}",
@@ -126,6 +128,7 @@ export const id: AppStrings = {
       deleteTitle: "Hapus tagihan rutin?",
       deleteBody: "{label} akan dihapus dari tagihan rutin. Pembayaran tercatat tetap ada di riwayat."
     },
+    appearanceTab: "Tampilan",
     billsTab: "Tagihan",
     categoriesTab: "Kategori",
     dataTab: "Data",
@@ -206,7 +209,8 @@ export const id: AppStrings = {
       dueToday: "jatuh tempo hari ini",
       dueTomorrow: "jatuh tempo besok",
       dueInDays: "jatuh tempo {count} hari lagi",
-      logPayment: "Catat pembayaran"
+      logPayment: "Catat pembayaran",
+      logPaymentA11y: "Catat pembayaran {label}, {amount}, {due}"
     }
   },
   memory: {

@@ -201,6 +201,8 @@ export type AppStrings = {
   capture: {
     addNote: string;
     amountA11y: string;
+    amountPlaceholder: string;
+    currencyPrefix: string;
     applyShortcutA11y: string;
     context: string;
     contextHints: {
@@ -298,6 +300,7 @@ export type AppStrings = {
       empty: string;
       horizonTotal: string;
       logPayment: string;
+      logPaymentA11y: string;
     };
     pulse: {
       estBalance: string;
@@ -472,6 +475,7 @@ export type AppStrings = {
       save: string;
       title: string;
     };
+    appearanceTab: string;
     billsTab: string;
     categories: {
       add: string;

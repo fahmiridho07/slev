@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { memo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTheme } from "../hooks/useTheme";
+import { hapticSelection } from "../lib/haptics";
 
 type ScreenTabBarProps<T extends string> = {
   options: {
@@ -30,7 +31,12 @@ function ScreenTabBarComponent<T extends string>({
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             key={option.value}
-            onPress={() => onSelect(option.value)}
+            onPress={() => {
+              if (!active) {
+                hapticSelection();
+              }
+              onSelect(option.value);
+            }}
             style={[componentStyles.screenTabItem, active && componentStyles.screenTabItemActive]}
           >
             <Ionicons

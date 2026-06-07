@@ -120,6 +120,7 @@ function SettingsScreenComponent({
           options={[
             { icon: "receipt-outline", label: strings.settings.billsTab, value: "bills" },
             { icon: "pricetags-outline", label: strings.settings.categoriesTab, value: "categories" },
+            { icon: "color-palette-outline", label: strings.settings.appearanceTab, value: "appearance" },
             { icon: "cloud-outline", label: strings.settings.dataTab, value: "data" }
           ]}
           selected={activeTab}
@@ -134,6 +135,32 @@ function SettingsScreenComponent({
             onDeleteBill={(id) => void actions.removeRecurringBill(id)}
             onSaveBill={(input) => void actions.saveRecurringBill(input)}
           />
+        )}
+
+        {activeTab === "appearance" && (
+          <View style={styles.capturePanel}>
+            <Text style={styles.microLabel}>{strings.appearance.label}</Text>
+            <SegmentedControl
+              options={[
+                { label: strings.appearance.light, value: "light" },
+                { label: strings.appearance.dark, value: "dark" },
+                { label: strings.appearance.system, value: "system" }
+              ]}
+              selected={colorScheme}
+              stretch
+              onSelect={setColorScheme}
+            />
+            <Text style={styles.microLabel}>{strings.locale.label}</Text>
+            <SegmentedControl
+              options={[
+                { label: strings.locale.english, value: "en" },
+                { label: strings.locale.indonesian, value: "id" }
+              ]}
+              selected={locale}
+              stretch
+              onSelect={setLocale}
+            />
+          </View>
         )}
 
         {activeTab === "categories" && (
@@ -216,6 +243,10 @@ function SettingsScreenComponent({
     momentCount,
     recurringBills.length,
     showCategoriesHint,
+    colorScheme,
+    locale,
+    setColorScheme,
+    setLocale,
     strings
   ]);
 
@@ -223,30 +254,6 @@ function SettingsScreenComponent({
     if (activeTab === "data") {
       return (
         <View style={styles.cardStack}>
-          <View style={styles.capturePanel}>
-            <Text style={styles.microLabel}>{strings.appearance.label}</Text>
-            <SegmentedControl
-              options={[
-                { label: strings.appearance.light, value: "light" },
-                { label: strings.appearance.dark, value: "dark" },
-                { label: strings.appearance.system, value: "system" }
-              ]}
-              selected={colorScheme}
-              stretch
-              onSelect={setColorScheme}
-            />
-            <Text style={styles.microLabel}>{strings.locale.label}</Text>
-            <SegmentedControl
-              options={[
-                { label: strings.locale.english, value: "en" },
-                { label: strings.locale.indonesian, value: "id" }
-              ]}
-              selected={locale}
-              stretch
-              onSelect={setLocale}
-            />
-          </View>
-
           <View style={styles.capturePanel}>
             <Text style={styles.microLabel}>{strings.settings.data.backupTitle}</Text>
             <Text style={styles.settingCopy}>{strings.settings.data.backupCopy}</Text>
@@ -283,7 +290,7 @@ function SettingsScreenComponent({
       );
     }
     return null;
-  }, [actions, activeTab, colorScheme, importDraft, locale, setColorScheme, setLocale, strings]);
+  }, [actions, activeTab, importDraft, strings]);
 
   const listEmpty = useMemo(() => {
     if (activeTab !== "categories") {

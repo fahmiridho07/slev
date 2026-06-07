@@ -54,7 +54,11 @@ export function UpcomingBillsPanel({
               {formatLocaleShortDate(item.dueDate)} · {formatDueHint(item.daysUntil)}
             </Text>
             <Pressable
-              accessibilityLabel={strings.home.bills.logPayment}
+              accessibilityLabel={formatString(strings.home.bills.logPaymentA11y, {
+                amount: formatCompactRupiah(item.bill.amount),
+                due: formatDueHint(item.daysUntil),
+                label: item.bill.label
+              })}
               accessibilityRole="button"
               onPress={() => onLogPayment(item.bill.id)}
               style={styles.textButton}

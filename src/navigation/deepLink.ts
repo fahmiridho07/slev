@@ -10,7 +10,7 @@ export type DeepLinkTarget =
 
 const BUDGET_TABS = new Set<BudgetTabKey>(["plan", "balance", "goals"]);
 const PATTERN_TABS = new Set<PatternTabKey>(["overview", "breakdown", "accounts"]);
-const SETTINGS_TABS = new Set<SettingsTabKey>(["bills", "categories", "data"]);
+const SETTINGS_TABS = new Set<SettingsTabKey>(["bills", "categories", "appearance", "data"]);
 
 export function parseDeepLink(url: string): DeepLinkTarget | null {
   const normalized = url.replace(/^[^:]+:\/\//, "").replace(/\/$/, "");

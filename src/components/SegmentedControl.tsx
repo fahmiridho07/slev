@@ -1,6 +1,7 @@
 import React, { memo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTheme } from "../hooks/useTheme";
+import { hapticSelection } from "../lib/haptics";
 
 type SegmentedControlProps<T extends string> = {
   compact?: boolean;
@@ -31,7 +32,12 @@ function SegmentedControlComponent<T extends string>({
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
                 key={option.value}
-                onPress={() => onSelect(option.value)}
+                onPress={() => {
+                  if (!active) {
+                    hapticSelection();
+                  }
+                  onSelect(option.value);
+                }}
                 style={[
                   componentStyles.choiceChip,
                   componentStyles.choiceChipStretch,
@@ -67,7 +73,12 @@ function SegmentedControlComponent<T extends string>({
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             key={option.value}
-            onPress={() => onSelect(option.value)}
+            onPress={() => {
+              if (!active) {
+                hapticSelection();
+              }
+              onSelect(option.value);
+            }}
             style={[componentStyles.choiceChip, active && componentStyles.choiceChipActive]}
           >
             <Text style={[componentStyles.choiceChipText, active && componentStyles.choiceChipTextActive]}>

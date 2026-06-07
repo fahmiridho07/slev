@@ -80,6 +80,8 @@ export const en: AppStrings = {
     fewerOptions: "Fewer options",
     moreOptions: "More options",
     amountA11y: "Amount",
+    amountPlaceholder: "0",
+    currencyPrefix: "Rp",
     applyShortcutA11y: "Apply shortcut {label}",
     removeShortcutA11y: "Remove shortcut {label}",
     repeatA11y: "Repeat {label}",
@@ -126,6 +128,7 @@ export const en: AppStrings = {
       deleteTitle: "Delete recurring bill?",
       deleteBody: "{label} will be removed from recurring bills. Logged payments stay in your spending history."
     },
+    appearanceTab: "Appearance",
     billsTab: "Bills",
     categoriesTab: "Categories",
     dataTab: "Data",
@@ -206,7 +209,8 @@ export const en: AppStrings = {
       dueToday: "due today",
       dueTomorrow: "due tomorrow",
       dueInDays: "due in {count} days",
-      logPayment: "Log payment"
+      logPayment: "Log payment",
+      logPaymentA11y: "Log payment for {label}, {amount}, {due}"
     }
   },
   memory: {

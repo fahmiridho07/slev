@@ -32,7 +32,7 @@ const LIST_ACTIONS_HINT_KEYS: Record<ListActionsHintKey, string> = {
 
 const BUDGET_TABS = new Set<BudgetTabKey>(["plan", "balance", "goals"]);
 const PATTERN_TABS = new Set<PatternTabKey>(["overview", "breakdown", "accounts"]);
-const SETTINGS_TABS = new Set<SettingsTabKey>(["bills", "categories", "data"]);
+const SETTINGS_TABS = new Set<SettingsTabKey>(["bills", "categories", "appearance", "data"]);
 
 function parseBudgetTab(value: unknown): BudgetTabKey {
   return typeof value === "string" && BUDGET_TABS.has(value as BudgetTabKey) ? (value as BudgetTabKey) : "plan";

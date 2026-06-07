@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useEffect, useMemo, useState } from "react";
-import { Appearance } from "react-native";
+import { ActivityIndicator, Appearance, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { getStrings, setRuntimeLocale, type AppStrings, type Locale } from "../i18n";
 import { darkColors, darkShadows, lightColors, lightShadows } from "./palettes";
 import {
@@ -39,6 +40,27 @@ function paletteForScheme(scheme: "dark" | "light") {
   return scheme === "dark"
     ? { colors: darkColors, shadows: darkShadows }
     : { colors: lightColors, shadows: lightShadows };
+}
+
+function ThemeBootSplash() {
+  const scheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
+  const { colors } = paletteForScheme(scheme);
+  const strings = getStrings("en");
+
+  return (
+    <SafeAreaView style={{ backgroundColor: colors.canvas, flex: 1 }}>
+      <View
+        accessibilityLabel={strings.boot.preparing}
+        accessibilityRole="progressbar"
+        style={{ alignItems: "center", flex: 1, gap: 12, justifyContent: "center", padding: 24 }}
+      >
+        <ActivityIndicator color={colors.greenDark} size="small" />
+        <Text style={{ color: colors.muted, fontSize: 14, letterSpacing: 0, textAlign: "center" }}>
+          {strings.boot.preparing}
+        </Text>
+      </View>
+    </SafeAreaView>
+  );
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -116,7 +138,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [colorScheme, isDark, locale, resolvedScheme, setColorScheme, setLocale]);
 
   if (!prefsReady) {
-    return null;
+    return <ThemeBootSplash />;
   }
 
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
