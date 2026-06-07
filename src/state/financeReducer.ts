@@ -25,6 +25,7 @@ export type FinanceState = {
   manualTemplates: ManualTemplate[];
   message: string;
   moments: SpendingMoment[];
+  undoToast: SpendingMoment | null;
   monthlyPlan: MonthlyPlan | null;
   recurringBills: RecurringBill[];
   savingsGoals: SavingsGoal[];
@@ -43,6 +44,7 @@ export const initialFinanceState: FinanceState = {
   manualTemplates: [],
   message: getDefaultToastMessage(),
   moments: [],
+  undoToast: null,
   monthlyPlan: null,
   recurringBills: [],
   savingsGoals: [],
@@ -51,7 +53,7 @@ export const initialFinanceState: FinanceState = {
 };
 
 export type FinanceAction =
-  | { type: "hydrate"; payload: Omit<FinanceState, "clearConfirmVisible" | "isReady" | "message"> }
+  | { type: "hydrate"; payload: Omit<FinanceState, "clearConfirmVisible" | "isReady" | "message" | "undoToast"> }
   | { type: "set_ready"; ready: boolean }
   | { type: "set_message"; message: string }
   | { type: "set_clear_confirm_visible"; visible: boolean }
@@ -59,6 +61,7 @@ export type FinanceAction =
   | { type: "prepend_moment"; moment: SpendingMoment }
   | { type: "replace_moment"; moment: SpendingMoment }
   | { type: "remove_moment"; id: string }
+  | { type: "set_undo_toast"; moment: SpendingMoment | null }
   | { type: "set_feedback"; feedback: PatternFeedback[] }
   | { type: "set_budget_limits"; budgetLimits: BudgetLimit[] }
   | { type: "set_category_modes"; categoryModes: CategoryMode[] }
@@ -101,6 +104,8 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       };
     case "remove_moment":
       return { ...state, moments: state.moments.filter((moment) => moment.id !== action.id) };
+    case "set_undo_toast":
+      return { ...state, undoToast: action.moment };
     case "set_feedback":
       return { ...state, feedback: action.feedback };
     case "set_budget_limits":

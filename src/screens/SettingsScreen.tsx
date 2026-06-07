@@ -11,6 +11,7 @@ import {
   SegmentedControl
 } from "../components";
 import { useListActionsHint } from "../hooks/useListActionsHint";
+import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { SettingsTabKey } from "../features/app.types";
 import { ExpenseCategory } from "../features/spendingMemory.types";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
@@ -30,7 +31,21 @@ function SettingsScreenComponent({
   onSettingsTabChange,
   scrollContentStyle
 }: SettingsScreenProps) {
-  const { colorScheme, colors, componentStyles, locale, setColorScheme, setLocale, strings, styles } = useTheme();
+  const {
+    capturePanelPreference,
+    colorScheme,
+    colors,
+    componentStyles,
+    locale,
+    reduceMotionPreference,
+    setCapturePanelPreference,
+    setColorScheme,
+    setLocale,
+    setReduceMotionPreference,
+    strings,
+    styles
+  } = useTheme();
+  const { refreshControl } = usePullToRefresh();
   const actions = useActions();
   const { categoryLabels } = useDerived();
   const { accounts, expenseCategories, isReady, moments, recurringBills } = useFinanceSelector(
@@ -138,6 +153,27 @@ function SettingsScreenComponent({
               selected={locale}
               stretch
               onSelect={setLocale}
+            />
+            <Text style={componentStyles.microLabel}>{strings.appearance.capturePanelLabel}</Text>
+            <SegmentedControl
+              options={[
+                { label: strings.appearance.captureExpanded, value: "expanded" },
+                { label: strings.appearance.captureCompact, value: "compact" }
+              ]}
+              selected={capturePanelPreference}
+              stretch
+              onSelect={setCapturePanelPreference}
+            />
+            <Text style={componentStyles.microLabel}>{strings.appearance.reduceMotionLabel}</Text>
+            <SegmentedControl
+              options={[
+                { label: strings.appearance.reduceMotionSystem, value: "system" },
+                { label: strings.appearance.reduceMotionOn, value: "on" },
+                { label: strings.appearance.reduceMotionOff, value: "off" }
+              ]}
+              selected={reduceMotionPreference}
+              stretch
+              onSelect={setReduceMotionPreference}
             />
           </View>
         )}
@@ -307,6 +343,7 @@ function SettingsScreenComponent({
           data={activeTab === "categories" ? expenseCategories : []}
           keyboardShouldPersistTaps="handled"
           keyExtractor={categoryKeyExtractor}
+          refreshControl={refreshControl}
           ListEmptyComponent={listEmpty}
           ListFooterComponent={listFooter}
           ListHeaderComponent={listHeader}

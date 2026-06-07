@@ -98,6 +98,15 @@ test("hydrate merges stored collections without touching ui flags", () => {
   assertEqual(next.clearConfirmVisible, true, "dialog state preserved");
 });
 
+test("set_undo_toast stores and clears deleted moment snapshot", () => {
+  const moment = buildMoment({ amount: 12000, occurredAt: "2026-06-01T01:00:00.000Z" });
+  const withUndo = financeReducer(initialFinanceState, { type: "set_undo_toast", moment });
+  assertEqual(withUndo.undoToast?.id, moment.id, "undo snapshot stored");
+
+  const cleared = financeReducer(withUndo, { type: "set_undo_toast", moment: null });
+  assertEqual(cleared.undoToast, null, "undo snapshot cleared");
+});
+
 test("set_budget_limits replaces limits array", () => {
   const limits = [{ category: "Meal" as const, createdAt: "x", id: "l1", limitAmount: 500000, period: "monthly" as const, updatedAt: "x" }];
   const next = financeReducer(initialFinanceState, { type: "set_budget_limits", budgetLimits: limits });

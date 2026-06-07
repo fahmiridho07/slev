@@ -20,6 +20,8 @@ export const id: AppStrings = {
     cancel: "Batal",
     delete: "Hapus",
     gotIt: "Mengerti",
+    pullToRefresh: "Tarik untuk memuat ulang",
+    undo: "Urungkan",
     openSettings: "Buka pengaturan",
     save: "Simpan",
     import: "Impor",
@@ -96,9 +98,16 @@ export const id: AppStrings = {
     }
   },
   appearance: {
+    captureCompact: "Ringkas",
+    captureExpanded: "Lengkap",
+    capturePanelLabel: "Catat cepat",
     label: "Tampilan",
     light: "Terang",
     dark: "Gelap",
+    reduceMotionLabel: "Animasi",
+    reduceMotionOff: "Penuh",
+    reduceMotionOn: "Dikurangi",
+    reduceMotionSystem: "Sistem",
     system: "Sistem"
   },
   locale: {

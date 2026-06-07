@@ -8,6 +8,7 @@ import { TrendsPanel } from "../features/analysis/TrendsPanel";
 import { PatternTabKey } from "../features/app.types";
 import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
+import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { useTheme } from "../hooks/useTheme";
 import { formatString } from "../i18n";
 
@@ -23,6 +24,7 @@ function PatternsScreenComponent({
   scrollContentStyle
 }: PatternsScreenProps) {
   const { strings, styles } = useTheme();
+  const { refreshControl } = usePullToRefresh();
   const actions = useActions();
   const { feedbackByPattern, latestBalanceTotal, monthlySummary, netWorthTrend, patterns, projectedBalanceSnapshots } =
     useDerived();
@@ -84,6 +86,7 @@ function PatternsScreenComponent({
 
   return (
     <StickyTabScreen
+      refreshControl={refreshControl}
       scrollContentStyle={scrollContentStyle}
       hero={
         <ScreenHero

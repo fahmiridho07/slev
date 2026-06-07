@@ -1,27 +1,38 @@
 import React, { createContext, useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Appearance, Text, View } from "react-native";
+import { AccessibilityInfo, ActivityIndicator, Appearance, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getStrings, setRuntimeLocale, type AppStrings, type Locale } from "../i18n";
 import { darkColors, darkShadows, lightColors, lightShadows } from "./palettes";
 import {
+  type CapturePanelPreference,
+  getCapturePanelPreference,
   getColorSchemePreference,
   getLocalePreference,
+  getReduceMotionPreference,
+  type ReduceMotionPreference,
+  setCapturePanelPreference as persistCapturePanelPreference,
   setColorSchemePreference,
-  setLocalePreference
+  setLocalePreference,
+  setReduceMotionPreference as persistReduceMotionPreference
 } from "../services/uiPreferences";
 import { createScreenStyles } from "./styles/app";
 import { createComponentStyles } from "./styles/components";
 import type { ColorScheme, ColorTokens, ShadowTokens } from "./types";
 
 export type AppTheme = {
+  capturePanelPreference: CapturePanelPreference;
   colorScheme: ColorScheme;
   colors: ColorTokens;
   componentStyles: ReturnType<typeof createComponentStyles>;
   isDark: boolean;
   locale: Locale;
+  reduceMotion: boolean;
+  reduceMotionPreference: ReduceMotionPreference;
   resolvedScheme: "dark" | "light";
+  setCapturePanelPreference: (preference: CapturePanelPreference) => void;
   setColorScheme: (scheme: ColorScheme) => void;
   setLocale: (locale: Locale) => void;
+  setReduceMotionPreference: (preference: ReduceMotionPreference) => void;
   shadows: ShadowTokens;
   strings: AppStrings;
   styles: ReturnType<typeof createScreenStyles>;
@@ -63,24 +74,49 @@ function ThemeBootSplash() {
   );
 }
 
+function resolveReduceMotion(
+  preference: ReduceMotionPreference,
+  systemReduceMotion: boolean
+): boolean {
+  if (preference === "on") {
+    return true;
+  }
+  if (preference === "off") {
+    return false;
+  }
+  return systemReduceMotion;
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>("system");
   const [locale, setLocaleState] = useState<Locale>("en");
+  const [capturePanelPreference, setCapturePanelPreferenceState] =
+    useState<CapturePanelPreference>("expanded");
+  const [reduceMotionPreference, setReduceMotionPreferenceState] =
+    useState<ReduceMotionPreference>("system");
+  const [systemReduceMotion, setSystemReduceMotion] = useState(false);
   const [prefsReady, setPrefsReady] = useState(false);
   const [systemScheme, setSystemScheme] = useState<"dark" | "light">(resolveScheme("system"));
 
   useEffect(() => {
     let active = true;
     void (async () => {
-      const [storedScheme, storedLocale] = await Promise.all([
-        getColorSchemePreference(),
-        getLocalePreference()
-      ]);
+      const [storedScheme, storedLocale, storedCapturePanel, storedReduceMotion, reduceMotionEnabled] =
+        await Promise.all([
+          getColorSchemePreference(),
+          getLocalePreference(),
+          getCapturePanelPreference(),
+          getReduceMotionPreference(),
+          AccessibilityInfo.isReduceMotionEnabled()
+        ]);
       if (!active) {
         return;
       }
       setColorSchemeState(storedScheme);
       setLocaleState(storedLocale);
+      setCapturePanelPreferenceState(storedCapturePanel);
+      setReduceMotionPreferenceState(storedReduceMotion);
+      setSystemReduceMotion(reduceMotionEnabled);
       setRuntimeLocale(storedLocale);
       setSystemScheme(resolveScheme(storedScheme));
       setPrefsReady(true);
@@ -97,8 +133,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.remove();
   }, []);
 
+  useEffect(() => {
+    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", (enabled) => {
+      setSystemReduceMotion(enabled);
+    });
+    return () => subscription.remove();
+  }, []);
+
   const resolvedScheme = colorScheme === "system" ? systemScheme : colorScheme;
   const isDark = resolvedScheme === "dark";
+  const reduceMotion = resolveReduceMotion(reduceMotionPreference, systemReduceMotion);
 
   const setColorScheme = useCallback((scheme: ColorScheme) => {
     setColorSchemeState(scheme);
@@ -112,6 +156,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     void setLocalePreference(nextLocale);
   }, []);
 
+  const setCapturePanelPreference = useCallback((preference: CapturePanelPreference) => {
+    setCapturePanelPreferenceState(preference);
+    void persistCapturePanelPreference(preference);
+  }, []);
+
+  const setReduceMotionPreference = useCallback((preference: ReduceMotionPreference) => {
+    setReduceMotionPreferenceState(preference);
+    void persistReduceMotionPreference(preference);
+  }, []);
+
   useEffect(() => {
     setRuntimeLocale(locale);
   }, [locale]);
@@ -123,19 +177,36 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const strings = getStrings(locale);
 
     return {
+      capturePanelPreference,
       colorScheme,
       colors,
       componentStyles,
       isDark,
       locale,
+      reduceMotion,
+      reduceMotionPreference,
       resolvedScheme,
+      setCapturePanelPreference,
       setColorScheme,
       setLocale,
+      setReduceMotionPreference,
       shadows,
       strings,
       styles
     };
-  }, [colorScheme, isDark, locale, resolvedScheme, setColorScheme, setLocale]);
+  }, [
+    capturePanelPreference,
+    colorScheme,
+    isDark,
+    locale,
+    reduceMotion,
+    reduceMotionPreference,
+    resolvedScheme,
+    setCapturePanelPreference,
+    setColorScheme,
+    setLocale,
+    setReduceMotionPreference
+  ]);
 
   if (!prefsReady) {
     return <ThemeBootSplash />;

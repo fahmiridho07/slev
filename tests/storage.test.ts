@@ -18,12 +18,16 @@ import {
   STORAGE_KEYS
 } from "../src/services/storageSchema";
 import {
+  getCapturePanelPreference,
   getColorSchemePreference,
   getLocalePreference,
+  getReduceMotionPreference,
   hasSeenListActionsHint,
   markListActionsHintSeen,
+  setCapturePanelPreference,
   setColorSchemePreference,
-  setLocalePreference
+  setLocalePreference,
+  setReduceMotionPreference
 } from "../src/services/uiPreferences";
 
 declare const process: {
@@ -364,6 +368,36 @@ test("locale preference persists", async () => {
 
   await setLocalePreference("id");
   assertEqual(await getLocalePreference(), "id", "indonesian locale stored");
+});
+
+test("capture panel preference defaults to expanded", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  assertEqual(await getCapturePanelPreference(), "expanded", "capture panel defaults to expanded");
+});
+
+test("capture panel preference persists", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await setCapturePanelPreference("compact");
+  assertEqual(await getCapturePanelPreference(), "compact", "compact capture panel stored");
+});
+
+test("reduce motion preference defaults to system", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  assertEqual(await getReduceMotionPreference(), "system", "reduce motion defaults to system");
+});
+
+test("reduce motion preference persists", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await setReduceMotionPreference("on");
+  assertEqual(await getReduceMotionPreference(), "on", "reduce motion on stored");
 });
 
 async function runTests(): Promise<void> {

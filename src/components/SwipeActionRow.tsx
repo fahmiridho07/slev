@@ -16,7 +16,7 @@ function SwipeActionRowComponent({
   children,
   onDelete
 }: SwipeActionRowProps) {
-  const { colors, componentStyles, strings } = useTheme();
+  const { colors, componentStyles, reduceMotion, strings } = useTheme();
   const translateX = useRef(new Animated.Value(0)).current;
   const isOpenRef = useRef(false);
   const dragStartX = useRef(0);
@@ -28,14 +28,19 @@ function SwipeActionRowComponent({
   const animateTo = useCallback(
     (isOpen: boolean) => {
       isOpenRef.current = isOpen;
+      const toValue = isOpen ? -SWIPE_DELETE_ACTION_WIDTH : 0;
+      if (reduceMotion) {
+        translateX.setValue(toValue);
+        return;
+      }
       Animated.spring(translateX, {
         friction: 8,
         tension: 90,
-        toValue: isOpen ? -SWIPE_DELETE_ACTION_WIDTH : 0,
+        toValue,
         useNativeDriver: true
       }).start();
     },
-    [translateX]
+    [reduceMotion, translateX]
   );
 
   const handleDelete = useCallback(() => {

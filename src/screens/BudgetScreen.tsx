@@ -12,6 +12,7 @@ import { BudgetTabKey } from "../features/app.types";
 import { formatSignedCompactRupiah } from "../lib/formatMoney";
 import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
+import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { useTheme } from "../hooks/useTheme";
 import { formatString } from "../i18n";
 
@@ -29,6 +30,7 @@ function BudgetScreenComponent({
   scrollContentStyle
 }: BudgetScreenProps) {
   const { colors, strings, styles } = useTheme();
+  const { refreshControl } = usePullToRefresh();
   const actions = useActions();
   const {
     accountDrift,
@@ -137,6 +139,7 @@ function BudgetScreenComponent({
 
   return (
     <StickyTabScreen
+      refreshControl={refreshControl}
       scrollContentStyle={scrollContentStyle}
       hero={
         <ScreenHero

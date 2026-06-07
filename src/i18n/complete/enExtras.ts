@@ -16,6 +16,7 @@ export const enExtras: AppStringsExtras = {
     },
     memory: {
       removed: "Memory removed.",
+      restored: "Memory restored.",
       needAmount: "Enter an amount before saving changes.",
       updated: "Memory updated."
     },

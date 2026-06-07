@@ -1,10 +1,11 @@
 import React, { memo } from "react";
-import { ScrollView, StyleProp, View, ViewStyle } from "react-native";
+import { RefreshControlProps, ScrollView, StyleProp, View, ViewStyle } from "react-native";
 import { useTheme } from "../hooks/useTheme";
 
 type StickyTabScreenProps = {
   children: React.ReactNode;
   hero: React.ReactNode;
+  refreshControl?: React.ReactElement<RefreshControlProps>;
   scrollContentStyle: StyleProp<ViewStyle>;
   tabBar: React.ReactNode;
 };
@@ -12,6 +13,7 @@ type StickyTabScreenProps = {
 function StickyTabScreenComponent({
   children,
   hero,
+  refreshControl,
   scrollContentStyle,
   tabBar
 }: StickyTabScreenProps) {
@@ -21,6 +23,7 @@ function StickyTabScreenComponent({
     <ScrollView
       contentContainerStyle={scrollContentStyle}
       keyboardShouldPersistTaps="handled"
+      refreshControl={refreshControl}
       stickyHeaderIndices={[1]}
     >
       {hero}

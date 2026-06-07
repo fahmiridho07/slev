@@ -10,6 +10,7 @@ import {
   ScreenHero
 } from "../components";
 import { useListActionsHint } from "../hooks/useListActionsHint";
+import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { MomentEditForm } from "../features/memory/MomentEditForm";
 import { SpendingMoment } from "../features/spendingMemory.types";
@@ -60,6 +61,7 @@ type MemoryScreenProps = {
 
 function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenProps) {
   const { colors, strings, styles } = useTheme();
+  const { refreshControl } = usePullToRefresh();
   const actions = useActions();
   const moments = useFinanceSelector((state) => state.moments);
 
@@ -202,6 +204,7 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
         contentContainerStyle={scrollContentStyle}
         keyboardShouldPersistTaps="handled"
         keyExtractor={keyExtractor}
+        refreshControl={refreshControl}
         ListEmptyComponent={listEmpty}
         ListHeaderComponent={listHeader}
         renderItem={renderItem}

@@ -9,9 +9,16 @@ export type ListHintCopy = {
 
 export type AppStrings = {
   appearance: {
+    captureCompact: string;
+    captureExpanded: string;
+    capturePanelLabel: string;
     dark: string;
     label: string;
     light: string;
+    reduceMotionLabel: string;
+    reduceMotionOff: string;
+    reduceMotionOn: string;
+    reduceMotionSystem: string;
     system: string;
   };
   boot: {
@@ -280,6 +287,8 @@ export type AppStrings = {
     import: string;
     income: string;
     openSettings: string;
+    pullToRefresh: string;
+    undo: string;
     paused: string;
     reset: string;
     save: string;
@@ -601,6 +610,7 @@ export type AppStrings = {
     memory: {
       needAmount: string;
       removed: string;
+      restored: string;
       updated: string;
     };
     plan: {

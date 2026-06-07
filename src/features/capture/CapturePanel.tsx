@@ -58,6 +58,10 @@ function CapturePanelComponent({
   const [noteOpen, setNoteOpen] = useState(Boolean(form.note));
 
   useEffect(() => {
+    setExpanded(defaultExpanded);
+  }, [defaultExpanded]);
+
+  useEffect(() => {
     if (form.note) {
       setNoteOpen(true);
       setExpanded(true);

@@ -49,6 +49,26 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     fontSize: 13,
     lineHeight: 18
   },
+  toastRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "space-between"
+  },
+  toastMessage: {
+    flex: 1
+  },
+  toastUndoButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 36,
+    paddingHorizontal: 4
+  },
+  toastUndoText: {
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
   iconButton: {
     alignItems: "center",
     borderColor: colors.line,

@@ -18,12 +18,12 @@ type BottomSheetProps = {
 };
 
 function BottomSheetComponent({ children, onClose, title, visible }: BottomSheetProps) {
-  const { componentStyles, strings } = useTheme();
+  const { componentStyles, reduceMotion, strings } = useTheme();
 
   return (
     <Modal
       accessibilityViewIsModal
-      animationType="slide"
+      animationType={reduceMotion ? "none" : "slide"}
       onRequestClose={onClose}
       transparent
       visible={visible}

@@ -52,6 +52,7 @@ import {
   getLimitSavedToast,
   getMemoryNeedAmountToast,
   getMemoryRemovedToast,
+  getMemoryRestoredToast,
   getMemoryUpdatedToast,
   getPlanSavedToast,
   getResetFailedToast,
@@ -114,6 +115,7 @@ import { runMigrations, STORAGE_KEYS } from "../services/storageSchema";
 import {
   clearSpendingMemory,
   deleteSpendingMoment,
+  restoreSpendingMoment,
   listPatternFeedback,
   listSpendingMoments,
   savePatternFeedback,
@@ -261,13 +263,40 @@ export function createFinanceActions(
   }
 
   async function removeMoment(id: string) {
+    const moment = getState().moments.find((entry) => entry.id === id);
+    if (!moment) {
+      return;
+    }
+
     const { persisted } = await deleteSpendingMoment(id);
     if (!persisted) {
       notifyWriteFailure(STORAGE_KEYS.moments);
       return;
     }
     dispatch({ type: "remove_moment", id });
+    dispatch({ type: "set_undo_toast", moment });
     setMessage(getMemoryRemovedToast());
+  }
+
+  function clearUndoToast() {
+    dispatch({ type: "set_undo_toast", moment: null });
+  }
+
+  async function undoRemoveMoment() {
+    const moment = getState().undoToast;
+    if (!moment) {
+      return;
+    }
+
+    const { persisted } = await restoreSpendingMoment(moment);
+    if (!persisted) {
+      notifyWriteFailure(STORAGE_KEYS.moments);
+      return;
+    }
+
+    dispatch({ type: "prepend_moment", moment });
+    dispatch({ type: "set_undo_toast", moment: null });
+    setMessage(getMemoryRestoredToast());
   }
 
   async function updateMoment(
@@ -705,6 +734,7 @@ export function createFinanceActions(
     boot,
     changeCategoryMode,
     clearAll,
+    clearUndoToast,
     confirmClearAll,
     exportLocalBackup,
     importLocalBackup,
@@ -715,6 +745,7 @@ export function createFinanceActions(
     removeCategoryBudget,
     removeManualTemplate,
     removeMoment,
+    undoRemoveMoment,
     logRecurringBillPayment,
     removeRecurringBill,
     removeSavingsGoal,

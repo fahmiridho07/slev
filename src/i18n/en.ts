@@ -20,6 +20,8 @@ export const en: AppStrings = {
     cancel: "Cancel",
     delete: "Delete",
     gotIt: "Got it",
+    pullToRefresh: "Pull to refresh",
+    undo: "Undo",
     openSettings: "Open settings",
     save: "Save",
     import: "Import",
@@ -96,9 +98,16 @@ export const en: AppStrings = {
     }
   },
   appearance: {
+    captureCompact: "Compact",
+    captureExpanded: "Expanded",
+    capturePanelLabel: "Quick capture",
     label: "Appearance",
     light: "Light",
     dark: "Dark",
+    reduceMotionLabel: "Motion",
+    reduceMotionOff: "Full",
+    reduceMotionOn: "Reduce",
+    reduceMotionSystem: "System",
     system: "System"
   },
   locale: {

@@ -3,6 +3,8 @@ import { ScrollView, StyleProp, View, ViewStyle } from "react-native";
 import { HomeMoneyPulse } from "../features/analysis/HomeMoneyPulse";
 import { UpcomingBillsPanel } from "../features/analysis/UpcomingBillsPanel";
 import { CapturePanel } from "../features/capture/CapturePanel";
+import { usePullToRefresh } from "../hooks/usePullToRefresh";
+import { useTheme } from "../hooks/useTheme";
 import { AppNavigation } from "../navigation/appNavigation";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
 
@@ -19,6 +21,8 @@ function HomeScreenComponent({
   onOpenSettings,
   scrollContentStyle
 }: HomeScreenProps) {
+  const { capturePanelPreference, reduceMotion } = useTheme();
+  const { refreshControl } = usePullToRefresh();
   const actions = useActions();
   const { allocationPlan, hasMonthlyPlan, latestBalanceTotal, monthlySummary, runwayMonths, upcomingBills } = useDerived();
   const { monthlyPlan, savingsGoals } = useFinanceSelector(
@@ -38,17 +42,18 @@ function HomeScreenComponent({
 
     requestAnimationFrame(() => {
       scrollRef.current?.scrollTo({
-        animated: true,
+        animated: !reduceMotion,
         y: Math.max(0, captureOffsetRef.current - 12)
       });
     });
-  }, [captureFocusRequest]);
+  }, [captureFocusRequest, reduceMotion]);
 
   return (
     <ScrollView
       ref={scrollRef}
       contentContainerStyle={scrollContentStyle}
       keyboardShouldPersistTaps="handled"
+      refreshControl={refreshControl}
     >
       <HomeMoneyPulse
         dailyFlexibleRoom={allocationPlan.dailyFlexibleRoom}
@@ -67,7 +72,7 @@ function HomeScreenComponent({
       >
         <CapturePanel
           compactTypePicker
-          defaultExpanded
+          defaultExpanded={capturePanelPreference === "expanded"}
           focusAmountToken={captureFocusRequest}
           onOpenSettings={onOpenSettings}
         />

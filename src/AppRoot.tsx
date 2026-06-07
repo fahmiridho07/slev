@@ -3,7 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Image, KeyboardAvoidingView, Linking, Platform, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { DeleteConfirmDialog } from "./components";
+import { AppToast, DeleteConfirmDialog } from "./components";
 import { BRAND } from "./data/brand";
 import { useLayoutInsets } from "./hooks/useLayoutInsets";
 import { useTheme } from "./hooks/useTheme";
@@ -37,11 +37,12 @@ function FinanceInitializer() {
 export function AppRoot() {
   const actions = useActions();
   const { colors, isDark, strings, styles } = useTheme();
-  const { clearConfirmVisible, isReady, message } = useFinanceSelector(
+  const { clearConfirmVisible, isReady, message, undoToast } = useFinanceSelector(
     (state) => ({
       clearConfirmVisible: state.clearConfirmVisible,
       isReady: state.isReady,
-      message: state.message
+      message: state.message,
+      undoToast: state.undoToast
     }),
     shallowEqual
   );
@@ -179,6 +180,15 @@ export function AppRoot() {
     return () => clearTimeout(timer);
   }, [isReady, message]);
 
+  useEffect(() => {
+    if (!undoToast) {
+      return;
+    }
+
+    const timer = setTimeout(() => actions.clearUndoToast(), 6000);
+    return () => clearTimeout(timer);
+  }, [actions, undoToast]);
+
   function selectTab(tab: AppTabKey) {
     hapticSelection();
     setActiveTab(tab);
@@ -218,9 +228,11 @@ export function AppRoot() {
               </Pressable>
             </View>
             {toastMessage ? (
-              <Text accessibilityLiveRegion="polite" style={styles.headerMessage}>
-                {toastMessage}
-              </Text>
+              <AppToast
+                message={toastMessage}
+                onUndo={undoToast ? () => void actions.undoRemoveMoment() : undefined}
+                undoLabel={undoToast ? strings.common.undo : undefined}
+              />
             ) : null}
           </View>
 

@@ -88,6 +88,10 @@ export function getMemoryRemovedToast(): string {
   return getRuntimeStrings().toasts.memory.removed;
 }
 
+export function getMemoryRestoredToast(): string {
+  return getRuntimeStrings().toasts.memory.restored;
+}
+
 export function getMemoryNeedAmountToast(): string {
   return getRuntimeStrings().toasts.memory.needAmount;
 }

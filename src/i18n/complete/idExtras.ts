@@ -16,6 +16,7 @@ export const idExtras: AppStringsExtras = {
     },
     memory: {
       removed: "Memori dihapus.",
+      restored: "Memori dipulihkan.",
       needAmount: "Masukkan jumlah sebelum menyimpan perubahan.",
       updated: "Memori diperbarui."
     },

@@ -84,6 +84,17 @@ export async function deleteSpendingMoment(id: string): Promise<WriteResult<Spen
   return { data: updated, persisted };
 }
 
+export async function restoreSpendingMoment(moment: SpendingMoment): Promise<WriteResult<SpendingMoment[]>> {
+  const moments = await listSpendingMoments();
+  if (moments.some((item) => item.id === moment.id)) {
+    return { data: moments, persisted: true };
+  }
+
+  const restored = sortMoments([moment, ...moments]);
+  const persisted = await persistSpendingMoments(restored);
+  return { data: restored, persisted };
+}
+
 export async function clearSpendingMemory(): Promise<boolean> {
   const removed = await removeKeys([MOMENTS_KEY, LEGACY_MOMENTS_KEY, FEEDBACK_KEY, LEGACY_FEEDBACK_KEY]);
   await writeRaw(V2_MIGRATION_KEY, "true");
