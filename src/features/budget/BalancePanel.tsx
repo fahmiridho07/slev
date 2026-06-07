@@ -136,15 +136,6 @@ export function BalancePanel({
             ) : null}
           </View>
         </View>
-        {latestSnapshots.length > 0 && (
-          <View style={styles.settingRow}>
-            <Ionicons name="camera-outline" size={20} color={colors.greenDark} />
-            <View style={styles.settingText}>
-              <Text style={styles.settingTitle}>Manual snapshot base</Text>
-              <Text style={styles.settingCopy}>{formatCompactRupiah(manualBalanceTotal)} from the latest saved snapshots.</Text>
-            </View>
-          </View>
-        )}
       </View>
 
       {accountDrift.length > 0 && (
@@ -163,6 +154,18 @@ export function BalancePanel({
                   </Text>
                 ))}
               </View>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {latestSnapshots.length > 0 && (
+        <View style={styles.settingsPanel}>
+          <View style={styles.settingRow}>
+            <Ionicons name="camera-outline" size={20} color={colors.greenDark} />
+            <View style={styles.settingText}>
+              <Text style={styles.settingTitle}>Manual snapshot base</Text>
+              <Text style={styles.settingCopy}>{formatCompactRupiah(manualBalanceTotal)} from the latest saved snapshots.</Text>
             </View>
           </View>
         </View>
