@@ -105,7 +105,7 @@ function PatternsScreenComponent({
         />
       )}
       {activePatternTab === "breakdown" && (
-        <View style={styles.analyticsBlock}>
+        <View style={styles.cardStack}>
           <BreakdownPanel moments={moments} />
           <TrendsPanel moments={moments} netWorthTrend={netWorthTrend} />
         </View>

@@ -157,13 +157,13 @@ function BudgetScreenComponent({
       />
 
       {activeBudgetTab === "plan" && (
-        <View style={styles.analyticsBlock}>
+        <View style={styles.cardStack}>
           <MonthlyPlanPanel
             monthlyPlan={monthlyPlan}
             monthlySummary={monthlySummary}
             onSaveMonthlyPlan={(input) => void actions.savePlan(input)}
           />
-          <View style={styles.cardGrid}>
+          <View style={styles.cardStack}>
             <Pressable
               accessibilityLabel={
                 showAllocationDetails
@@ -172,7 +172,7 @@ function BudgetScreenComponent({
               }
               accessibilityRole="button"
               onPress={() => setShowAllocationDetails((prev) => !prev)}
-              style={styles.planSummaryRow}
+              style={styles.accordionCard}
             >
               <Text style={styles.settingTitle}>{strings.budget.plan.allocationDetails}</Text>
               <Ionicons name={showAllocationDetails ? "chevron-up" : "chevron-down"} size={18} color={colors.muted} />
@@ -189,7 +189,7 @@ function BudgetScreenComponent({
               />
             )}
           </View>
-          <View style={styles.cardGrid}>
+          <View style={styles.cardStack}>
             <Pressable
               accessibilityLabel={
                 showCategoryLimits
@@ -198,7 +198,7 @@ function BudgetScreenComponent({
               }
               accessibilityRole="button"
               onPress={() => setShowCategoryLimits((prev) => !prev)}
-              style={styles.planSummaryRow}
+              style={styles.accordionCard}
             >
               <Text style={styles.settingTitle}>{strings.budget.plan.categoryLimitsOptional}</Text>
               <Ionicons name={showCategoryLimits ? "chevron-up" : "chevron-down"} size={18} color={colors.muted} />

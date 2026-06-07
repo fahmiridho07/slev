@@ -118,7 +118,7 @@ export function AccountAnalysisPanel({
   const transferKeyExtractor = useCallback((transfer: MoneyTransfer) => transfer.id, []);
 
   return (
-    <View style={styles.analyticsBlock}>
+    <View style={styles.cardStack}>
       <View style={styles.settingsPanel}>
         <View style={styles.settingRow}>
           <Ionicons name="swap-horizontal-outline" size={20} color={colors.greenDark} />

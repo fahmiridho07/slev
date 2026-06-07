@@ -22,7 +22,7 @@ export function PatternOverview({
   const groups = useMemo(() => groupPatterns(patterns), [patterns]);
 
   return (
-    <>
+    <View style={styles.cardStack}>
       {patterns.length === 0 ? (
         <EmptyState text={strings.patterns.recapEmpty} />
       ) : (
@@ -64,6 +64,6 @@ export function PatternOverview({
           </View>
         ))
       )}
-    </>
+    </View>
   );
 }

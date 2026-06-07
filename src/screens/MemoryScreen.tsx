@@ -121,12 +121,16 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
   const keyExtractor = useCallback((item: SpendingMoment) => item.id, []);
 
   const renderSectionHeader = useCallback(
-    ({ section }: { section: MemorySection }) => (
-      <View style={styles.memoryGroup}>
-        <Text style={styles.groupTitle}>{section.title}</Text>
-      </View>
-    ),
-    []
+    ({ section }: { section: MemorySection }) => {
+      const sectionIndex = sections.findIndex((entry) => entry.key === section.key);
+
+      return (
+        <View style={[styles.memoryGroup, sectionIndex > 0 && styles.memorySectionLead]}>
+          <Text style={styles.groupTitle}>{section.title}</Text>
+        </View>
+      );
+    },
+    [sections]
   );
 
   const listHeader = useMemo(
@@ -143,6 +147,7 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
           valueTone="danger"
           variant="surface"
         />
+        <View style={styles.cardStack}>
         {showListHint && (
           <ListActionsOnboardingTip
             body={strings.listHints.memory.body}
@@ -160,6 +165,7 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
             value={query}
           />
         )}
+        </View>
       </>
     ),
     [

@@ -34,23 +34,18 @@ export function UpcomingBillsPanel({
   }
 
   return (
-    <View style={styles.capturePanel}>
-      <View style={styles.analyticsRowHeader}>
-        <Text style={styles.microLabel}>{strings.home.bills.comingUp}</Text>
-        <Text style={styles.settingCopy}>
-          {formatString(strings.home.bills.horizonTotal, { amount: formatCompactRupiah(horizonTotal) })}
-        </Text>
+    <View style={styles.cardStack}>
+      <View style={styles.capturePanel}>
+        <View style={styles.analyticsRowHeader}>
+          <Text style={styles.microLabel}>{strings.home.bills.comingUp}</Text>
+          <Text style={styles.settingCopy}>
+            {formatString(strings.home.bills.horizonTotal, { amount: formatCompactRupiah(horizonTotal) })}
+          </Text>
+        </View>
       </View>
       <View style={styles.listPanel}>
-        {upcomingBills.map((item, index) => (
-          <View
-            key={`${item.bill.id}-${item.dueDate}`}
-            style={[
-              styles.analyticsRow,
-              index > 0 && styles.listPanelContinued,
-              index < upcomingBills.length - 1 && styles.listPanelMiddle
-            ]}
-          >
+        {upcomingBills.map((item) => (
+          <View key={`${item.bill.id}-${item.dueDate}`} style={styles.analyticsRow}>
             <View style={styles.analyticsRowHeader}>
               <Text style={styles.analyticsTitle}>{item.bill.label}</Text>
               <Text style={styles.analyticsAmount}>{formatCompactRupiah(item.bill.amount)}</Text>

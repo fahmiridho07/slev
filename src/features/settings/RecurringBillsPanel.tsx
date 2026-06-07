@@ -62,7 +62,8 @@ export function RecurringBillsPanel({
   }
 
   return (
-    <View style={styles.capturePanel}>
+    <View style={styles.cardStack}>
+      <View style={styles.capturePanel}>
       <Text style={styles.microLabel}>{strings.settings.bills.title}</Text>
       <Text style={styles.settingCopy}>{strings.settings.bills.intro}</Text>
 
@@ -131,6 +132,7 @@ export function RecurringBillsPanel({
           <Text style={styles.primaryButtonText}>{strings.settings.bills.save}</Text>
         </Pressable>
       </View>
+      </View>
 
       {recurringBills.length === 0 ? (
         <EmptyState text={strings.settings.bills.empty} />
@@ -143,11 +145,11 @@ export function RecurringBillsPanel({
               title={strings.listHints.recurring_bills.title}
             />
           )}
-          <View style={styles.listPanel}>
           {recurringBills.map((bill, index) => (
             <View
               key={bill.id}
               style={[
+                styles.listPanel,
                 index > 0 && styles.listPanelContinued,
                 index < recurringBills.length - 1 && styles.listPanelMiddle
               ]}
@@ -174,7 +176,6 @@ export function RecurringBillsPanel({
               </ListActionRow>
             </View>
           ))}
-          </View>
         </>
       )}
 

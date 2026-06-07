@@ -159,7 +159,7 @@ export function BalancePanel({
   const { dismiss: dismissAccountsHint, visible: showAccountsHint } = useListActionsHint("balance_accounts", accounts.length > 0);
 
   return (
-    <View style={styles.analyticsBlock}>
+    <View style={styles.cardStack}>
       <View style={styles.settingsPanel}>
         <View style={styles.settingRow}>
           <Ionicons name="albums-outline" size={20} color={colors.greenDark} />

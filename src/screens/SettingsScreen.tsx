@@ -137,7 +137,7 @@ function SettingsScreenComponent({
         )}
 
         {activeTab === "categories" && (
-          <>
+          <View style={styles.cardStack}>
             {showCategoriesHint && (
               <ListActionsOnboardingTip
                 body={strings.listHints.settings_categories.body}
@@ -175,7 +175,7 @@ function SettingsScreenComponent({
                 </Pressable>
               </View>
             </View>
-          </>
+          </View>
         )}
 
         {activeTab === "data" && corruptIssues.length > 0 && (
@@ -222,7 +222,7 @@ function SettingsScreenComponent({
   const listFooter = useMemo(() => {
     if (activeTab === "data") {
       return (
-        <>
+        <View style={styles.cardStack}>
           <View style={styles.capturePanel}>
             <Text style={styles.microLabel}>{strings.appearance.label}</Text>
             <SegmentedControl
@@ -279,7 +279,7 @@ function SettingsScreenComponent({
             <Ionicons name="trash-outline" size={18} color={colors.coral} />
             <Text style={styles.dangerButtonText}>{strings.settings.data.clearAll}</Text>
           </Pressable>
-        </>
+        </View>
       );
     }
     return null;

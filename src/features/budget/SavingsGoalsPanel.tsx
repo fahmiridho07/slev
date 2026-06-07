@@ -47,7 +47,7 @@ export function SavingsGoalsPanel({
   }
 
   return (
-    <View style={styles.analyticsBlock}>
+    <View style={styles.cardStack}>
       <View style={styles.capturePanel}>
         <Text style={styles.microLabel}>{editingGoalId ? goalsStrings.editGoal : goalsStrings.newGoal}</Text>
         <TextInput
@@ -97,7 +97,7 @@ export function SavingsGoalsPanel({
       {savingsGoals.length === 0 ? (
         <EmptyState text={goalsStrings.emptyGoals} />
       ) : (
-        <View style={styles.cardGrid}>
+        <View style={styles.cardStack}>
           {showGoalsHint && (
             <ListActionsOnboardingTip
               body={strings.listHints.goals.body}

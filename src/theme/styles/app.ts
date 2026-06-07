@@ -3,6 +3,8 @@ import { lightColors, lightShadows } from "../palettes";
 import type { ColorTokens, ShadowTokens } from "../types";
 import { createComponentStyles } from "./components";
 
+export const CARD_STACK_GAP = 12;
+
 export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   return StyleSheet.create({
   safeArea: {
@@ -78,9 +80,12 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     letterSpacing: 0
   },
   scrollContent: {
-    gap: 18,
+    gap: CARD_STACK_GAP,
     padding: 20,
     paddingBottom: 98
+  },
+  cardStack: {
+    gap: CARD_STACK_GAP
   },
   capturePanel: {
     backgroundColor: colors.surface,
@@ -94,7 +99,7 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   pulsePanel: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10
+    gap: CARD_STACK_GAP
   },
   pulseItem: {
     borderRadius: 8,
@@ -675,7 +680,11 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     color: colors.coral
   },
   memoryGroup: {
-    gap: 8
+    gap: 8,
+    paddingTop: 4
+  },
+  memorySectionLead: {
+    marginTop: CARD_STACK_GAP
   },
   groupTitle: {
     color: colors.muted,
@@ -746,6 +755,18 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     minHeight: 44,
     paddingHorizontal: 12
   },
+  accordionCard: {
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    minHeight: 48,
+    paddingHorizontal: 14,
+    paddingVertical: 4
+  },
   goalCard: {
     backgroundColor: colors.surface,
     borderColor: colors.line,
@@ -755,7 +776,7 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     padding: 14
   },
   patternGroup: {
-    gap: 10
+    gap: CARD_STACK_GAP
   },
   patternCard: {
     borderRadius: 8,
@@ -777,7 +798,7 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     lineHeight: 19
   },
   analyticsBlock: {
-    gap: 14
+    gap: CARD_STACK_GAP
   },
   analyticsRow: {
     borderBottomColor: colors.faint,
@@ -939,7 +960,7 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     lineHeight: 18
   },
   cardGrid: {
-    gap: 10
+    gap: CARD_STACK_GAP
   },
   dangerButton: {
     alignItems: "center",

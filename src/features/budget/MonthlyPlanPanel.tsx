@@ -47,7 +47,6 @@ export function MonthlyPlanPanel({
   const showIncomeSuggestion = !monthlyPlan && expectedIncome.trim() === "" && loggedIncome > 0;
 
   return (
-    <View style={styles.analyticsBlock}>
       <View style={styles.capturePanel}>
         <Text style={styles.microLabel}>{planStrings.title}</Text>
         <TextInput
@@ -125,6 +124,5 @@ export function MonthlyPlanPanel({
           <Text style={styles.primaryButtonText}>{planStrings.savePlan}</Text>
         </Pressable>
       </View>
-    </View>
   );
 }

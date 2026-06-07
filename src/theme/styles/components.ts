@@ -486,7 +486,9 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     color: colors.blue
   },
   sectionHeaderBlock: {
-    paddingHorizontal: 2
+    paddingBottom: 2,
+    paddingHorizontal: 2,
+    paddingTop: 2
   },
   sectionTitle: {
     color: colors.ink,
