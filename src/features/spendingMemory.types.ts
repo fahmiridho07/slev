@@ -16,11 +16,14 @@ export type SpendingMoment = {
   updatedAt: string;
 };
 
+export type AccountTier = "tracked" | "ephemeral";
+
 export type MoneyAccount = {
   id: string;
   label: string;
   kind: "bank" | "wallet" | "cash" | "other";
   isIncomeHub: boolean;
+  tier?: AccountTier;
   createdAt: string;
   updatedAt: string;
 };

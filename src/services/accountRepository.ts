@@ -1,4 +1,4 @@
-import { MoneyAccount, MoneyTransfer } from "../features/spendingMemory.types";
+import { AccountTier, MoneyAccount, MoneyTransfer } from "../features/spendingMemory.types";
 import { isKeyCorrupt, readJson, removeKeys, WriteResult, writeJson } from "./storage";
 
 const ACCOUNTS_KEY = "slev_accounts";
@@ -9,6 +9,7 @@ type AccountInput = {
   isIncomeHub?: boolean;
   kind: MoneyAccount["kind"];
   label: string;
+  tier?: AccountTier;
 };
 
 type TransferInput = {
@@ -119,6 +120,7 @@ function normalizeMoneyAccount(value: unknown): MoneyAccount | null {
     label,
     kind: normalizeAccountKind(readString(record, "kind")),
     isIncomeHub: readBoolean(record, "isIncomeHub") ?? false,
+    tier: normalizeAccountTier(readString(record, "tier")),
     createdAt: readString(record, "createdAt") ?? now,
     updatedAt: readString(record, "updatedAt") ?? now
   };
@@ -149,7 +151,8 @@ function createDefaultAccount(
   id: string,
   label: string,
   kind: MoneyAccount["kind"],
-  isIncomeHub: boolean
+  isIncomeHub: boolean,
+  tier: AccountTier = "tracked"
 ): MoneyAccount {
   const createdAt = "2026-01-01T00:00:00.000Z";
   return {
@@ -157,6 +160,7 @@ function createDefaultAccount(
     label,
     kind,
     isIncomeHub,
+    tier,
     createdAt,
     updatedAt: createdAt
   };
@@ -190,6 +194,10 @@ function sortTransfers(a: MoneyTransfer, b: MoneyTransfer): number {
 function normalizeAccountKind(value: string | undefined): MoneyAccount["kind"] {
   if (value === "bank" || value === "wallet" || value === "cash") return value;
   return "other";
+}
+
+function normalizeAccountTier(value: string | undefined): AccountTier {
+  return value === "ephemeral" ? "ephemeral" : "tracked";
 }
 
 function toRecord(value: unknown): Record<string, unknown> | null {

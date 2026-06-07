@@ -1,3 +1,4 @@
+import { listMoneyAccounts, saveMoneyAccount } from "../src/services/accountRepository";
 import { listSpendingMoments, saveSpendingMoment } from "../src/services/spendingMemoryRepository";
 import { exportAllData, exportAllDataWithReport, importAllData } from "../src/services/storageBackup";
 import {
@@ -224,6 +225,63 @@ test("runMigrations warns and continues when a migration step throws", async () 
   } finally {
     console.warn = originalWarn;
   }
+});
+
+test("legacy stored accounts without tier normalize to tracked", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await writeJson("slev_accounts", [
+    {
+      id: "legacy-1",
+      label: "GoPay",
+      kind: "wallet",
+      isIncomeHub: false,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z"
+    }
+  ]);
+
+  const accounts = await listMoneyAccounts();
+  const account = accounts.find((item) => item.id === "legacy-1");
+  assertEqual(account?.tier, "tracked", "missing tier defaults to tracked");
+});
+
+test("account tier ephemeral persists through save and list", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await saveMoneyAccount({
+    label: "QRIS Wallet",
+    kind: "wallet",
+    isIncomeHub: false,
+    tier: "ephemeral"
+  });
+
+  const accounts = await listMoneyAccounts();
+  const account = accounts.find((item) => item.label === "QRIS Wallet");
+  assertEqual(account?.tier, "ephemeral", "ephemeral tier round-trips");
+});
+
+test("invalid account tier strings normalize to tracked", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await writeJson("slev_accounts", [
+    {
+      id: "bad-tier-1",
+      label: "Mystery",
+      kind: "other",
+      isIncomeHub: false,
+      tier: "floating",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z"
+    }
+  ]);
+
+  const accounts = await listMoneyAccounts();
+  const account = accounts.find((item) => item.id === "bad-tier-1");
+  assertEqual(account?.tier, "tracked", "invalid tier coerced to tracked");
 });
 
 test("exportAllData and importAllData round-trip finance collections", async () => {
