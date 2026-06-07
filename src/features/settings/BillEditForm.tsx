@@ -5,7 +5,7 @@ import { AccountPicker, ContextPicker } from "../../components";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
-import { useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
+import { useActions, useFinanceDerived, useFinanceSelector } from "../../state/useFinance";
 import { useTheme } from "../../hooks/useTheme";
 import { RecurringBill, SpendingContext } from "../spendingMemory.types";
 import { BillFieldError } from "./settingsValidation";
@@ -19,7 +19,7 @@ type BillEditFormProps = {
 function BillEditFormComponent({ bill, onCancel, onSaved }: BillEditFormProps) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const actions = useActions();
-  const { categoryLabels } = useDerived();
+  const categoryLabels = useFinanceDerived((derived) => derived.categoryLabels);
   const accounts = useFinanceSelector((state) => state.accounts);
   const [label, setLabel] = useState(bill.label);
   const [amount, setAmount] = useState(formatAmountInput(String(bill.amount)));

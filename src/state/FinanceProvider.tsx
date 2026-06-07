@@ -18,6 +18,7 @@ import { generateSpendingPatterns } from "../lib/spendingMemoryPatterns";
 import { getCategoryLabels } from "../services/categoryRepository";
 import { createFinanceActions, FinanceActions } from "./financeActions";
 import { financeReducer, initialFinanceState } from "./financeReducer";
+import { createDerivedStore, DerivedStore } from "./derivedStore";
 import { createFinanceStore, FinanceStore } from "./financeStore";
 
 export type FinanceDerived = {
@@ -38,6 +39,7 @@ export type FinanceDerived = {
 
 export const ActionsContext = createContext<FinanceActions | null>(null);
 export const DerivedContext = createContext<FinanceDerived | null>(null);
+export const DerivedStoreContext = createContext<DerivedStore | null>(null);
 export const FinanceStoreContext = createContext<FinanceStore | null>(null);
 
 export function FinanceProvider({ children }: { children: React.ReactNode }) {
@@ -112,10 +114,13 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       }),
     [latestBalanceTotal, state.moments]
   );
-  // future: reserve unpaid upcoming bills in safe-to-spend once budgeting is unified.
   const upcomingBills = useMemo(
     () => getUpcomingBills({ bills: state.recurringBills }),
     [state.recurringBills]
+  );
+  const upcomingBillsReserve = useMemo(
+    () => upcomingBills.reduce((sum, item) => sum + item.bill.amount, 0),
+    [upcomingBills]
   );
   const netWorthTrend = useMemo(
     () =>
@@ -140,7 +145,8 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         hasBalanceEvidence,
         latestSnapshots: currentBalances,
         monthlyPlan: state.monthlyPlan,
-        monthlySummary
+        monthlySummary,
+        upcomingBillsReserve
       });
     },
     [
@@ -149,7 +155,8 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       state.accounts,
       state.balanceSnapshots.length,
       state.monthlyPlan,
-      state.transfers.length
+      state.transfers.length,
+      upcomingBillsReserve
     ]
   );
   const derived = useMemo<FinanceDerived>(
@@ -185,11 +192,24 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     ]
   );
 
+  const derivedRef = useRef(derived);
+  derivedRef.current = derived;
+  const derivedStore = useMemo(
+    () => createDerivedStore(() => derivedRef.current),
+    []
+  );
+
+  useEffect(() => {
+    derivedStore.notify();
+  }, [derived, derivedStore]);
+
   return (
     <FinanceStoreContext.Provider value={store}>
-      <DerivedContext.Provider value={derived}>
-        <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
-      </DerivedContext.Provider>
+      <DerivedStoreContext.Provider value={derivedStore}>
+        <DerivedContext.Provider value={derived}>
+          <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
+        </DerivedContext.Provider>
+      </DerivedStoreContext.Provider>
     </FinanceStoreContext.Provider>
   );
 }

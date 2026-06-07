@@ -2,6 +2,7 @@ import { useCallback, useContext, useRef, useSyncExternalStore } from "react";
 import {
   ActionsContext,
   DerivedContext,
+  DerivedStoreContext,
   FinanceDerived,
   FinanceStoreContext
 } from "./FinanceProvider";
@@ -25,6 +26,34 @@ export function useDerived(): FinanceDerived {
     throw new Error("useDerived must be used within FinanceProvider");
   }
   return context;
+}
+
+export function useFinanceDerived<T>(
+  selector: (derived: FinanceDerived) => T,
+  isEqual: (a: T, b: T) => boolean = Object.is
+): T {
+  const store = useContext(DerivedStoreContext);
+  if (!store) {
+    throw new Error("useFinanceDerived must be used within FinanceProvider");
+  }
+
+  const selectorRef = useRef(selector);
+  const isEqualRef = useRef(isEqual);
+  selectorRef.current = selector;
+  isEqualRef.current = isEqual;
+
+  const sliceRef = useRef<T | undefined>(undefined);
+
+  const getSnapshot = useCallback(() => {
+    const next = selectorRef.current(store.getDerived());
+    const prev = sliceRef.current;
+    if (prev === undefined || !isEqualRef.current(prev, next)) {
+      sliceRef.current = next;
+    }
+    return sliceRef.current as T;
+  }, [store]);
+
+  return useSyncExternalStore(store.subscribe, getSnapshot, getSnapshot);
 }
 
 export function useFinanceSelector<T>(

@@ -44,6 +44,7 @@ export const idExtras: AppStringsExtras = {
     },
     category: {
       needName: "Tambahkan nama kategori.",
+      duplicate: "Kategori itu sudah ada.",
       saved: "Kategori {label} tersimpan.",
       removed: "Kategori {label} dihapus."
     },
@@ -69,7 +70,6 @@ export const idExtras: AppStringsExtras = {
       saved: "Tagihan rutin tersimpan.",
       removed: "Tagihan rutin dihapus.",
       unavailable: "Tagihan rutin itu tidak tersedia lagi.",
-      loggedPartial: "{amount} tercatat, tetapi siklus tagihan tidak bisa diperbarui.",
       logged: "{amount} tercatat untuk {label}."
     },
     balance: {

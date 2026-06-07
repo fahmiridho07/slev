@@ -156,6 +156,10 @@ export function getCategoryNeedNameToast(): string {
   return getRuntimeStrings().toasts.category.needName;
 }
 
+export function getCategoryDuplicateToast(): string {
+  return getRuntimeStrings().toasts.category.duplicate;
+}
+
 export function getCategorySavedToast(label: string): string {
   return formatString(getRuntimeStrings().toasts.category.saved, { label });
 }
@@ -225,12 +229,6 @@ export function getBillRemovedToast(): string {
 
 export function getBillUnavailableToast(): string {
   return getRuntimeStrings().toasts.bill.unavailable;
-}
-
-export function getBillLoggedPartialToast(amount: number): string {
-  return formatString(getRuntimeStrings().toasts.bill.loggedPartial, {
-    amount: formatRupiah(amount)
-  });
 }
 
 export function getBillLoggedToast(amount: number, label: string): string {

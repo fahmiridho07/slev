@@ -17,6 +17,7 @@ export type ReadJsonResult<T = unknown> =
 export type WriteResult<T> = {
   data: T;
   persisted: boolean;
+  reason?: "duplicate" | "invalid";
 };
 
 const CORRUPT_BACKUP_PREFIX = "slev_corrupt_backup__";

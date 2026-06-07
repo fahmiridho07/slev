@@ -7,7 +7,7 @@ import { PatternOverview } from "../features/analysis/PatternOverview";
 import { TrendsPanel } from "../features/analysis/TrendsPanel";
 import { PatternTabKey } from "../features/app.types";
 import { buildPatternsTabHero } from "../lib/tabHero";
-import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
+import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../state/useFinance";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { useTheme } from "../hooks/useTheme";
 type PatternsScreenProps = {
@@ -29,7 +29,17 @@ function PatternsScreenComponent({
   const { refreshControl } = usePullToRefresh();
   const actions = useActions();
   const { feedbackByPattern, latestBalanceTotal, monthlySummary, netWorthTrend, patterns, projectedBalanceSnapshots } =
-    useDerived();
+    useFinanceDerived(
+      (derived) => ({
+        feedbackByPattern: derived.feedbackByPattern,
+        latestBalanceTotal: derived.latestBalanceTotal,
+        monthlySummary: derived.monthlySummary,
+        netWorthTrend: derived.netWorthTrend,
+        patterns: derived.patterns,
+        projectedBalanceSnapshots: derived.projectedBalanceSnapshots
+      }),
+      shallowEqual
+    );
   const { accounts, balanceSnapshots, moments, transfers } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,

@@ -78,6 +78,31 @@ test("buildAllocationPlan exposes daily flexible room for safe-to-spend", () => 
   assertEqual(allocation.dailyFlexibleRoom, 87_500, "safe-to-spend should divide remaining flexible by days left");
 });
 
+test("buildAllocationPlan reserves upcoming bills before safe-to-spend", () => {
+  const allocation = buildAllocationPlan({
+    accounts: [],
+    latestSnapshots: [],
+    monthlyPlan: plan({
+      expectedIncome: 10_000_000,
+      fixedCosts: 2_000_000,
+      flexibleBudget: 1_700_000,
+      savingsTarget: 1_000_000
+    }),
+    monthlySummary: {
+      expense: 300_000,
+      fixedExpense: 0,
+      flexibleExpense: 300_000,
+      income: 0,
+      net: -300_000,
+      topCategories: []
+    },
+    upcomingBillsReserve: 400_000,
+    today: juneMidpoint
+  });
+
+  assertEqual(allocation.dailyFlexibleRoom, 62_500, "safe-to-spend should reserve upcoming bills first");
+});
+
 test("buildAllocationPlan keeps daily flexible room at zero without a plan", () => {
   const allocation = buildAllocationPlan({
     accounts: [],

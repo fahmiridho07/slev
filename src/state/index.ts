@@ -1,2 +1,2 @@
 export { FinanceProvider } from "./FinanceProvider";
-export { shallowEqual, useActions, useDerived, useFinanceSelector } from "./useFinance";
+export { shallowEqual, useActions, useDerived, useFinanceDerived, useFinanceSelector } from "./useFinance";

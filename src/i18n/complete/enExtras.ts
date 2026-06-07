@@ -44,6 +44,7 @@ export const enExtras: AppStringsExtras = {
     },
     category: {
       needName: "Add a category name.",
+      duplicate: "That category already exists.",
       saved: "{label} category saved.",
       removed: "{label} category removed."
     },
@@ -69,7 +70,6 @@ export const enExtras: AppStringsExtras = {
       saved: "Recurring bill saved.",
       removed: "Recurring bill removed.",
       unavailable: "That recurring bill is no longer available.",
-      loggedPartial: "{amount} logged, but the bill cycle could not be updated.",
       logged: "{amount} logged for {label}."
     },
     balance: {

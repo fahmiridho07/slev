@@ -1,7 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Image, KeyboardAvoidingView, Linking, Platform, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Linking,
+  Platform,
+  Pressable,
+  StyleProp,
+  Text,
+  View,
+  ViewStyle
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppToast, DeleteConfirmDialog } from "./components";
 import { BRAND } from "./data/brand";
@@ -17,6 +28,10 @@ import { initialFinanceState } from "./state/financeReducer";
 import { shallowEqual, useActions, useFinanceSelector } from "./state/useFinance";
 
 const SLEV_MARK = require("../assets/brand/slev-mark-transparent.png");
+
+function tabPaneStyle(visible: boolean): StyleProp<ViewStyle> {
+  return visible ? { flex: 1 } : { display: "none" };
+}
 
 const tabIcons: Record<AppTabKey, keyof typeof Ionicons.glyphMap> = {
   home: "home-outline",
@@ -269,44 +284,48 @@ export function AppRoot() {
                 </Pressable>
               </View>
             ) : null}
-            {isReady && !bootError && activeTab === "home" && (
-              <HomeScreen
-                captureFocusRequest={captureFocusRequest}
-                navigation={navigation}
-                onOpenSettings={openSettings}
-                scrollContentStyle={scrollContentStyle}
-              />
-            )}
-            {isReady && !bootError && activeTab === "memory" && (
-              <MemoryScreen navigation={navigation} scrollContentStyle={scrollContentStyle} />
-            )}
-            {isReady && !bootError && activeTab === "budget" && (
-              <BudgetScreen
-                activeBudgetTab={budgetTab}
-                onBudgetTabChange={setBudgetTab}
-                onOpenSettings={openSettings}
-                scrollContentStyle={scrollContentStyle}
-              />
-            )}
-            {isReady && !bootError && activeTab === "patterns" && (
-              <PatternsScreen
-                activePatternTab={patternTab}
-                onOpenBalance={() => {
-                  setBudgetTab("balance");
-                  setActiveTab("budget");
-                }}
-                onOpenCapture={navigation.openCapture}
-                onPatternTabChange={setPatternTab}
-                scrollContentStyle={scrollContentStyle}
-              />
-            )}
-            {isReady && !bootError && activeTab === "settings" && (
-              <SettingsScreen
-                activeSettingsTab={settingsTab}
-                onSettingsTabChange={setSettingsTab}
-                scrollContentStyle={scrollContentStyle}
-              />
-            )}
+            {isReady && !bootError ? (
+              <>
+                <View style={tabPaneStyle(activeTab === "home")}>
+                  <HomeScreen
+                    captureFocusRequest={captureFocusRequest}
+                    navigation={navigation}
+                    onOpenSettings={openSettings}
+                    scrollContentStyle={scrollContentStyle}
+                  />
+                </View>
+                <View style={tabPaneStyle(activeTab === "memory")}>
+                  <MemoryScreen navigation={navigation} scrollContentStyle={scrollContentStyle} />
+                </View>
+                <View style={tabPaneStyle(activeTab === "budget")}>
+                  <BudgetScreen
+                    activeBudgetTab={budgetTab}
+                    onBudgetTabChange={setBudgetTab}
+                    onOpenSettings={openSettings}
+                    scrollContentStyle={scrollContentStyle}
+                  />
+                </View>
+                <View style={tabPaneStyle(activeTab === "patterns")}>
+                  <PatternsScreen
+                    activePatternTab={patternTab}
+                    onOpenBalance={() => {
+                      setBudgetTab("balance");
+                      setActiveTab("budget");
+                    }}
+                    onOpenCapture={navigation.openCapture}
+                    onPatternTabChange={setPatternTab}
+                    scrollContentStyle={scrollContentStyle}
+                  />
+                </View>
+                <View style={tabPaneStyle(activeTab === "settings")}>
+                  <SettingsScreen
+                    activeSettingsTab={settingsTab}
+                    onSettingsTabChange={setSettingsTab}
+                    scrollContentStyle={scrollContentStyle}
+                  />
+                </View>
+              </>
+            ) : null}
           </View>
 
           <View accessibilityRole="tablist" style={tabBarStyle}>

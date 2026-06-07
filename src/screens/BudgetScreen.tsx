@@ -10,7 +10,7 @@ import { MonthlyPlanPanel } from "../features/budget/MonthlyPlanPanel";
 import { SavingsGoalsPanel } from "../features/budget/SavingsGoalsPanel";
 import { BudgetTabKey } from "../features/app.types";
 import { buildBudgetTabHero } from "../lib/tabHero";
-import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
+import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../state/useFinance";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { useTheme } from "../hooks/useTheme";
 type BudgetScreenProps = {
@@ -37,7 +37,18 @@ function BudgetScreenComponent({
     latestBalanceTotal,
     monthlySummary,
     projectedBalanceSnapshots
-  } = useDerived();
+  } = useFinanceDerived(
+    (derived) => ({
+      accountDrift: derived.accountDrift,
+      allocationPlan: derived.allocationPlan,
+      categoryLabels: derived.categoryLabels,
+      hasMonthlyPlan: derived.hasMonthlyPlan,
+      latestBalanceTotal: derived.latestBalanceTotal,
+      monthlySummary: derived.monthlySummary,
+      projectedBalanceSnapshots: derived.projectedBalanceSnapshots
+    }),
+    shallowEqual
+  );
   const {
     accounts,
     balanceSnapshots,

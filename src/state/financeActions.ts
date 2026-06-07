@@ -46,6 +46,8 @@ import {
   getBillSavedToast,
   getBillUnavailableToast,
 
+  getCategoryDuplicateToast,
+  getCategoryNeedNameToast,
   getCategoryRemovedToast,
   getCategorySavedToast,
   getClearAllToast,
@@ -469,8 +471,14 @@ export function createFinanceActions(
       return { ok: false, validation: validationError };
     }
 
-    const { data: updated, persisted } = await saveExpenseCategory(input);
+    const { data: updated, persisted, reason } = await saveExpenseCategory(input);
     if (!persisted) {
+      if (reason === "duplicate") {
+        return { ok: false, validation: { field: "label", message: getCategoryDuplicateToast() } };
+      }
+      if (reason === "invalid") {
+        return { ok: false, validation: { field: "label", message: getCategoryNeedNameToast() } };
+      }
       notifyWriteFailure(STORAGE_KEYS.expenseCategories);
       return { ok: false };
     }

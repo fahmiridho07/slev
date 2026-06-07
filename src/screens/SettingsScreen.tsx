@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { memo, useMemo, useState } from "react";
+import * as DocumentPicker from "expo-document-picker";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import { Pressable, StyleProp, Text, TextInput, View, ViewStyle } from "react-native";
 import {
   BottomSheet,
@@ -24,7 +25,7 @@ import { FormValidationError } from "../lib/formValidation";
 import { ImportFieldError } from "../features/settings/dataValidation";
 import { CategoryFieldError } from "../features/settings/settingsValidation";
 import { listCorruptStorageIssues, StorageHealthIssue } from "../services/storageHealth";
-import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
+import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../state/useFinance";
 import { useTheme } from "../hooks/useTheme";
 
 type SettingsScreenProps = {
@@ -52,7 +53,7 @@ function SettingsScreenComponent({
   } = useTheme();
   const { refreshControl } = usePullToRefresh();
   const actions = useActions();
-  const { categoryLabels } = useDerived();
+  const categoryLabels = useFinanceDerived((derived) => derived.categoryLabels);
   const { accounts, expenseCategories, isReady, moments, recurringBills } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
@@ -88,6 +89,25 @@ function SettingsScreenComponent({
     setCategoryDraft("");
     setCategoryFieldError(null);
   }
+
+  const pickImportFile = useCallback(async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      copyToCacheDirectory: true,
+      type: ["application/json", "text/json", "text/plain"]
+    });
+    if (result.canceled || result.assets.length === 0) {
+      return;
+    }
+
+    try {
+      const response = await fetch(result.assets[0].uri);
+      const text = await response.text();
+      setImportFieldError((current) => (current?.field === "importJson" ? null : current));
+      setImportDraft(text);
+    } catch {
+      hapticWarning();
+    }
+  }, []);
 
   const corruptIssues = isReady ? listCorruptStorageIssues() : [];
 
@@ -274,6 +294,14 @@ function SettingsScreenComponent({
             <Ionicons name="share-outline" size={16} color={colors.greenDark} />
             <Text style={componentStyles.secondaryButtonText}>{strings.settings.data.export}</Text>
           </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => void pickImportFile()}
+            style={styles.secondaryInlineButton}
+          >
+            <Ionicons name="document-outline" size={16} color={colors.greenDark} />
+            <Text style={componentStyles.secondaryButtonText}>{strings.settings.data.importChooseFile}</Text>
+          </Pressable>
           <TextInput
             accessibilityLabel={
               importFieldError?.field === "importJson"
@@ -330,6 +358,7 @@ function SettingsScreenComponent({
     expenseCategories,
     importDraft,
     importFieldError,
+    pickImportFile,
     locale,
     recurringBills,
     reduceMotionPreference,

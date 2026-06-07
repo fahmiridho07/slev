@@ -206,17 +206,12 @@ test("corrupt backup pruning keeps at most three snapshots per source key", asyn
   assertEqual(backupKeys.length <= 3, true, "at most three backups retained");
 });
 
-test("runMigrations warns and continues when a migration step throws", async () => {
-  const warnings: unknown[] = [];
-  const originalWarn = console.warn;
-  console.warn = (...args: unknown[]) => {
-    warnings.push(args);
-  };
+test("runMigrations throws and leaves schema version unchanged when a step fails", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
 
+  let threw = false;
   try {
-    const driver = createMemoryDriver();
-    setStorageDriver(driver);
-
     await runMigrations([
       {
         toVersion: 2,
@@ -225,16 +220,43 @@ test("runMigrations warns and continues when a migration step throws", async () 
         }
       }
     ]);
-
-    assertEqual(
-      warnings.some((entry) => JSON.stringify(entry).includes("migration failed")),
-      true,
-      "migration failure logged"
-    );
-    assertEqual(await getSchemaVersion(), 0, "schema version not advanced after failure");
-  } finally {
-    console.warn = originalWarn;
+  } catch (error) {
+    threw = error instanceof Error && error.message.includes("simulated migration failure");
   }
+
+  assertEqual(threw, true, "migration failure propagates");
+  assertEqual(await getSchemaVersion(), 0, "schema version not advanced after failure");
+});
+
+test("runMigrations does not mark V2 complete when moment persist fails", async () => {
+  const driver = createMemoryDriver({ failWrites: new Set([STORAGE_KEYS.moments]) });
+  setStorageDriver(driver);
+
+  await driver.setItem(
+    STORAGE_KEYS.legacyTransactions,
+    JSON.stringify([
+      {
+        id: "tx-fail",
+        amount: 12000,
+        merchant: "Legacy",
+        category: "Food",
+        status: "confirmed",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z"
+      }
+    ])
+  );
+
+  let threw = false;
+  try {
+    await runMigrations();
+  } catch (error) {
+    threw = error instanceof Error && error.message.includes("Failed to persist spending moments");
+  }
+
+  assertEqual(threw, true, "persist failure aborts migration");
+  assertEqual(await getSchemaVersion(), 0, "schema version not advanced");
+  assertEqual(driver.store.get(STORAGE_KEYS.migratedV2), undefined, "legacy migration flag not set");
 });
 
 test("legacy stored accounts without tier normalize to tracked", async () => {

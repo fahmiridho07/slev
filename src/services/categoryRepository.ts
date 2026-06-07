@@ -29,11 +29,11 @@ export async function saveExpenseCategory(input: CategoryInput): Promise<WriteRe
     createdAt: existing?.createdAt ?? now,
     updatedAt: now
   });
-  if (!category) return { data: visible, persisted: true };
+  if (!category) return { data: visible, persisted: false, reason: "invalid" };
   const duplicateVisible = visible.find(
     (item) => item.id !== category.id && item.label.toLowerCase() === category.label.toLowerCase()
   );
-  if (duplicateVisible) return { data: visible, persisted: true };
+  if (duplicateVisible) return { data: visible, persisted: false, reason: "duplicate" };
 
   const updatedStored = [
     category,

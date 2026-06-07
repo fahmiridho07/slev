@@ -151,6 +151,10 @@ export async function runSpendingMemoryV2Migration(): Promise<void> {
   const alreadyMigrated = await readRaw(V2_MIGRATION_KEY);
   if (alreadyMigrated === "true") return;
 
+  if (isKeyCorrupt(MOMENTS_KEY)) {
+    throw new Error("Cannot migrate spending moments while storage is corrupt");
+  }
+
   const momentsResult = await readJson<unknown>(MOMENTS_KEY);
   const raw = momentsResult.status === "ok" ? await readRaw(MOMENTS_KEY) : null;
   const legacyMomentsRaw = raw ? null : await readRaw(LEGACY_MOMENTS_KEY);
@@ -158,17 +162,23 @@ export async function runSpendingMemoryV2Migration(): Promise<void> {
   const legacyTransactionMoments = await migrateConfirmedTransactions();
   const mergedMoments = dedupeMomentsById([...legacyTransactionMoments, ...existingMoments]);
 
-  if (
-    !isKeyCorrupt(MOMENTS_KEY) &&
-    (legacyMomentsRaw ||
-      legacyTransactionMoments.length > 0 ||
-      existingMoments.some((moment) => moment.type !== "expense" && moment.type !== "income") ||
-      raw !== JSON.stringify(sortMoments(mergedMoments).map(normalizeMoment)))
-  ) {
-    await persistSpendingMoments(mergedMoments);
+  const needsPersist =
+    legacyMomentsRaw ||
+    legacyTransactionMoments.length > 0 ||
+    existingMoments.some((moment) => moment.type !== "expense" && moment.type !== "income") ||
+    raw !== JSON.stringify(sortMoments(mergedMoments).map(normalizeMoment));
+
+  if (needsPersist) {
+    const persisted = await persistSpendingMoments(mergedMoments);
+    if (!persisted) {
+      throw new Error("Failed to persist spending moments during V2 migration");
+    }
   }
 
-  await writeRaw(V2_MIGRATION_KEY, "true");
+  const flagged = await writeRaw(V2_MIGRATION_KEY, "true");
+  if (!flagged) {
+    throw new Error("Failed to mark spending memory V2 migration complete");
+  }
 }
 
 function parseMomentList(raw: unknown | string | null): SpendingMoment[] {

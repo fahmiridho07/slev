@@ -155,6 +155,115 @@ test("importLocalBackup clears undo toast after successful import", async () => 
   assertEqual(getState().undoToast, null, "undo toast cleared");
 });
 
+test("saveCategory rejects duplicate default labels", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+  const { actions } = createTestHarness({ isReady: true });
+
+  const result = await actions.saveCategory({ label: "Food" });
+
+  assertEqual(result.ok, false, "duplicate category rejected");
+  if (!result.ok) {
+    assertEqual(result.validation?.field, "label", "label field flagged");
+  }
+});
+
+test("saveMoment persists expense and prepends to state", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+  const { actions, getState } = createTestHarness({
+    isReady: true,
+    accounts: [
+      {
+        id: "acct-bri",
+        label: "BRI",
+        kind: "bank",
+        isIncomeHub: true,
+        tier: "tracked",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z"
+      }
+    ]
+  });
+
+  const result = await actions.saveMoment(
+    {
+      entryType: "expense",
+      amountText: "25000",
+      label: "Snack",
+      context: "Food",
+      accountLabel: "BRI",
+      note: "",
+      fromAccount: "BRI",
+      toAccount: "Jago",
+      source: ""
+    },
+    8
+  );
+
+  assertEqual(result.ok, true, "capture saved");
+  assertEqual(getState().moments.length, 1, "moment prepended");
+  assertEqual(getState().moments[0]?.amount, 25000, "amount stored");
+});
+
+test("logRecurringBillPayment reverts bill mark when moment write fails", async () => {
+  const driver = createMemoryDriver({ failWrites: new Set(["slev_entries"]) });
+  setStorageDriver(driver);
+  const bill = {
+    id: "bill-1",
+    label: "Internet",
+    amount: 300000,
+    context: "Bills" as const,
+    accountLabel: "BRI",
+    dayOfMonth: 5,
+    active: true,
+    createdAt: "2026-06-01T00:00:00.000Z",
+    updatedAt: "2026-06-01T00:00:00.000Z"
+  };
+  const { actions, getState } = createTestHarness({
+    isReady: true,
+    recurringBills: [bill]
+  });
+
+  await actions.logRecurringBillPayment("bill-1");
+
+  assertEqual(getState().moments.length, 0, "moment not saved");
+  assertEqual(getState().recurringBills[0]?.lastPaidMonth, undefined, "bill payment reverted");
+});
+
+test("removeCategory clears related budget data", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+  const { actions, getState } = createTestHarness({ isReady: true });
+
+  const saved = await actions.saveCategory({ label: "Streaming" });
+  assertEqual(saved.ok, true, "category saved");
+  const category = getState().expenseCategories.find((item) => item.label === "Streaming");
+  if (!category) {
+    throw new Error("expected saved category");
+  }
+
+  await actions.saveCategoryBudget("Streaming", "150000", "monthly");
+  await actions.changeCategoryMode("Streaming", "flexible");
+  await actions.removeCategory(category);
+
+  assertEqual(
+    getState().expenseCategories.some((item) => item.label.toLowerCase() === "streaming"),
+    false,
+    "category removed"
+  );
+  assertEqual(
+    getState().budgetLimits.some((limit) => limit.category === "Streaming"),
+    false,
+    "limit removed"
+  );
+  assertEqual(
+    getState().categoryModes.some((mode) => mode.category === "Streaming"),
+    false,
+    "mode removed"
+  );
+});
+
 test("confirmClearAll clears undo toast in reducer state", async () => {
   const driver = createMemoryDriver();
   setStorageDriver(driver);

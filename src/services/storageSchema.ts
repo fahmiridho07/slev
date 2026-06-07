@@ -72,24 +72,25 @@ export async function setSchemaVersion(version: number): Promise<boolean> {
 }
 
 export async function runMigrations(steps: MigrationStep[] = DEFAULT_MIGRATIONS): Promise<void> {
-  try {
-    let version = await getSchemaVersion();
+  let version = await getSchemaVersion();
 
-    for (const step of steps) {
-      if (version >= step.toVersion) {
-        continue;
-      }
-
-      await step.run();
-      version = step.toVersion;
-      await setSchemaVersion(version);
+  for (const step of steps) {
+    if (version >= step.toVersion) {
+      continue;
     }
 
-    if (version < SCHEMA_VERSION) {
-      await setSchemaVersion(SCHEMA_VERSION);
+    await step.run();
+    version = step.toVersion;
+    const versionWritten = await setSchemaVersion(version);
+    if (!versionWritten) {
+      throw new Error(`Failed to persist schema version ${version}`);
     }
-  } catch (error) {
-    console.warn("[slev] migration failed", error);
-    return;
+  }
+
+  if (version < SCHEMA_VERSION) {
+    const versionWritten = await setSchemaVersion(SCHEMA_VERSION);
+    if (!versionWritten) {
+      throw new Error(`Failed to persist schema version ${SCHEMA_VERSION}`);
+    }
   }
 }

@@ -6,7 +6,7 @@ import { getDefaultMomentAccount } from "../../lib/analysis";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
-import { useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
+import { useActions, useFinanceDerived, useFinanceSelector } from "../../state/useFinance";
 import { useTheme } from "../../hooks/useTheme";
 import { MemoryFieldError } from "./memoryValidation";
 
@@ -31,7 +31,7 @@ function buildEditForm(moment: SpendingMoment, accounts: MoneyAccount[]) {
 function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormProps) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const actions = useActions();
-  const { categoryLabels } = useDerived();
+  const categoryLabels = useFinanceDerived((derived) => derived.categoryLabels);
   const accounts = useFinanceSelector((state) => state.accounts);
   const initial = buildEditForm(moment, accounts);
 

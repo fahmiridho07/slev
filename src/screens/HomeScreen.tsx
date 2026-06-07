@@ -6,7 +6,7 @@ import { CapturePanel } from "../features/capture/CapturePanel";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { useTheme } from "../hooks/useTheme";
 import { AppNavigation } from "../navigation/appNavigation";
-import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
+import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../state/useFinance";
 
 type HomeScreenProps = {
   captureFocusRequest: number;
@@ -24,7 +24,18 @@ function HomeScreenComponent({
   const { reduceMotion } = useTheme();
   const { refreshControl } = usePullToRefresh();
   const actions = useActions();
-  const { allocationPlan, hasMonthlyPlan, latestBalanceTotal, monthlySummary, runwayMonths, upcomingBills } = useDerived();
+  const { allocationPlan, hasMonthlyPlan, latestBalanceTotal, monthlySummary, runwayMonths, upcomingBills } =
+    useFinanceDerived(
+      (derived) => ({
+        allocationPlan: derived.allocationPlan,
+        hasMonthlyPlan: derived.hasMonthlyPlan,
+        latestBalanceTotal: derived.latestBalanceTotal,
+        monthlySummary: derived.monthlySummary,
+        runwayMonths: derived.runwayMonths,
+        upcomingBills: derived.upcomingBills
+      }),
+      shallowEqual
+    );
   const { monthlyPlan, savingsGoals } = useFinanceSelector(
     (state) => ({
       monthlyPlan: state.monthlyPlan,

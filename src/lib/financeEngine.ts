@@ -396,6 +396,7 @@ export function buildAllocationPlan({
   hasBalanceEvidence,
   monthlyPlan,
   monthlySummary,
+  upcomingBillsReserve = 0,
   today = new Date()
 }: {
   hasBalanceEvidence?: boolean;
@@ -403,6 +404,7 @@ export function buildAllocationPlan({
   latestSnapshots: BalanceSnapshot[];
   monthlyPlan: MonthlyPlan | null;
   monthlySummary: FinanceMonthSummary;
+  upcomingBillsReserve?: number;
   today?: Date;
 }): AllocationPlan {
   const expectedIncome = monthlyPlan?.expectedIncome ?? 0;
@@ -419,8 +421,9 @@ export function buildAllocationPlan({
   const savingsGap = savingsTarget - possibleSavings;
   const daysRemaining = getDaysRemainingInMonth(today);
   const hasBalances = hasBalanceEvidence ?? latestSnapshots.length > 0;
+  const flexibleAfterBills = Math.max(0, flexibleRemaining - Math.max(0, upcomingBillsReserve));
   const dailyFlexibleRoom = monthlyPlan
-    ? Math.max(0, Math.round(flexibleRemaining / daysRemaining))
+    ? Math.max(0, Math.round(flexibleAfterBills / daysRemaining))
     : 0;
   const snapshotByLabel = new Map(latestSnapshots.map((snapshot) => [snapshot.accountLabel, snapshot.amount]));
   const incomeHubLabel = accounts.find((account) => account.isIncomeHub)?.label;

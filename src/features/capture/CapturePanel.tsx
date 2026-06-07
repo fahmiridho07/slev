@@ -5,7 +5,7 @@ import { AccountPicker, ContextPicker, EmptyState } from "../../components";
 import { CaptureTypePicker } from "./CaptureTypePicker";
 import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { getTemplateLabel } from "../../lib/analysis";
-import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
+import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../../state/useFinance";
 import { formatString } from "../../i18n";
 import { useTheme } from "../../hooks/useTheme";
 import { hapticSuccess } from "../../lib/haptics";
@@ -33,7 +33,13 @@ function CapturePanelComponent({
     return strings.capture.saveExpense;
   }
   const actions = useActions();
-  const { categoryLabels, repeatSuggestions } = useDerived();
+  const { categoryLabels, repeatSuggestions } = useFinanceDerived(
+    (derived) => ({
+      categoryLabels: derived.categoryLabels,
+      repeatSuggestions: derived.repeatSuggestions
+    }),
+    shallowEqual
+  );
   const { accounts, manualTemplates } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,

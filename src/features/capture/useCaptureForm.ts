@@ -12,7 +12,7 @@ import {
 import { formatAmountInput } from "../../lib/formatMoney";
 import { ManualTemplate, MoneyAccount, SpendingContext } from "../spendingMemory.types";
 import { getTemplateReadyToast } from "../../i18n/toasts";
-import { useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
+import { useActions, useFinanceDerived, useFinanceSelector } from "../../state/useFinance";
 import { CaptureFormValues } from "./types";
 
 function buildDefaultCapture(accounts: MoneyAccount[], context: SpendingContext): CaptureFormValues {
@@ -37,7 +37,7 @@ function buildDefaultCapture(accounts: MoneyAccount[], context: SpendingContext)
 
 export function useCaptureForm() {
   const actions = useActions();
-  const { categoryLabels } = useDerived();
+  const categoryLabels = useFinanceDerived((derived) => derived.categoryLabels);
   const accounts = useFinanceSelector((state) => state.accounts);
   const lastExpenseContext = useFinanceSelector(
     (state) => state.moments.find((moment) => moment.type === "expense")?.context ?? "Other"

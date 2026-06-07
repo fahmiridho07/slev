@@ -519,6 +519,7 @@ export type AppStrings = {
       healthTitle: string;
       import: string;
       importA11y: string;
+      importChooseFile: string;
       importPlaceholder: string;
       resetBody: string;
       resetConfirm: string;
@@ -574,7 +575,6 @@ export type AppStrings = {
     bill: {
       invalidDay: string;
       logged: string;
-      loggedPartial: string;
       needFields: string;
       removed: string;
       saved: string;
@@ -592,6 +592,7 @@ export type AppStrings = {
       transferMoved: string;
     };
     category: {
+      duplicate: string;
       needName: string;
       removed: string;
       saved: string;
