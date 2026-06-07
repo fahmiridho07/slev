@@ -1,20 +1,31 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useCallback, useMemo, useRef } from "react";
-import { Animated, PanResponder, Pressable, Text, View } from "react-native";
+import { Animated, PanResponder, Pressable, Text, View, ViewStyle } from "react-native";
 import { useTheme } from "../hooks/useTheme";
 import { hapticLight } from "../lib/haptics";
+import { shouldCaptureSwipeGesture } from "../lib/swipeGesture";
 import { SWIPE_DELETE_ACTION_WIDTH } from "../theme/styles/components";
 
 type SwipeActionRowProps = {
+  accessibilityHint?: string;
+  accessibilityLabel?: string;
   canDelete: boolean;
   children: React.ReactNode;
+  foregroundStyle?: ViewStyle;
   onDelete: () => void;
+  onLongPress?: () => void;
+  onPress?: () => void;
 };
 
 function SwipeActionRowComponent({
+  accessibilityHint,
+  accessibilityLabel,
   canDelete,
   children,
-  onDelete
+  foregroundStyle,
+  onDelete,
+  onLongPress,
+  onPress
 }: SwipeActionRowProps) {
   const { colors, componentStyles, reduceMotion, strings } = useTheme();
   const translateX = useRef(new Animated.Value(0)).current;
@@ -49,32 +60,36 @@ function SwipeActionRowComponent({
     onDelete();
   }, [animateTo, onDelete]);
 
+  const handleForegroundPress = useCallback(() => {
+    if (isOpenRef.current) {
+      animateTo(false);
+      return;
+    }
+    onPress?.();
+  }, [animateTo, onPress]);
+
+  const handleForegroundLongPress = useCallback(() => {
+    if (isOpenRef.current) {
+      animateTo(false);
+      return;
+    }
+    onLongPress?.();
+  }, [animateTo, onLongPress]);
+
   const panResponder = useMemo(
     () =>
       PanResponder.create({
         onMoveShouldSetPanResponderCapture: (_, gesture) => {
-          if (!canDelete || !isOpenRef.current) {
+          if (!canDelete) {
             return false;
           }
-
-          const horizontal = Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2;
-          return horizontal && Math.abs(gesture.dx) > 8;
+          return shouldCaptureSwipeGesture(gesture.dx, gesture.dy, isOpenRef.current);
         },
         onMoveShouldSetPanResponder: (_, gesture) => {
           if (!canDelete) {
             return false;
           }
-
-          const horizontal = Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2;
-          if (!horizontal) {
-            return false;
-          }
-
-          if (isOpenRef.current) {
-            return Math.abs(gesture.dx) > 8;
-          }
-
-          return gesture.dx < -12;
+          return shouldCaptureSwipeGesture(gesture.dx, gesture.dy, isOpenRef.current);
         },
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
@@ -102,9 +117,25 @@ function SwipeActionRowComponent({
     [animateTo, canDelete, clampOffset, translateX]
   );
 
-  const foregroundStyle = {
+  const foregroundAnimatedStyle = {
     transform: [{ translateX }]
   };
+
+  const hasForegroundAction = Boolean(onPress || onLongPress);
+  const foreground = hasForegroundAction ? (
+    <Pressable
+      accessibilityHint={accessibilityHint}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      onLongPress={onLongPress ? handleForegroundLongPress : undefined}
+      onPress={handleForegroundPress}
+      style={[componentStyles.listActionPressable, foregroundStyle]}
+    >
+      {children}
+    </Pressable>
+  ) : (
+    <View style={foregroundStyle}>{children}</View>
+  );
 
   return (
     <View style={componentStyles.swipeRowShell}>
@@ -123,9 +154,9 @@ function SwipeActionRowComponent({
       )}
       <Animated.View
         {...(canDelete ? panResponder.panHandlers : {})}
-        style={[componentStyles.swipeForeground, foregroundStyle]}
+        style={[componentStyles.swipeForeground, foregroundAnimatedStyle]}
       >
-        {children}
+        {foreground}
       </Animated.View>
     </View>
   );

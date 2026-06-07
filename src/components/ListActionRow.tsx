@@ -23,28 +23,35 @@ function ListActionRowComponent({
   const { componentStyles, strings } = useTheme();
   const resolvedHint = accessibilityHint ?? (onDelete ? strings.common.swipeOrLongPressDelete : undefined);
 
-  const content = onPress || onDelete ? (
-    <Pressable
-      accessibilityHint={resolvedHint}
-      accessibilityLabel={accessibilityLabel}
-      accessibilityRole="button"
-      onLongPress={onDelete}
-      onPress={onPress}
-      style={[componentStyles.listActionPressable, style]}
-    >
-      {children}
-    </Pressable>
-  ) : (
-    <View style={style}>{children}</View>
-  );
-
   if (!onDelete) {
-    return content;
+    if (!onPress) {
+      return <View style={style}>{children}</View>;
+    }
+
+    return (
+      <Pressable
+        accessibilityHint={resolvedHint}
+        accessibilityLabel={accessibilityLabel}
+        accessibilityRole="button"
+        onPress={onPress}
+        style={[componentStyles.listActionPressable, style]}
+      >
+        {children}
+      </Pressable>
+    );
   }
 
   return (
-    <SwipeActionRow canDelete onDelete={onDelete}>
-      {content}
+    <SwipeActionRow
+      accessibilityHint={resolvedHint}
+      accessibilityLabel={accessibilityLabel}
+      canDelete
+      foregroundStyle={style}
+      onDelete={onDelete}
+      onLongPress={onDelete}
+      onPress={onPress}
+    >
+      {children}
     </SwipeActionRow>
   );
 }
