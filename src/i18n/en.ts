@@ -193,7 +193,7 @@ export const en: AppStrings = {
     },
     settings_categories: {
       title: "Category list actions",
-      body: "Tap a custom category to rename it. Swipe left to remove it."
+      body: "Swipe left to hide any category. Tap a custom category to rename it."
     }
   },
   home: {

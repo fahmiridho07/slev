@@ -230,13 +230,14 @@ function SettingsScreenComponent({
                   ]}
                 >
                   <ListActionRow
+                    accessibilityHint={strings.common.swipeToDelete}
                     accessibilityLabel={
                       category.isDefault
                         ? category.label
                         : formatString(strings.settings.categories.editA11y, { label: category.label })
                     }
-                    onDelete={!category.isDefault ? () => setPendingDeleteCategory(category) : undefined}
-                    onPress={!category.isDefault ? () => editCategory(category) : undefined}
+                    onDelete={() => setPendingDeleteCategory(category)}
+                    onPress={category.isDefault ? undefined : () => editCategory(category)}
                   >
                     <View style={styles.analyticsRow}>
                       <View style={styles.analyticsRowHeader}>

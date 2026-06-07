@@ -193,7 +193,7 @@ export const id: AppStrings = {
     },
     settings_categories: {
       title: "Aksi daftar kategori",
-      body: "Ketuk kategori kustom untuk mengganti nama. Geser kiri untuk menghapusnya."
+      body: "Geser kiri untuk menyembunyikan kategori apa pun. Ketuk kategori kustom untuk mengganti nama."
     }
   },
   home: {
