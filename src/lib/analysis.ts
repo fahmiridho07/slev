@@ -407,6 +407,59 @@ export function isWithinRange(value: string, start: Date, end: Date): boolean {
   return time >= start.getTime() && time < end.getTime();
 }
 
+export function getFrequentAccountLabels(
+  moments: SpendingMoment[],
+  accounts: MoneyAccount[],
+  limit = 4
+): string[] {
+  const validLabels = new Set(accounts.map((account) => account.label));
+  const usage = new Map<string, { count: number; latestAt: string }>();
+
+  for (const moment of moments) {
+    const label = moment.accountLabel;
+    if (!label || !validLabels.has(label)) continue;
+
+    const current = usage.get(label);
+    if (!current) {
+      usage.set(label, { count: 1, latestAt: moment.occurredAt });
+      continue;
+    }
+
+    current.count += 1;
+    if (moment.occurredAt > current.latestAt) {
+      current.latestAt = moment.occurredAt;
+    }
+  }
+
+  const ranked = [...usage.entries()]
+    .sort((left, right) => {
+      if (right[1].count !== left[1].count) {
+        return right[1].count - left[1].count;
+      }
+      return right[1].latestAt.localeCompare(left[1].latestAt);
+    })
+    .map(([label]) => label);
+
+  const result: string[] = [];
+  const seen = new Set<string>();
+
+  for (const label of ranked) {
+    if (result.length >= limit) break;
+    if (seen.has(label)) continue;
+    seen.add(label);
+    result.push(label);
+  }
+
+  for (const account of accounts) {
+    if (result.length >= limit) break;
+    if (seen.has(account.label)) continue;
+    seen.add(account.label);
+    result.push(account.label);
+  }
+
+  return result;
+}
+
 export function getRepeatSuggestions(moments: SpendingMoment[]): RepeatSuggestion[] {
   const seen = new Set<string>();
   const suggestions: RepeatSuggestion[] = [];

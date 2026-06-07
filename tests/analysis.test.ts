@@ -6,6 +6,7 @@ import {
   dateKey,
   filterMoments,
   getAllocationActionCopy,
+  getFrequentAccountLabels,
   getMomentsInPeriod,
   getMonthKey,
   getRepeatHint,
@@ -16,7 +17,7 @@ import {
   sumMoments
 } from "../src/lib/analysis";
 import { AllocationPlan } from "../src/lib/financeEngine";
-import { EntryType, SpendingContext, SpendingMoment } from "../src/features/spendingMemory.types";
+import { EntryType, MoneyAccount, SpendingContext, SpendingMoment } from "../src/features/spendingMemory.types";
 
 declare const process: {
   exitCode?: number;
@@ -51,6 +52,82 @@ test("filterMoments passes through empty query and matches labels", () => {
   assertEqual(filterMoments(moments, "").length, 2, "empty query");
   assertEqual(filterMoments(moments, "coffee").length, 1, "label search");
   assertEqual(filterMoments(moments, "10000").length, 1, "amount search");
+});
+
+test("getFrequentAccountLabels falls back to account order without moments", () => {
+  const accounts = [
+    moneyAccount({ label: "Jago", index: 0 }),
+    moneyAccount({ label: "BRI", index: 1 }),
+    moneyAccount({ label: "Cash", index: 2 })
+  ];
+
+  assertArrayEqual(
+    getFrequentAccountLabels([], accounts),
+    ["Jago", "BRI", "Cash"],
+    "account order fallback"
+  );
+});
+
+test("getFrequentAccountLabels ranks labels by usage count", () => {
+  const accounts = [
+    moneyAccount({ label: "Jago", index: 0 }),
+    moneyAccount({ label: "BRI", index: 1 }),
+    moneyAccount({ label: "Cash", index: 2 })
+  ];
+  const moments = [
+    moment({ amount: 10000, accountLabel: "BRI", occurredAt: "2026-06-01T01:00:00.000Z" }),
+    moment({ amount: 12000, accountLabel: "Jago", occurredAt: "2026-06-02T01:00:00.000Z" }),
+    moment({ amount: 8000, accountLabel: "BRI", occurredAt: "2026-06-03T01:00:00.000Z" }),
+    moment({ amount: 9000, accountLabel: "BRI", occurredAt: "2026-06-04T01:00:00.000Z" })
+  ];
+
+  assertArrayEqual(
+    getFrequentAccountLabels(moments, accounts),
+    ["BRI", "Jago", "Cash"],
+    "frequency ordering with backfill"
+  );
+});
+
+test("getFrequentAccountLabels tie-breaks by most recent usage", () => {
+  const accounts = [
+    moneyAccount({ label: "Jago", index: 0 }),
+    moneyAccount({ label: "BRI", index: 1 })
+  ];
+  const moments = [
+    moment({ amount: 10000, accountLabel: "Jago", occurredAt: "2026-06-01T01:00:00.000Z" }),
+    moment({ amount: 12000, accountLabel: "BRI", occurredAt: "2026-06-02T01:00:00.000Z" }),
+    moment({ amount: 8000, accountLabel: "Jago", occurredAt: "2026-06-05T01:00:00.000Z" })
+  ];
+
+  assertArrayEqual(
+    getFrequentAccountLabels(moments, accounts),
+    ["Jago", "BRI"],
+    "recency tie-break"
+  );
+});
+
+test("getFrequentAccountLabels ignores labels missing from accounts", () => {
+  const accounts = [moneyAccount({ label: "Jago", index: 0 })];
+  const moments = [
+    moment({ amount: 10000, accountLabel: "Old wallet", occurredAt: "2026-06-01T01:00:00.000Z" }),
+    moment({ amount: 12000, accountLabel: "Jago", occurredAt: "2026-06-02T01:00:00.000Z" })
+  ];
+
+  assertArrayEqual(getFrequentAccountLabels(moments, accounts), ["Jago"], "unknown labels ignored");
+});
+
+test("getFrequentAccountLabels respects limit", () => {
+  const accounts = [
+    moneyAccount({ label: "Jago", index: 0 }),
+    moneyAccount({ label: "BRI", index: 1 }),
+    moneyAccount({ label: "Cash", index: 2 })
+  ];
+
+  assertArrayEqual(
+    getFrequentAccountLabels([], accounts, 2),
+    ["Jago", "BRI"],
+    "limit respected"
+  );
 });
 
 test("getRepeatSuggestions dedupes labels and skips income", () => {
@@ -222,6 +299,22 @@ function assertEqual(actual: unknown, expected: unknown, message: string): void 
   if (actual !== expected) {
     throw new Error(`${message}. Expected ${printable(expected)}, got ${printable(actual)}.`);
   }
+}
+
+function assertArrayEqual(actual: unknown[], expected: unknown[], message: string): void {
+  assertEqual(JSON.stringify(actual), JSON.stringify(expected), message);
+}
+
+function moneyAccount(input: { index?: number; label: string }): MoneyAccount {
+  const index = input.index ?? 0;
+  return {
+    createdAt: "2026-01-01T00:00:00.000Z",
+    id: `account-${index}`,
+    isIncomeHub: index === 0,
+    kind: "bank",
+    label: input.label,
+    updatedAt: "2026-01-01T00:00:00.000Z"
+  };
 }
 
 function moment(input: {
