@@ -1,4 +1,5 @@
 import { Share } from "react-native";
+import { hapticSuccess } from "../lib/haptics";
 import { CategoryModeValue } from "../features/app.types";
 import { CaptureFormValues } from "../features/capture/types";
 import {
@@ -61,7 +62,9 @@ import {
   getShortcutTransferUseChipsToast,
   getTransferMovedToast,
   getTransferRemovedToast,
-  getWriteFailureToast
+  getWriteFailureToast,
+  getBackupShareTitle,
+  getImportErrorToast
 } from "../i18n/toasts";
 import { parseAmountInput } from "../lib/formatMoney";
 import {
@@ -186,8 +189,13 @@ export function createFinanceActions(
     dispatch({ type: "set_message", message });
   }
 
-  function notifyWriteFailure(area: string, storageKey: string) {
-    setMessage(getWriteFailureToast(area, storageKey));
+  function notifySuccess(message: string) {
+    hapticSuccess();
+    setMessage(message);
+  }
+
+  function notifyWriteFailure(storageKey: string) {
+    setMessage(getWriteFailureToast(storageKey));
   }
 
   function setClearConfirmVisible(visible: boolean) {
@@ -219,7 +227,7 @@ export function createFinanceActions(
         toAccount: capture.toAccount
       });
       if (!persisted) {
-        notifyWriteFailure("this transfer", STORAGE_KEYS.transfers);
+        notifyWriteFailure(STORAGE_KEYS.transfers);
         return { ok: false as const };
       }
       dispatch({ type: "set_transfers", transfers: updatedTransfers });
@@ -237,7 +245,7 @@ export function createFinanceActions(
       accountLabel: capture.accountLabel
     });
     if (!persisted) {
-      notifyWriteFailure("this memory", STORAGE_KEYS.moments);
+      notifyWriteFailure(STORAGE_KEYS.moments);
       return { ok: false as const };
     }
     dispatch({ type: "prepend_moment", moment: saved });
@@ -255,7 +263,7 @@ export function createFinanceActions(
   async function removeMoment(id: string) {
     const { persisted } = await deleteSpendingMoment(id);
     if (!persisted) {
-      notifyWriteFailure("this memory", STORAGE_KEYS.moments);
+      notifyWriteFailure(STORAGE_KEYS.moments);
       return;
     }
     dispatch({ type: "remove_moment", id });
@@ -290,7 +298,7 @@ export function createFinanceActions(
       accountLabel: input.accountLabel
     });
     if (!persisted) {
-      notifyWriteFailure("this memory", STORAGE_KEYS.moments);
+      notifyWriteFailure(STORAGE_KEYS.moments);
       return;
     }
     const moment = updated.find((item) => item.id === id);
@@ -299,7 +307,7 @@ export function createFinanceActions(
     } else {
       dispatch({ type: "set_moments", moments: updated });
     }
-    setMessage(getMemoryUpdatedToast());
+    notifySuccess(getMemoryUpdatedToast());
   }
 
   async function saveAsTemplate(capture: CaptureFormValues) {
@@ -325,7 +333,7 @@ export function createFinanceActions(
       type: capture.entryType
     });
     if (!persisted) {
-      notifyWriteFailure("this shortcut", STORAGE_KEYS.manualTemplates);
+      notifyWriteFailure(STORAGE_KEYS.manualTemplates);
       return;
     }
     dispatch({ type: "set_manual_templates", manualTemplates: updated });
@@ -335,7 +343,7 @@ export function createFinanceActions(
   async function removeManualTemplate(id: string) {
     const { data: updated, persisted } = await deleteManualTemplate(id);
     if (!persisted) {
-      notifyWriteFailure("this shortcut", STORAGE_KEYS.manualTemplates);
+      notifyWriteFailure(STORAGE_KEYS.manualTemplates);
       return;
     }
     dispatch({ type: "set_manual_templates", manualTemplates: updated });
@@ -345,7 +353,7 @@ export function createFinanceActions(
   async function removeTransfer(id: string) {
     const { data: updated, persisted } = await deleteMoneyTransfer(id);
     if (!persisted) {
-      notifyWriteFailure("this transfer", STORAGE_KEYS.transfers);
+      notifyWriteFailure(STORAGE_KEYS.transfers);
       return;
     }
     dispatch({ type: "set_transfers", transfers: updated });
@@ -366,7 +374,7 @@ export function createFinanceActions(
 
     const { data: updated, persisted } = await saveMoneyAccount(input);
     if (!persisted) {
-      notifyWriteFailure("this account", STORAGE_KEYS.accounts);
+      notifyWriteFailure(STORAGE_KEYS.accounts);
       return;
     }
     dispatch({ type: "set_accounts", accounts: updated });
@@ -376,7 +384,7 @@ export function createFinanceActions(
   async function removeAccount(id: string) {
     const { data: updated, persisted } = await deleteMoneyAccount(id);
     if (!persisted) {
-      notifyWriteFailure("this account", STORAGE_KEYS.accounts);
+      notifyWriteFailure(STORAGE_KEYS.accounts);
       return;
     }
     dispatch({ type: "set_accounts", accounts: updated });
@@ -391,7 +399,7 @@ export function createFinanceActions(
 
     const { data: updated, persisted } = await saveExpenseCategory(input);
     if (!persisted) {
-      notifyWriteFailure("this category", STORAGE_KEYS.expenseCategories);
+      notifyWriteFailure(STORAGE_KEYS.expenseCategories);
       return;
     }
     dispatch({ type: "set_expense_categories", expenseCategories: updated });
@@ -403,7 +411,7 @@ export function createFinanceActions(
     const updatedLimits = await deleteBudgetLimit(category.label);
     const updatedModes = await deleteCategoryMode(category.label);
     if (!updatedCategories.persisted || !updatedLimits.persisted || !updatedModes.persisted) {
-      notifyWriteFailure("this category", STORAGE_KEYS.expenseCategories);
+      notifyWriteFailure(STORAGE_KEYS.expenseCategories);
       await reload();
       return;
     }
@@ -422,7 +430,7 @@ export function createFinanceActions(
 
     const { data: updated, persisted } = await saveBudgetLimit({ category, limitAmount, period });
     if (!persisted) {
-      notifyWriteFailure("this budget limit", STORAGE_KEYS.budgetLimits);
+      notifyWriteFailure(STORAGE_KEYS.budgetLimits);
       return;
     }
     dispatch({ type: "set_budget_limits", budgetLimits: updated });
@@ -432,7 +440,7 @@ export function createFinanceActions(
   async function removeCategoryBudget(category: SpendingContext) {
     const { data: updated, persisted } = await deleteBudgetLimit(category);
     if (!persisted) {
-      notifyWriteFailure("this budget limit", STORAGE_KEYS.budgetLimits);
+      notifyWriteFailure(STORAGE_KEYS.budgetLimits);
       return;
     }
     dispatch({ type: "set_budget_limits", budgetLimits: updated });
@@ -442,7 +450,7 @@ export function createFinanceActions(
   async function changeCategoryMode(category: SpendingContext, mode: CategoryModeValue) {
     const { data: updated, persisted } = await saveCategoryMode(category, mode);
     if (!persisted) {
-      notifyWriteFailure("this category mode", STORAGE_KEYS.categoryModes);
+      notifyWriteFailure(STORAGE_KEYS.categoryModes);
       return;
     }
     dispatch({ type: "set_category_modes", categoryModes: updated });
@@ -466,11 +474,11 @@ export function createFinanceActions(
       savingsTarget: parseAmountInput(input.savingsTarget) ?? 0
     });
     if (!persisted) {
-      notifyWriteFailure("this monthly plan", STORAGE_KEYS.monthlyPlans);
+      notifyWriteFailure(STORAGE_KEYS.monthlyPlans);
       return;
     }
     dispatch({ type: "set_monthly_plan", monthlyPlan: saved });
-    setMessage(getPlanSavedToast());
+    notifySuccess(getPlanSavedToast());
   }
 
   async function saveGoal(input: {
@@ -492,17 +500,17 @@ export function createFinanceActions(
       targetAmount
     });
     if (!persisted) {
-      notifyWriteFailure("this savings goal", STORAGE_KEYS.savingsGoals);
+      notifyWriteFailure(STORAGE_KEYS.savingsGoals);
       return;
     }
     dispatch({ type: "set_savings_goals", savingsGoals: updated });
-    setMessage(getGoalSavedToast());
+    notifySuccess(getGoalSavedToast());
   }
 
   async function removeSavingsGoal(id: string) {
     const { data: updated, persisted } = await deleteSavingsGoal(id);
     if (!persisted) {
-      notifyWriteFailure("this savings goal", STORAGE_KEYS.savingsGoals);
+      notifyWriteFailure(STORAGE_KEYS.savingsGoals);
       return;
     }
     dispatch({ type: "set_savings_goals", savingsGoals: updated });
@@ -541,17 +549,17 @@ export function createFinanceActions(
       lastPaidMonth: input.lastPaidMonth
     });
     if (!persisted) {
-      notifyWriteFailure("this recurring bill", STORAGE_KEYS.recurringBills);
+      notifyWriteFailure(STORAGE_KEYS.recurringBills);
       return;
     }
     dispatch({ type: "set_recurring_bills", recurringBills: updated });
-    setMessage(getBillSavedToast());
+    notifySuccess(getBillSavedToast());
   }
 
   async function removeRecurringBill(id: string) {
     const { data: updated, persisted } = await deleteRecurringBill(id);
     if (!persisted) {
-      notifyWriteFailure("this recurring bill", STORAGE_KEYS.recurringBills);
+      notifyWriteFailure(STORAGE_KEYS.recurringBills);
       return;
     }
     dispatch({ type: "set_recurring_bills", recurringBills: updated });
@@ -573,7 +581,7 @@ export function createFinanceActions(
       type: "expense"
     });
     if (!persisted) {
-      notifyWriteFailure("this memory", STORAGE_KEYS.moments);
+      notifyWriteFailure(STORAGE_KEYS.moments);
       return;
     }
     dispatch({ type: "prepend_moment", moment: saved });
@@ -590,7 +598,7 @@ export function createFinanceActions(
       lastPaidMonth: currentMonthKey
     });
     if (!billPersisted) {
-      notifyWriteFailure("this recurring bill", STORAGE_KEYS.recurringBills);
+      notifyWriteFailure(STORAGE_KEYS.recurringBills);
       setMessage(getBillLoggedPartialToast(saved.amount));
       return;
     }
@@ -610,17 +618,17 @@ export function createFinanceActions(
       accountLabel: input.accountLabel
     });
     if (!persisted) {
-      notifyWriteFailure("this balance snapshot", STORAGE_KEYS.balanceSnapshots);
+      notifyWriteFailure(STORAGE_KEYS.balanceSnapshots);
       return;
     }
     dispatch({ type: "set_balance_snapshots", balanceSnapshots: updated });
-    setMessage(getBalanceSavedToast());
+    notifySuccess(getBalanceSavedToast());
   }
 
   async function answerPattern(patternId: string, response: PatternFeedbackResponse) {
     const { data: updated, persisted } = await savePatternFeedback(patternId, response);
     if (!persisted) {
-      notifyWriteFailure("pattern feedback", STORAGE_KEYS.patternFeedback);
+      notifyWriteFailure(STORAGE_KEYS.patternFeedback);
       return;
     }
     dispatch({ type: "set_feedback", feedback: updated });
@@ -635,7 +643,7 @@ export function createFinanceActions(
       const { backup, skipped } = await exportAllDataWithReport();
       await Share.share({
         message: JSON.stringify(backup, null, 2),
-        title: "Slev finance backup"
+        title: getBackupShareTitle()
       });
       const skipWarning = formatSkippedExportWarning(skipped);
       setMessage(getBackupReadyToast(skipWarning || undefined));
@@ -661,11 +669,12 @@ export function createFinanceActions(
       const parsed = JSON.parse(jsonText) as unknown;
       const result = await importAllData(parsed);
       if (!result.ok) {
-        setMessage(result.reason);
+        setMessage(getImportErrorToast(result.code, result.key));
         return;
       }
 
       await reload();
+      hapticSuccess();
       setMessage(getBackupImportedToast());
     } catch {
       setMessage(getBackupInvalidJsonToast());

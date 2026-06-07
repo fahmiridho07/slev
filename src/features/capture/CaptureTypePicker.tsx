@@ -53,6 +53,7 @@ export function CaptureTypePicker({
           const active = option.value === selected;
           return (
             <Pressable
+              accessibilityLabel={`${option.label}. ${option.hint}`}
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
               key={option.value}

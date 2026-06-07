@@ -79,7 +79,7 @@ function PatternsScreenComponent({ scrollContentStyle }: PatternsScreenProps) {
   ]);
 
   return (
-    <ScrollView contentContainerStyle={scrollContentStyle}>
+    <ScrollView contentContainerStyle={scrollContentStyle} keyboardShouldPersistTaps="handled">
       <ScreenHero hint={hero.hint} kicker={hero.kicker} value={hero.value} valueTone={hero.valueTone} variant={hero.variant} />
 
       <SegmentedControl

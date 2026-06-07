@@ -1,5 +1,13 @@
 import React, { memo } from "react";
-import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View
+} from "react-native";
 import { useTheme } from "../hooks/useTheme";
 
 type BottomSheetProps = {
@@ -13,14 +21,36 @@ function BottomSheetComponent({ children, onClose, title, visible }: BottomSheet
   const { componentStyles, strings } = useTheme();
 
   return (
-    <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
-      <Pressable accessibilityLabel={strings.common.closeSheet} accessibilityRole="button" onPress={onClose} style={componentStyles.sheetBackdrop}>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={componentStyles.sheetKeyboard}>
+    <Modal
+      accessibilityViewIsModal
+      animationType="slide"
+      onRequestClose={onClose}
+      transparent
+      visible={visible}
+    >
+      <Pressable
+        accessibilityLabel={strings.common.closeSheet}
+        accessibilityRole="button"
+        onPress={onClose}
+        style={componentStyles.sheetBackdrop}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={componentStyles.sheetKeyboard}
+        >
           <Pressable onPress={(event) => event.stopPropagation()}>
             <View style={componentStyles.sheetCard}>
               <View style={componentStyles.sheetHandle} />
-              <Text style={componentStyles.sheetTitle}>{title}</Text>
-              {children}
+              <Text accessibilityRole="header" style={componentStyles.sheetTitle}>
+                {title}
+              </Text>
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled
+                showsVerticalScrollIndicator={false}
+              >
+                {children}
+              </ScrollView>
             </View>
           </Pressable>
         </KeyboardAvoidingView>

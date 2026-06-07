@@ -71,7 +71,13 @@ export const enExtras: AppStringsExtras = {
       ready: "Backup ready to share or save.",
       exportFailed: "Could not export local data.",
       imported: "Backup imported.",
-      invalidJson: "That text is not valid Slev backup JSON."
+      invalidJson: "That text is not valid Slev backup JSON.",
+      invalidBackup: "That backup file is not valid Slev data.",
+      invalidCollection: "Backup data for {label} is not a valid JSON collection.",
+      restoreFailed: "Could not restore {label}. Try freeing device storage.",
+      emptyBackup: "That backup has no recognizable finance data.",
+      normalizeFailed: "Imported data could not be normalized. Your previous data is unchanged.",
+      shareTitle: "Slev finance backup"
     },
     reset: {
       failed: "Could not reset {label}.",
@@ -362,7 +368,8 @@ export const enExtras: AppStringsExtras = {
     chart: {
       title: "This month at a glance",
       totalAcross: "{total} across {count} categories",
-      legendValue: "{amount} · {percent}%"
+      legendValue: "{amount} · {percent}%",
+      a11ySummary: "Spending chart: {total} across {count} categories. {breakdown}"
     },
     recapEmpty: "Patterns appear after a few saved moments.",
     groups: {

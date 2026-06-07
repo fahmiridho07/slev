@@ -4,7 +4,13 @@ import { readRaw, writeRaw } from "./storage";
 
 const COLOR_SCHEME_KEY = "slev_ui_color_scheme";
 const LOCALE_KEY = "slev_ui_locale";
+const NAV_STATE_KEY = "slev_ui_nav_state";
 const MEMORY_LIST_HINT_KEY = "slev_ui_memory_list_hint_seen";
+
+export type StoredNavState = {
+  activeTab: string;
+  budgetTab: string;
+};
 
 export type ListActionsHintKey =
   | "balance_accounts"
@@ -51,11 +57,45 @@ export async function setColorSchemePreference(scheme: ColorScheme): Promise<voi
   await writeRaw(COLOR_SCHEME_KEY, scheme);
 }
 
+export function detectDeviceLocale(): Locale {
+  try {
+    const tag = Intl.DateTimeFormat().resolvedOptions().locale ?? "";
+    return tag.toLowerCase().startsWith("id") ? "id" : "en";
+  } catch {
+    return "en";
+  }
+}
+
 export async function getLocalePreference(): Promise<Locale> {
   const stored = await readRaw(LOCALE_KEY);
-  return stored === "id" ? "id" : "en";
+  if (stored === "id" || stored === "en") {
+    return stored;
+  }
+  return detectDeviceLocale();
 }
 
 export async function setLocalePreference(locale: Locale): Promise<void> {
   await writeRaw(LOCALE_KEY, locale);
+}
+
+export async function getNavStatePreference(): Promise<StoredNavState | null> {
+  const stored = await readRaw(NAV_STATE_KEY);
+  if (!stored) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(stored) as StoredNavState;
+    if (typeof parsed.activeTab === "string" && typeof parsed.budgetTab === "string") {
+      return parsed;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+export async function setNavStatePreference(state: StoredNavState): Promise<void> {
+  await writeRaw(NAV_STATE_KEY, JSON.stringify(state));
 }

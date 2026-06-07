@@ -31,6 +31,7 @@ function DeleteConfirmDialogComponent({
 
   return (
     <Modal
+      accessibilityViewIsModal
       animationType="fade"
       onRequestClose={onCancel}
       transparent

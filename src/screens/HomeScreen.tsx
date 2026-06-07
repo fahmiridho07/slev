@@ -45,12 +45,10 @@ function HomeScreenComponent({ navigation, onOpenSettings, scrollContentStyle }:
           runwayMonths={runwayMonths}
           savingsGoals={savingsGoals}
         />
-        {upcomingBills.length > 0 && (
-          <UpcomingBillsPanel
-            upcomingBills={upcomingBills}
-            onLogPayment={(billId) => void actions.logRecurringBillPayment(billId)}
-          />
-        )}
+        <UpcomingBillsPanel
+          upcomingBills={upcomingBills}
+          onLogPayment={(billId) => void actions.logRecurringBillPayment(billId)}
+        />
       </ScrollView>
 
       <CaptureFab

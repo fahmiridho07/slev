@@ -31,7 +31,9 @@ export const id: AppStrings = {
     account: "Akun",
     income: "Pemasukan",
     expense: "Pengeluaran",
-    closeSheet: "Tutup lembar"
+    closeSheet: "Tutup lembar",
+    selectAccount: "Pilih akun {label}",
+    swipeOrLongPressDelete: "Geser kiri atau tekan lama untuk menghapus"
   },
   capture: {
     fabLabel: "Catat cepat",
@@ -57,6 +59,16 @@ export const id: AppStrings = {
       Home: "Kebutuhan rumah",
       Other: "Lainnya",
       custom: "Kategori pengeluaran kustom"
+    },
+    contextLabels: {
+      Meal: "Makan",
+      Coffee: "Kopi",
+      Transport: "Transport",
+      Groceries: "Belanja",
+      Bills: "Tagihan",
+      Treat: "Jajan",
+      Home: "Rumah",
+      Other: "Lainnya"
     },
     notePlaceholder: "Catatan singkat, opsional",
     addNote: "Tambah catatan",
@@ -241,7 +253,11 @@ export const id: AppStrings = {
     },
     plan: {
       allocationDetails: "Detail alokasi",
-      categoryLimitsOptional: "Batas kategori (opsional)"
+      categoryLimitsOptional: "Batas kategori (opsional)",
+      expandAllocationA11y: "Tampilkan detail alokasi",
+      collapseAllocationA11y: "Sembunyikan detail alokasi",
+      expandLimitsA11y: "Tampilkan batas kategori",
+      collapseLimitsA11y: "Sembunyikan batas kategori"
     },
     ...idExtras.budget
   },

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
-import { Image, KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Image, KeyboardAvoidingView, Linking, Platform, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { DeleteConfirmDialog } from "./components";
 import { BRAND } from "./data/brand";
@@ -9,7 +9,9 @@ import { useLayoutInsets } from "./hooks/useLayoutInsets";
 import { useTheme } from "./hooks/useTheme";
 import { BudgetTabKey } from "./features/app.types";
 import { hapticSelection } from "./lib/haptics";
+import { isAppTabKey, parseDeepLink } from "./navigation/deepLink";
 import { AppNavigation, AppTabKey } from "./navigation/appNavigation";
+import { getNavStatePreference, setNavStatePreference } from "./services/uiPreferences";
 import { BudgetScreen, HomeScreen, MemoryScreen, PatternsScreen, SettingsScreen } from "./screens";
 import { initialFinanceState } from "./state/financeReducer";
 import { shallowEqual, useActions, useFinanceSelector } from "./state/useFinance";
@@ -48,6 +50,7 @@ export function AppRoot() {
   const [returnTab, setReturnTab] = useState<AppTabKey>("home");
   const [budgetTab, setBudgetTab] = useState<BudgetTabKey>("plan");
   const [toastMessage, setToastMessage] = useState("");
+  const [navHydrated, setNavHydrated] = useState(false);
 
   const tabs: { key: AppTabKey; label: string }[] = [
     { key: "home", label: strings.tabs.home },
@@ -56,14 +59,36 @@ export function AppRoot() {
     { key: "patterns", label: strings.tabs.analysis }
   ];
 
-  const openSettings = () => {
-    if (activeTab !== "settings") {
-      setReturnTab(activeTab);
-    }
-    setActiveTab("settings");
-  };
+  const openSettings = useCallback(() => {
+    setActiveTab((current) => {
+      if (current !== "settings") {
+        setReturnTab(current);
+      }
+      return "settings";
+    });
+  }, []);
   const closeSettings = () => setActiveTab(returnTab);
   const inSettings = activeTab === "settings";
+
+  const applyDeepLink = useCallback(
+    (url: string) => {
+      const target = parseDeepLink(url);
+      if (!target) {
+        return;
+      }
+
+      if (target.tab === "settings") {
+        openSettings();
+        return;
+      }
+
+      setActiveTab(target.tab);
+      if (target.tab === "budget" && target.budgetTab) {
+        setBudgetTab(target.budgetTab);
+      }
+    },
+    [openSettings]
+  );
 
   const navigation: AppNavigation = {
     openBudgetPlan: () => {
@@ -72,13 +97,50 @@ export function AppRoot() {
     },
     openHome: () => setActiveTab("home"),
     openMemory: () => setActiveTab("memory"),
-    openSettings: () => {
-      if (activeTab !== "settings") {
-        setReturnTab(activeTab);
-      }
-      setActiveTab("settings");
-    }
+    openSettings
   };
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const stored = await getNavStatePreference();
+      if (!active || !stored || !isAppTabKey(stored.activeTab) || stored.activeTab === "settings") {
+        if (active) {
+          setNavHydrated(true);
+        }
+        return;
+      }
+
+      setActiveTab(stored.activeTab);
+      if (stored.budgetTab === "balance" || stored.budgetTab === "goals" || stored.budgetTab === "plan") {
+        setBudgetTab(stored.budgetTab);
+      }
+      if (active) {
+        setNavHydrated(true);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    void Linking.getInitialURL().then((url) => {
+      if (url) {
+        applyDeepLink(url);
+      }
+    });
+    const subscription = Linking.addEventListener("url", ({ url }) => applyDeepLink(url));
+    return () => subscription.remove();
+  }, [applyDeepLink]);
+
+  useEffect(() => {
+    if (!isReady || !navHydrated || inSettings) {
+      return;
+    }
+    void setNavStatePreference({ activeTab, budgetTab });
+  }, [activeTab, budgetTab, inSettings, isReady, navHydrated]);
 
   useEffect(() => {
     if (!isReady) {
@@ -132,12 +194,17 @@ export function AppRoot() {
                 />
               </Pressable>
             </View>
-            {toastMessage ? <Text style={styles.headerMessage}>{toastMessage}</Text> : null}
+            {toastMessage ? (
+              <Text accessibilityLiveRegion="polite" style={styles.headerMessage}>
+                {toastMessage}
+              </Text>
+            ) : null}
           </View>
 
           <View style={styles.content}>
             {!isReady && (
               <View style={styles.bootState}>
+                <ActivityIndicator color={colors.greenDark} size="small" />
                 <Text style={styles.bootText}>{strings.boot.preparing}</Text>
               </View>
             )}

@@ -187,6 +187,10 @@ export type AppStrings = {
     plan: {
       allocationDetails: string;
       categoryLimitsOptional: string;
+      collapseAllocationA11y: string;
+      collapseLimitsA11y: string;
+      expandAllocationA11y: string;
+      expandLimitsA11y: string;
     };
     tabs: {
       balance: string;
@@ -203,6 +207,16 @@ export type AppStrings = {
       Bills: string;
       Coffee: string;
       custom: string;
+      Groceries: string;
+      Home: string;
+      Meal: string;
+      Other: string;
+      Transport: string;
+      Treat: string;
+    };
+    contextLabels: {
+      Bills: string;
+      Coffee: string;
       Groceries: string;
       Home: string;
       Meal: string;
@@ -261,6 +275,8 @@ export type AppStrings = {
     paused: string;
     reset: string;
     save: string;
+    selectAccount: string;
+    swipeOrLongPressDelete: string;
   };
   dialogs: {
     categoryDeleteCustom: string;
@@ -368,6 +384,7 @@ export type AppStrings = {
       net: string;
     };
     chart: {
+      a11ySummary: string;
       legendValue: string;
       title: string;
       totalAcross: string;
@@ -513,10 +530,16 @@ export type AppStrings = {
       saved: string;
     };
     backup: {
+      emptyBackup: string;
       exportFailed: string;
       imported: string;
+      invalidBackup: string;
+      invalidCollection: string;
       invalidJson: string;
+      normalizeFailed: string;
       ready: string;
+      restoreFailed: string;
+      shareTitle: string;
     };
     balance: {
       needFields: string;

@@ -51,6 +51,7 @@ export function MonthlyPlanPanel({
       <View style={styles.capturePanel}>
         <Text style={styles.microLabel}>{planStrings.title}</Text>
         <TextInput
+          accessibilityLabel={planStrings.expectedIncome}
           keyboardType="number-pad"
           onChangeText={(value) => setExpectedIncome(formatAmountInput(value))}
           placeholder={planStrings.expectedIncome}
@@ -71,6 +72,7 @@ export function MonthlyPlanPanel({
           </Pressable>
         )}
         <TextInput
+          accessibilityLabel={planStrings.fixedCosts}
           keyboardType="number-pad"
           onChangeText={(value) => setFixedCosts(formatAmountInput(value))}
           placeholder={planStrings.fixedCosts}
@@ -79,6 +81,7 @@ export function MonthlyPlanPanel({
           value={fixedCosts}
         />
         <TextInput
+          accessibilityLabel={planStrings.savingsTarget}
           keyboardType="number-pad"
           onChangeText={(value) => setSavingsTarget(formatAmountInput(value))}
           placeholder={planStrings.savingsTarget}
@@ -87,6 +90,7 @@ export function MonthlyPlanPanel({
           value={savingsTarget}
         />
         <TextInput
+          accessibilityLabel={planStrings.notePlaceholder}
           multiline
           onChangeText={setNote}
           placeholder={planStrings.notePlaceholder}

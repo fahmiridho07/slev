@@ -16,7 +16,13 @@ function FeedbackButtonComponent({
   const { componentStyles } = useTheme();
 
   return (
-    <Pressable onPress={onPress} style={[componentStyles.feedbackButton, active && componentStyles.feedbackButtonActive]}>
+    <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+      style={[componentStyles.feedbackButton, active && componentStyles.feedbackButtonActive]}
+    >
       <Text style={[componentStyles.feedbackText, active && componentStyles.feedbackTextActive]}>{label}</Text>
     </Pressable>
   );

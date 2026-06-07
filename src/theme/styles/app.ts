@@ -68,6 +68,7 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   bootState: {
     alignItems: "center",
     flex: 1,
+    gap: 12,
     justifyContent: "center",
     padding: 24
   },
@@ -502,7 +503,7 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     alignSelf: "flex-start",
     flexDirection: "row",
     gap: 6,
-    minHeight: 36,
+    minHeight: 44,
     paddingHorizontal: 2
   },
   addNoteText: {
@@ -553,7 +554,7 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     alignSelf: "flex-start",
     flexDirection: "row",
     gap: 6,
-    minHeight: 36,
+    minHeight: 44,
     paddingHorizontal: 2
   },
   observationPanel: {
@@ -732,7 +733,7 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     padding: 16
   },
   recapBlock: {
-    borderTopColor: "rgba(24,32,28,0.08)",
+    borderTopColor: colors.recapDivider,
     borderTopWidth: 1,
     gap: 10,
     marginTop: 4,
@@ -926,7 +927,7 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     fontWeight: "800"
   },
   tabBar: {
-    backgroundColor: "rgba(247, 248, 244, 0.96)",
+    backgroundColor: colors.tabBar,
     borderTopColor: colors.line,
     borderTopWidth: 1,
     bottom: 0,
@@ -952,7 +953,7 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   },
   tabLabel: {
     color: colors.muted,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
     letterSpacing: 0
   },

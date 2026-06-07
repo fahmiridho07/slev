@@ -35,7 +35,7 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     paddingHorizontal: 10
   },
   segmentButtonCompact: {
-    minHeight: 34,
+    minHeight: 40,
     minWidth: 84
   },
   segmentButtonActive: {
@@ -83,7 +83,7 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
   },
   confirmBackdrop: {
     alignItems: "center",
-    backgroundColor: "rgba(24, 32, 28, 0.36)",
+    backgroundColor: colors.sheetBackdrop,
     flex: 1,
     justifyContent: "center",
     padding: 24
@@ -461,7 +461,7 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     alignItems: "center",
     flexDirection: "row",
     gap: 5,
-    minHeight: 32
+    minHeight: 44
   },
   textButtonLabel: {
     color: colors.greenDark,

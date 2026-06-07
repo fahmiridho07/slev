@@ -44,6 +44,7 @@ function paletteForScheme(scheme: "dark" | "light") {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>("system");
   const [locale, setLocaleState] = useState<Locale>("en");
+  const [prefsReady, setPrefsReady] = useState(false);
   const [systemScheme, setSystemScheme] = useState<"dark" | "light">(resolveScheme("system"));
 
   useEffect(() => {
@@ -58,7 +59,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       }
       setColorSchemeState(storedScheme);
       setLocaleState(storedLocale);
+      setRuntimeLocale(storedLocale);
       setSystemScheme(resolveScheme(storedScheme));
+      setPrefsReady(true);
     })();
     return () => {
       active = false;
@@ -111,6 +114,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       styles
     };
   }, [colorScheme, isDark, locale, resolvedScheme, setColorScheme, setLocale]);
+
+  if (!prefsReady) {
+    return null;
+  }
 
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
 }

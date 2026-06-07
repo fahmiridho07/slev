@@ -229,6 +229,7 @@ export function BalancePanel({
           onSelect={setAccountLabel}
         />
         <TextInput
+          accessibilityLabel={balanceStrings.currentBalancePlaceholder}
           keyboardType="number-pad"
           onChangeText={(value) => setAmount(formatAmountInput(value))}
           placeholder={balanceStrings.currentBalancePlaceholder}
@@ -255,6 +256,7 @@ export function BalancePanel({
           {editingAccountId ? balanceStrings.editAccount : balanceStrings.addAccount}
         </Text>
         <TextInput
+          accessibilityLabel={balanceStrings.accountPlaceholder}
           onChangeText={setAccountDraftLabel}
           placeholder={balanceStrings.accountPlaceholder}
           placeholderTextColor={colors.muted}

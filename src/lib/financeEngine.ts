@@ -10,6 +10,7 @@ import {
   SpendingMoment
 } from "../features/spendingMemory.types";
 import { DEFAULT_SPENDING_CONTEXTS } from "../data/spendingMemory";
+import { displayContext } from "../i18n/display";
 import { getRuntimeStrings } from "../i18n/runtime";
 
 export type FinanceCategoryModeValue = CategoryMode["mode"];
@@ -185,7 +186,7 @@ export function buildMonthlyBreakdown(
     .map(([label, amount]) => ({
       amount,
       key: label,
-      label,
+      label: type === "expense" ? displayContext(label) : label,
       share: total > 0 ? amount / total : 0
     }))
     .sort((a, b) => b.amount - a.amount);

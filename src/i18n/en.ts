@@ -31,7 +31,9 @@ export const en: AppStrings = {
     account: "Account",
     income: "Income",
     expense: "Expense",
-    closeSheet: "Close sheet"
+    closeSheet: "Close sheet",
+    selectAccount: "Select account {label}",
+    swipeOrLongPressDelete: "Swipe left or long press to delete"
   },
   capture: {
     fabLabel: "Quick capture",
@@ -57,6 +59,16 @@ export const en: AppStrings = {
       Home: "Household needs",
       Other: "Anything else",
       custom: "Custom spending category"
+    },
+    contextLabels: {
+      Meal: "Meal",
+      Coffee: "Coffee",
+      Transport: "Transport",
+      Groceries: "Groceries",
+      Bills: "Bills",
+      Treat: "Treat",
+      Home: "Home",
+      Other: "Other"
     },
     notePlaceholder: "Tiny note, optional",
     addNote: "Add a note",
@@ -241,7 +253,11 @@ export const en: AppStrings = {
     },
     plan: {
       allocationDetails: "Allocation details",
-      categoryLimitsOptional: "Category limits (optional)"
+      categoryLimitsOptional: "Category limits (optional)",
+      expandAllocationA11y: "Show allocation details",
+      collapseAllocationA11y: "Hide allocation details",
+      expandLimitsA11y: "Show category limits",
+      collapseLimitsA11y: "Hide category limits"
     },
     ...enExtras.budget
   },

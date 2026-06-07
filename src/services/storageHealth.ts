@@ -87,6 +87,6 @@ export function formatSkippedExportWarning(skippedKeys: string[]): string {
   });
 }
 
-export function getWriteFailureMessage(area: string, storageKey?: string): string {
-  return getWriteFailureToast(area, storageKey);
+export function getWriteFailureMessage(storageKey: string): string {
+  return getWriteFailureToast(storageKey);
 }

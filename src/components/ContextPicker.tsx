@@ -1,5 +1,6 @@
 import React, { memo } from "react";
 import { Pressable, Text, View } from "react-native";
+import { displayContext } from "../i18n/display";
 import { SpendingContext } from "../features/spendingMemory.types";
 import { useTheme } from "../hooks/useTheme";
 
@@ -26,22 +27,27 @@ function ContextPickerComponent({
   return (
     <View style={componentStyles.contextPickerBlock}>
       <View style={compact ? componentStyles.contextWrapCompact : componentStyles.contextWrap}>
-        {categories.map((item) => (
-          <Pressable
-            accessibilityRole="button"
-            key={item}
-            onPress={() => {
-              if (item !== selected) {
-                onSelect(item);
-              }
-            }}
-            style={[componentStyles.contextChip, selected === item && componentStyles.contextChipActive]}
-          >
-            <Text style={[componentStyles.contextChipText, selected === item && componentStyles.contextChipTextActive]}>
-              {item}
-            </Text>
-          </Pressable>
-        ))}
+        {categories.map((item) => {
+          const active = selected === item;
+          return (
+            <Pressable
+              accessibilityLabel={displayContext(item)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              key={item}
+              onPress={() => {
+                if (!active) {
+                  onSelect(item);
+                }
+              }}
+              style={[componentStyles.contextChip, active && componentStyles.contextChipActive]}
+            >
+              <Text style={[componentStyles.contextChipText, active && componentStyles.contextChipTextActive]}>
+                {displayContext(item)}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
       {!compact && (
         <View style={componentStyles.contextHintBox}>

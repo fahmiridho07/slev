@@ -166,6 +166,11 @@ function BudgetScreenComponent({
           />
           <View style={styles.cardGrid}>
             <Pressable
+              accessibilityLabel={
+                showAllocationDetails
+                  ? strings.budget.plan.collapseAllocationA11y
+                  : strings.budget.plan.expandAllocationA11y
+              }
               accessibilityRole="button"
               onPress={() => setShowAllocationDetails((prev) => !prev)}
               style={styles.planSummaryRow}
@@ -187,6 +192,11 @@ function BudgetScreenComponent({
           </View>
           <View style={styles.cardGrid}>
             <Pressable
+              accessibilityLabel={
+                showCategoryLimits
+                  ? strings.budget.plan.collapseLimitsA11y
+                  : strings.budget.plan.expandLimitsA11y
+              }
               accessibilityRole="button"
               onPress={() => setShowCategoryLimits((prev) => !prev)}
               style={styles.planSummaryRow}

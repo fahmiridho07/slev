@@ -71,7 +71,13 @@ export const idExtras: AppStringsExtras = {
       ready: "Cadangan siap dibagikan atau disimpan.",
       exportFailed: "Tidak bisa mengekspor data lokal.",
       imported: "Cadangan diimpor.",
-      invalidJson: "Teks itu bukan JSON cadangan Slev yang valid."
+      invalidJson: "Teks itu bukan JSON cadangan Slev yang valid.",
+      invalidBackup: "File cadangan itu bukan data Slev yang valid.",
+      invalidCollection: "Data cadangan untuk {label} bukan koleksi JSON yang valid.",
+      restoreFailed: "Tidak bisa memulihkan {label}. Coba kosongkan ruang penyimpanan.",
+      emptyBackup: "Cadangan itu tidak memiliki data keuangan yang dikenali.",
+      normalizeFailed: "Data yang diimpor tidak bisa dinormalisasi. Data sebelumnya tidak berubah.",
+      shareTitle: "Cadangan keuangan Slev"
     },
     reset: {
       failed: "Tidak bisa mengatur ulang {label}.",
@@ -362,7 +368,8 @@ export const idExtras: AppStringsExtras = {
     chart: {
       title: "Bulan ini sekilas",
       totalAcross: "{total} di {count} kategori",
-      legendValue: "{amount} · {percent}%"
+      legendValue: "{amount} · {percent}%",
+      a11ySummary: "Grafik pengeluaran: {total} di {count} kategori. {breakdown}"
     },
     recapEmpty: "Pola muncul setelah beberapa momen tersimpan.",
     groups: {

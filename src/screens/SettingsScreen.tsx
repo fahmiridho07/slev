@@ -69,7 +69,7 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
               ? category.label
               : formatString(strings.settings.categories.editA11y, { label: category.label })
           }
-          onDelete={() => setPendingDeleteCategory(category)}
+          onDelete={!category.isDefault ? () => setPendingDeleteCategory(category) : undefined}
           onPress={!category.isDefault ? () => editCategory(category) : undefined}
         >
           <View style={styles.analyticsRow}>
@@ -252,7 +252,9 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
               value={importDraft}
             />
             <Pressable
+              accessibilityLabel={strings.settings.data.import}
               accessibilityRole="button"
+              accessibilityState={{ disabled: !importDraft.trim() }}
               disabled={!importDraft.trim()}
               onPress={() => setImportConfirmVisible(true)}
               style={[styles.smallPrimaryButton, !importDraft.trim() ? { opacity: 0.5 } : undefined]}
@@ -283,6 +285,7 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
       <FlatList
         contentContainerStyle={scrollContentStyle}
         data={activeTab === "categories" ? expenseCategories : []}
+        keyboardShouldPersistTaps="handled"
         keyExtractor={categoryKeyExtractor}
         ListEmptyComponent={listEmpty}
         ListFooterComponent={listFooter}

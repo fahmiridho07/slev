@@ -170,6 +170,7 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
         </View>
       ) : expanded && form.entryType === "income" ? (
         <TextInput
+          accessibilityLabel={strings.capture.sourcePlaceholder}
           onChangeText={(value) => patch({ source: value })}
           placeholder={strings.capture.sourcePlaceholder}
           placeholderTextColor={colors.muted}
@@ -178,6 +179,7 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
         />
       ) : expanded ? (
         <TextInput
+          accessibilityLabel={strings.capture.labelPlaceholder}
           onChangeText={(value) => patch({ label: value })}
           placeholder={strings.capture.labelPlaceholder}
           placeholderTextColor={colors.muted}

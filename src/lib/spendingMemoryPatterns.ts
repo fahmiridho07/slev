@@ -1,4 +1,5 @@
 import { PatternGroup, SpendingPattern, SpendingMoment } from "../features/spendingMemory.types";
+import { displayContext } from "../i18n/display";
 import { formatString } from "../i18n/format";
 import { getRuntimeStrings } from "../i18n/runtime";
 
@@ -70,7 +71,7 @@ function buildContextChangePatterns(
     .map(({ context, items, previousCount }) => ({
       id: `more-visible-${context.toLowerCase()}`,
       group: strings.groups.standsOut as PatternGroup,
-      title: formatString(strings.generated.contextMoreVisibleTitle, { context }),
+      title: formatString(strings.generated.contextMoreVisibleTitle, { context: displayContext(context) }),
       detail:
         previousCount > 0
           ? formatString(strings.generated.contextMoreVisibleDetailWithPrevious, {
@@ -80,7 +81,7 @@ function buildContextChangePatterns(
           : formatString(strings.generated.contextMoreVisibleDetailNoPrevious, { count: items.length }),
       tone: "notice",
       recapQuestion: formatString(strings.generated.contextMoreVisibleRecap, {
-        context: context.toLowerCase()
+        context: displayContext(context)
       })
     }));
 }
@@ -182,7 +183,7 @@ function buildQuietPatterns(
     .map(([context]) => ({
       id: `quiet-${context.toLowerCase()}`,
       group: strings.groups.standsOut as PatternGroup,
-      title: formatString(strings.generated.contextQuieterTitle, { context }),
+      title: formatString(strings.generated.contextQuieterTitle, { context: displayContext(context) }),
       detail: strings.generated.contextQuieterDetail,
       tone: "calm"
     }));
@@ -207,11 +208,11 @@ function buildGentleFallback(moments: SpendingMoment[]): SpendingPattern[] {
     {
       id: `steady-${context.toLowerCase()}`,
       group: strings.groups.repeatedLately as PatternGroup,
-      title: formatString(strings.generated.steadyRhythmTitle, { context }),
+      title: formatString(strings.generated.steadyRhythmTitle, { context: displayContext(context) }),
       detail: formatString(strings.generated.steadyRhythmDetail, { count: items.length }),
       tone: "calm",
       recapQuestion: formatString(strings.generated.steadyRhythmRecap, {
-        context: context.toLowerCase()
+        context: displayContext(context)
       })
     }
   ];
@@ -252,7 +253,7 @@ function normalizedLabel(moment: SpendingMoment): string {
 }
 
 function displayLabel(moment: SpendingMoment): string {
-  return moment.label || moment.context;
+  return moment.label || displayContext(moment.context);
 }
 
 function isSmallMoment(moment: SpendingMoment): boolean {

@@ -1,5 +1,8 @@
+import { CategoryModeValue } from "../features/app.types";
 import { formatRupiah } from "../lib/spendingMemoryPatterns";
 import { isKeyCorrupt } from "../services/storage";
+import type { ImportErrorCode } from "../services/storageBackup";
+import { displayContext } from "./display";
 import { formatString } from "./format";
 import { getRuntimeStrings } from "./runtime";
 
@@ -7,10 +10,40 @@ export function getDefaultToastMessage(): string {
   return getRuntimeStrings().toasts.default;
 }
 
-export function getWriteFailureToast(area: string, storageKey?: string): string {
+function getStorageCollectionLabel(storageKey: string): string {
+  const collections = getRuntimeStrings().storage.collections;
+  return collections[storageKey] ?? storageKey;
+}
+
+export function getWriteFailureToast(storageKey: string): string {
+  const area = getStorageCollectionLabel(storageKey);
   const strings = getRuntimeStrings().toasts.writeFailure;
-  const template = storageKey && isKeyCorrupt(storageKey) ? strings.corrupt : strings.generic;
+  const template = isKeyCorrupt(storageKey) ? strings.corrupt : strings.generic;
   return formatString(template, { area });
+}
+
+export function getTemplateReadyToast(label: string): string {
+  return formatString(getRuntimeStrings().toasts.capture.templateReady, { label });
+}
+
+export function getImportErrorToast(code: ImportErrorCode, key?: string): string {
+  const strings = getRuntimeStrings().toasts.backup;
+  switch (code) {
+    case "invalid_backup":
+      return strings.invalidBackup;
+    case "invalid_collection":
+      return formatString(strings.invalidCollection, { label: getStorageCollectionLabel(key ?? "") });
+    case "restore_failed":
+      return formatString(strings.restoreFailed, { label: getStorageCollectionLabel(key ?? "") });
+    case "empty_backup":
+      return strings.emptyBackup;
+    case "normalize_failed":
+      return strings.normalizeFailed;
+  }
+}
+
+export function getBackupShareTitle(): string {
+  return getRuntimeStrings().toasts.backup.shareTitle;
 }
 
 export function getCaptureNeedAmountToast(): string {
@@ -118,15 +151,20 @@ export function getLimitNeedAmountToast(): string {
 export function getLimitSavedToast(category: string, period: "weekly" | "monthly"): string {
   const strings = getRuntimeStrings().toasts.limit;
   const template = period === "weekly" ? strings.savedWeek : strings.savedMonth;
-  return formatString(template, { category });
+  return formatString(template, { category: displayContext(category) });
 }
 
 export function getLimitRemovedToast(category: string): string {
-  return formatString(getRuntimeStrings().toasts.limit.removed, { category });
+  return formatString(getRuntimeStrings().toasts.limit.removed, { category: displayContext(category) });
 }
 
-export function getLimitMarkedAsToast(category: string, mode: string): string {
-  return formatString(getRuntimeStrings().toasts.limit.markedAs, { category, mode });
+export function getLimitMarkedAsToast(category: string, mode: CategoryModeValue): string {
+  const limits = getRuntimeStrings().budget.limits;
+  const modeLabel = mode === "fixed" ? limits.fixed : limits.flexible;
+  return formatString(getRuntimeStrings().toasts.limit.markedAs, {
+    category: displayContext(category),
+    mode: modeLabel
+  });
 }
 
 export function getPlanSavedToast(): string {

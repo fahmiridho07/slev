@@ -25,6 +25,8 @@ export type ColorTokens = {
   iconWarning: string;
   iconInfo: string;
   sheetBackdrop: string;
+  tabBar: string;
+  recapDivider: string;
 };
 
 export type ShadowTokens = {

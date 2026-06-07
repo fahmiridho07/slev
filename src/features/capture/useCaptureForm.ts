@@ -9,6 +9,7 @@ import {
 } from "../../lib/analysis";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { ManualTemplate, MoneyAccount, SpendingContext } from "../spendingMemory.types";
+import { getTemplateReadyToast } from "../../i18n/toasts";
 import { useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
 import { CaptureFormValues } from "./types";
 
@@ -183,7 +184,7 @@ export function useCaptureForm() {
         source: template.type === "income" ? template.source ?? "" : "",
         toAccount: form.toAccount
       });
-      actions.setMessage(`${getTemplateLabel(template)} ready to save.`);
+      actions.setMessage(getTemplateReadyToast(getTemplateLabel(template)));
     },
     [accounts, actions, form.fromAccount, form.toAccount]
   );

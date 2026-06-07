@@ -28,8 +28,25 @@ export function MonthlySpendingChart({ rows }: { rows: FinanceBreakdownRow[] }) 
     return null;
   }
 
+  const breakdownSummary = rows
+    .map((row) =>
+      formatString(chartStrings.legendValue, {
+        amount: formatCompactRupiah(row.amount),
+        percent: Math.round(row.share * 100)
+      })
+    )
+    .join("; ");
+
   return (
-    <View style={styles.capturePanel}>
+    <View
+      accessibilityLabel={formatString(chartStrings.a11ySummary, {
+        total: formatCompactRupiah(total),
+        count: rows.length,
+        breakdown: breakdownSummary
+      })}
+      accessible
+      style={styles.capturePanel}
+    >
       <Text style={styles.microLabel}>{chartStrings.title}</Text>
       <Text style={styles.settingCopy}>
         {formatString(chartStrings.totalAcross, { total: formatCompactRupiah(total), count: rows.length })}

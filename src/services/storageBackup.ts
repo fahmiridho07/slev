@@ -27,9 +27,16 @@ export type StorageBackup = {
   data: Partial<Record<(typeof EXPORTABLE_STORAGE_KEYS)[number], unknown>>;
 };
 
+export type ImportErrorCode =
+  | "invalid_backup"
+  | "invalid_collection"
+  | "restore_failed"
+  | "empty_backup"
+  | "normalize_failed";
+
 export type ImportResult =
   | { ok: true }
-  | { ok: false; reason: string };
+  | { ok: false; code: ImportErrorCode; key?: string };
 
 export type ExportReport = {
   backup: StorageBackup;
@@ -68,7 +75,7 @@ export async function exportAllData(): Promise<StorageBackup> {
 export async function importAllData(raw: unknown): Promise<ImportResult> {
   const backup = parseBackup(raw);
   if (!backup) {
-    return { ok: false, reason: "That backup file is not valid Slev data." };
+    return { ok: false, code: "invalid_backup" };
   }
 
   let importedAny = false;
@@ -79,24 +86,24 @@ export async function importAllData(raw: unknown): Promise<ImportResult> {
     }
 
     if (!isImportableValue(value)) {
-      return { ok: false, reason: `Backup data for ${key} is not a valid JSON collection.` };
+      return { ok: false, code: "invalid_collection", key };
     }
 
     clearCorruptFlag(key);
     const written = await writeJson(key, value);
     if (!written) {
-      return { ok: false, reason: `Could not restore ${key}. Try freeing device storage.` };
+      return { ok: false, code: "restore_failed", key };
     }
     importedAny = true;
   }
 
   if (!importedAny) {
-    return { ok: false, reason: "That backup has no recognizable finance data." };
+    return { ok: false, code: "empty_backup" };
   }
 
   const normalized = await normalizeImportedData();
   if (!normalized) {
-    return { ok: false, reason: "Imported data could not be normalized. Your previous data is unchanged." };
+    return { ok: false, code: "normalize_failed" };
   }
 
   if (backup.schemaVersion < SCHEMA_VERSION) {

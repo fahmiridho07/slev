@@ -26,7 +26,9 @@ export const lightColors: ColorTokens = {
   iconExpense: "#ffe0da",
   iconWarning: "#ffe9bd",
   iconInfo: "#d9edf6",
-  sheetBackdrop: "rgba(24, 32, 28, 0.36)"
+  sheetBackdrop: "rgba(24, 32, 28, 0.36)",
+  tabBar: "rgba(247, 248, 244, 0.96)",
+  recapDivider: "rgba(24, 32, 28, 0.08)"
 };
 
 export const darkColors: ColorTokens = {
@@ -55,7 +57,9 @@ export const darkColors: ColorTokens = {
   iconExpense: "#4a302c",
   iconWarning: "#4a3e28",
   iconInfo: "#243640",
-  sheetBackdrop: "rgba(0, 0, 0, 0.55)"
+  sheetBackdrop: "rgba(0, 0, 0, 0.55)",
+  tabBar: "rgba(20, 26, 23, 0.96)",
+  recapDivider: "rgba(255, 255, 255, 0.08)"
 };
 
 export const lightShadows: ShadowTokens = {
