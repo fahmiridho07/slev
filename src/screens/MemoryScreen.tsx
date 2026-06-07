@@ -185,7 +185,7 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
       return (
         <EmptyState
           actionLabel={strings.memory.emptyAction}
-          onAction={navigation.openHome}
+          onAction={navigation.openCapture}
           text={strings.memory.emptyText}
         />
       );
@@ -194,7 +194,7 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
       return <EmptyState text={strings.memory.searchNoResults} />;
     }
     return null;
-  }, [filteredMoments.length, moments.length, navigation.openHome, strings.memory]);
+  }, [filteredMoments.length, moments.length, navigation.openCapture, strings.memory]);
 
   return (
     <>

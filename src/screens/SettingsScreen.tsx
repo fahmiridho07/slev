@@ -106,27 +106,6 @@ function SettingsScreenComponent({
 
     return (
       <>
-        <ScreenHero
-          hint={formatString(strings.settings.heroHint, {
-            accounts: accounts.length,
-            bills: recurringBills.length
-          })}
-          kicker={strings.settings.heroKicker}
-          value={formatString(strings.settings.heroValue, { count: momentCount })}
-          variant="surface"
-        />
-
-        <ScreenTabBar
-          options={[
-            { icon: "receipt-outline", label: strings.settings.billsTab, value: "bills" },
-            { icon: "pricetags-outline", label: strings.settings.categoriesTab, value: "categories" },
-            { icon: "color-palette-outline", label: strings.settings.appearanceTab, value: "appearance" },
-            { icon: "cloud-outline", label: strings.settings.dataTab, value: "data" }
-          ]}
-          selected={activeTab}
-          onSelect={onSettingsTabChange}
-        />
-
         {activeTab === "bills" && (
           <RecurringBillsPanel
             accounts={accounts}
@@ -301,16 +280,40 @@ function SettingsScreenComponent({
 
   return (
     <>
-      <FlatList
-        contentContainerStyle={scrollContentStyle}
-        data={activeTab === "categories" ? expenseCategories : []}
-        keyboardShouldPersistTaps="handled"
-        keyExtractor={categoryKeyExtractor}
-        ListEmptyComponent={listEmpty}
-        ListFooterComponent={listFooter}
-        ListHeaderComponent={listHeader}
-        renderItem={renderCategoryItem}
-      />
+      <View style={styles.appShell}>
+        <View style={styles.screenFixedHeader}>
+          <ScreenHero
+            hint={formatString(strings.settings.heroHint, {
+              accounts: accounts.length,
+              bills: recurringBills.length
+            })}
+            kicker={strings.settings.heroKicker}
+            value={formatString(strings.settings.heroValue, { count: momentCount })}
+            variant="surface"
+          />
+          <ScreenTabBar
+            options={[
+              { icon: "receipt-outline", label: strings.settings.billsTab, value: "bills" },
+              { icon: "pricetags-outline", label: strings.settings.categoriesTab, value: "categories" },
+              { icon: "color-palette-outline", label: strings.settings.appearanceTab, value: "appearance" },
+              { icon: "cloud-outline", label: strings.settings.dataTab, value: "data" }
+            ]}
+            selected={activeTab}
+            onSelect={onSettingsTabChange}
+          />
+        </View>
+        <FlatList
+          contentContainerStyle={[scrollContentStyle, { paddingTop: 0 }]}
+          data={activeTab === "categories" ? expenseCategories : []}
+          keyboardShouldPersistTaps="handled"
+          keyExtractor={categoryKeyExtractor}
+          ListEmptyComponent={listEmpty}
+          ListFooterComponent={listFooter}
+          ListHeaderComponent={listHeader}
+          renderItem={renderCategoryItem}
+          style={styles.content}
+        />
+      </View>
       <DeleteConfirmDialog
         body={pendingDeleteCategory ? getCategoryDeleteMessage(pendingDeleteCategory) : ""}
         onCancel={() => setPendingDeleteCategory(null)}

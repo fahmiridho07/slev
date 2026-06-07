@@ -87,6 +87,17 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   cardStack: {
     gap: CARD_STACK_GAP
   },
+  stickyTabHeader: {
+    backgroundColor: colors.canvas,
+    zIndex: 2
+  },
+  screenFixedHeader: {
+    backgroundColor: colors.canvas,
+    gap: CARD_STACK_GAP,
+    paddingBottom: CARD_STACK_GAP,
+    paddingHorizontal: 20,
+    paddingTop: 0
+  },
   capturePanel: {
     backgroundColor: colors.surface,
     borderColor: colors.line,

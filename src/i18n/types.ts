@@ -181,8 +181,16 @@ export type AppStrings = {
       overIncomeBy: string;
       savePlan: string;
       savingsTarget: string;
+      stepFixedCopy: string;
+      stepIncomeCopy: string;
+      stepSavingsCopy: string;
       title: string;
       useLoggedIncome: string;
+      wizardBack: string;
+      wizardFinish: string;
+      wizardNext: string;
+      wizardStep: string;
+      wizardTitle: string;
     };
     plan: {
       allocationDetails: string;
@@ -434,8 +442,10 @@ export type AppStrings = {
       recapValue: string;
     };
     recap: {
+      expensesProgress: string;
       feedbackKeep: string;
       feedbackLessOften: string;
+      feedbackLockedHint: string;
       feedbackNotSure: string;
     };
     recapEmpty: string;

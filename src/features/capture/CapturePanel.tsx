@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { memo, useCallback, useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { AccountPicker, ContextPicker, EmptyState } from "../../components";
 import { CaptureTypePicker } from "./CaptureTypePicker";
@@ -14,6 +14,7 @@ import { useCaptureForm } from "./useCaptureForm";
 type CapturePanelProps = {
   compactTypePicker?: boolean;
   defaultExpanded?: boolean;
+  focusAmountToken?: number;
   onOpenSettings: () => void;
   onSaved?: () => void;
   sheet?: boolean;
@@ -22,11 +23,13 @@ type CapturePanelProps = {
 function CapturePanelComponent({
   compactTypePicker = false,
   defaultExpanded = false,
+  focusAmountToken = 0,
   onOpenSettings,
   onSaved,
   sheet = false
 }: CapturePanelProps) {
   const { colors, strings, styles } = useTheme();
+  const amountInputRef = useRef<TextInput>(null);
 
   function getSaveLabel(entryType: "expense" | "income" | "transfer") {
     if (entryType === "income") return strings.capture.saveIncome;
@@ -74,6 +77,17 @@ function CapturePanelComponent({
       setExpanded(true);
     }
   }, [form.entryType]);
+
+  useEffect(() => {
+    if (focusAmountToken <= 0) {
+      return;
+    }
+
+    setExpanded(true);
+    requestAnimationFrame(() => {
+      amountInputRef.current?.focus();
+    });
+  }, [focusAmountToken]);
 
   const handleSave = useCallback(async () => {
     const saved = await save();
@@ -157,6 +171,7 @@ function CapturePanelComponent({
       <View style={styles.amountRow}>
         <Text style={styles.currencyPrefix}>{strings.capture.currencyPrefix}</Text>
         <TextInput
+          ref={amountInputRef}
           accessibilityLabel={strings.capture.amountA11y}
           keyboardType="number-pad"
           onChangeText={changeAmountText}

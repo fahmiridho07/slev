@@ -53,6 +53,7 @@ export function AppRoot() {
   const [settingsTab, setSettingsTab] = useState<SettingsTabKey>("bills");
   const [toastMessage, setToastMessage] = useState("");
   const [navHydrated, setNavHydrated] = useState(false);
+  const [captureFocusRequest, setCaptureFocusRequest] = useState(0);
 
   const tabs: { key: AppTabKey; label: string }[] = [
     { key: "home", label: strings.tabs.home },
@@ -107,6 +108,10 @@ export function AppRoot() {
     openBudgetPlan: () => {
       setBudgetTab("plan");
       setActiveTab("budget");
+    },
+    openCapture: () => {
+      setActiveTab("home");
+      setCaptureFocusRequest((current) => current + 1);
     },
     openHome: () => setActiveTab("home"),
     openMemory: () => setActiveTab("memory"),
@@ -227,7 +232,12 @@ export function AppRoot() {
               </View>
             )}
             {isReady && activeTab === "home" && (
-              <HomeScreen navigation={navigation} onOpenSettings={openSettings} scrollContentStyle={scrollContentStyle} />
+              <HomeScreen
+                captureFocusRequest={captureFocusRequest}
+                navigation={navigation}
+                onOpenSettings={openSettings}
+                scrollContentStyle={scrollContentStyle}
+              />
             )}
             {isReady && activeTab === "memory" && (
               <MemoryScreen navigation={navigation} scrollContentStyle={scrollContentStyle} />

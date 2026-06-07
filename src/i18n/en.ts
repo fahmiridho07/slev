@@ -229,7 +229,7 @@ export const en: AppStrings = {
     searchA11y: "Search memories",
     searchPlaceholder: "Search label, context, or amount",
     emptyText: "No saved spending memory yet.",
-    emptyAction: "Go to Home",
+    emptyAction: "Log first expense",
     searchNoResults: "No memory matches that search.",
     editSheetTitle: "Edit memory",
     editSheetTitleNamed: "Edit {title}",
@@ -283,8 +283,10 @@ export const en: AppStrings = {
       recapValue: "{count} pattern(s)"
     },
     recap: {
+      expensesProgress: "{count} of 6 recent expenses logged",
       feedbackKeep: "Keep",
       feedbackLessOften: "Less often",
+      feedbackLockedHint: "Log at least 6 expenses in the last 14 days to answer recap questions.",
       feedbackNotSure: "Not sure"
     },
     ...enExtras.patterns

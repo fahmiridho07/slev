@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from "react";
-import { ScrollView, StyleProp, View, ViewStyle } from "react-native";
-import { ScreenHero, ScreenTabBar } from "../components";
+import { StyleProp, View, ViewStyle } from "react-native";
+import { ScreenHero, ScreenTabBar, StickyTabScreen } from "../components";
 import { AccountAnalysisPanel } from "../features/analysis/AccountAnalysisPanel";
 import { BreakdownPanel } from "../features/analysis/BreakdownPanel";
 import { PatternOverview } from "../features/analysis/PatternOverview";
@@ -83,19 +83,29 @@ function PatternsScreenComponent({
   ]);
 
   return (
-    <ScrollView contentContainerStyle={scrollContentStyle} keyboardShouldPersistTaps="handled">
-      <ScreenHero hint={hero.hint} kicker={hero.kicker} value={hero.value} valueTone={hero.valueTone} variant={hero.variant} />
-
-      <ScreenTabBar
-        options={[
-          { icon: "sparkles-outline", label: strings.patterns.tabs.recap, value: "overview" },
-          { icon: "pie-chart-outline", label: strings.patterns.tabs.spending, value: "breakdown" },
-          { icon: "card-outline", label: strings.patterns.tabs.accounts, value: "accounts" }
-        ]}
-        selected={activePatternTab}
-        onSelect={onPatternTabChange}
-      />
-
+    <StickyTabScreen
+      scrollContentStyle={scrollContentStyle}
+      hero={
+        <ScreenHero
+          hint={hero.hint}
+          kicker={hero.kicker}
+          value={hero.value}
+          valueTone={hero.valueTone}
+          variant={hero.variant}
+        />
+      }
+      tabBar={
+        <ScreenTabBar
+          options={[
+            { icon: "sparkles-outline", label: strings.patterns.tabs.recap, value: "overview" },
+            { icon: "pie-chart-outline", label: strings.patterns.tabs.spending, value: "breakdown" },
+            { icon: "card-outline", label: strings.patterns.tabs.accounts, value: "accounts" }
+          ]}
+          selected={activePatternTab}
+          onSelect={onPatternTabChange}
+        />
+      }
+    >
       {activePatternTab === "overview" && (
         <PatternOverview
           feedbackByPattern={feedbackByPattern}
@@ -120,7 +130,7 @@ function PatternsScreenComponent({
           onDeleteTransfer={(id) => void actions.removeTransfer(id)}
         />
       )}
-    </ScrollView>
+    </StickyTabScreen>
   );
 }
 

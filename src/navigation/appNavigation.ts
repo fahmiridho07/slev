@@ -4,6 +4,7 @@ export type AppTabKey = "home" | "memory" | "budget" | "patterns" | "settings";
 
 export type AppNavigation = {
   openBudgetPlan: () => void;
+  openCapture: () => void;
   openHome: () => void;
   openMemory: () => void;
   openSettings: () => void;

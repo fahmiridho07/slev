@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from "react-native";
-import { ScreenHero, ScreenTabBar } from "../components";
+import { Pressable, StyleProp, Text, View, ViewStyle } from "react-native";
+import { MonthlyPlanWizard } from "../features/budget/MonthlyPlanWizard";
+import { ScreenHero, ScreenTabBar, StickyTabScreen } from "../components";
 import { AllocationPanel } from "../features/budget/AllocationPanel";
 import { BalancePanel } from "../features/budget/BalancePanel";
 import { BudgetLimitsPanel } from "../features/budget/BudgetLimitsPanel";
@@ -135,34 +136,45 @@ function BudgetScreenComponent({
   ]);
 
   return (
-    <ScrollView contentContainerStyle={scrollContentStyle} keyboardShouldPersistTaps="handled">
-      <ScreenHero
-        actionLabel={hero.actionLabel}
-        hint={hero.hint}
-        kicker={hero.kicker}
-        onAction={hero.onAction}
-        value={hero.value}
-        valueTone={hero.valueTone}
-        variant={hero.variant}
-      />
-
-      <ScreenTabBar
-        options={[
-          { icon: "clipboard-outline", label: strings.budget.tabs.plan, value: "plan" },
-          { icon: "wallet-outline", label: strings.budget.tabs.balance, value: "balance" },
-          { icon: "flag-outline", label: strings.budget.tabs.goals, value: "goals" }
-        ]}
-        selected={activeBudgetTab}
-        onSelect={onBudgetTabChange}
-      />
-
+    <StickyTabScreen
+      scrollContentStyle={scrollContentStyle}
+      hero={
+        <ScreenHero
+          actionLabel={hero.actionLabel}
+          hint={hero.hint}
+          kicker={hero.kicker}
+          onAction={hero.onAction}
+          value={hero.value}
+          valueTone={hero.valueTone}
+          variant={hero.variant}
+        />
+      }
+      tabBar={
+        <ScreenTabBar
+          options={[
+            { icon: "clipboard-outline", label: strings.budget.tabs.plan, value: "plan" },
+            { icon: "wallet-outline", label: strings.budget.tabs.balance, value: "balance" },
+            { icon: "flag-outline", label: strings.budget.tabs.goals, value: "goals" }
+          ]}
+          selected={activeBudgetTab}
+          onSelect={onBudgetTabChange}
+        />
+      }
+    >
       {activeBudgetTab === "plan" && (
         <View style={styles.cardStack}>
-          <MonthlyPlanPanel
-            monthlyPlan={monthlyPlan}
-            monthlySummary={monthlySummary}
-            onSaveMonthlyPlan={(input) => void actions.savePlan(input)}
-          />
+          {!monthlyPlan ? (
+            <MonthlyPlanWizard
+              monthlySummary={monthlySummary}
+              onSaveMonthlyPlan={(input) => void actions.savePlan(input)}
+            />
+          ) : (
+            <MonthlyPlanPanel
+              monthlyPlan={monthlyPlan}
+              monthlySummary={monthlySummary}
+              onSaveMonthlyPlan={(input) => void actions.savePlan(input)}
+            />
+          )}
           <View style={styles.cardStack}>
             <Pressable
               accessibilityLabel={
@@ -238,7 +250,7 @@ function BudgetScreenComponent({
           onSaveBalance={(input) => void actions.saveBalance(input)}
         />
       )}
-    </ScrollView>
+    </StickyTabScreen>
   );
 }
 

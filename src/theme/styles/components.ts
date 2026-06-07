@@ -427,6 +427,9 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     backgroundColor: colors.greenDark,
     borderColor: colors.greenDark
   },
+  feedbackButtonDisabled: {
+    opacity: 0.45
+  },
   feedbackText: {
     color: colors.greenDark,
     fontSize: 13,

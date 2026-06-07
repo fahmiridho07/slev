@@ -2,9 +2,20 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { Text, View } from "react-native";
 import { EmptyState, FeedbackButton, getPatternToneStyle, patternColor, patternIcon, SectionHeader } from "../../components";
+import { formatString } from "../../i18n";
 import { groupPatterns } from "../../lib/analysis";
 import { PatternFeedbackResponse, SpendingMoment, SpendingPattern } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
+
+const RECAP_EXPENSE_THRESHOLD = 6;
+const RECAP_LOOKBACK_MS = 14 * 24 * 60 * 60 * 1000;
+
+function countRecentExpenses(moments: SpendingMoment[]) {
+  const cutoff = Date.now() - RECAP_LOOKBACK_MS;
+  return moments.filter(
+    (moment) => moment.type === "expense" && Date.parse(moment.occurredAt) >= cutoff
+  ).length;
+}
 
 export function PatternOverview({
   feedbackByPattern,
@@ -18,7 +29,8 @@ export function PatternOverview({
   onAnswer: (patternId: string, response: PatternFeedbackResponse) => void;
 }) {
   const { colors, componentStyles, strings, styles } = useTheme();
-  const enoughForRecap = moments.filter((moment) => moment.type === "expense" && Date.parse(moment.occurredAt) >= Date.now() - 14 * 24 * 60 * 60 * 1000).length >= 6;
+  const recentExpenseCount = useMemo(() => countRecentExpenses(moments), [moments]);
+  const enoughForRecap = recentExpenseCount >= RECAP_EXPENSE_THRESHOLD;
   const groups = useMemo(() => groupPatterns(patterns), [patterns]);
 
   return (
@@ -37,22 +49,33 @@ export function PatternOverview({
                 </View>
                 <Text style={styles.patternDetail}>{pattern.detail}</Text>
 
-                {enoughForRecap && pattern.recapQuestion && (
+                {pattern.recapQuestion && (
                   <View style={styles.recapBlock}>
                     <Text style={styles.recapQuestion}>{pattern.recapQuestion}</Text>
+                    {!enoughForRecap && (
+                      <>
+                        <Text style={styles.settingCopy}>
+                          {formatString(strings.patterns.recap.expensesProgress, { count: recentExpenseCount })}
+                        </Text>
+                        <Text style={styles.settingCopy}>{strings.patterns.recap.feedbackLockedHint}</Text>
+                      </>
+                    )}
                     <View style={styles.feedbackRow}>
                       <FeedbackButton
                         active={feedbackByPattern.get(pattern.id) === "keep"}
+                        disabled={!enoughForRecap}
                         label={strings.patterns.recap.feedbackKeep}
                         onPress={() => onAnswer(pattern.id, "keep")}
                       />
                       <FeedbackButton
                         active={feedbackByPattern.get(pattern.id) === "less_often"}
+                        disabled={!enoughForRecap}
                         label={strings.patterns.recap.feedbackLessOften}
                         onPress={() => onAnswer(pattern.id, "less_often")}
                       />
                       <FeedbackButton
                         active={feedbackByPattern.get(pattern.id) === "not_sure"}
+                        disabled={!enoughForRecap}
                         label={strings.patterns.recap.feedbackNotSure}
                         onPress={() => onAnswer(pattern.id, "not_sure")}
                       />

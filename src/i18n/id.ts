@@ -229,7 +229,7 @@ export const id: AppStrings = {
     searchA11y: "Cari memori",
     searchPlaceholder: "Cari label, konteks, atau jumlah",
     emptyText: "Belum ada memori pengeluaran.",
-    emptyAction: "Ke Beranda",
+    emptyAction: "Catat pengeluaran pertama",
     searchNoResults: "Tidak ada memori yang cocok dengan pencarian.",
     editSheetTitle: "Edit memori",
     editSheetTitleNamed: "Edit {title}",
@@ -283,8 +283,10 @@ export const id: AppStrings = {
       recapValue: "{count} pola"
     },
     recap: {
+      expensesProgress: "{count} dari 6 pengeluaran terbaru tercatat",
       feedbackKeep: "Pertahankan",
       feedbackLessOften: "Lebih jarang",
+      feedbackLockedHint: "Catat minimal 6 pengeluaran dalam 14 hari terakhir untuk menjawab pertanyaan ringkasan.",
       feedbackNotSure: "Tidak yakin"
     },
     ...idExtras.patterns
