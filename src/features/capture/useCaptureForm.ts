@@ -8,7 +8,8 @@ import {
   getIncomeHubLabel,
   getTemplateLabel
 } from "../../lib/analysis";
-import { formatAmountInput } from "../../lib/formatMoney";
+import { formatAmountInput, parseAmountInput } from "../../lib/formatMoney";
+import { CaptureSaveAck } from "./captureSaveAck";
 import { ManualTemplate, MoneyAccount, SpendingContext } from "../spendingMemory.types";
 import { getTemplateReadyToast } from "../../i18n/toasts";
 import { useActions, useFinanceDerived, useFinanceSelector } from "../../state/useFinance";
@@ -227,24 +228,34 @@ export function useCaptureForm() {
     setForm((current) => ({ ...current, note: "" }));
   }, []);
 
-  const save = useCallback(async () => {
+  const save = useCallback(async (): Promise<CaptureSaveAck | null> => {
+    const amount = parseAmountInput(form.amountText);
+    const ack: CaptureSaveAck = {
+      amount: amount ?? 0,
+      context: form.entryType === "expense" ? form.context : undefined,
+      entryType: form.entryType,
+      fromAccount: form.fromAccount,
+      label: form.label,
+      source: form.source,
+      toAccount: form.toAccount
+    };
     const result = await actions.saveMoment(form, categoryLabels.length);
     if (!result.ok) {
       hapticWarning();
       if ("validation" in result && result.validation) {
         setFieldError(result.validation);
       }
-      return false;
+      return null;
     }
     setFieldError(null);
 
     if (result.resetNote) {
       resetAfterSave(form.context);
-      return true;
+      return ack;
     }
 
     resetAfterSave(result.expenseContext);
-    return true;
+    return ack;
   }, [actions, categoryLabels.length, form, resetAfterSave]);
 
   const saveTemplate = useCallback(async () => {

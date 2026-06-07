@@ -9,6 +9,7 @@ import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from 
 import { formatString } from "../../i18n";
 import { useTheme } from "../../hooks/useTheme";
 import { hapticSuccess } from "../../lib/haptics";
+import { buildCaptureSaveAckBanner, CaptureSaveAck } from "./captureSaveAck";
 import { useCaptureForm } from "./useCaptureForm";
 
 type CapturePanelProps = {
@@ -54,6 +55,27 @@ function CapturePanelComponent({
   } = useCaptureForm();
 
   const [noteOpen, setNoteOpen] = useState(Boolean(form.note));
+  const [saveAck, setSaveAck] = useState<CaptureSaveAck | null>(null);
+  const saveAckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showSaveAck = useCallback((ack: CaptureSaveAck) => {
+    if (saveAckTimerRef.current) {
+      clearTimeout(saveAckTimerRef.current);
+    }
+    setSaveAck(ack);
+    saveAckTimerRef.current = setTimeout(() => {
+      setSaveAck(null);
+      saveAckTimerRef.current = null;
+    }, 2500);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (saveAckTimerRef.current) {
+        clearTimeout(saveAckTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (form.note) {
@@ -74,11 +96,12 @@ function CapturePanelComponent({
   const handleSave = useCallback(async () => {
     const saved = await save();
     if (saved) {
+      showSaveAck(saved);
       hapticSuccess();
       setNoteOpen(false);
       onSaved?.();
     }
-  }, [onSaved, save]);
+  }, [onSaved, save, showSaveAck]);
 
   return (
     <View style={styles.capturePanel}>
@@ -262,14 +285,27 @@ function CapturePanelComponent({
       )}
 
       <Pressable
-        accessibilityLabel={getSaveLabel(form.entryType)}
+        accessibilityLabel={saveAck ? strings.capture.savedButton : getSaveLabel(form.entryType)}
         accessibilityRole="button"
         onPress={() => void handleSave()}
-        style={styles.primaryButton}
+        style={[styles.primaryButton, saveAck ? styles.primaryButtonSaved : null]}
       >
-        <Ionicons name="checkmark-circle-outline" size={20} color={colors.surface} />
-        <Text style={styles.primaryButtonText}>{getSaveLabel(form.entryType)}</Text>
+        <Ionicons
+          name={saveAck ? "checkmark-circle" : "checkmark-circle-outline"}
+          size={20}
+          color={colors.surface}
+        />
+        <Text style={styles.primaryButtonText}>
+          {saveAck ? strings.capture.savedButton : getSaveLabel(form.entryType)}
+        </Text>
       </Pressable>
+
+      {saveAck && (
+        <View accessibilityLiveRegion="polite" style={styles.captureSaveBanner}>
+          <Ionicons name="checkmark-circle" size={18} color={colors.greenDark} />
+          <Text style={styles.captureSaveBannerText}>{buildCaptureSaveAckBanner(saveAck, strings)}</Text>
+        </View>
+      )}
 
       <Pressable
         accessibilityLabel={strings.capture.saveAsShortcutA11y}

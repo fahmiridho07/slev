@@ -274,6 +274,12 @@ export type AppStrings = {
     repeatA11y: string;
     saveAsShortcut: string;
     saveAsShortcutA11y: string;
+    savedBannerExpense: string;
+    savedBannerExpenseNamed: string;
+    savedBannerIncome: string;
+    savedBannerIncomeNamed: string;
+    savedBannerTransfer: string;
+    savedButton: string;
     saveExpense: string;
     saveIncome: string;
     saveTransfer: string;

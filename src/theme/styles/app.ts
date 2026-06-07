@@ -525,6 +525,27 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     minHeight: 52,
     paddingHorizontal: 16
   },
+  primaryButtonSaved: {
+    backgroundColor: colors.green
+  },
+  captureSaveBanner: {
+    alignItems: "center",
+    backgroundColor: colors.mint,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12
+  },
+  captureSaveBannerText: {
+    color: colors.greenDark,
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 20
+  },
   smallPrimaryButton: {
     alignItems: "center",
     backgroundColor: colors.greenDark,
