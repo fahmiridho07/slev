@@ -66,7 +66,7 @@ export function AppRoot() {
   const [activeTab, setActiveTab] = useState<AppTabKey>("home");
   const [returnTab, setReturnTab] = useState<AppTabKey>("home");
   const [budgetTab, setBudgetTab] = useState<BudgetTabKey>("plan");
-  const [patternTab, setPatternTab] = useState<PatternTabKey>("overview");
+  const [patternTab, setPatternTab] = useState<PatternTabKey>("breakdown");
   const [settingsTab, setSettingsTab] = useState<SettingsTabKey>("bills");
   const [toastMessage, setToastMessage] = useState("");
   const [navHydrated, setNavHydrated] = useState(false);
@@ -316,7 +316,6 @@ export function AppRoot() {
                       setBudgetTab("balance");
                       setActiveTab("budget");
                     }}
-                    onOpenCapture={navigation.openCapture}
                     onPatternTabChange={setPatternTab}
                     scrollContentStyle={scrollContentStyle}
                   />

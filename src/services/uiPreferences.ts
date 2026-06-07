@@ -34,7 +34,7 @@ const LIST_ACTIONS_HINT_KEYS: Record<ListActionsHintKey, string> = {
 };
 
 const BUDGET_TABS = new Set<BudgetTabKey>(["plan", "balance", "goals"]);
-const PATTERN_TABS = new Set<PatternTabKey>(["overview", "breakdown", "accounts"]);
+const PATTERN_TABS = new Set<PatternTabKey>(["breakdown", "accounts"]);
 const SETTINGS_TABS = new Set<SettingsTabKey>(["bills", "categories", "appearance", "data"]);
 
 function parseBudgetTab(value: unknown): BudgetTabKey {
@@ -42,9 +42,12 @@ function parseBudgetTab(value: unknown): BudgetTabKey {
 }
 
 function parsePatternTab(value: unknown): PatternTabKey {
+  if (value === "overview" || value === "recap") {
+    return "breakdown";
+  }
   return typeof value === "string" && PATTERN_TABS.has(value as PatternTabKey)
     ? (value as PatternTabKey)
-    : "overview";
+    : "breakdown";
 }
 
 function parseSettingsTab(value: unknown): SettingsTabKey {

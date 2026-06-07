@@ -40,7 +40,9 @@ test("parseDeepLink routes budget and analysis aliases", () => {
   assertEqual(parseDeepLink("slev://budget/goals"), { tab: "budget", budgetTab: "goals" }, "budget goals");
   assertEqual(parseDeepLink("slev://budget"), { tab: "budget", budgetTab: "plan" }, "budget default");
   assertEqual(parseDeepLink("slev://analysis/breakdown"), { tab: "patterns", patternTab: "breakdown" }, "analysis breakdown");
-  assertEqual(parseDeepLink("slev://patterns"), { tab: "patterns" }, "patterns root");
+  assertEqual(parseDeepLink("slev://patterns"), { tab: "patterns", patternTab: "breakdown" }, "patterns root");
+  assertEqual(parseDeepLink("slev://patterns/overview"), { tab: "patterns", patternTab: "breakdown" }, "legacy recap tab");
+  assertEqual(parseDeepLink("slev://analysis/recap"), { tab: "patterns", patternTab: "breakdown" }, "legacy recap alias");
   assertEqual(parseDeepLink("slev://overview"), { tab: "overview" }, "overview root");
   assertEqual(parseDeepLink("slev://memory"), { tab: "overview" }, "memory alias");
 });

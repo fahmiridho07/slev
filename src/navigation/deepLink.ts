@@ -9,7 +9,8 @@ export type DeepLinkTarget =
   | { tab: "settings"; settingsTab?: SettingsTabKey };
 
 const BUDGET_TABS = new Set<BudgetTabKey>(["plan", "balance", "goals"]);
-const PATTERN_TABS = new Set<PatternTabKey>(["overview", "breakdown", "accounts"]);
+const PATTERN_TABS = new Set<PatternTabKey>(["breakdown", "accounts"]);
+const LEGACY_PATTERN_TABS = new Set(["overview", "recap"]);
 const SETTINGS_TABS = new Set<SettingsTabKey>(["bills", "categories", "appearance", "data"]);
 
 export function parseDeepLink(url: string): DeepLinkTarget | null {
@@ -34,11 +35,14 @@ export function parseDeepLink(url: string): DeepLinkTarget | null {
     return { tab: "settings" };
   }
   if (root === "patterns" || root === "analysis") {
-    const sub = parts[1]?.toLowerCase() as PatternTabKey | undefined;
-    if (sub && PATTERN_TABS.has(sub)) {
-      return { tab: "patterns", patternTab: sub };
+    const sub = parts[1]?.toLowerCase();
+    if (sub && PATTERN_TABS.has(sub as PatternTabKey)) {
+      return { tab: "patterns", patternTab: sub as PatternTabKey };
     }
-    return { tab: "patterns" };
+    if (sub && LEGACY_PATTERN_TABS.has(sub)) {
+      return { tab: "patterns", patternTab: "breakdown" };
+    }
+    return { tab: "patterns", patternTab: "breakdown" };
   }
   if (root === "budget") {
     const sub = parts[1]?.toLowerCase() as BudgetTabKey | undefined;

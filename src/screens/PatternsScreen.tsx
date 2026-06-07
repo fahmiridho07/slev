@@ -3,8 +3,6 @@ import { StyleProp, ViewStyle } from "react-native";
 import { ScreenHero, ScreenTabBar, StickyTabScreen } from "../components";
 import { AccountAnalysisPanel } from "../features/analysis/AccountAnalysisPanel";
 import { BreakdownPanel } from "../features/analysis/BreakdownPanel";
-import { PatternOverview } from "../features/analysis/PatternOverview";
-
 import { PatternTabKey } from "../features/app.types";
 import { buildCurrentMonthSummary } from "../lib/financeEngine";
 import { getMonthReferenceDate } from "../lib/spendingPeriod";
@@ -12,10 +10,10 @@ import { buildPatternsTabHero } from "../lib/tabHero";
 import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../state/useFinance";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { useTheme } from "../hooks/useTheme";
+
 type PatternsScreenProps = {
   activePatternTab: PatternTabKey;
   onOpenBalance: () => void;
-  onOpenCapture: () => void;
   onPatternTabChange: (tab: PatternTabKey) => void;
   scrollContentStyle: StyleProp<ViewStyle>;
 };
@@ -23,26 +21,22 @@ type PatternsScreenProps = {
 function PatternsScreenComponent({
   activePatternTab,
   onOpenBalance,
-  onOpenCapture,
   onPatternTabChange,
   scrollContentStyle
 }: PatternsScreenProps) {
   const { strings } = useTheme();
-  const { refreshControl } = usePullToRefresh();
   const actions = useActions();
+  const { refreshControl } = usePullToRefresh();
   const [breakdownMonthOffset, setBreakdownMonthOffset] = useState(0);
-  const { feedbackByPattern, latestBalanceTotal, monthlySummary, netWorthTrend, patterns, projectedBalanceSnapshots } =
-    useFinanceDerived(
-      (derived) => ({
-        feedbackByPattern: derived.feedbackByPattern,
-        latestBalanceTotal: derived.latestBalanceTotal,
-        monthlySummary: derived.monthlySummary,
-        netWorthTrend: derived.netWorthTrend,
-        patterns: derived.patterns,
-        projectedBalanceSnapshots: derived.projectedBalanceSnapshots
-      }),
-      shallowEqual
-    );
+  const { latestBalanceTotal, monthlySummary, netWorthTrend, projectedBalanceSnapshots } = useFinanceDerived(
+    (derived) => ({
+      latestBalanceTotal: derived.latestBalanceTotal,
+      monthlySummary: derived.monthlySummary,
+      netWorthTrend: derived.netWorthTrend,
+      projectedBalanceSnapshots: derived.projectedBalanceSnapshots
+    }),
+    shallowEqual
+  );
   const { accounts, balanceSnapshots, budgetLimits, categoryModes, moments, transfers } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
@@ -79,7 +73,6 @@ function PatternsScreenComponent({
         latestBalanceTotal,
         monthlySummary,
         netWorthTrendLength: netWorthTrend.length,
-        patternCount: patterns.length,
         strings
       }),
     [
@@ -90,7 +83,6 @@ function PatternsScreenComponent({
       latestBalanceTotal,
       monthlySummary,
       netWorthTrend.length,
-      patterns.length,
       strings
     ]
   );
@@ -111,7 +103,6 @@ function PatternsScreenComponent({
       tabBar={
         <ScreenTabBar
           options={[
-            { icon: "sparkles-outline", label: strings.patterns.tabs.recap, value: "overview" },
             { icon: "pie-chart-outline", label: strings.patterns.tabs.spending, value: "breakdown" },
             { icon: "card-outline", label: strings.patterns.tabs.accounts, value: "accounts" }
           ]}
@@ -120,15 +111,6 @@ function PatternsScreenComponent({
         />
       }
     >
-      {activePatternTab === "overview" && (
-        <PatternOverview
-          feedbackByPattern={feedbackByPattern}
-          moments={moments}
-          onOpenCapture={onOpenCapture}
-          patterns={patterns}
-          onAnswer={(patternId, response) => void actions.answerPattern(patternId, response)}
-        />
-      )}
       {activePatternTab === "breakdown" && (
         <BreakdownPanel
           budgetLimits={budgetLimits}

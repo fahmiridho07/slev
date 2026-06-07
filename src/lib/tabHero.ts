@@ -86,7 +86,6 @@ export function buildPatternsTabHero(input: {
   latestBalanceTotal: number;
   monthlySummary: MonthlySummary;
   netWorthTrendLength: number;
-  patternCount: number;
   strings: AppStrings;
 }): HeroConfig {
   const { strings } = input;
@@ -127,17 +126,14 @@ export function buildPatternsTabHero(input: {
       variant: "info"
     };
   }
+  const summary = input.breakdownSummary ?? input.monthlySummary;
   return {
-    hint:
-      input.patternCount > 0
-        ? strings.patterns.hero.recapHintWithPatterns
-        : strings.patterns.hero.recapHintEmpty,
-    kicker: strings.patterns.hero.recapKicker,
-    value:
-      input.patternCount > 0
-        ? formatString(strings.patterns.hero.recapValue, { count: input.patternCount })
-        : undefined,
-    valueTone: "default",
-    variant: "surface"
+    hint: formatString(strings.patterns.hero.breakdownHint, {
+      amount: formatCompactRupiah(summary.income)
+    }),
+    kicker: strings.patterns.hero.breakdownKicker,
+    value: formatCompactRupiah(summary.expense),
+    valueTone: "danger",
+    variant: "info"
   };
 }

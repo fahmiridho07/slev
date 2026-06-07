@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useMemo, useReducer, useRef } from "react";
-import { PatternFeedbackResponse } from "../features/spendingMemory.types";
+
 import { getUpcomingBills, UpcomingBill } from "../lib/recurringBills";
 import {
   AccountDriftRow,
@@ -13,7 +13,7 @@ import {
   getProjectedBalanceSnapshots,
   getRunwayMonths
 } from "../lib/financeEngine";
-import { generateSpendingPatterns } from "../lib/spendingMemoryPatterns";
+
 import { getCategoryLabels } from "../services/categoryRepository";
 import { createFinanceActions, FinanceActions } from "./financeActions";
 import { financeReducer, initialFinanceState } from "./financeReducer";
@@ -24,12 +24,10 @@ export type FinanceDerived = {
   accountDrift: AccountDriftRow[];
   allocationPlan: AllocationPlan;
   categoryLabels: ReturnType<typeof getCategoryLabels>;
-  feedbackByPattern: Map<string, PatternFeedbackResponse>;
   hasMonthlyPlan: boolean;
   latestBalanceTotal: number;
   runwayMonths: number | null;
   monthlySummary: ReturnType<typeof buildCurrentMonthSummary>;
-  patterns: ReturnType<typeof generateSpendingPatterns>;
   projectedBalanceSnapshots: ReturnType<typeof getProjectedBalanceSnapshots>;
   upcomingBills: UpcomingBill[];
   netWorthTrend: ReturnType<typeof buildNetWorthTrend>;
@@ -58,10 +56,6 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
-  const patterns = useMemo(
-    () => generateSpendingPatterns(state.moments),
-    [state.moments]
-  );
   const monthlySummary = useMemo(
     () => buildCurrentMonthSummary(state.moments, state.categoryModes),
     [state.moments, state.categoryModes]
@@ -89,10 +83,6 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   const latestBalanceTotal = useMemo(
     () => getLatestBalanceTotal(projectedBalanceSnapshots),
     [projectedBalanceSnapshots]
-  );
-  const feedbackByPattern = useMemo(
-    () => new Map(state.feedback.map((item) => [item.patternId, item.response])),
-    [state.feedback]
   );
   const categoryLabels = useMemo(
     () => getCategoryLabels(state.expenseCategories),
@@ -157,12 +147,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       accountDrift,
       allocationPlan,
       categoryLabels,
-      feedbackByPattern,
       hasMonthlyPlan,
       latestBalanceTotal,
       runwayMonths,
       monthlySummary,
-      patterns,
       projectedBalanceSnapshots,
       upcomingBills,
       netWorthTrend
@@ -171,13 +159,11 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       accountDrift,
       allocationPlan,
       categoryLabels,
-      feedbackByPattern,
       hasMonthlyPlan,
       latestBalanceTotal,
       netWorthTrend,
       runwayMonths,
       monthlySummary,
-      patterns,
       projectedBalanceSnapshots,
       upcomingBills
     ]
