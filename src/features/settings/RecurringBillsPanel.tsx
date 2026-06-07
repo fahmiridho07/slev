@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { AccountPicker, ContextPicker, DeleteConfirmDialog, EmptyState, ListActionRow, ListActionsOnboardingTip } from "../../components";
+import { AccountPicker, ContextPicker, DeleteConfirmDialog, EmptyState, FormScrollAnchor, ListActionRow, ListActionsOnboardingTip } from "../../components";
+import { useScrollToForm } from "../../hooks/scrollToForm";
 import { useListActionsHint } from "../../hooks/useListActionsHint";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
@@ -44,6 +45,13 @@ export function RecurringBillsPanel({
   const [pendingDeleteBill, setPendingDeleteBill] = useState<RecurringBill | null>(null);
   const [fieldError, setFieldError] = useState<FormValidationError<BillFieldError> | null>(null);
   const { dismiss: dismissBillsHint, visible: showBillsHint } = useListActionsHint("recurring_bills", recurringBills.length > 0);
+  const scrollToForm = useScrollToForm();
+
+  useEffect(() => {
+    if (editingBillId) {
+      requestAnimationFrame(() => scrollToForm());
+    }
+  }, [editingBillId, scrollToForm]);
 
   function editBill(bill: RecurringBill) {
     hapticSelection();
@@ -82,6 +90,7 @@ export function RecurringBillsPanel({
 
   return (
     <View style={styles.cardStack}>
+      <FormScrollAnchor>
       <View style={styles.capturePanel}>
       <Text style={componentStyles.microLabel}>{strings.settings.bills.title}</Text>
       <Text style={styles.settingCopy}>{strings.settings.bills.intro}</Text>
@@ -198,6 +207,7 @@ export function RecurringBillsPanel({
         </Pressable>
       </View>
       </View>
+      </FormScrollAnchor>
 
       {recurringBills.length === 0 ? (
         <EmptyState text={strings.settings.bills.empty} />

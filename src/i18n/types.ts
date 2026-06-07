@@ -631,6 +631,7 @@ export type AppStrings = {
       failed: string;
     };
     plan: {
+      needFields: string;
       saved: string;
     };
     reset: {

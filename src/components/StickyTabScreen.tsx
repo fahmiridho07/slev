@@ -1,5 +1,6 @@
-import React, { memo } from "react";
+import React, { memo, useRef } from "react";
 import { RefreshControlProps, ScrollView, StyleProp, View, ViewStyle } from "react-native";
+import { ScrollToFormProvider } from "../hooks/scrollToForm";
 import { useTheme } from "../hooks/useTheme";
 
 type StickyTabScreenProps = {
@@ -18,18 +19,22 @@ function StickyTabScreenComponent({
   tabBar
 }: StickyTabScreenProps) {
   const { styles } = useTheme();
+  const scrollRef = useRef<ScrollView>(null);
 
   return (
-    <ScrollView
-      contentContainerStyle={scrollContentStyle}
-      keyboardShouldPersistTaps="handled"
-      refreshControl={refreshControl}
-      stickyHeaderIndices={[1]}
-    >
-      {hero}
-      <View style={styles.stickyTabHeader}>{tabBar}</View>
-      {children}
-    </ScrollView>
+    <ScrollToFormProvider scrollRef={scrollRef}>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={scrollContentStyle}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={refreshControl}
+        stickyHeaderIndices={[1]}
+      >
+        {hero}
+        <View style={styles.stickyTabHeader}>{tabBar}</View>
+        {children}
+      </ScrollView>
+    </ScrollToFormProvider>
   );
 }
 

@@ -8,7 +8,8 @@ import {
   getAccountValidationError,
   getBalanceSnapshotValidationError,
   getGoalValidationError,
-  getLimitValidationError
+  getLimitValidationError,
+  getPlanValidationError
 } from "../features/budget/budgetValidation";
 import { getImportJsonValidationError } from "../features/settings/dataValidation";
 import { getBillValidationError, getCategoryValidationError } from "../features/settings/settingsValidation";
@@ -557,10 +558,20 @@ export function createFinanceActions(
     note: string;
     expectedIncome: string;
     savingsTarget: string;
-  }) {
+  }): Promise<FormActionResult<"expectedIncome">> {
+    const validationError = getPlanValidationError(input);
+    if (validationError) {
+      return { ok: false, validation: validationError };
+    }
+
+    const expectedIncome = parseAmountInput(input.expectedIncome);
+    if (!expectedIncome) {
+      return { ok: false };
+    }
+
     const currentMonthKey = getMonthKey(new Date());
     const { data: saved, persisted } = await saveMonthlyPlan({
-      expectedIncome: parseAmountInput(input.expectedIncome) ?? 0,
+      expectedIncome,
       fixedCosts: parseAmountInput(input.fixedCosts) ?? 0,
       flexibleBudget: parseAmountInput(input.flexibleBudget) ?? 0,
       month: currentMonthKey,
@@ -569,10 +580,11 @@ export function createFinanceActions(
     });
     if (!persisted) {
       notifyWriteFailure(STORAGE_KEYS.monthlyPlans);
-      return;
+      return { ok: false };
     }
     dispatch({ type: "set_monthly_plan", monthlyPlan: saved });
     notifySuccess(getPlanSavedToast());
+    return { ok: true };
   }
 
   async function saveGoal(input: {

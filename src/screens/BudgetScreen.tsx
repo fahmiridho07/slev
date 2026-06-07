@@ -127,13 +127,13 @@ function BudgetScreenComponent({
           {!monthlyPlan ? (
             <MonthlyPlanWizard
               monthlySummary={monthlySummary}
-              onSaveMonthlyPlan={(input) => void actions.savePlan(input)}
+              onSaveMonthlyPlan={(input) => actions.savePlan(input)}
             />
           ) : (
             <MonthlyPlanPanel
               monthlyPlan={monthlyPlan}
               monthlySummary={monthlySummary}
-              onSaveMonthlyPlan={(input) => void actions.savePlan(input)}
+              onSaveMonthlyPlan={(input) => actions.savePlan(input)}
             />
           )}
           <View style={styles.cardStack}>

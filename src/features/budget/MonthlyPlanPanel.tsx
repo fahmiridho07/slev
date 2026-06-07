@@ -6,7 +6,10 @@ import { MonthlySummary } from "../app.types";
 import { formatAmountInput, formatSignedCompactRupiah, parseAmountInput } from "../../lib/formatMoney";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { MonthlyPlan } from "../spendingMemory.types";
+import { hapticWarning } from "../../lib/haptics";
+import { FormValidationError } from "../../lib/formValidation";
 import { useTheme } from "../../hooks/useTheme";
+import { PlanFieldError } from "./budgetValidation";
 
 export function MonthlyPlanPanel({
   monthlyPlan,
@@ -21,7 +24,7 @@ export function MonthlyPlanPanel({
     flexibleBudget: string;
     note: string;
     savingsTarget: string;
-  }) => void;
+  }) => Promise<{ ok: boolean; validation?: FormValidationError<PlanFieldError> }>;
 }) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const planStrings = strings.budget.monthlyPlan;
@@ -29,12 +32,14 @@ export function MonthlyPlanPanel({
   const [fixedCosts, setFixedCosts] = useState(monthlyPlan ? formatAmountInput(String(monthlyPlan.fixedCosts)) : "");
   const [savingsTarget, setSavingsTarget] = useState(monthlyPlan ? formatAmountInput(String(monthlyPlan.savingsTarget)) : "");
   const [note, setNote] = useState(monthlyPlan?.note ?? "");
+  const [fieldError, setFieldError] = useState<FormValidationError<PlanFieldError> | null>(null);
 
   useEffect(() => {
     setExpectedIncome(monthlyPlan ? formatAmountInput(String(monthlyPlan.expectedIncome)) : "");
     setFixedCosts(monthlyPlan ? formatAmountInput(String(monthlyPlan.fixedCosts)) : "");
     setSavingsTarget(monthlyPlan ? formatAmountInput(String(monthlyPlan.savingsTarget)) : "");
     setNote(monthlyPlan?.note ?? "");
+    setFieldError(null);
   }, [monthlyPlan]);
 
   const expectedIncomeAmount = parseAmountInput(expectedIncome) ?? 0;
@@ -46,18 +51,42 @@ export function MonthlyPlanPanel({
   const loggedIncome = Math.round(monthlySummary.income);
   const showIncomeSuggestion = !monthlyPlan && expectedIncome.trim() === "" && loggedIncome > 0;
 
+  function clearFieldError(field?: PlanFieldError) {
+    setFieldError((current) => {
+      if (!current) {
+        return current;
+      }
+      if (!field || current.field === field) {
+        return null;
+      }
+      return current;
+    });
+  }
+
   return (
       <View style={styles.capturePanel}>
         <Text style={componentStyles.microLabel}>{planStrings.title}</Text>
         <TextInput
-          accessibilityLabel={planStrings.expectedIncome}
+          accessibilityLabel={
+            fieldError?.field === "expectedIncome"
+              ? `${planStrings.expectedIncome}. ${fieldError.message}`
+              : planStrings.expectedIncome
+          }
           keyboardType="number-pad"
-          onChangeText={(value) => setExpectedIncome(formatAmountInput(value))}
+          onChangeText={(value) => {
+            clearFieldError("expectedIncome");
+            setExpectedIncome(formatAmountInput(value));
+          }}
           placeholder={planStrings.expectedIncome}
           placeholderTextColor={colors.muted}
           style={styles.input}
           value={expectedIncome}
         />
+        {fieldError?.field === "expectedIncome" && (
+          <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+            {fieldError.message}
+          </Text>
+        )}
         {showIncomeSuggestion && (
           <Pressable
             accessibilityRole="button"
@@ -115,9 +144,23 @@ export function MonthlyPlanPanel({
         )}
         <Pressable
           accessibilityRole="button"
-          onPress={() =>
-            onSaveMonthlyPlan({ expectedIncome, fixedCosts, flexibleBudget: String(flexibleBudget), note, savingsTarget })
-          }
+          onPress={() => {
+            void (async () => {
+              const result = await onSaveMonthlyPlan({
+                expectedIncome,
+                fixedCosts,
+                flexibleBudget: String(flexibleBudget),
+                note,
+                savingsTarget
+              });
+              if (!result.ok) {
+                hapticWarning();
+                if (result.validation) {
+                  setFieldError(result.validation);
+                }
+              }
+            })();
+          }}
           style={styles.primaryButton}
         >
           <Ionicons name="save-outline" size={18} color={colors.surface} />

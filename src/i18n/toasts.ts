@@ -187,6 +187,10 @@ export function getLimitMarkedAsToast(category: string, mode: CategoryModeValue)
   });
 }
 
+export function getPlanNeedFieldsToast(): string {
+  return getRuntimeStrings().toasts.plan.needFields;
+}
+
 export function getPlanSavedToast(): string {
   return getRuntimeStrings().toasts.plan.saved;
 }

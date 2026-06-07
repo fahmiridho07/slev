@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { DeleteConfirmDialog, EmptyState, ListActionRow, ListActionsOnboardingTip, ProgressBar } from "../../components";
+import { DeleteConfirmDialog, EmptyState, FormScrollAnchor, ListActionRow, ListActionsOnboardingTip, ProgressBar } from "../../components";
+import { useScrollToForm } from "../../hooks/scrollToForm";
 import { useListActionsHint } from "../../hooks/useListActionsHint";
 import { formatString } from "../../i18n";
 import { getPercentWidthStyle } from "../../lib/analysis";
@@ -35,6 +36,13 @@ export function SavingsGoalsPanel({
   const [pendingDeleteGoal, setPendingDeleteGoal] = useState<SavingsGoal | null>(null);
   const [fieldError, setFieldError] = useState<FormValidationError<GoalFieldError> | null>(null);
   const { dismiss: dismissGoalsHint, visible: showGoalsHint } = useListActionsHint("goals", savingsGoals.length > 0);
+  const scrollToForm = useScrollToForm();
+
+  useEffect(() => {
+    if (editingGoalId) {
+      requestAnimationFrame(() => scrollToForm());
+    }
+  }, [editingGoalId, scrollToForm]);
 
   function editGoal(goal: SavingsGoal) {
     hapticSelection();
@@ -67,6 +75,7 @@ export function SavingsGoalsPanel({
 
   return (
     <View style={styles.cardStack}>
+      <FormScrollAnchor>
       <View style={styles.capturePanel}>
         <Text style={componentStyles.microLabel}>{editingGoalId ? goalsStrings.editGoal : goalsStrings.newGoal}</Text>
         <TextInput
@@ -150,6 +159,7 @@ export function SavingsGoalsPanel({
           </Pressable>
         </View>
       </View>
+      </FormScrollAnchor>
 
       {savingsGoals.length === 0 ? (
         <EmptyState text={goalsStrings.emptyGoals} />

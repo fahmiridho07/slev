@@ -2,7 +2,8 @@ import {
   getAccountValidationError,
   getBalanceSnapshotValidationError,
   getGoalValidationError,
-  getLimitValidationError
+  getLimitValidationError,
+  getPlanValidationError
 } from "../src/features/budget/budgetValidation";
 
 declare const process: {
@@ -50,6 +51,11 @@ test("getGoalValidationError checks label and target amount", () => {
 test("getLimitValidationError requires a positive amount", () => {
   assertField(getLimitValidationError(""), "amount", "empty limit");
   assertField(getLimitValidationError("0"), "amount", "zero limit");
+});
+
+test("getPlanValidationError requires expected income", () => {
+  assertField(getPlanValidationError({ expectedIncome: "" }), "expectedIncome", "empty income");
+  assertField(getPlanValidationError({ expectedIncome: "0" }), "expectedIncome", "zero income");
 });
 
 let passed = 0;

@@ -6,11 +6,13 @@ import {
   AccountTitle,
   DeleteConfirmDialog,
   EmptyState,
+  FormScrollAnchor,
   ListActionRow,
   ListActionsOnboardingTip,
   SectionHeader,
   SegmentedControl
 } from "../../components";
+import { useScrollToForm } from "../../hooks/scrollToForm";
 import { useListActionsHint } from "../../hooks/useListActionsHint";
 import { formatString, type AppStrings } from "../../i18n";
 import { formatAmountInput, formatSignedCompactRupiah } from "../../lib/formatMoney";
@@ -91,6 +93,13 @@ export function BalancePanel({
     currentBalances.forEach((snapshot) => map.set(snapshot.accountLabel, snapshot.amount));
     return map;
   }, [currentBalances]);
+  const scrollToForm = useScrollToForm();
+
+  useEffect(() => {
+    if (editingAccountId) {
+      requestAnimationFrame(() => scrollToForm());
+    }
+  }, [editingAccountId, scrollToForm]);
 
   useEffect(() => {
     const labels = accounts.map((account) => account.label);
@@ -304,6 +313,7 @@ export function BalancePanel({
         </Pressable>
       </View>
 
+      <FormScrollAnchor>
       <View style={styles.capturePanel}>
         <Text style={componentStyles.microLabel}>
           {editingAccountId ? balanceStrings.editAccount : balanceStrings.addAccount}
@@ -392,6 +402,7 @@ export function BalancePanel({
           </Pressable>
         </View>
       </View>
+      </FormScrollAnchor>
 
       {showAccountsHint && (
         <ListActionsOnboardingTip

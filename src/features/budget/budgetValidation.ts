@@ -2,7 +2,8 @@ import {
   getAccountNeedNameToast,
   getBalanceNeedFieldsToast,
   getGoalNeedFieldsToast,
-  getLimitNeedAmountToast
+  getLimitNeedAmountToast,
+  getPlanNeedFieldsToast
 } from "../../i18n";
 import { FormValidationError } from "../../lib/formValidation";
 import { parseAmountInput } from "../../lib/formatMoney";
@@ -44,6 +45,18 @@ export function getGoalValidationError(input: {
       field: !input.label.trim() ? "label" : "targetAmount",
       message: getGoalNeedFieldsToast()
     };
+  }
+  return null;
+}
+
+export type PlanFieldError = "expectedIncome";
+
+export function getPlanValidationError(input: {
+  expectedIncome: string;
+}): FormValidationError<PlanFieldError> | null {
+  const parsedIncome = parseAmountInput(input.expectedIncome);
+  if (!parsedIncome) {
+    return { field: "expectedIncome", message: getPlanNeedFieldsToast() };
   }
   return null;
 }

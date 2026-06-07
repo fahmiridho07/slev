@@ -5,7 +5,10 @@ import { formatString } from "../../i18n";
 import { MonthlySummary } from "../app.types";
 import { formatAmountInput, formatSignedCompactRupiah, parseAmountInput } from "../../lib/formatMoney";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
+import { hapticWarning } from "../../lib/haptics";
+import { FormValidationError } from "../../lib/formValidation";
 import { useTheme } from "../../hooks/useTheme";
+import { PlanFieldError } from "./budgetValidation";
 
 const WIZARD_STEPS = 3;
 
@@ -20,7 +23,7 @@ export function MonthlyPlanWizard({
     flexibleBudget: string;
     note: string;
     savingsTarget: string;
-  }) => void;
+  }) => Promise<{ ok: boolean; validation?: FormValidationError<PlanFieldError> }>;
 }) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const planStrings = strings.budget.monthlyPlan;
@@ -29,6 +32,7 @@ export function MonthlyPlanWizard({
   const [fixedCosts, setFixedCosts] = useState("");
   const [savingsTarget, setSavingsTarget] = useState("");
   const [note, setNote] = useState("");
+  const [fieldError, setFieldError] = useState<FormValidationError<PlanFieldError> | null>(null);
 
   const expectedIncomeAmount = parseAmountInput(expectedIncome) ?? 0;
   const fixedCostsAmount = parseAmountInput(fixedCosts) ?? 0;
@@ -47,6 +51,18 @@ export function MonthlyPlanWizard({
     setStep((current) => Math.max(current - 1, 0));
   }
 
+  function clearFieldError(field?: PlanFieldError) {
+    setFieldError((current) => {
+      if (!current) {
+        return current;
+      }
+      if (!field || current.field === field) {
+        return null;
+      }
+      return current;
+    });
+  }
+
   return (
     <View style={styles.capturePanel}>
       <Text style={componentStyles.microLabel}>{planStrings.wizardTitle}</Text>
@@ -58,14 +74,26 @@ export function MonthlyPlanWizard({
         <>
           <Text style={styles.settingCopy}>{planStrings.stepIncomeCopy}</Text>
           <TextInput
-            accessibilityLabel={planStrings.expectedIncome}
+            accessibilityLabel={
+              fieldError?.field === "expectedIncome"
+                ? `${planStrings.expectedIncome}. ${fieldError.message}`
+                : planStrings.expectedIncome
+            }
             keyboardType="number-pad"
-            onChangeText={(value) => setExpectedIncome(formatAmountInput(value))}
+            onChangeText={(value) => {
+              clearFieldError("expectedIncome");
+              setExpectedIncome(formatAmountInput(value));
+            }}
             placeholder={planStrings.expectedIncome}
             placeholderTextColor={colors.muted}
             style={styles.input}
             value={expectedIncome}
           />
+          {fieldError?.field === "expectedIncome" && (
+            <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+              {fieldError.message}
+            </Text>
+          )}
           {showIncomeSuggestion && (
             <Pressable
               accessibilityRole="button"
@@ -149,15 +177,26 @@ export function MonthlyPlanWizard({
         ) : (
           <Pressable
             accessibilityRole="button"
-            onPress={() =>
-              onSaveMonthlyPlan({
-                expectedIncome,
-                fixedCosts,
-                flexibleBudget: String(flexibleBudget),
-                note,
-                savingsTarget
-              })
-            }
+            onPress={() => {
+              void (async () => {
+                const result = await onSaveMonthlyPlan({
+                  expectedIncome,
+                  fixedCosts,
+                  flexibleBudget: String(flexibleBudget),
+                  note,
+                  savingsTarget
+                });
+                if (!result.ok) {
+                  hapticWarning();
+                  if (result.validation) {
+                    setFieldError(result.validation);
+                    if (result.validation.field === "expectedIncome") {
+                      setStep(0);
+                    }
+                  }
+                }
+              })();
+            }}
             style={styles.primaryButton}
           >
             <Ionicons name="save-outline" size={18} color={colors.surface} />

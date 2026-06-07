@@ -324,6 +324,88 @@ test("exportAllData and importAllData round-trip finance collections", async () 
   assertEqual(moments[0]?.amount, 25000, "imported amount preserved");
 });
 
+test("importAllData rolls back touched keys on invalid collection", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await saveSpendingMoment({
+    amount: 1000,
+    label: "Coffee",
+    context: "Food",
+    type: "expense"
+  });
+  const original = await exportAllData();
+
+  const maliciousBackup = {
+    ...original,
+    data: {
+      ...original.data,
+      [STORAGE_KEYS.moments]: [
+        {
+          id: "new-moment",
+          amount: 99999,
+          label: "Hacked",
+          context: "Food",
+          type: "expense",
+          recordedAt: "2026-06-01T00:00:00.000Z"
+        }
+      ],
+      [STORAGE_KEYS.accounts]: "bad-value"
+    }
+  };
+
+  const result = await importAllData(maliciousBackup);
+  assertEqual(result.ok, false, "import fails");
+  if (!result.ok) {
+    assertEqual(result.code, "invalid_collection", "invalid collection code");
+  }
+
+  const moments = await listSpendingMoments();
+  assertEqual(moments.length, 1, "still one moment");
+  assertEqual(moments[0]?.label, "Coffee", "original moment restored");
+});
+
+test("importAllData rolls back touched keys when a write fails", async () => {
+  const driver = createMemoryDriver({ failWrites: new Set([STORAGE_KEYS.accounts]) });
+  setStorageDriver(driver);
+
+  await saveSpendingMoment({
+    amount: 1000,
+    label: "Coffee",
+    context: "Food",
+    type: "expense"
+  });
+
+  const backup = {
+    app: "slev" as const,
+    schemaVersion: 0,
+    exportedAt: new Date().toISOString(),
+    data: {
+      [STORAGE_KEYS.moments]: [
+        {
+          id: "new-moment",
+          amount: 50000,
+          label: "Lunch",
+          context: "Food",
+          type: "expense",
+          recordedAt: "2026-06-01T00:00:00.000Z"
+        }
+      ],
+      [STORAGE_KEYS.accounts]: []
+    }
+  };
+
+  const result = await importAllData(backup);
+  assertEqual(result.ok, false, "import fails on accounts write");
+  if (!result.ok) {
+    assertEqual(result.code, "restore_failed", "restore failed code");
+    assertEqual(result.key, STORAGE_KEYS.accounts, "failed key");
+  }
+
+  const moments = await listSpendingMoments();
+  assertEqual(moments[0]?.label, "Coffee", "original moment restored after rollback");
+});
+
 test("list actions hint defaults to unseen", async () => {
   const driver = createMemoryDriver();
   setStorageDriver(driver);

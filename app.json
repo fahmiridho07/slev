@@ -27,6 +27,16 @@
         "android.permission.SYSTEM_ALERT_WINDOW"
       ]
     },
+    "ios": {
+      "bundleIdentifier": "com.slev.app",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["slev"]
+          }
+        ]
+      }
+    },
     "extra": {
       "privacy": {
         "storesRawNotifications": false,

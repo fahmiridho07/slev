@@ -55,6 +55,7 @@ export const idExtras: AppStringsExtras = {
       markedAs: "{category} ditandai sebagai {mode}."
     },
     plan: {
+      needFields: "Masukkan pendapatan yang diharapkan untuk menyimpan rencana ini.",
       saved: "Rencana bulanan tersimpan."
     },
     goal: {

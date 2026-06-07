@@ -55,6 +55,7 @@ export const enExtras: AppStringsExtras = {
       markedAs: "{category} marked as {mode}."
     },
     plan: {
+      needFields: "Enter expected income to save this plan.",
       saved: "Monthly plan saved."
     },
     goal: {

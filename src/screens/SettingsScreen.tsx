@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { memo, useMemo, useState } from "react";
+import React, { memo, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleProp, Text, TextInput, View, ViewStyle } from "react-native";
 import {
   DeleteConfirmDialog,
   EmptyState,
+  FormScrollAnchor,
   ListActionRow,
   ListActionsOnboardingTip,
   ScreenHero,
@@ -11,6 +12,7 @@ import {
   SegmentedControl,
   StickyTabScreen
 } from "../components";
+import { useScrollToForm } from "../hooks/scrollToForm";
 import { useListActionsHint } from "../hooks/useListActionsHint";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { SettingsTabKey } from "../features/app.types";
@@ -79,6 +81,13 @@ function SettingsScreenComponent({
     "settings_categories",
     activeTab === "categories" && expenseCategories.length > 0
   );
+  const scrollToForm = useScrollToForm();
+
+  useEffect(() => {
+    if (editingCategoryId) {
+      requestAnimationFrame(() => scrollToForm());
+    }
+  }, [editingCategoryId, scrollToForm]);
 
   function editCategory(category: ExpenseCategory) {
     hapticSelection();
@@ -167,6 +176,7 @@ function SettingsScreenComponent({
               title={strings.listHints.settings_categories.title}
             />
           )}
+          <FormScrollAnchor>
           <View style={styles.capturePanel}>
             <Text style={componentStyles.microLabel}>
               {editingCategoryId ? strings.settings.categories.edit : strings.settings.categories.add}
@@ -218,6 +228,7 @@ function SettingsScreenComponent({
               </Pressable>
             </View>
           </View>
+          </FormScrollAnchor>
           {expenseCategories.length === 0 ? (
             <EmptyState text={strings.settings.categories.empty} />
           ) : (
