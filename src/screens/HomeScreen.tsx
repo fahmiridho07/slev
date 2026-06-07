@@ -3,7 +3,6 @@ import { ScrollView, StyleProp, ViewStyle } from "react-native";
 import { HomeMoneyPulse } from "../features/analysis/HomeMoneyPulse";
 import { UpcomingBillsPanel } from "../features/analysis/UpcomingBillsPanel";
 import { CapturePanel } from "../features/capture/CapturePanel";
-import { useTheme } from "../hooks/useTheme";
 import { AppNavigation } from "../navigation/appNavigation";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
 
@@ -26,7 +25,6 @@ function HomeScreenComponent({ navigation, onOpenSettings, scrollContentStyle }:
 
   return (
     <ScrollView contentContainerStyle={scrollContentStyle} keyboardShouldPersistTaps="handled">
-      <CapturePanel compactTypePicker defaultExpanded onOpenSettings={onOpenSettings} />
       <HomeMoneyPulse
         dailyFlexibleRoom={allocationPlan.dailyFlexibleRoom}
         hasMonthlyPlan={hasMonthlyPlan}
@@ -37,6 +35,7 @@ function HomeScreenComponent({ navigation, onOpenSettings, scrollContentStyle }:
         runwayMonths={runwayMonths}
         savingsGoals={savingsGoals}
       />
+      <CapturePanel compactTypePicker defaultExpanded onOpenSettings={onOpenSettings} />
       <UpcomingBillsPanel
         upcomingBills={upcomingBills}
         onLogPayment={(billId) => void actions.logRecurringBillPayment(billId)}

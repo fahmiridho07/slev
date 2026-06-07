@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useState } from "react";
+import React, { memo, useMemo } from "react";
 import { ScrollView, StyleProp, View, ViewStyle } from "react-native";
 import { ScreenHero, ScreenTabBar } from "../components";
 import { AccountAnalysisPanel } from "../features/analysis/AccountAnalysisPanel";
@@ -12,10 +12,16 @@ import { useTheme } from "../hooks/useTheme";
 import { formatString } from "../i18n";
 
 type PatternsScreenProps = {
+  activePatternTab: PatternTabKey;
+  onPatternTabChange: (tab: PatternTabKey) => void;
   scrollContentStyle: StyleProp<ViewStyle>;
 };
 
-function PatternsScreenComponent({ scrollContentStyle }: PatternsScreenProps) {
+function PatternsScreenComponent({
+  activePatternTab,
+  onPatternTabChange,
+  scrollContentStyle
+}: PatternsScreenProps) {
   const { strings, styles } = useTheme();
   const actions = useActions();
   const { feedbackByPattern, latestBalanceTotal, monthlySummary, netWorthTrend, patterns, projectedBalanceSnapshots } =
@@ -29,8 +35,6 @@ function PatternsScreenComponent({ scrollContentStyle }: PatternsScreenProps) {
     }),
     shallowEqual
   );
-  const [activePatternTab, setActivePatternTab] = useState<PatternTabKey>("overview");
-
   const hero = useMemo(() => {
     if (activePatternTab === "breakdown") {
       return {
@@ -89,7 +93,7 @@ function PatternsScreenComponent({ scrollContentStyle }: PatternsScreenProps) {
           { icon: "card-outline", label: strings.patterns.tabs.accounts, value: "accounts" }
         ]}
         selected={activePatternTab}
-        onSelect={setActivePatternTab}
+        onSelect={onPatternTabChange}
       />
 
       {activePatternTab === "overview" && (

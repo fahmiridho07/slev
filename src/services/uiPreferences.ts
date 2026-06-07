@@ -1,4 +1,5 @@
 import type { Locale } from "../i18n";
+import { BudgetTabKey, PatternTabKey, SettingsTabKey } from "../features/app.types";
 import type { ColorScheme } from "../theme/types";
 import { readRaw, writeRaw } from "./storage";
 
@@ -9,7 +10,9 @@ const MEMORY_LIST_HINT_KEY = "slev_ui_memory_list_hint_seen";
 
 export type StoredNavState = {
   activeTab: string;
-  budgetTab: string;
+  budgetTab: BudgetTabKey;
+  patternTab: PatternTabKey;
+  settingsTab: SettingsTabKey;
 };
 
 export type ListActionsHintKey =
@@ -26,6 +29,26 @@ const LIST_ACTIONS_HINT_KEYS: Record<ListActionsHintKey, string> = {
   recurring_bills: "slev_ui_bills_list_hint_seen",
   settings_categories: "slev_ui_settings_categories_hint_seen"
 };
+
+const BUDGET_TABS = new Set<BudgetTabKey>(["plan", "balance", "goals"]);
+const PATTERN_TABS = new Set<PatternTabKey>(["overview", "breakdown", "accounts"]);
+const SETTINGS_TABS = new Set<SettingsTabKey>(["bills", "categories", "data"]);
+
+function parseBudgetTab(value: unknown): BudgetTabKey {
+  return typeof value === "string" && BUDGET_TABS.has(value as BudgetTabKey) ? (value as BudgetTabKey) : "plan";
+}
+
+function parsePatternTab(value: unknown): PatternTabKey {
+  return typeof value === "string" && PATTERN_TABS.has(value as PatternTabKey)
+    ? (value as PatternTabKey)
+    : "overview";
+}
+
+function parseSettingsTab(value: unknown): SettingsTabKey {
+  return typeof value === "string" && SETTINGS_TABS.has(value as SettingsTabKey)
+    ? (value as SettingsTabKey)
+    : "bills";
+}
 
 export async function hasSeenListActionsHint(key: ListActionsHintKey): Promise<boolean> {
   return (await readRaw(LIST_ACTIONS_HINT_KEYS[key])) === "1";
@@ -85,15 +108,20 @@ export async function getNavStatePreference(): Promise<StoredNavState | null> {
   }
 
   try {
-    const parsed = JSON.parse(stored) as StoredNavState;
-    if (typeof parsed.activeTab === "string" && typeof parsed.budgetTab === "string") {
-      return parsed;
+    const parsed = JSON.parse(stored) as Partial<StoredNavState>;
+    if (typeof parsed.activeTab !== "string") {
+      return null;
     }
+
+    return {
+      activeTab: parsed.activeTab,
+      budgetTab: parseBudgetTab(parsed.budgetTab),
+      patternTab: parsePatternTab(parsed.patternTab),
+      settingsTab: parseSettingsTab(parsed.settingsTab)
+    };
   } catch {
     return null;
   }
-
-  return null;
 }
 
 export async function setNavStatePreference(state: StoredNavState): Promise<void> {

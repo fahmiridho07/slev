@@ -1,14 +1,16 @@
-import { BudgetTabKey } from "../features/app.types";
+import { BudgetTabKey, PatternTabKey, SettingsTabKey } from "../features/app.types";
 import { AppTabKey } from "./appNavigation";
 
 export type DeepLinkTarget =
   | { tab: "home" }
   | { tab: "memory" }
   | { tab: "budget"; budgetTab?: BudgetTabKey }
-  | { tab: "patterns" }
-  | { tab: "settings" };
+  | { tab: "patterns"; patternTab?: PatternTabKey }
+  | { tab: "settings"; settingsTab?: SettingsTabKey };
 
 const BUDGET_TABS = new Set<BudgetTabKey>(["plan", "balance", "goals"]);
+const PATTERN_TABS = new Set<PatternTabKey>(["overview", "breakdown", "accounts"]);
+const SETTINGS_TABS = new Set<SettingsTabKey>(["bills", "categories", "data"]);
 
 export function parseDeepLink(url: string): DeepLinkTarget | null {
   const normalized = url.replace(/^[^:]+:\/\//, "").replace(/\/$/, "");
@@ -17,8 +19,20 @@ export function parseDeepLink(url: string): DeepLinkTarget | null {
 
   if (root === "home") return { tab: "home" };
   if (root === "memory") return { tab: "memory" };
-  if (root === "settings") return { tab: "settings" };
-  if (root === "patterns" || root === "analysis") return { tab: "patterns" };
+  if (root === "settings") {
+    const sub = parts[1]?.toLowerCase() as SettingsTabKey | undefined;
+    if (sub && SETTINGS_TABS.has(sub)) {
+      return { tab: "settings", settingsTab: sub };
+    }
+    return { tab: "settings" };
+  }
+  if (root === "patterns" || root === "analysis") {
+    const sub = parts[1]?.toLowerCase() as PatternTabKey | undefined;
+    if (sub && PATTERN_TABS.has(sub)) {
+      return { tab: "patterns", patternTab: sub };
+    }
+    return { tab: "patterns" };
+  }
   if (root === "budget") {
     const sub = parts[1]?.toLowerCase() as BudgetTabKey | undefined;
     if (sub && BUDGET_TABS.has(sub)) {

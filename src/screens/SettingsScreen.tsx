@@ -11,6 +11,7 @@ import {
   SegmentedControl
 } from "../components";
 import { useListActionsHint } from "../hooks/useListActionsHint";
+import { SettingsTabKey } from "../features/app.types";
 import { ExpenseCategory } from "../features/spendingMemory.types";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
 import { formatString, getCategoryDeleteMessage } from "../i18n";
@@ -18,13 +19,17 @@ import { listCorruptStorageIssues, StorageHealthIssue } from "../services/storag
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
 import { useTheme } from "../hooks/useTheme";
 
-type SettingsTabKey = "bills" | "categories" | "data";
-
 type SettingsScreenProps = {
+  activeSettingsTab: SettingsTabKey;
+  onSettingsTabChange: (tab: SettingsTabKey) => void;
   scrollContentStyle: StyleProp<ViewStyle>;
 };
 
-function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
+function SettingsScreenComponent({
+  activeSettingsTab,
+  onSettingsTabChange,
+  scrollContentStyle
+}: SettingsScreenProps) {
   const { colorScheme, colors, locale, setColorScheme, setLocale, strings, styles } = useTheme();
   const actions = useActions();
   const { categoryLabels } = useDerived();
@@ -40,7 +45,7 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
   );
   const momentCount = moments.length;
 
-  const [activeTab, setActiveTab] = useState<SettingsTabKey>("bills");
+  const activeTab = activeSettingsTab;
   const [editingCategoryId, setEditingCategoryId] = useState<string | undefined>(undefined);
   const [categoryDraft, setCategoryDraft] = useState("");
   const [pendingDeleteCategory, setPendingDeleteCategory] = useState<ExpenseCategory | null>(null);
@@ -118,7 +123,7 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
             { icon: "cloud-outline", label: strings.settings.dataTab, value: "data" }
           ]}
           selected={activeTab}
-          onSelect={setActiveTab}
+          onSelect={onSettingsTabChange}
         />
 
         {activeTab === "bills" && (

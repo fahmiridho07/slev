@@ -7,7 +7,7 @@ import { DeleteConfirmDialog } from "./components";
 import { BRAND } from "./data/brand";
 import { useLayoutInsets } from "./hooks/useLayoutInsets";
 import { useTheme } from "./hooks/useTheme";
-import { BudgetTabKey } from "./features/app.types";
+import { BudgetTabKey, PatternTabKey, SettingsTabKey } from "./features/app.types";
 import { hapticSelection } from "./lib/haptics";
 import { isAppTabKey, parseDeepLink } from "./navigation/deepLink";
 import { AppNavigation, AppTabKey } from "./navigation/appNavigation";
@@ -49,6 +49,8 @@ export function AppRoot() {
   const [activeTab, setActiveTab] = useState<AppTabKey>("home");
   const [returnTab, setReturnTab] = useState<AppTabKey>("home");
   const [budgetTab, setBudgetTab] = useState<BudgetTabKey>("plan");
+  const [patternTab, setPatternTab] = useState<PatternTabKey>("overview");
+  const [settingsTab, setSettingsTab] = useState<SettingsTabKey>("bills");
   const [toastMessage, setToastMessage] = useState("");
   const [navHydrated, setNavHydrated] = useState(false);
 
@@ -78,7 +80,18 @@ export function AppRoot() {
       }
 
       if (target.tab === "settings") {
+        if (target.settingsTab) {
+          setSettingsTab(target.settingsTab);
+        }
         openSettings();
+        return;
+      }
+
+      if (target.tab === "patterns") {
+        setActiveTab("patterns");
+        if (target.patternTab) {
+          setPatternTab(target.patternTab);
+        }
         return;
       }
 
@@ -112,9 +125,9 @@ export function AppRoot() {
       }
 
       setActiveTab(stored.activeTab);
-      if (stored.budgetTab === "balance" || stored.budgetTab === "goals" || stored.budgetTab === "plan") {
-        setBudgetTab(stored.budgetTab);
-      }
+      setBudgetTab(stored.budgetTab);
+      setPatternTab(stored.patternTab);
+      setSettingsTab(stored.settingsTab);
       if (active) {
         setNavHydrated(true);
       }
@@ -136,11 +149,16 @@ export function AppRoot() {
   }, [applyDeepLink]);
 
   useEffect(() => {
-    if (!isReady || !navHydrated || inSettings) {
+    if (!isReady || !navHydrated) {
       return;
     }
-    void setNavStatePreference({ activeTab, budgetTab });
-  }, [activeTab, budgetTab, inSettings, isReady, navHydrated]);
+    void setNavStatePreference({
+      activeTab: inSettings ? returnTab : activeTab,
+      budgetTab,
+      patternTab,
+      settingsTab
+    });
+  }, [activeTab, budgetTab, inSettings, isReady, navHydrated, patternTab, returnTab, settingsTab]);
 
   useEffect(() => {
     if (!isReady) {
@@ -222,8 +240,20 @@ export function AppRoot() {
                 scrollContentStyle={scrollContentStyle}
               />
             )}
-            {isReady && activeTab === "patterns" && <PatternsScreen scrollContentStyle={scrollContentStyle} />}
-            {isReady && activeTab === "settings" && <SettingsScreen scrollContentStyle={scrollContentStyle} />}
+            {isReady && activeTab === "patterns" && (
+              <PatternsScreen
+                activePatternTab={patternTab}
+                onPatternTabChange={setPatternTab}
+                scrollContentStyle={scrollContentStyle}
+              />
+            )}
+            {isReady && activeTab === "settings" && (
+              <SettingsScreen
+                activeSettingsTab={settingsTab}
+                onSettingsTabChange={setSettingsTab}
+                scrollContentStyle={scrollContentStyle}
+              />
+            )}
           </View>
 
           <View style={tabBarStyle}>
