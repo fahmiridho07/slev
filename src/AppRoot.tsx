@@ -148,14 +148,21 @@ export function AppRoot() {
   }, []);
 
   useEffect(() => {
+    const subscription = Linking.addEventListener("url", ({ url }) => applyDeepLink(url));
+    return () => subscription.remove();
+  }, [applyDeepLink]);
+
+  useEffect(() => {
+    if (!navHydrated) {
+      return;
+    }
+
     void Linking.getInitialURL().then((url) => {
       if (url) {
         applyDeepLink(url);
       }
     });
-    const subscription = Linking.addEventListener("url", ({ url }) => applyDeepLink(url));
-    return () => subscription.remove();
-  }, [applyDeepLink]);
+  }, [applyDeepLink, navHydrated]);
 
   useEffect(() => {
     if (!isReady || !navHydrated) {
