@@ -77,6 +77,10 @@ export function AccountAnalysisPanel({
           <Text style={styles.analyticsAmount}>{formatCompactRupiah(row.expense)}</Text>
         </View>
         <ProgressBar
+          accessibilityLabel={formatString(strings.common.progressA11y, {
+            label: row.label,
+            percent: Math.round(row.share * 100)
+          })}
           fillStyle={[styles.expenseFill, getPercentWidthStyle(row.share)]}
           value={row.share}
         />
@@ -88,7 +92,7 @@ export function AccountAnalysisPanel({
         </Text>
       </View>
     ),
-    [accountsStrings.incomeNetCopy, styles]
+    [accountsStrings.incomeNetCopy, strings.common.progressA11y, styles]
   );
 
   const renderTransferItem = useCallback(

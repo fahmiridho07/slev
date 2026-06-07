@@ -103,6 +103,12 @@ export function AllocationPanel({
                   </View>
                   {row.planned > 0 && (
                     <ProgressBar
+                      accessibilityLabel={formatString(strings.common.progressA11y, {
+                        label: rowCopy.title,
+                        percent: Math.round(
+                          row.planned > 0 ? (row.actual / row.planned) * 100 : 0
+                        )
+                      })}
                       fillStyle={[styles.progressFill, getAllocationFillStyle(row, colors)]}
                       value={row.planned > 0 ? row.actual / row.planned : 0}
                     />

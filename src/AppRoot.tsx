@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Image, KeyboardAvoidingView, Linking, Platform, Pressable, Text, View } from "react-native";
+import { Image, KeyboardAvoidingView, Linking, Platform, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppToast, DeleteConfirmDialog } from "./components";
 import { BRAND } from "./data/brand";
@@ -194,6 +194,9 @@ export function AppRoot() {
     setActiveTab(tab);
   }
 
+  const visibleToastMessage =
+    toastMessage || (undoToast ? strings.toasts.memory.removed : "");
+
   return (
     <>
       <FinanceInitializer />
@@ -227,9 +230,9 @@ export function AppRoot() {
                 />
               </Pressable>
             </View>
-            {toastMessage ? (
+            {visibleToastMessage ? (
               <AppToast
-                message={toastMessage}
+                message={visibleToastMessage}
                 onUndo={undoToast ? () => void actions.undoRemoveMoment() : undefined}
                 undoLabel={undoToast ? strings.common.undo : undefined}
               />
@@ -237,12 +240,6 @@ export function AppRoot() {
           </View>
 
           <View style={styles.content}>
-            {!isReady && (
-              <View style={styles.bootState}>
-                <ActivityIndicator color={colors.greenDark} size="small" />
-                <Text style={styles.bootText}>{strings.boot.preparing}</Text>
-              </View>
-            )}
             {isReady && activeTab === "home" && (
               <HomeScreen
                 captureFocusRequest={captureFocusRequest}

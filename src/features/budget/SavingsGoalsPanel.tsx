@@ -119,6 +119,10 @@ export function SavingsGoalsPanel({
                     <Text style={styles.analyticsAmount}>{formatRupiah(goal.savedAmount)} / {formatRupiah(goal.targetAmount)}</Text>
                   </View>
                   <ProgressBar
+                    accessibilityLabel={formatString(strings.common.progressA11y, {
+                      label: goal.label,
+                      percent: Math.round(progress * 100)
+                    })}
                     fillStyle={[styles.trendFill, getPercentWidthStyle(progress)]}
                     value={progress}
                   />

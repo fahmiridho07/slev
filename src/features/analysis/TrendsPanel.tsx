@@ -7,6 +7,7 @@ import { NetWorthPoint } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { SpendingMoment, type PatternGroup } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
+import { formatString } from "../../i18n";
 import { formatLocaleShortDate } from "../../i18n/localeDate";
 import { CashflowPanel } from "./CashflowPanel";
 
@@ -44,6 +45,12 @@ export function TrendsPanel({
                   <Text style={styles.analyticsAmount}>{formatCompactRupiah(point.total)}</Text>
                 </View>
                 <ProgressBar
+                  accessibilityLabel={formatString(strings.common.progressA11y, {
+                    label: formatLocaleShortDate(point.date),
+                    percent: Math.round(
+                      (netWorthPeak > 0 ? point.total / netWorthPeak : 0) * 100
+                    )
+                  })}
                   fillStyle={[
                     styles.trendFill,
                     getPercentWidthStyle(netWorthPeak > 0 ? point.total / netWorthPeak : 0)
@@ -67,6 +74,10 @@ export function TrendsPanel({
               <Text style={styles.analyticsAmount}>{formatCompactRupiah(month.amount)}</Text>
             </View>
             <ProgressBar
+              accessibilityLabel={formatString(strings.common.progressA11y, {
+                label: month.label,
+                percent: Math.round(month.share * 100)
+              })}
               fillStyle={[styles.trendFill, getPercentWidthStyle(month.share)]}
               value={month.share}
             />

@@ -20,6 +20,7 @@ export const id: AppStrings = {
     cancel: "Batal",
     delete: "Hapus",
     gotIt: "Mengerti",
+    progressA11y: "{label}: {percent} persen",
     pullToRefresh: "Tarik untuk memuat ulang",
     undo: "Urungkan",
     openSettings: "Buka pengaturan",
@@ -294,7 +295,8 @@ export const id: AppStrings = {
       feedbackKeep: "Pertahankan",
       feedbackLessOften: "Lebih jarang",
       feedbackLockedHint: "Catat minimal 6 pengeluaran dalam 14 hari terakhir untuk menjawab pertanyaan ringkasan.",
-      feedbackNotSure: "Tidak yakin"
+      feedbackNotSure: "Tidak yakin",
+      feedbackSaved: "Terima kasih — kami akan mengingatnya."
     },
     ...idExtras.patterns
   },

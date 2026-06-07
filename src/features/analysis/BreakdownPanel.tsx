@@ -49,6 +49,10 @@ export function BreakdownPanel({ moments }: { moments: SpendingMoment[] }) {
                   </Text>
                 </View>
                 <ProgressBar
+                  accessibilityLabel={formatString(strings.common.progressA11y, {
+                    label: row.label,
+                    percent: Math.round(row.share * 100)
+                  })}
                   fillStyle={[styles.breakdownFill, getPercentWidthStyle(row.share)]}
                   value={row.share}
                 />

@@ -287,6 +287,7 @@ export type AppStrings = {
     import: string;
     income: string;
     openSettings: string;
+    progressA11y: string;
     pullToRefresh: string;
     undo: string;
     paused: string;
@@ -453,6 +454,7 @@ export type AppStrings = {
       feedbackKeep: string;
       feedbackLessOften: string;
       feedbackLockedHint: string;
+      feedbackSaved: string;
       feedbackNotSure: string;
     };
     recapEmpty: string;

@@ -133,6 +133,10 @@ export function BudgetLimitsPanel({
 
           {row.limit && (
             <ProgressBar
+              accessibilityLabel={formatString(strings.common.progressA11y, {
+                label: row.category,
+                percent: Math.round(row.progress * 100)
+              })}
               fillStyle={[styles.progressFill, getProgressFillStyle(row.progress, colors)]}
               value={row.progress}
             />

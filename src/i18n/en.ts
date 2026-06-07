@@ -20,6 +20,7 @@ export const en: AppStrings = {
     cancel: "Cancel",
     delete: "Delete",
     gotIt: "Got it",
+    progressA11y: "{label}: {percent} percent",
     pullToRefresh: "Pull to refresh",
     undo: "Undo",
     openSettings: "Open settings",
@@ -294,7 +295,8 @@ export const en: AppStrings = {
       feedbackKeep: "Keep",
       feedbackLessOften: "Less often",
       feedbackLockedHint: "Log at least 6 expenses in the last 14 days to answer recap questions.",
-      feedbackNotSure: "Not sure"
+      feedbackNotSure: "Not sure",
+      feedbackSaved: "Thanks — we'll remember that."
     },
     ...enExtras.patterns
   },

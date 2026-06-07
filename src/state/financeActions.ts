@@ -1,5 +1,5 @@
 import { Share } from "react-native";
-import { hapticSuccess } from "../lib/haptics";
+import { hapticSelection, hapticSuccess } from "../lib/haptics";
 import { CategoryModeValue } from "../features/app.types";
 import { CaptureFormValues } from "../features/capture/types";
 import {
@@ -53,6 +53,7 @@ import {
   getMemoryNeedAmountToast,
   getMemoryRemovedToast,
   getMemoryRestoredToast,
+  getPatternFeedbackSavedToast,
   getMemoryUpdatedToast,
   getPlanSavedToast,
   getResetFailedToast,
@@ -661,6 +662,8 @@ export function createFinanceActions(
       return;
     }
     dispatch({ type: "set_feedback", feedback: updated });
+    hapticSelection();
+    setMessage(getPatternFeedbackSavedToast());
   }
 
   function clearAll() {

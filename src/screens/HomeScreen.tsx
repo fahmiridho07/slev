@@ -55,16 +55,6 @@ function HomeScreenComponent({
       keyboardShouldPersistTaps="handled"
       refreshControl={refreshControl}
     >
-      <HomeMoneyPulse
-        dailyFlexibleRoom={allocationPlan.dailyFlexibleRoom}
-        hasMonthlyPlan={hasMonthlyPlan}
-        latestBalanceTotal={latestBalanceTotal}
-        monthlyPlan={monthlyPlan}
-        monthlySummary={monthlySummary}
-        onOpenBudgetPlan={navigation.openBudgetPlan}
-        runwayMonths={runwayMonths}
-        savingsGoals={savingsGoals}
-      />
       <View
         onLayout={(event) => {
           captureOffsetRef.current = event.nativeEvent.layout.y;
@@ -77,6 +67,16 @@ function HomeScreenComponent({
           onOpenSettings={onOpenSettings}
         />
       </View>
+      <HomeMoneyPulse
+        dailyFlexibleRoom={allocationPlan.dailyFlexibleRoom}
+        hasMonthlyPlan={hasMonthlyPlan}
+        latestBalanceTotal={latestBalanceTotal}
+        monthlyPlan={monthlyPlan}
+        monthlySummary={monthlySummary}
+        onOpenBudgetPlan={navigation.openBudgetPlan}
+        runwayMonths={runwayMonths}
+        savingsGoals={savingsGoals}
+      />
       <UpcomingBillsPanel
         upcomingBills={upcomingBills}
         onLogPayment={(billId) => void actions.logRecurringBillPayment(billId)}

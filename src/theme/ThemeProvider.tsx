@@ -5,6 +5,7 @@ import { getStrings, setRuntimeLocale, type AppStrings, type Locale } from "../i
 import { darkColors, darkShadows, lightColors, lightShadows } from "./palettes";
 import {
   type CapturePanelPreference,
+  detectDeviceLocale,
   getCapturePanelPreference,
   getColorSchemePreference,
   getLocalePreference,
@@ -56,7 +57,7 @@ function paletteForScheme(scheme: "dark" | "light") {
 function ThemeBootSplash() {
   const scheme = Appearance.getColorScheme() === "dark" ? "dark" : "light";
   const { colors } = paletteForScheme(scheme);
-  const strings = getStrings("en");
+  const strings = getStrings(detectDeviceLocale());
 
   return (
     <SafeAreaView style={{ backgroundColor: colors.canvas, flex: 1 }}>
