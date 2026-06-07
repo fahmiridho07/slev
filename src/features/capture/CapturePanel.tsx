@@ -13,7 +13,6 @@ import { useCaptureForm } from "./useCaptureForm";
 
 type CapturePanelProps = {
   compactTypePicker?: boolean;
-  defaultExpanded?: boolean;
   focusAmountToken?: number;
   onOpenSettings: () => void;
   onSaved?: () => void;
@@ -21,7 +20,6 @@ type CapturePanelProps = {
 
 function CapturePanelComponent({
   compactTypePicker = false,
-  defaultExpanded = false,
   focusAmountToken = 0,
   onOpenSettings,
   onSaved
@@ -56,32 +54,19 @@ function CapturePanelComponent({
     saveTemplate
   } = useCaptureForm();
 
-  const [expanded, setExpanded] = useState(defaultExpanded);
   const [noteOpen, setNoteOpen] = useState(Boolean(form.note));
-
-  useEffect(() => {
-    setExpanded(defaultExpanded);
-  }, [defaultExpanded]);
 
   useEffect(() => {
     if (form.note) {
       setNoteOpen(true);
-      setExpanded(true);
     }
   }, [form.note]);
-
-  useEffect(() => {
-    if (form.entryType !== "expense") {
-      setExpanded(true);
-    }
-  }, [form.entryType]);
 
   useEffect(() => {
     if (focusAmountToken <= 0) {
       return;
     }
 
-    setExpanded(true);
     requestAnimationFrame(() => {
       amountInputRef.current?.focus();
     });
@@ -97,7 +82,7 @@ function CapturePanelComponent({
   }, [onSaved, save]);
 
   const showRepeatSuggestions = form.entryType === "expense" && repeatSuggestions.length > 0;
-  const showQuickAdd = expanded && (manualTemplates.length > 0 || showRepeatSuggestions);
+  const showQuickAdd = manualTemplates.length > 0 || showRepeatSuggestions;
 
   return (
     <View style={styles.capturePanel}>
@@ -158,13 +143,7 @@ function CapturePanelComponent({
           )}
         </View>
       )}
-      {expanded && (
-        <CaptureTypePicker
-          compact={compactTypePicker}
-          onSelect={changeEntryType}
-          selected={form.entryType}
-        />
-      )}
+      <CaptureTypePicker compact={compactTypePicker} onSelect={changeEntryType} selected={form.entryType} />
 
       <View style={styles.amountRow}>
         <Text style={styles.currencyPrefix}>{strings.capture.currencyPrefix}</Text>
@@ -189,7 +168,7 @@ function CapturePanelComponent({
         </Text>
       )}
 
-      {expanded && form.entryType === "transfer" ? (
+      {form.entryType === "transfer" ? (
         <View style={styles.transferPickerBlock}>
           <AccountPicker
             accounts={accounts}
@@ -209,7 +188,7 @@ function CapturePanelComponent({
             </Text>
           )}
         </View>
-      ) : expanded && form.entryType === "income" ? (
+      ) : form.entryType === "income" ? (
         <>
           <TextInput
             accessibilityLabel={
@@ -229,7 +208,7 @@ function CapturePanelComponent({
             </Text>
           )}
         </>
-      ) : expanded ? (
+      ) : (
         <>
           <TextInput
             accessibilityLabel={
@@ -249,9 +228,9 @@ function CapturePanelComponent({
             </Text>
           )}
         </>
-      ) : null}
+      )}
 
-      {expanded && form.entryType !== "transfer" && (
+      {form.entryType !== "transfer" && (
         <AccountPicker
           accounts={accounts}
           label={form.entryType === "income" ? strings.capture.receivedIn : strings.capture.paidFrom}
@@ -288,22 +267,20 @@ function CapturePanelComponent({
         )
       )}
 
-      {expanded && (
-        noteOpen ? (
-          <TextInput
-            multiline
-            onChangeText={(value) => patch({ note: value })}
-            placeholder={strings.capture.notePlaceholder}
-            placeholderTextColor={colors.muted}
-            style={[styles.input, styles.noteInput]}
-            value={form.note}
-          />
-        ) : (
-          <Pressable accessibilityRole="button" onPress={() => setNoteOpen(true)} style={styles.addNoteButton}>
-            <Ionicons name="create-outline" size={16} color={colors.muted} />
-            <Text style={styles.addNoteText}>{strings.capture.addNote}</Text>
-          </Pressable>
-        )
+      {noteOpen ? (
+        <TextInput
+          multiline
+          onChangeText={(value) => patch({ note: value })}
+          placeholder={strings.capture.notePlaceholder}
+          placeholderTextColor={colors.muted}
+          style={[styles.input, styles.noteInput]}
+          value={form.note}
+        />
+      ) : (
+        <Pressable accessibilityRole="button" onPress={() => setNoteOpen(true)} style={styles.addNoteButton}>
+          <Ionicons name="create-outline" size={16} color={colors.muted} />
+          <Text style={styles.addNoteText}>{strings.capture.addNote}</Text>
+        </Pressable>
       )}
 
       <Pressable
@@ -316,44 +293,19 @@ function CapturePanelComponent({
         <Text style={styles.primaryButtonText}>{getSaveLabel(form.entryType)}</Text>
       </Pressable>
 
-      {expanded ? (
-        <>
-          <Pressable
-            accessibilityLabel={strings.capture.saveAsShortcutA11y}
-            accessibilityRole="button"
-            onPress={() => void saveTemplate()}
-            style={styles.secondaryInlineButton}
-          >
-            <Ionicons name="bookmark-outline" size={16} color={colors.greenDark} />
-            <Text style={componentStyles.textButtonLabel}>{strings.capture.saveAsShortcut}</Text>
-          </Pressable>
-          {shortcutFieldError?.field === "shortcutTransfer" && (
-            <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
-              {shortcutFieldError.message}
-            </Text>
-          )}
-          {form.entryType === "expense" && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ expanded: true }}
-              onPress={() => setExpanded(false)}
-              style={styles.captureExpandRow}
-            >
-              <Text style={styles.captureExpandText}>{strings.capture.fewerOptions}</Text>
-              <Ionicons name="chevron-up-outline" size={16} color={colors.greenDark} />
-            </Pressable>
-          )}
-        </>
-      ) : (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ expanded: false }}
-          onPress={() => setExpanded(true)}
-          style={styles.captureExpandRow}
-        >
-          <Text style={styles.captureExpandText}>{strings.capture.moreOptions}</Text>
-          <Ionicons name="chevron-down-outline" size={16} color={colors.greenDark} />
-        </Pressable>
+      <Pressable
+        accessibilityLabel={strings.capture.saveAsShortcutA11y}
+        accessibilityRole="button"
+        onPress={() => void saveTemplate()}
+        style={styles.secondaryInlineButton}
+      >
+        <Ionicons name="bookmark-outline" size={16} color={colors.greenDark} />
+        <Text style={componentStyles.textButtonLabel}>{strings.capture.saveAsShortcut}</Text>
+      </Pressable>
+      {shortcutFieldError?.field === "shortcutTransfer" && (
+        <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+          {shortcutFieldError.message}
+        </Text>
       )}
     </View>
   );

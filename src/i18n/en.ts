@@ -82,8 +82,6 @@ export const en: AppStrings = {
     saveTransfer: "Save transfer",
     saveAsShortcut: "Save as shortcut",
     saveAsShortcutA11y: "Save as shortcut",
-    fewerOptions: "Fewer options",
-    moreOptions: "More options",
     amountA11y: "Amount",
     amountPlaceholder: "0",
     currencyPrefix: "Rp",
@@ -103,9 +101,6 @@ export const en: AppStrings = {
     }
   },
   appearance: {
-    captureCompact: "Compact",
-    captureExpanded: "Expanded",
-    capturePanelLabel: "Quick capture",
     label: "Appearance",
     light: "Light",
     dark: "Dark",

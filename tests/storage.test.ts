@@ -18,13 +18,11 @@ import {
   STORAGE_KEYS
 } from "../src/services/storageSchema";
 import {
-  getCapturePanelPreference,
   getColorSchemePreference,
   getLocalePreference,
   getReduceMotionPreference,
   hasSeenListActionsHint,
   markListActionsHintSeen,
-  setCapturePanelPreference,
   setColorSchemePreference,
   setLocalePreference,
   setReduceMotionPreference
@@ -450,21 +448,6 @@ test("locale preference persists", async () => {
 
   await setLocalePreference("id");
   assertEqual(await getLocalePreference(), "id", "indonesian locale stored");
-});
-
-test("capture panel preference defaults to expanded", async () => {
-  const driver = createMemoryDriver();
-  setStorageDriver(driver);
-
-  assertEqual(await getCapturePanelPreference(), "expanded", "capture panel defaults to expanded");
-});
-
-test("capture panel preference persists", async () => {
-  const driver = createMemoryDriver();
-  setStorageDriver(driver);
-
-  await setCapturePanelPreference("compact");
-  assertEqual(await getCapturePanelPreference(), "compact", "compact capture panel stored");
 });
 
 test("reduce motion preference defaults to system", async () => {

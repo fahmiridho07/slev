@@ -7,10 +7,8 @@ const COLOR_SCHEME_KEY = "slev_ui_color_scheme";
 const LOCALE_KEY = "slev_ui_locale";
 const NAV_STATE_KEY = "slev_ui_nav_state";
 const MEMORY_LIST_HINT_KEY = "slev_ui_memory_list_hint_seen";
-const CAPTURE_PANEL_KEY = "slev_ui_capture_panel";
 const REDUCE_MOTION_KEY = "slev_ui_reduce_motion";
 
-export type CapturePanelPreference = "compact" | "expanded";
 export type ReduceMotionPreference = "off" | "on" | "system";
 
 export type StoredNavState = {
@@ -104,15 +102,6 @@ export async function getLocalePreference(): Promise<Locale> {
 
 export async function setLocalePreference(locale: Locale): Promise<void> {
   await writeRaw(LOCALE_KEY, locale);
-}
-
-export async function getCapturePanelPreference(): Promise<CapturePanelPreference> {
-  const stored = await readRaw(CAPTURE_PANEL_KEY);
-  return stored === "compact" ? "compact" : "expanded";
-}
-
-export async function setCapturePanelPreference(preference: CapturePanelPreference): Promise<void> {
-  await writeRaw(CAPTURE_PANEL_KEY, preference);
 }
 
 export async function getReduceMotionPreference(): Promise<ReduceMotionPreference> {

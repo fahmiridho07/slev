@@ -82,8 +82,6 @@ export const id: AppStrings = {
     saveTransfer: "Simpan transfer",
     saveAsShortcut: "Simpan sebagai pintasan",
     saveAsShortcutA11y: "Simpan sebagai pintasan",
-    fewerOptions: "Lebih sedikit opsi",
-    moreOptions: "Lebih banyak opsi",
     amountA11y: "Jumlah",
     amountPlaceholder: "0",
     currencyPrefix: "Rp",
@@ -103,9 +101,6 @@ export const id: AppStrings = {
     }
   },
   appearance: {
-    captureCompact: "Ringkas",
-    captureExpanded: "Lengkap",
-    capturePanelLabel: "Catat cepat",
     label: "Tampilan",
     light: "Terang",
     dark: "Gelap",

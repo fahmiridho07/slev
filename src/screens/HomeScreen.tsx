@@ -21,7 +21,7 @@ function HomeScreenComponent({
   onOpenSettings,
   scrollContentStyle
 }: HomeScreenProps) {
-  const { capturePanelPreference, reduceMotion } = useTheme();
+  const { reduceMotion } = useTheme();
   const { refreshControl } = usePullToRefresh();
   const actions = useActions();
   const { allocationPlan, hasMonthlyPlan, latestBalanceTotal, monthlySummary, runwayMonths, upcomingBills } = useDerived();
@@ -62,7 +62,6 @@ function HomeScreenComponent({
       >
         <CapturePanel
           compactTypePicker
-          defaultExpanded={capturePanelPreference === "expanded"}
           focusAmountToken={captureFocusRequest}
           onOpenSettings={onOpenSettings}
         />

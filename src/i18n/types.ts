@@ -9,9 +9,6 @@ export type ListHintCopy = {
 
 export type AppStrings = {
   appearance: {
-    captureCompact: string;
-    captureExpanded: string;
-    capturePanelLabel: string;
     dark: string;
     label: string;
     light: string;
@@ -244,12 +241,10 @@ export type AppStrings = {
       Transport: string;
       Treat: string;
     };
-    fewerOptions: string;
     from: string;
     income: string;
     kicker: string;
     labelPlaceholder: string;
-    moreOptions: string;
     noCategories: string;
     notePlaceholder: string;
     openSettings: string;

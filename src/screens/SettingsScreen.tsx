@@ -39,13 +39,11 @@ function SettingsScreenComponent({
   scrollContentStyle
 }: SettingsScreenProps) {
   const {
-    capturePanelPreference,
     colorScheme,
     colors,
     componentStyles,
     locale,
     reduceMotionPreference,
-    setCapturePanelPreference,
     setColorScheme,
     setLocale,
     setReduceMotionPreference,
@@ -129,16 +127,6 @@ function SettingsScreenComponent({
             selected={locale}
             stretch
             onSelect={setLocale}
-          />
-          <Text style={componentStyles.microLabel}>{strings.appearance.capturePanelLabel}</Text>
-          <SegmentedControl
-            options={[
-              { label: strings.appearance.captureExpanded, value: "expanded" },
-              { label: strings.appearance.captureCompact, value: "compact" }
-            ]}
-            selected={capturePanelPreference}
-            stretch
-            onSelect={setCapturePanelPreference}
           />
           <Text style={componentStyles.microLabel}>{strings.appearance.reduceMotionLabel}</Text>
           <SegmentedControl
@@ -328,7 +316,6 @@ function SettingsScreenComponent({
     accounts,
     actions,
     activeTab,
-    capturePanelPreference,
     categoryDraft,
     categoryFieldError,
     categoryLabels,
@@ -346,7 +333,6 @@ function SettingsScreenComponent({
     locale,
     recurringBills,
     reduceMotionPreference,
-    setCapturePanelPreference,
     setColorScheme,
     setLocale,
     setReduceMotionPreference,

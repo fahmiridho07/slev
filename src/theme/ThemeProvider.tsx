@@ -4,14 +4,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { getStrings, setRuntimeLocale, type AppStrings, type Locale } from "../i18n";
 import { darkColors, darkShadows, lightColors, lightShadows } from "./palettes";
 import {
-  type CapturePanelPreference,
   detectDeviceLocale,
-  getCapturePanelPreference,
   getColorSchemePreference,
   getLocalePreference,
   getReduceMotionPreference,
   type ReduceMotionPreference,
-  setCapturePanelPreference as persistCapturePanelPreference,
   setColorSchemePreference,
   setLocalePreference,
   setReduceMotionPreference as persistReduceMotionPreference
@@ -21,7 +18,6 @@ import { createComponentStyles } from "./styles/components";
 import type { ColorScheme, ColorTokens, ShadowTokens } from "./types";
 
 export type AppTheme = {
-  capturePanelPreference: CapturePanelPreference;
   colorScheme: ColorScheme;
   colors: ColorTokens;
   componentStyles: ReturnType<typeof createComponentStyles>;
@@ -30,7 +26,6 @@ export type AppTheme = {
   reduceMotion: boolean;
   reduceMotionPreference: ReduceMotionPreference;
   resolvedScheme: "dark" | "light";
-  setCapturePanelPreference: (preference: CapturePanelPreference) => void;
   setColorScheme: (scheme: ColorScheme) => void;
   setLocale: (locale: Locale) => void;
   setReduceMotionPreference: (preference: ReduceMotionPreference) => void;
@@ -91,8 +86,6 @@ function resolveReduceMotion(
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>("system");
   const [locale, setLocaleState] = useState<Locale>("en");
-  const [capturePanelPreference, setCapturePanelPreferenceState] =
-    useState<CapturePanelPreference>("expanded");
   const [reduceMotionPreference, setReduceMotionPreferenceState] =
     useState<ReduceMotionPreference>("system");
   const [systemReduceMotion, setSystemReduceMotion] = useState(false);
@@ -102,20 +95,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let active = true;
     void (async () => {
-      const [storedScheme, storedLocale, storedCapturePanel, storedReduceMotion, reduceMotionEnabled] =
-        await Promise.all([
-          getColorSchemePreference(),
-          getLocalePreference(),
-          getCapturePanelPreference(),
-          getReduceMotionPreference(),
-          AccessibilityInfo.isReduceMotionEnabled()
-        ]);
+      const [storedScheme, storedLocale, storedReduceMotion, reduceMotionEnabled] = await Promise.all([
+        getColorSchemePreference(),
+        getLocalePreference(),
+        getReduceMotionPreference(),
+        AccessibilityInfo.isReduceMotionEnabled()
+      ]);
       if (!active) {
         return;
       }
       setColorSchemeState(storedScheme);
       setLocaleState(storedLocale);
-      setCapturePanelPreferenceState(storedCapturePanel);
       setReduceMotionPreferenceState(storedReduceMotion);
       setSystemReduceMotion(reduceMotionEnabled);
       setRuntimeLocale(storedLocale);
@@ -157,11 +147,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     void setLocalePreference(nextLocale);
   }, []);
 
-  const setCapturePanelPreference = useCallback((preference: CapturePanelPreference) => {
-    setCapturePanelPreferenceState(preference);
-    void persistCapturePanelPreference(preference);
-  }, []);
-
   const setReduceMotionPreference = useCallback((preference: ReduceMotionPreference) => {
     setReduceMotionPreferenceState(preference);
     void persistReduceMotionPreference(preference);
@@ -178,7 +163,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const strings = getStrings(locale);
 
     return {
-      capturePanelPreference,
       colorScheme,
       colors,
       componentStyles,
@@ -187,7 +171,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       reduceMotion,
       reduceMotionPreference,
       resolvedScheme,
-      setCapturePanelPreference,
       setColorScheme,
       setLocale,
       setReduceMotionPreference,
@@ -196,14 +179,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       styles
     };
   }, [
-    capturePanelPreference,
     colorScheme,
     isDark,
     locale,
     reduceMotion,
     reduceMotionPreference,
     resolvedScheme,
-    setCapturePanelPreference,
     setColorScheme,
     setLocale,
     setReduceMotionPreference
