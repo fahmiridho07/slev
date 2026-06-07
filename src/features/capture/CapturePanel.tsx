@@ -50,27 +50,42 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
     }
   }, [save]);
 
+  const showRepeatSuggestions = form.entryType === "expense" && repeatSuggestions.length > 0;
+  const showQuickAdd = manualTemplates.length > 0 || showRepeatSuggestions;
+
   return (
     <View style={styles.capturePanel}>
       <Text style={styles.kicker}>Quick capture</Text>
-      {manualTemplates.length > 0 && (
+      {showQuickAdd && (
         <View style={styles.repeatBlock}>
-          <Text style={styles.microLabel}>Manual shortcuts</Text>
-          <View style={styles.templateGrid}>
-            {manualTemplates.slice(0, 6).map((template) => (
-              <View key={template.id} style={styles.templateChip}>
-                <Pressable onPress={() => applyTemplate(template)} style={styles.templateMain}>
-                  <Text style={styles.repeatText}>{getTemplateLabel(template)}</Text>
-                  <Text style={styles.repeatAmount}>
-                    {template.amount > 0 ? formatRupiah(template.amount) : template.type === "income" ? "Income" : template.context}
-                  </Text>
+          <Text style={styles.microLabel}>Quick add</Text>
+          {manualTemplates.length > 0 && (
+            <View style={styles.templateGrid}>
+              {manualTemplates.slice(0, 6).map((template) => (
+                <View key={template.id} style={styles.templateChip}>
+                  <Pressable onPress={() => applyTemplate(template)} style={styles.templateMain}>
+                    <Text style={styles.repeatText}>{getTemplateLabel(template)}</Text>
+                    <Text style={styles.repeatAmount}>
+                      {template.amount > 0 ? formatRupiah(template.amount) : template.type === "income" ? "Income" : template.context}
+                    </Text>
+                  </Pressable>
+                  <Pressable onPress={() => actions.removeManualTemplate(template.id)} style={styles.templateRemoveButton}>
+                    <Ionicons name="close-outline" size={14} color={colors.muted} />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          )}
+          {showRepeatSuggestions && (
+            <View style={styles.suggestionRow}>
+              {repeatSuggestions.map((item) => (
+                <Pressable key={`${item.label}-${item.context}`} onPress={() => applyRepeat(item)} style={styles.repeatChip}>
+                  <Text style={styles.repeatText}>{item.label}</Text>
+                  <Text style={styles.repeatAmount}>{formatCompactRupiah(item.amount)}</Text>
                 </Pressable>
-                <Pressable onPress={() => actions.removeManualTemplate(template.id)} style={styles.templateRemoveButton}>
-                  <Ionicons name="close-outline" size={14} color={colors.muted} />
-                </Pressable>
-              </View>
-            ))}
-          </View>
+              ))}
+            </View>
+          )}
         </View>
       )}
       <CaptureTypePicker onSelect={changeEntryType} selected={form.entryType} />
@@ -127,20 +142,6 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
           selected={form.accountLabel}
           onSelect={(value) => patch({ accountLabel: value })}
         />
-      )}
-
-      {form.entryType === "expense" && repeatSuggestions.length > 0 && (
-        <View style={styles.repeatBlock}>
-          <Text style={styles.microLabel}>Repeat faster</Text>
-          <View style={styles.suggestionRow}>
-            {repeatSuggestions.map((item) => (
-              <Pressable key={`${item.label}-${item.context}`} onPress={() => applyRepeat(item)} style={styles.repeatChip}>
-                <Text style={styles.repeatText}>{item.label}</Text>
-                <Text style={styles.repeatAmount}>{formatCompactRupiah(item.amount)}</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
       )}
 
       {form.entryType === "expense" && (
