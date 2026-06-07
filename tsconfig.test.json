@@ -7,7 +7,12 @@
     "outDir": ".tmp-tests",
     "rootDir": ".",
     "target": "ES2020",
-    "types": []
+    "types": [],
+    "paths": {
+      "@/*": ["./src/*"],
+      "react-native": ["./tests/shims/react-native.ts"],
+      "expo-haptics": ["./tests/shims/expo-haptics.ts"]
+    }
   },
   "include": [
     "src/data/spendingMemory.ts",
@@ -30,8 +35,10 @@
     "src/navigation/appNavigation.ts",
     "src/lib/swipeGesture.ts",
     "src/navigation/deepLink.ts",
+    "src/state/financeActions.ts",
     "src/state/financeReducer.ts",
     "src/state/shallowEqual.ts",
+    "src/lib/haptics.ts",
     "tests/**/*.ts"
   ]
 }
