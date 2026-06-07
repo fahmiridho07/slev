@@ -1,7 +1,6 @@
 import { useCallback, useContext, useRef, useSyncExternalStore } from "react";
 import {
   ActionsContext,
-  DerivedContext,
   DerivedStoreContext,
   FinanceDerived,
   FinanceStoreContext
@@ -16,14 +15,6 @@ export function useActions(): FinanceActions {
   const context = useContext(ActionsContext);
   if (!context) {
     throw new Error("useActions must be used within FinanceProvider");
-  }
-  return context;
-}
-
-export function useDerived(): FinanceDerived {
-  const context = useContext(DerivedContext);
-  if (!context) {
-    throw new Error("useDerived must be used within FinanceProvider");
   }
   return context;
 }

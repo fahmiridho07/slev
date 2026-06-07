@@ -96,10 +96,10 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
           }}
           accessibilityLabel={
             fieldError?.field === "amount"
-              ? `${strings.memory.edit.amount}. ${fieldError.message}`
-              : strings.memory.edit.amount
+              ? `${strings.activity.edit.amount}. ${fieldError.message}`
+              : strings.activity.edit.amount
           }
-          placeholder={strings.memory.edit.amount}
+          placeholder={strings.activity.edit.amount}
           placeholderTextColor={colors.muted}
           style={styles.input}
           value={amountText}
@@ -120,12 +120,12 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
           }}
           accessibilityLabel={
             fieldError?.field === "label"
-              ? `${type === "income" ? strings.memory.edit.source : strings.memory.edit.label}. ${fieldError.message}`
+              ? `${type === "income" ? strings.activity.edit.source : strings.activity.edit.label}. ${fieldError.message}`
               : type === "income"
-                ? strings.memory.edit.source
-                : strings.memory.edit.label
+                ? strings.activity.edit.source
+                : strings.activity.edit.label
           }
-          placeholder={type === "income" ? strings.memory.edit.source : strings.memory.edit.label}
+          placeholder={type === "income" ? strings.activity.edit.source : strings.activity.edit.label}
           placeholderTextColor={colors.muted}
           style={styles.input}
           value={type === "income" ? source : label}
@@ -149,15 +149,15 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
         )}
         <AccountPicker
           accounts={accounts}
-          label={type === "income" ? strings.memory.edit.receivedIn : strings.memory.edit.paidFrom}
+          label={type === "income" ? strings.activity.edit.receivedIn : strings.activity.edit.paidFrom}
           selected={accountLabel}
           onSelect={setAccountLabel}
         />
         <TextInput
           multiline
           onChangeText={setNote}
-          accessibilityLabel={strings.memory.edit.note}
-          placeholder={strings.memory.edit.note}
+          accessibilityLabel={strings.activity.edit.note}
+          placeholder={strings.activity.edit.note}
           placeholderTextColor={colors.muted}
           style={[styles.input, styles.noteInput]}
           value={note}
@@ -174,12 +174,12 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
             <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
           </Pressable>
           <Pressable
-            accessibilityLabel={strings.memory.edit.save}
+            accessibilityLabel={strings.activity.edit.save}
             accessibilityRole="button"
             onPress={() => void save()}
             style={styles.smallPrimaryButton}
           >
-            <Text style={styles.primaryButtonText}>{strings.memory.edit.save}</Text>
+            <Text style={styles.primaryButtonText}>{strings.activity.edit.save}</Text>
           </Pressable>
         </View>
       </View>

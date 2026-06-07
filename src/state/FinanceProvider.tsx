@@ -38,7 +38,6 @@ export type FinanceDerived = {
 };
 
 export const ActionsContext = createContext<FinanceActions | null>(null);
-export const DerivedContext = createContext<FinanceDerived | null>(null);
 export const DerivedStoreContext = createContext<DerivedStore | null>(null);
 export const FinanceStoreContext = createContext<FinanceStore | null>(null);
 
@@ -206,9 +205,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   return (
     <FinanceStoreContext.Provider value={store}>
       <DerivedStoreContext.Provider value={derivedStore}>
-        <DerivedContext.Provider value={derived}>
-          <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
-        </DerivedContext.Provider>
+        <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
       </DerivedStoreContext.Provider>
     </FinanceStoreContext.Provider>
   );

@@ -8,7 +8,8 @@ import {
   EmptyState,
   ListActionRow,
   ListActionsOnboardingTip,
-  MomentRow
+  MomentRow,
+  SectionHeader
 } from "../components";
 import { useListActionsHint } from "../hooks/useListActionsHint";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
@@ -164,6 +165,7 @@ function OverviewScreenComponent({ navigation, onOpenSettings, scrollContentStyl
           onOpenSettings={onOpenSettings}
           upcomingBills={upcomingBills}
         />
+        <SectionHeader title={strings.activity.sectionTitle} />
         {showListHint && (
           <ListActionsOnboardingTip
             body={strings.listHints.memory.body}
@@ -173,9 +175,9 @@ function OverviewScreenComponent({ navigation, onOpenSettings, scrollContentStyl
         )}
         {moments.length > 0 && (
           <TextInput
-            accessibilityLabel={strings.memory.searchA11y}
+            accessibilityLabel={strings.activity.searchA11y}
             onChangeText={setQuery}
-            placeholder={strings.memory.searchPlaceholder}
+            placeholder={strings.activity.searchPlaceholder}
             placeholderTextColor={colors.muted}
             style={styles.input}
             value={query}
@@ -199,8 +201,8 @@ function OverviewScreenComponent({ navigation, onOpenSettings, scrollContentStyl
       runwayMonths,
       savingsGoals,
       showListHint,
+      strings.activity,
       strings.listHints.memory,
-      strings.memory,
       styles.cardStack,
       styles.input,
       upcomingBills
@@ -211,17 +213,17 @@ function OverviewScreenComponent({ navigation, onOpenSettings, scrollContentStyl
     if (moments.length === 0) {
       return (
         <EmptyState
-          actionLabel={strings.memory.emptyAction}
+          actionLabel={strings.activity.emptyAction}
           onAction={navigation.openCapture}
-          text={strings.memory.emptyText}
+          text={strings.activity.emptyText}
         />
       );
     }
     if (filteredMoments.length === 0) {
-      return <EmptyState text={strings.memory.searchNoResults} />;
+      return <EmptyState text={strings.activity.searchNoResults} />;
     }
     return null;
-  }, [filteredMoments.length, moments.length, navigation.openCapture, strings.memory]);
+  }, [filteredMoments.length, moments.length, navigation.openCapture, strings.activity]);
 
   return (
     <>
@@ -241,8 +243,8 @@ function OverviewScreenComponent({ navigation, onOpenSettings, scrollContentStyl
         onClose={cancelEdit}
         title={
           editingMoment
-            ? formatString(strings.memory.editSheetTitleNamed, { title: getMomentTitle(editingMoment) })
-            : strings.memory.editSheetTitle
+            ? formatString(strings.activity.editSheetTitleNamed, { title: getMomentTitle(editingMoment) })
+            : strings.activity.editSheetTitle
         }
         visible={Boolean(editingMoment)}
       >
@@ -258,7 +260,7 @@ function OverviewScreenComponent({ navigation, onOpenSettings, scrollContentStyl
       <DeleteConfirmDialog
         body={
           pendingDeleteMoment
-            ? formatString(strings.dialogs.memoryDeleteBody, { title: getMomentTitle(pendingDeleteMoment) })
+            ? formatString(strings.dialogs.activityDeleteBody, { title: getMomentTitle(pendingDeleteMoment) })
             : ""
         }
         onCancel={() => setPendingDeleteMoment(null)}
@@ -268,7 +270,7 @@ function OverviewScreenComponent({ navigation, onOpenSettings, scrollContentStyl
             setPendingDeleteMoment(null);
           }
         }}
-        title={strings.dialogs.memoryDeleteTitle}
+        title={strings.dialogs.activityDeleteTitle}
         visible={Boolean(pendingDeleteMoment)}
       />
     </>

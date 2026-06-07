@@ -1,4 +1,4 @@
-import { parseDeepLink } from "../src/navigation/deepLink";
+import { isAppTabKey, normalizeStoredTabKey, parseDeepLink } from "../src/navigation/deepLink";
 
 declare const process: {
   exitCode?: number;
@@ -48,6 +48,19 @@ test("parseDeepLink routes budget and analysis aliases", () => {
 test("parseDeepLink returns null for unknown routes", () => {
   assertEqual(parseDeepLink("slev://unknown"), null, "unknown route");
   assertEqual(parseDeepLink(""), null, "empty url");
+});
+
+test("normalizeStoredTabKey migrates legacy memory tab", () => {
+  assertEqual(normalizeStoredTabKey("memory"), "overview", "memory alias");
+  assertEqual(normalizeStoredTabKey("overview"), "overview", "overview key");
+  assertEqual(normalizeStoredTabKey("home"), "home", "home key");
+  assertEqual(normalizeStoredTabKey("legacy"), null, "unknown key");
+});
+
+test("isAppTabKey accepts current tab keys only", () => {
+  assertEqual(isAppTabKey("overview"), true, "overview accepted");
+  assertEqual(isAppTabKey("memory"), false, "memory rejected");
+  assertEqual(isAppTabKey("settings"), true, "settings accepted");
 });
 
 let passed = 0;

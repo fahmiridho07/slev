@@ -27,6 +27,25 @@ export type AppStrings = {
     settings: string;
     tagline: string;
   };
+  activity: {
+    edit: {
+      amount: string;
+      label: string;
+      note: string;
+      paidFrom: string;
+      receivedIn: string;
+      save: string;
+      source: string;
+    };
+    editSheetTitle: string;
+    editSheetTitleNamed: string;
+    emptyAction: string;
+    emptyText: string;
+    searchA11y: string;
+    searchNoResults: string;
+    searchPlaceholder: string;
+    sectionTitle: string;
+  };
   analysis: {
     accounts: {
       unassigned: string;
@@ -304,8 +323,8 @@ export type AppStrings = {
     clearAllBody: string;
     clearAllConfirm: string;
     clearAllTitle: string;
-    memoryDeleteBody: string;
-    memoryDeleteTitle: string;
+    activityDeleteBody: string;
+    activityDeleteTitle: string;
   };
   home: {
     bills: {
@@ -342,36 +361,16 @@ export type AppStrings = {
     label: string;
   };
   memory: {
-    deleteTitle: string;
-    edit: {
-      amount: string;
-      label: string;
-      note: string;
-      paidFrom: string;
-      receivedIn: string;
-      save: string;
-      source: string;
-    };
-    editSheetTitle: string;
-    editSheetTitleNamed: string;
-    emptyAction: string;
-    emptyText: string;
     groups: {
       earlier: string;
       thisWeek: string;
       today: string;
       yesterday: string;
     };
-    heroHintEmpty: string;
-    heroHintWithCount: string;
-    heroKicker: string;
     momentTitle: {
       income: string;
     };
     repeatHint: string;
-    searchNoResults: string;
-    searchPlaceholder: string;
-    searchA11y: string;
   };
   patterns: {
     accounts: {

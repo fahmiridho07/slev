@@ -118,7 +118,7 @@ export const id: AppStrings = {
   settings: {
     bills: {
       title: "Tagihan rutin",
-      intro: "Tagihan bulanan yang diharapkan tiap siklus. Muncul di Beranda saat pembayaran mendekat.",
+      intro: "Tagihan bulanan yang diharapkan tiap siklus. Muncul di Ringkasan saat pembayaran mendekat.",
       add: "Tambah tagihan",
       edit: "Edit tagihan",
       nameA11y: "Nama tagihan",
@@ -224,7 +224,8 @@ export const id: AppStrings = {
       logPaymentA11y: "Catat pembayaran {label}, {amount}, {due}"
     }
   },
-  memory: {
+  activity: {
+    sectionTitle: "Aktivitas",
     edit: {
       amount: "Jumlah",
       label: "Label",
@@ -234,17 +235,15 @@ export const id: AppStrings = {
       note: "Catatan",
       save: "Simpan"
     },
-    heroKicker: "Memori pengeluaran",
-    heroHintWithCount: "{count} momen tersimpan bulan ini",
-    heroHintEmpty: "Pengeluaran tersimpan muncul di sini setelah pencatatan",
-    searchA11y: "Cari memori",
+    searchA11y: "Cari aktivitas",
     searchPlaceholder: "Cari label, konteks, atau jumlah",
-    emptyText: "Belum ada memori pengeluaran.",
+    emptyText: "Belum ada pengeluaran tersimpan.",
     emptyAction: "Catat pengeluaran pertama",
-    searchNoResults: "Tidak ada memori yang cocok dengan pencarian.",
-    editSheetTitle: "Edit memori",
-    editSheetTitleNamed: "Edit {title}",
-    deleteTitle: "Hapus memori?",
+    searchNoResults: "Tidak ada aktivitas yang cocok dengan pencarian.",
+    editSheetTitle: "Edit entri",
+    editSheetTitleNamed: "Edit {title}"
+  },
+  memory: {
     ...idExtras.memory
   },
   budget: {
@@ -312,8 +311,8 @@ export const id: AppStrings = {
     categoryDeleteTitle: "Hapus kategori?",
     categoryDeleteDefault: "{label} akan hilang dari pencatatan dan batas anggaran. Memori yang ada tetap tersimpan.",
     categoryDeleteCustom: "{label} akan dihapus dari pencatatan dan batas anggaran. Memori yang ada tetap tersimpan.",
-    memoryDeleteTitle: "Hapus memori?",
-    memoryDeleteBody: "{title} akan dihapus dari Ringkasan. Total anggaran dan analisis diperbarui otomatis."
+    activityDeleteTitle: "Hapus entri?",
+    activityDeleteBody: "{title} akan dihapus dari Ringkasan. Total anggaran dan analisis diperbarui otomatis."
   },
   toasts: idExtras.toasts,
   analysis: idExtras.analysis,

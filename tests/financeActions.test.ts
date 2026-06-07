@@ -1,6 +1,7 @@
 import { saveSpendingMoment } from "../src/services/spendingMemoryRepository";
 import { exportAllData } from "../src/services/storageBackup";
 import { resetStorageDriver, setStorageDriver, StorageDriver } from "../src/services/storage";
+import { STORAGE_KEYS } from "../src/services/storageSchema";
 import { createFinanceActions } from "../src/state/financeActions";
 import { financeReducer, FinanceState, initialFinanceState } from "../src/state/financeReducer";
 
@@ -204,6 +205,83 @@ test("saveMoment persists expense and prepends to state", async () => {
   assertEqual(result.ok, true, "capture saved");
   assertEqual(getState().moments.length, 1, "moment prepended");
   assertEqual(getState().moments[0]?.amount, 25000, "amount stored");
+});
+
+test("saveMoment persists transfer and updates transfers state", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+  const { actions, getState } = createTestHarness({
+    isReady: true,
+    accounts: [
+      {
+        id: "acct-bri",
+        label: "BRI",
+        kind: "bank",
+        isIncomeHub: true,
+        tier: "tracked",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z"
+      },
+      {
+        id: "acct-jago",
+        label: "Jago",
+        kind: "bank",
+        isIncomeHub: false,
+        tier: "tracked",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z"
+      }
+    ]
+  });
+
+  const result = await actions.saveMoment(
+    {
+      entryType: "transfer",
+      amountText: "100000",
+      label: "",
+      context: "",
+      accountLabel: "BRI",
+      note: "Top up",
+      fromAccount: "BRI",
+      toAccount: "Jago",
+      source: ""
+    },
+    0
+  );
+
+  assertEqual(result.ok, true, "transfer saved");
+  assertEqual(getState().moments.length, 0, "transfer does not create a moment");
+  assertEqual(getState().transfers.length, 1, "transfer prepended");
+  assertEqual(getState().transfers[0]?.amount, 100000, "transfer amount stored");
+  assertEqual(getState().transfers[0]?.fromAccount, "BRI", "from account stored");
+  assertEqual(getState().transfers[0]?.toAccount, "Jago", "to account stored");
+});
+
+test("boot sets boot error and still marks ready when migration fails", async () => {
+  const driver = createMemoryDriver({ failWrites: new Set([STORAGE_KEYS.moments]) });
+  setStorageDriver(driver);
+
+  await driver.setItem(
+    STORAGE_KEYS.legacyTransactions,
+    JSON.stringify([
+      {
+        id: "tx-boot-fail",
+        amount: 12000,
+        merchant: "Legacy",
+        category: "Food",
+        status: "confirmed",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z"
+      }
+    ])
+  );
+
+  const { actions, getState } = createTestHarness({ isReady: false });
+
+  await actions.boot();
+
+  assertEqual(getState().isReady, true, "boot finishes ready state");
+  assertEqual(getState().bootError !== null, true, "boot error recorded");
 });
 
 test("logRecurringBillPayment reverts bill mark when moment write fails", async () => {

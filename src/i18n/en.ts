@@ -118,7 +118,7 @@ export const en: AppStrings = {
   settings: {
     bills: {
       title: "Recurring bills",
-      intro: "Monthly bills you expect each cycle. They show on Home when a payment is coming up.",
+      intro: "Monthly bills you expect each cycle. They show on Overview when a payment is coming up.",
       add: "Add bill",
       edit: "Edit bill",
       nameA11y: "Bill name",
@@ -224,7 +224,8 @@ export const en: AppStrings = {
       logPaymentA11y: "Log payment for {label}, {amount}, {due}"
     }
   },
-  memory: {
+  activity: {
+    sectionTitle: "Activity",
     edit: {
       amount: "Amount",
       label: "Label",
@@ -234,17 +235,15 @@ export const en: AppStrings = {
       note: "Note",
       save: "Save"
     },
-    heroKicker: "Spending memory",
-    heroHintWithCount: "{count} moment(s) saved this month",
-    heroHintEmpty: "Saved spending appears here after capture",
-    searchA11y: "Search memories",
+    searchA11y: "Search activity",
     searchPlaceholder: "Search label, context, or amount",
-    emptyText: "No saved spending memory yet.",
+    emptyText: "No saved spending yet.",
     emptyAction: "Log first expense",
-    searchNoResults: "No memory matches that search.",
-    editSheetTitle: "Edit memory",
-    editSheetTitleNamed: "Edit {title}",
-    deleteTitle: "Delete memory?",
+    searchNoResults: "No activity matches that search.",
+    editSheetTitle: "Edit entry",
+    editSheetTitleNamed: "Edit {title}"
+  },
+  memory: {
     ...enExtras.memory
   },
   budget: {
@@ -312,8 +311,8 @@ export const en: AppStrings = {
     categoryDeleteTitle: "Delete category?",
     categoryDeleteDefault: "{label} will disappear from capture and budget limits. Existing memories stay saved.",
     categoryDeleteCustom: "{label} will be removed from capture and budget limits. Existing memories stay saved.",
-    memoryDeleteTitle: "Delete memory?",
-    memoryDeleteBody: "{title} will be removed from Overview. Budget and analysis totals will update automatically."
+    activityDeleteTitle: "Delete entry?",
+    activityDeleteBody: "{title} will be removed from Overview. Budget and analysis totals will update automatically."
   },
   toasts: enExtras.toasts,
   analysis: enExtras.analysis,
