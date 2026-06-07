@@ -748,6 +748,17 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     fontWeight: "700",
     letterSpacing: 0
   },
+  breakdownBudgetBlock: {
+    gap: 8
+  },
+  breakdownRowTitle: {
+    flex: 1
+  },
+  breakdownRowTrailing: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 4
+  },
   budgetMeta: {
     color: colors.muted,
     fontSize: 12,

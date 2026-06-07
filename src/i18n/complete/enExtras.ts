@@ -354,7 +354,12 @@ export const enExtras: AppStringsExtras = {
       nextMonthA11y: "Next month, currently {month}",
       vsLastMonthUp: "Up {percent}% vs last month",
       vsLastMonthDown: "Down {percent}% vs last month",
-      vsLastMonthFlat: "Same as last month"
+      vsLastMonthFlat: "Same as last month",
+      viewEntriesA11y: "View {count} entries for {category}",
+      drilldownTitle: "{category} · {month}",
+      drilldownSummary: "{count} entries · {total}",
+      drilldownEmpty: "No entries in this month",
+      budgetProgressA11y: "{label} budget {percent}% used"
     },
     trends: {
       empty: "Trends appear after spending builds across months.",

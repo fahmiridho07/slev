@@ -1,9 +1,11 @@
-import React, { useMemo, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { EmptyState, MonthPeriodPicker, ProgressBar, SectionHeader, SegmentedControl } from "../../components";
 import { formatString } from "../../i18n";
 import { getPercentWidthStyle } from "../../lib/analysis";
-import { buildMonthlyBreakdown } from "../../lib/financeEngine";
+import { filterBreakdownMoments, getMonthlyBudgetLimit } from "../../lib/breakdownDrilldown";
+import { FinanceBreakdownRow, buildMonthlyBreakdown } from "../../lib/financeEngine";
 import {
   buildMonthExpenseComparison,
   getEarliestSpendingMonthOffset,
@@ -11,8 +13,11 @@ import {
   isCurrentMonthOffset
 } from "../../lib/spendingPeriod";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
-import { EntryType, SpendingMoment } from "../spendingMemory.types";
+import { BudgetLimit, EntryType, SpendingMoment } from "../spendingMemory.types";
+import { hapticSelection } from "../../lib/haptics";
 import { useTheme } from "../../hooks/useTheme";
+import { getProgressFillStyle } from "../../theme/styles/fillStyles";
+import { CategoryBreakdownSheet } from "./CategoryBreakdownSheet";
 import { MonthlySpendingChart } from "./MonthlySpendingChart";
 import { SpendingTrendsSection } from "./SpendingTrendsSection";
 
@@ -20,16 +25,19 @@ const TOP_CATEGORY_LIMIT = 5;
 const FLAT_DELTA_THRESHOLD = 0.005;
 
 type BreakdownPanelProps = {
+  budgetLimits: BudgetLimit[];
   moments: SpendingMoment[];
   monthOffset: number;
   onMonthOffsetChange: (offset: number) => void;
 };
 
-export function BreakdownPanel({ moments, monthOffset, onMonthOffsetChange }: BreakdownPanelProps) {
-  const { componentStyles, strings, styles } = useTheme();
+export function BreakdownPanel({ budgetLimits, moments, monthOffset, onMonthOffsetChange }: BreakdownPanelProps) {
+  const { colors, componentStyles, strings, styles } = useTheme();
   const breakdownStrings = strings.patterns.breakdown;
+  const limitsStrings = strings.budget.limits;
   const [breakdownType, setBreakdownType] = useState<EntryType>("expense");
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<FinanceBreakdownRow | null>(null);
   const referenceDate = useMemo(() => getMonthReferenceDate(monthOffset), [monthOffset]);
   const earliestMonthOffset = useMemo(() => getEarliestSpendingMonthOffset(moments), [moments]);
   const rows = useMemo(
@@ -38,6 +46,13 @@ export function BreakdownPanel({ moments, monthOffset, onMonthOffsetChange }: Br
   );
   const visibleRows = showAllCategories ? rows : rows.slice(0, TOP_CATEGORY_LIMIT);
   const hasHiddenRows = rows.length > TOP_CATEGORY_LIMIT;
+  const entryCountByKey = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const row of rows) {
+      counts.set(row.key, filterBreakdownMoments(moments, breakdownType, row.key, referenceDate).length);
+    }
+    return counts;
+  }, [breakdownType, moments, referenceDate, rows]);
   const expenseComparison = useMemo(
     () => buildMonthExpenseComparison(moments, monthOffset),
     [moments, monthOffset]
@@ -62,6 +77,15 @@ export function BreakdownPanel({ moments, monthOffset, onMonthOffsetChange }: Br
       : formatString(breakdownStrings.vsLastMonthDown, { percent: roundedPercent });
   }, [breakdownStrings, breakdownType, expenseComparison.deltaPercent, expenseComparison.previousExpense]);
   const deltaTone = expenseComparison.deltaPercent && expenseComparison.deltaPercent > 0 ? "up" : "down";
+
+  useEffect(() => {
+    setSelectedRow(null);
+  }, [breakdownType, monthOffset]);
+
+  function openRow(row: FinanceBreakdownRow) {
+    hapticSelection();
+    setSelectedRow(row);
+  }
 
   return (
     <View style={styles.analyticsBlock}>
@@ -108,27 +132,68 @@ export function BreakdownPanel({ moments, monthOffset, onMonthOffsetChange }: Br
             title={breakdownType === "income" ? breakdownStrings.incomeBySource : breakdownStrings.spendingByCategory}
           />
           <View style={styles.listPanel}>
-            {visibleRows.map((row) => (
-              <View key={row.key} style={styles.analyticsRow}>
-                <View style={styles.analyticsRowHeader}>
-                  <Text style={componentStyles.analyticsTitle}>{row.label}</Text>
-                  <Text style={styles.analyticsAmount}>
-                    {formatString(breakdownStrings.amountShare, {
-                      amount: formatCompactRupiah(row.amount),
+            {visibleRows.map((row) => {
+              const monthlyLimit =
+                breakdownType === "expense" ? getMonthlyBudgetLimit(budgetLimits, row.key) : undefined;
+              const budgetProgress =
+                monthlyLimit && monthlyLimit.limitAmount > 0 ? row.amount / monthlyLimit.limitAmount : 0;
+
+              return (
+                <Pressable
+                  key={row.key}
+                  accessibilityLabel={formatString(breakdownStrings.viewEntriesA11y, {
+                    category: row.label,
+                    count: entryCountByKey.get(row.key) ?? 0
+                  })}
+                  accessibilityRole="button"
+                  onPress={() => openRow(row)}
+                  style={[componentStyles.listActionPressable, styles.analyticsRow]}
+                >
+                  <View style={styles.analyticsRowHeader}>
+                    <Text style={[componentStyles.analyticsTitle, styles.breakdownRowTitle]}>{row.label}</Text>
+                    <View style={styles.breakdownRowTrailing}>
+                      <Text style={styles.analyticsAmount}>
+                        {formatString(breakdownStrings.amountShare, {
+                          amount: formatCompactRupiah(row.amount),
+                          percent: Math.round(row.share * 100)
+                        })}
+                      </Text>
+                      <Ionicons color={colors.muted} name="chevron-forward" size={16} />
+                    </View>
+                  </View>
+
+                  {monthlyLimit && (
+                    <Text style={styles.budgetMeta}>
+                      {formatString(limitsStrings.spentOfLimit, {
+                        spent: formatCompactRupiah(row.amount),
+                        limit: formatCompactRupiah(monthlyLimit.limitAmount),
+                        period: limitsStrings.monthly
+                      })}
+                    </Text>
+                  )}
+
+                  <ProgressBar
+                    accessibilityLabel={formatString(strings.common.progressA11y, {
+                      label: row.label,
                       percent: Math.round(row.share * 100)
                     })}
-                  </Text>
-                </View>
-                <ProgressBar
-                  accessibilityLabel={formatString(strings.common.progressA11y, {
-                    label: row.label,
-                    percent: Math.round(row.share * 100)
-                  })}
-                  fillStyle={[styles.breakdownFill, getPercentWidthStyle(row.share)]}
-                  value={row.share}
-                />
-              </View>
-            ))}
+                    fillStyle={[styles.breakdownFill, getPercentWidthStyle(row.share)]}
+                    value={row.share}
+                  />
+
+                  {monthlyLimit && (
+                    <ProgressBar
+                      accessibilityLabel={formatString(breakdownStrings.budgetProgressA11y, {
+                        label: row.label,
+                        percent: Math.round(budgetProgress * 100)
+                      })}
+                      fillStyle={[styles.progressFill, getProgressFillStyle(budgetProgress, colors)]}
+                      value={budgetProgress}
+                    />
+                  )}
+                </Pressable>
+              );
+            })}
           </View>
           {hasHiddenRows && (
             <Pressable
@@ -147,6 +212,16 @@ export function BreakdownPanel({ moments, monthOffset, onMonthOffsetChange }: Br
           )}
         </>
       )}
+
+      <CategoryBreakdownSheet
+        breakdownType={breakdownType}
+        budgetLimits={budgetLimits}
+        moments={moments}
+        onClose={() => setSelectedRow(null)}
+        referenceDate={referenceDate}
+        row={selectedRow}
+        visible={Boolean(selectedRow)}
+      />
     </View>
   );
 }

@@ -43,10 +43,11 @@ function PatternsScreenComponent({
       }),
       shallowEqual
     );
-  const { accounts, balanceSnapshots, categoryModes, moments, transfers } = useFinanceSelector(
+  const { accounts, balanceSnapshots, budgetLimits, categoryModes, moments, transfers } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
       balanceSnapshots: state.balanceSnapshots,
+      budgetLimits: state.budgetLimits,
       categoryModes: state.categoryModes,
       moments: state.moments,
       transfers: state.transfers
@@ -130,6 +131,7 @@ function PatternsScreenComponent({
       )}
       {activePatternTab === "breakdown" && (
         <BreakdownPanel
+          budgetLimits={budgetLimits}
           moments={moments}
           monthOffset={breakdownMonthOffset}
           onMonthOffsetChange={setBreakdownMonthOffset}

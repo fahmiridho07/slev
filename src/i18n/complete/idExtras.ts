@@ -354,7 +354,12 @@ export const idExtras: AppStringsExtras = {
       nextMonthA11y: "Bulan berikutnya, saat ini {month}",
       vsLastMonthUp: "Naik {percent}% vs bulan lalu",
       vsLastMonthDown: "Turun {percent}% vs bulan lalu",
-      vsLastMonthFlat: "Sama dengan bulan lalu"
+      vsLastMonthFlat: "Sama dengan bulan lalu",
+      viewEntriesA11y: "Lihat {count} entri untuk {category}",
+      drilldownTitle: "{category} · {month}",
+      drilldownSummary: "{count} entri · {total}",
+      drilldownEmpty: "Tidak ada entri di bulan ini",
+      budgetProgressA11y: "Anggaran {label} terpakai {percent}%"
     },
     trends: {
       empty: "Tren muncul setelah pengeluaran terbentuk lintas bulan.",
