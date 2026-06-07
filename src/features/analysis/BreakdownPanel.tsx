@@ -1,10 +1,26 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { EmptyState, MonthPeriodPicker, ProgressBar, SectionHeader, SegmentedControl } from "../../components";
+import {
+  BottomSheet,
+  DeleteConfirmDialog,
+  EmptyState,
+  MonthPeriodPicker,
+  ProgressBar,
+  SectionHeader,
+  SegmentedControl
+} from "../../components";
 import { formatString } from "../../i18n";
-import { getPercentWidthStyle } from "../../lib/analysis";
-import { filterBreakdownMoments, getMonthlyBudgetLimit } from "../../lib/breakdownDrilldown";
+import { AppStrings } from "../../i18n/types";
+import { getMomentTitle, getPercentWidthStyle } from "../../lib/analysis";
+import {
+  buildBreakdownMonthDeltas,
+  filterBreakdownMoments,
+  getBreakdownDeltaBadgeKind,
+  getMonthlyBudgetLimit,
+  getTopBreakdownIncreases,
+  shouldShowBreakdownDeltaBadge
+} from "../../lib/breakdownDrilldown";
 import { FinanceBreakdownRow, buildMonthlyBreakdown } from "../../lib/financeEngine";
 import {
   buildMonthExpenseComparison,
@@ -14,7 +30,9 @@ import {
 } from "../../lib/spendingPeriod";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { BudgetLimit, EntryType, SpendingMoment } from "../spendingMemory.types";
+import { MomentEditForm } from "../memory/MomentEditForm";
 import { hapticSelection } from "../../lib/haptics";
+import { useActions } from "../../state/useFinance";
 import { useTheme } from "../../hooks/useTheme";
 import { getProgressFillStyle } from "../../theme/styles/fillStyles";
 import { CategoryBreakdownSheet } from "./CategoryBreakdownSheet";
@@ -31,13 +49,40 @@ type BreakdownPanelProps = {
   onMonthOffsetChange: (offset: number) => void;
 };
 
+function getDeltaBadgeLabel(
+  deltaKind: ReturnType<typeof getBreakdownDeltaBadgeKind>,
+  deltaPercent: number | null,
+  strings: AppStrings
+): string | null {
+  if (!deltaKind) {
+    return null;
+  }
+
+  const breakdownStrings = strings.patterns.breakdown;
+  if (deltaKind === "new") {
+    return breakdownStrings.categoryNewThisMonth;
+  }
+
+  if (deltaPercent === null) {
+    return null;
+  }
+
+  const percent = Math.round(Math.abs(deltaPercent) * 100);
+  return deltaKind === "up"
+    ? formatString(breakdownStrings.categoryDeltaUp, { percent })
+    : formatString(breakdownStrings.categoryDeltaDown, { percent });
+}
+
 export function BreakdownPanel({ budgetLimits, moments, monthOffset, onMonthOffsetChange }: BreakdownPanelProps) {
   const { colors, componentStyles, strings, styles } = useTheme();
+  const actions = useActions();
   const breakdownStrings = strings.patterns.breakdown;
   const limitsStrings = strings.budget.limits;
   const [breakdownType, setBreakdownType] = useState<EntryType>("expense");
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [selectedRow, setSelectedRow] = useState<FinanceBreakdownRow | null>(null);
+  const [editingMoment, setEditingMoment] = useState<SpendingMoment | null>(null);
+  const [pendingDeleteMoment, setPendingDeleteMoment] = useState<SpendingMoment | null>(null);
   const referenceDate = useMemo(() => getMonthReferenceDate(monthOffset), [monthOffset]);
   const earliestMonthOffset = useMemo(() => getEarliestSpendingMonthOffset(moments), [moments]);
   const rows = useMemo(
@@ -53,6 +98,14 @@ export function BreakdownPanel({ budgetLimits, moments, monthOffset, onMonthOffs
     }
     return counts;
   }, [breakdownType, moments, referenceDate, rows]);
+  const monthDeltas = useMemo(
+    () => buildBreakdownMonthDeltas(moments, breakdownType, monthOffset),
+    [breakdownType, moments, monthOffset]
+  );
+  const topIncreases = useMemo(
+    () => getTopBreakdownIncreases(rows, monthDeltas),
+    [monthDeltas, rows]
+  );
   const expenseComparison = useMemo(
     () => buildMonthExpenseComparison(moments, monthOffset),
     [moments, monthOffset]
@@ -77,15 +130,28 @@ export function BreakdownPanel({ budgetLimits, moments, monthOffset, onMonthOffs
       : formatString(breakdownStrings.vsLastMonthDown, { percent: roundedPercent });
   }, [breakdownStrings, breakdownType, expenseComparison.deltaPercent, expenseComparison.previousExpense]);
   const deltaTone = expenseComparison.deltaPercent && expenseComparison.deltaPercent > 0 ? "up" : "down";
+  const showTopIncreases =
+    breakdownType === "expense" && expenseComparison.previousExpense > 0 && topIncreases.length > 0;
 
   useEffect(() => {
     setSelectedRow(null);
+    setEditingMoment(null);
+    setPendingDeleteMoment(null);
   }, [breakdownType, monthOffset]);
 
-  function openRow(row: FinanceBreakdownRow) {
+  const openRow = useCallback((row: FinanceBreakdownRow) => {
     hapticSelection();
     setSelectedRow(row);
-  }
+  }, []);
+
+  const startEditing = useCallback((moment: SpendingMoment) => {
+    hapticSelection();
+    setEditingMoment(moment);
+  }, []);
+
+  const cancelEdit = useCallback(() => setEditingMoment(null), []);
+
+  const handleSaved = useCallback(() => setEditingMoment(null), []);
 
   return (
     <View style={styles.analyticsBlock}>
@@ -128,6 +194,37 @@ export function BreakdownPanel({ budgetLimits, moments, monthOffset, onMonthOffs
           {breakdownType === "expense" && (
             <MonthlySpendingChart compactLegend hero periodDate={referenceDate} rows={rows} />
           )}
+
+          {showTopIncreases && (
+            <View style={styles.topIncreasesPanel}>
+              <Text style={componentStyles.microLabel}>{breakdownStrings.topIncreasesTitle}</Text>
+              {topIncreases.map((increase) => {
+                const matchingRow = rows.find((row) => row.key === increase.key);
+                return (
+                  <Pressable
+                    key={increase.key}
+                    accessibilityLabel={formatString(breakdownStrings.viewEntriesA11y, {
+                      category: increase.label,
+                      count: entryCountByKey.get(increase.key) ?? 0
+                    })}
+                    accessibilityRole="button"
+                    disabled={!matchingRow}
+                    onPress={() => matchingRow && openRow(matchingRow)}
+                    style={styles.topIncreaseRow}
+                  >
+                    <Text style={styles.topIncreaseLabel}>{increase.label}</Text>
+                    <Text style={styles.topIncreaseAmount}>
+                      {formatString(breakdownStrings.topIncreaseAmount, {
+                        amount: formatCompactRupiah(increase.deltaAmount),
+                        percent: increase.deltaPercent ? Math.round(increase.deltaPercent * 100) : 0
+                      })}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+
           <SectionHeader
             title={breakdownType === "income" ? breakdownStrings.incomeBySource : breakdownStrings.spendingByCategory}
           />
@@ -137,6 +234,9 @@ export function BreakdownPanel({ budgetLimits, moments, monthOffset, onMonthOffs
                 breakdownType === "expense" ? getMonthlyBudgetLimit(budgetLimits, row.key) : undefined;
               const budgetProgress =
                 monthlyLimit && monthlyLimit.limitAmount > 0 ? row.amount / monthlyLimit.limitAmount : 0;
+              const rowDelta = monthDeltas.get(row.key);
+              const deltaKind = getBreakdownDeltaBadgeKind(rowDelta);
+              const deltaBadgeLabel = getDeltaBadgeLabel(deltaKind, rowDelta?.deltaPercent ?? null, strings);
 
               return (
                 <Pressable
@@ -150,7 +250,30 @@ export function BreakdownPanel({ budgetLimits, moments, monthOffset, onMonthOffs
                   style={[componentStyles.listActionPressable, styles.analyticsRow]}
                 >
                   <View style={styles.analyticsRowHeader}>
-                    <Text style={[componentStyles.analyticsTitle, styles.breakdownRowTitle]}>{row.label}</Text>
+                    <View style={styles.breakdownRowTitleBlock}>
+                      <Text style={[componentStyles.analyticsTitle, styles.breakdownRowTitle]}>{row.label}</Text>
+                      {deltaBadgeLabel && shouldShowBreakdownDeltaBadge(rowDelta) && (
+                        <View
+                          style={[
+                            styles.categoryDeltaBadge,
+                            deltaKind === "up" || deltaKind === "new"
+                              ? styles.categoryDeltaBadgeUp
+                              : styles.categoryDeltaBadgeDown
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.categoryDeltaText,
+                              deltaKind === "up" || deltaKind === "new"
+                                ? styles.categoryDeltaTextUp
+                                : styles.categoryDeltaTextDown
+                            ]}
+                          >
+                            {deltaBadgeLabel}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
                     <View style={styles.breakdownRowTrailing}>
                       <Text style={styles.analyticsAmount}>
                         {formatString(breakdownStrings.amountShare, {
@@ -218,9 +341,47 @@ export function BreakdownPanel({ budgetLimits, moments, monthOffset, onMonthOffs
         budgetLimits={budgetLimits}
         moments={moments}
         onClose={() => setSelectedRow(null)}
+        onDeleteMoment={setPendingDeleteMoment}
+        onEditMoment={startEditing}
         referenceDate={referenceDate}
         row={selectedRow}
         visible={Boolean(selectedRow)}
+      />
+
+      <BottomSheet
+        onClose={cancelEdit}
+        title={
+          editingMoment
+            ? formatString(strings.activity.editSheetTitleNamed, { title: getMomentTitle(editingMoment) })
+            : strings.activity.editSheetTitle
+        }
+        visible={Boolean(editingMoment)}
+      >
+        {editingMoment ? (
+          <MomentEditForm
+            key={editingMoment.id}
+            moment={editingMoment}
+            onCancel={cancelEdit}
+            onSaved={handleSaved}
+          />
+        ) : null}
+      </BottomSheet>
+
+      <DeleteConfirmDialog
+        body={
+          pendingDeleteMoment
+            ? formatString(strings.dialogs.activityDeleteBody, { title: getMomentTitle(pendingDeleteMoment) })
+            : ""
+        }
+        onCancel={() => setPendingDeleteMoment(null)}
+        onConfirm={() => {
+          if (pendingDeleteMoment) {
+            void actions.removeMoment(pendingDeleteMoment.id);
+          }
+          setPendingDeleteMoment(null);
+        }}
+        title={strings.dialogs.activityDeleteTitle}
+        visible={Boolean(pendingDeleteMoment)}
       />
     </View>
   );

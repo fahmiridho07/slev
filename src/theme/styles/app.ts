@@ -751,8 +751,64 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   breakdownBudgetBlock: {
     gap: 8
   },
+  breakdownRowTitleBlock: {
+    flex: 1,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6
+  },
   breakdownRowTitle: {
-    flex: 1
+    flexShrink: 1
+  },
+  categoryDeltaBadge: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3
+  },
+  categoryDeltaBadgeUp: {
+    backgroundColor: colors.surfaceDanger,
+    borderColor: colors.borderDanger
+  },
+  categoryDeltaBadgeDown: {
+    backgroundColor: colors.mint,
+    borderColor: colors.line
+  },
+  categoryDeltaText: {
+    fontSize: 11,
+    fontWeight: "800"
+  },
+  categoryDeltaTextUp: {
+    color: colors.coral
+  },
+  categoryDeltaTextDown: {
+    color: colors.greenDark
+  },
+  topIncreasesPanel: {
+    backgroundColor: colors.mint,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 8,
+    padding: 14
+  },
+  topIncreaseRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "space-between"
+  },
+  topIncreaseLabel: {
+    color: colors.ink,
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "700"
+  },
+  topIncreaseAmount: {
+    color: colors.coral,
+    fontSize: 12,
+    fontWeight: "800"
   },
   breakdownRowTrailing: {
     alignItems: "center",

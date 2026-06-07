@@ -359,7 +359,12 @@ export const idExtras: AppStringsExtras = {
       drilldownTitle: "{category} · {month}",
       drilldownSummary: "{count} entri · {total}",
       drilldownEmpty: "Tidak ada entri di bulan ini",
-      budgetProgressA11y: "Anggaran {label} terpakai {percent}%"
+      budgetProgressA11y: "Anggaran {label} terpakai {percent}%",
+      categoryNewThisMonth: "Baru bulan ini",
+      categoryDeltaUp: "+{percent}%",
+      categoryDeltaDown: "-{percent}%",
+      topIncreasesTitle: "Kenaikan terbesar vs bulan lalu",
+      topIncreaseAmount: "+{amount} (+{percent}%)"
     },
     trends: {
       empty: "Tren muncul setelah pengeluaran terbentuk lintas bulan.",

@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { ScrollView, Text, View } from "react-native";
-import { BottomSheet, EmptyState, MomentRow, ProgressBar } from "../../components";
+import { BottomSheet, EmptyState, ProgressBar } from "../../components";
 import { formatString } from "../../i18n";
 import { formatLocaleMonthYear } from "../../i18n/localeDate";
 import { filterBreakdownMoments, getMonthlyBudgetLimit } from "../../lib/breakdownDrilldown";
@@ -9,12 +9,15 @@ import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { BudgetLimit, EntryType, SpendingMoment } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 import { getProgressFillStyle } from "../../theme/styles/fillStyles";
+import { BreakdownMomentItem } from "./BreakdownMomentItem";
 
 type CategoryBreakdownSheetProps = {
   breakdownType: EntryType;
   budgetLimits: BudgetLimit[];
   moments: SpendingMoment[];
   onClose: () => void;
+  onDeleteMoment: (moment: SpendingMoment) => void;
+  onEditMoment: (moment: SpendingMoment) => void;
   referenceDate: Date;
   row: FinanceBreakdownRow | null;
   visible: boolean;
@@ -25,6 +28,8 @@ export function CategoryBreakdownSheet({
   budgetLimits,
   moments,
   onClose,
+  onDeleteMoment,
+  onEditMoment,
   referenceDate,
   row,
   visible
@@ -89,7 +94,12 @@ export function CategoryBreakdownSheet({
           ) : (
             <View style={styles.listPanel}>
               {entries.map((moment) => (
-                <MomentRow key={moment.id} moment={moment} />
+                <BreakdownMomentItem
+                  key={moment.id}
+                  moment={moment}
+                  onDelete={onDeleteMoment}
+                  onStartEdit={onEditMoment}
+                />
               ))}
             </View>
           )}

@@ -412,12 +412,17 @@ export type AppStrings = {
       viewAll: string;
       viewLess: string;
       budgetProgressA11y: string;
+      categoryDeltaDown: string;
+      categoryDeltaUp: string;
+      categoryNewThisMonth: string;
       drilldownEmpty: string;
       drilldownSummary: string;
       drilldownTitle: string;
       vsLastMonthDown: string;
       vsLastMonthFlat: string;
       vsLastMonthUp: string;
+      topIncreaseAmount: string;
+      topIncreasesTitle: string;
       viewEntriesA11y: string;
     };
     cashflow: {

@@ -359,7 +359,12 @@ export const enExtras: AppStringsExtras = {
       drilldownTitle: "{category} · {month}",
       drilldownSummary: "{count} entries · {total}",
       drilldownEmpty: "No entries in this month",
-      budgetProgressA11y: "{label} budget {percent}% used"
+      budgetProgressA11y: "{label} budget {percent}% used",
+      categoryNewThisMonth: "New this month",
+      categoryDeltaUp: "+{percent}%",
+      categoryDeltaDown: "-{percent}%",
+      topIncreasesTitle: "Biggest increases vs last month",
+      topIncreaseAmount: "+{amount} (+{percent}%)"
     },
     trends: {
       empty: "Trends appear after spending builds across months.",
