@@ -55,7 +55,6 @@ function BudgetScreenComponent({ onOpenSettings }: BudgetScreenProps) {
       <SegmentedControl
         options={[
           { label: "Plan", value: "plan" },
-          { label: "Limits", value: "limits" },
           { label: "Balance", value: "balance" },
           { label: "Goals", value: "goals" }
         ]}
@@ -102,20 +101,6 @@ function BudgetScreenComponent({ onOpenSettings }: BudgetScreenProps) {
             )}
           </View>
         </View>
-      )}
-      {activeBudgetTab === "limits" && (
-        <BudgetLimitsPanel
-          budgetLimits={budgetLimits}
-          categoryLabels={categoryLabels}
-          categoryModes={categoryModes}
-          expenseCategories={expenseCategories}
-          moments={moments}
-          onDeleteCategory={(category) => void actions.removeCategory(category)}
-          onDeleteLimit={(category) => void actions.removeCategoryBudget(category)}
-          onOpenSettings={onOpenSettings}
-          onSaveCategoryMode={(category, mode) => void actions.changeCategoryMode(category, mode)}
-          onSaveLimit={(category, amountText, period) => void actions.saveCategoryBudget(category, amountText, period)}
-        />
       )}
       {activeBudgetTab === "goals" && (
         <SavingsGoalsPanel
