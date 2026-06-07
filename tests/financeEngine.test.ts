@@ -243,6 +243,24 @@ test("buildAccountDriftAlerts exempts ephemeral accounts from drift flags", () =
   assertEqual(trackedAlerts[0]?.label, "GoPay", "tracked drift label");
 });
 
+test("buildAccountDriftAlerts still surfaces unknown snapshot labels as tracked", () => {
+  const alerts = buildAccountDriftAlerts({
+    accounts: [account("BRI", "bank", true)],
+    balanceSnapshots: [
+      snapshot("Old wallet", 50_000, "2026-06-01T00:00:00.000Z"),
+      snapshot("Old wallet", 200_000, "2026-06-10T00:00:00.000Z")
+    ],
+    moments: [
+      moment({ accountLabel: "Old wallet", amount: 25_000, occurredAt: "2026-06-04T00:00:00.000Z" })
+    ],
+    toleranceAmount: 1_000,
+    transfers: []
+  });
+
+  assertEqual(alerts.length, 1, "unknown labels without tier still surface drift");
+  assertEqual(alerts[0]?.label, "Old wallet", "unknown label kept");
+});
+
 test("buildAccountDriftAlerts ignores small_gap mismatches", () => {
   const alerts = buildAccountDriftAlerts({
     accounts: [account("BRI", "bank", true)],
