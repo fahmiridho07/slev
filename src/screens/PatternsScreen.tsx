@@ -27,7 +27,6 @@ function PatternsScreenComponent() {
     <ScrollView contentContainerStyle={styles.scrollContent}>
       <View style={styles.heroPanel}>
         <Text style={styles.kickerDark}>Analysis</Text>
-        <Text style={styles.heroTitle}>Cashflow, pockets, and spending rhythm without bank access.</Text>
       </View>
 
       <SegmentedControl

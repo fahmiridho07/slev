@@ -120,7 +120,6 @@ function MemoryScreenComponent() {
       <>
         <View style={styles.heroPanel}>
           <Text style={styles.kickerDark}>Memory</Text>
-          <Text style={styles.heroTitle}>A quiet list of where money went.</Text>
         </View>
         {moments.length > 0 && (
           <TextInput

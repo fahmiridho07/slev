@@ -47,7 +47,6 @@ function BudgetScreenComponent({ onOpenSettings }: BudgetScreenProps) {
     <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
       <View style={styles.heroPanel}>
         <Text style={styles.kickerDark}>Money plan</Text>
-        <Text style={styles.heroTitle}>Plan the month, then keep manual capture easy.</Text>
       </View>
 
       <SegmentedControl

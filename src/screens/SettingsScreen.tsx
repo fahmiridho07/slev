@@ -81,7 +81,6 @@ function SettingsScreenComponent() {
       <>
         <View style={styles.heroPanel}>
           <Text style={styles.kickerDark}>Settings</Text>
-          <Text style={styles.heroTitle}>Categories and local data.</Text>
           <Text style={styles.settingCopy}>{momentCount} money memor{momentCount === 1 ? "y" : "ies"} saved on this device.</Text>
         </View>
 
