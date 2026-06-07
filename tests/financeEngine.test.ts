@@ -208,6 +208,41 @@ test("buildAccountDriftAlerts stays empty when balances reconcile", () => {
   assertEqual(alerts.length, 0, "no drift alerts when reconciliation is clean");
 });
 
+test("buildAccountDriftAlerts exempts ephemeral accounts from drift flags", () => {
+  const balanceSnapshots = [
+    snapshot("GoPay", 50_000, "2026-06-01T00:00:00.000Z"),
+    snapshot("GoPay", 120_000, "2026-06-10T00:00:00.000Z")
+  ];
+  const moments = [
+    moment({ accountLabel: "GoPay", amount: 25_000, occurredAt: "2026-06-04T00:00:00.000Z" })
+  ];
+  const fixture = {
+    balanceSnapshots,
+    moments,
+    toleranceAmount: 1_000,
+    transfers: [] as MoneyTransfer[]
+  };
+  const reconciliation = buildAccountReconciliation({
+    ...fixture,
+    accounts: [account("GoPay", "wallet", false, "ephemeral")]
+  });
+
+  assertEqual(findReconciliation(reconciliation, "GoPay").status, "needs_review", "fixture should need review");
+
+  const ephemeralAlerts = buildAccountDriftAlerts({
+    ...fixture,
+    accounts: [account("GoPay", "wallet", false, "ephemeral")]
+  });
+  const trackedAlerts = buildAccountDriftAlerts({
+    ...fixture,
+    accounts: [account("GoPay", "wallet", false, "tracked")]
+  });
+
+  assertEqual(ephemeralAlerts.length, 0, "ephemeral accounts stay exempt from drift flags");
+  assertEqual(trackedAlerts.length, 1, "tracked account with same drift is surfaced");
+  assertEqual(trackedAlerts[0]?.label, "GoPay", "tracked drift label");
+});
+
 test("buildAccountDriftAlerts ignores small_gap mismatches", () => {
   const alerts = buildAccountDriftAlerts({
     accounts: [account("BRI", "bank", true)],

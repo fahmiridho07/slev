@@ -509,8 +509,19 @@ export function buildAccountDriftAlerts(args: {
   transfers: MoneyTransfer[];
   toleranceAmount?: number;
 }): AccountDriftRow[] {
+  const ephemeralLabels = new Set(
+    args.accounts
+      .filter((account) => account.tier === "ephemeral")
+      .map((account) => account.label)
+  );
+
   return buildAccountReconciliation(args)
-    .filter((row) => row.status === "needs_review" && row.difference !== null)
+    .filter(
+      (row) =>
+        row.status === "needs_review" &&
+        row.difference !== null &&
+        !ephemeralLabels.has(row.label)
+    )
     .map((row) => ({
       label: row.label,
       difference: row.difference!,
