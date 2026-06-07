@@ -1,7 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useCallback, useMemo, useState } from "react";
-import { Pressable, SectionList, Text, TextInput, View } from "react-native";
-import { DeleteConfirmDialog, EmptyState, MomentRow, ScreenHero } from "../components";
+import { SectionList, Text, TextInput, View } from "react-native";
+import { DeleteConfirmDialog, EmptyState, ListActionRow, MomentRow, ScreenHero } from "../components";
 import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { MomentEditForm } from "../features/memory/MomentEditForm";
 import { SpendingMoment } from "../features/spendingMemory.types";
@@ -31,17 +30,13 @@ const MemoryMomentItem = memo(function MemoryMomentItem({
 }: MemoryMomentItemProps) {
   return (
     <View>
-      <MomentRow moment={moment} repeatHint={repeatHint} />
-      <View style={styles.rowActions}>
-        <Pressable onPress={() => onStartEdit(moment)} style={styles.textButton}>
-          <Ionicons name="create-outline" size={16} color={colors.greenDark} />
-          <Text style={styles.textButtonLabel}>Edit</Text>
-        </Pressable>
-        <Pressable onPress={() => onDelete(moment)} style={styles.textButton}>
-          <Ionicons name="trash-outline" size={16} color={colors.coral} />
-          <Text style={[styles.textButtonLabel, styles.deleteText]}>Delete</Text>
-        </Pressable>
-      </View>
+      <ListActionRow
+        accessibilityLabel={`Edit ${getMomentTitle(moment)}`}
+        onDelete={() => onDelete(moment)}
+        onPress={() => onStartEdit(moment)}
+      >
+        <MomentRow moment={moment} repeatHint={repeatHint} />
+      </ListActionRow>
 
       {isEditing && <MomentEditForm moment={moment} onCancel={onCancelEdit} onSaved={onSaved} />}
     </View>
@@ -130,7 +125,11 @@ function MemoryScreenComponent() {
     () => (
       <>
         <ScreenHero
-          hint={`${thisMonthCount} moment${thisMonthCount === 1 ? "" : "s"} saved this month`}
+          hint={
+            moments.length > 0
+              ? `Tap a row to edit · swipe to delete · ${thisMonthCount} moment${thisMonthCount === 1 ? "" : "s"} this month`
+              : "Saved spending appears here after capture"
+          }
           kicker="Spending memory"
           value={thisMonthExpense > 0 ? formatCompactRupiah(thisMonthExpense) : undefined}
           valueTone="danger"

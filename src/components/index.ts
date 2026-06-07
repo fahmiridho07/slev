@@ -4,6 +4,7 @@ export { AccountTitle } from "./AccountTitle";
 export { ContextPicker } from "./ContextPicker";
 export { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 export { EmptyState } from "./EmptyState";
+export { ListActionRow } from "./ListActionRow";
 export { FeedbackButton } from "./FeedbackButton";
 export { MomentRow } from "./MomentRow";
 export { ObservationPanel } from "./ObservationPanel";

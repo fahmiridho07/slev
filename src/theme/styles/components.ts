@@ -446,5 +446,27 @@ export const componentStyles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "800",
     letterSpacing: 0
+  },
+  listActionPressable: {
+    width: "100%"
+  },
+  textButton: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 5,
+    minHeight: 32
+  },
+  textButtonLabel: {
+    color: colors.greenDark,
+    fontSize: 13,
+    fontWeight: "700"
+  },
+  deleteText: {
+    color: colors.coral
+  },
+  editActions: {
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "flex-end"
   }
 });

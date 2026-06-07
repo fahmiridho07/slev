@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
-import { AccountPicker, AccountTitle, DeleteConfirmDialog, EmptyState, SectionHeader, SegmentedControl } from "../../components";
+import { AccountPicker, AccountTitle, DeleteConfirmDialog, EmptyState, ListActionRow, SectionHeader, SegmentedControl } from "../../components";
 import { formatAmountInput, formatSignedCompactRupiah } from "../../lib/formatMoney";
 import {
   AccountDriftRow,
@@ -94,27 +94,23 @@ export function BalancePanel({
           : `${account.kind.charAt(0).toUpperCase()}${account.kind.slice(1)}`;
 
       return (
-      <View style={styles.analyticsRow}>
-        <View style={styles.analyticsRowHeader}>
-          <View style={styles.budgetTitleBlock}>
-            <AccountTitle kind={account.kind} label={account.label} />
-            <Text style={styles.settingCopy}>{accountMeta}</Text>
+        <ListActionRow
+          accessibilityLabel={`Edit account ${account.label}`}
+          onDelete={() => setPendingDeleteAccount(account)}
+          onPress={() => editAccount(account)}
+        >
+          <View style={styles.analyticsRow}>
+            <View style={styles.analyticsRowHeader}>
+              <View style={styles.budgetTitleBlock}>
+                <AccountTitle kind={account.kind} label={account.label} />
+                <Text style={styles.settingCopy}>{accountMeta}</Text>
+              </View>
+              <Text style={styles.analyticsAmount}>
+                {balance !== undefined ? formatCompactRupiah(balance) : "No activity"}
+              </Text>
+            </View>
           </View>
-          <Text style={styles.analyticsAmount}>
-            {balance !== undefined ? formatCompactRupiah(balance) : "No activity"}
-          </Text>
-        </View>
-        <View style={styles.editActions}>
-          <Pressable onPress={() => editAccount(account)} style={styles.textButton}>
-            <Ionicons name="create-outline" size={16} color={colors.greenDark} />
-            <Text style={styles.textButtonLabel}>Edit</Text>
-          </Pressable>
-          <Pressable onPress={() => setPendingDeleteAccount(account)} style={styles.textButton}>
-            <Ionicons name="trash-outline" size={16} color={colors.coral} />
-            <Text style={[styles.textButtonLabel, styles.deleteText]}>Delete</Text>
-          </Pressable>
-        </View>
-      </View>
+        </ListActionRow>
       );
     },
     [balanceByLabel]

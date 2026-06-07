@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useMemo, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
-import { AccountTitle, DeleteConfirmDialog, EmptyState, ObservationPanel, SectionHeader, TransferTitle } from "../../components";
+import { AccountTitle, DeleteConfirmDialog, EmptyState, ListActionRow, ObservationPanel, SectionHeader, TransferTitle } from "../../components";
 import { AccountActivityRow, buildAccountActivity, dateKey, formatDate, formatReconciliationDifference, getReconciliationCopy, getReconciliationDetail, getPercentWidthStyle } from "../../lib/analysis";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
 import { buildAccountReconciliation, getLatestBalanceSnapshots } from "../../lib/financeEngine";
@@ -84,21 +84,20 @@ export function AccountAnalysisPanel({
 
   const renderTransferItem = useCallback(
     ({ item: transfer }: { item: MoneyTransfer }) => (
-      <View style={styles.analyticsRow}>
-        <View style={styles.analyticsRowHeader}>
-          <TransferTitle fromLabel={transfer.fromAccount} toLabel={transfer.toAccount} />
-          <Text style={styles.analyticsAmount}>{formatCompactRupiah(transfer.amount)}</Text>
+      <ListActionRow
+        accessibilityLabel={`Delete transfer from ${transfer.fromAccount} to ${transfer.toAccount}`}
+        onDelete={() => setPendingDeleteTransfer(transfer)}
+      >
+        <View style={styles.analyticsRow}>
+          <View style={styles.analyticsRowHeader}>
+            <TransferTitle fromLabel={transfer.fromAccount} toLabel={transfer.toAccount} />
+            <Text style={styles.analyticsAmount}>{formatCompactRupiah(transfer.amount)}</Text>
+          </View>
+          <Text style={styles.settingCopy}>
+            {formatDate(dateKey(new Date(transfer.occurredAt)))}{transfer.note ? ` - ${transfer.note}` : ""}
+          </Text>
         </View>
-        <Text style={styles.settingCopy}>
-          {formatDate(dateKey(new Date(transfer.occurredAt)))}{transfer.note ? ` - ${transfer.note}` : ""}
-        </Text>
-        <View style={styles.editActions}>
-          <Pressable onPress={() => setPendingDeleteTransfer(transfer)} style={styles.textButton}>
-            <Ionicons name="trash-outline" size={16} color={colors.coral} />
-            <Text style={[styles.textButtonLabel, styles.deleteText]}>Delete</Text>
-          </Pressable>
-        </View>
-      </View>
+      </ListActionRow>
     ),
     []
   );

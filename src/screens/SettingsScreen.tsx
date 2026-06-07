@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useCallback, useMemo, useState } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
-import { DeleteConfirmDialog, EmptyState, ScreenHero, SwipeActionRow } from "../components";
+import { DeleteConfirmDialog, EmptyState, ListActionRow, ScreenHero } from "../components";
 import { ExpenseCategory } from "../features/spendingMemory.types";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
 import { getCategoryDeleteBody } from "../lib/analysis";
@@ -51,22 +51,18 @@ function SettingsScreenComponent() {
           index < expenseCategories.length - 1 && styles.listPanelMiddle
         ]}
       >
-        <SwipeActionRow canDelete onDelete={() => setPendingDeleteCategory(category)}>
+        <ListActionRow
+          onDelete={() => setPendingDeleteCategory(category)}
+          onPress={!category.isDefault ? () => editCategory(category) : undefined}
+          accessibilityLabel={category.isDefault ? category.label : `Edit category ${category.label}`}
+        >
           <View style={styles.analyticsRow}>
             <View style={styles.analyticsRowHeader}>
               <Text style={styles.analyticsTitle}>{category.label}</Text>
               <Text style={styles.analyticsAmount}>{category.isDefault ? "Default" : "Custom"}</Text>
             </View>
-            {!category.isDefault && (
-              <View style={styles.editActions}>
-                <Pressable onPress={() => editCategory(category)} style={styles.textButton}>
-                  <Ionicons name="create-outline" size={16} color={colors.greenDark} />
-                  <Text style={styles.textButtonLabel}>Edit</Text>
-                </Pressable>
-              </View>
-            )}
           </View>
-        </SwipeActionRow>
+        </ListActionRow>
       </View>
     ),
     [expenseCategories.length]

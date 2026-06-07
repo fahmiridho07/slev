@@ -1,7 +1,8 @@
 import { StyleSheet } from "react-native";
 import { colors, shadows } from "../colors";
+import { componentStyles } from "./components";
 
-export const styles = StyleSheet.create({
+const screenStyles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.canvas
@@ -336,53 +337,6 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10
   },
-  segmentedControl: {
-    backgroundColor: colors.faint,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    maxWidth: "100%"
-  },
-  segmentedControlCompact: {
-    alignSelf: "flex-start",
-    maxWidth: "100%"
-  },
-  segmentedControlContent: {
-    flexDirection: "row",
-    gap: 3,
-    padding: 4
-  },
-  segmentButton: {
-    alignItems: "center",
-    borderColor: "transparent",
-    borderWidth: 1,
-    borderRadius: 6,
-    flexGrow: 0,
-    flexShrink: 0,
-    justifyContent: "center",
-    minHeight: 40,
-    minWidth: 88,
-    paddingHorizontal: 10
-  },
-  segmentButtonCompact: {
-    minHeight: 34,
-    minWidth: 84
-  },
-  segmentButtonActive: {
-    backgroundColor: colors.surface,
-    borderColor: colors.line
-  },
-  segmentButtonText: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 0,
-    textAlign: "center"
-  },
-  segmentButtonTextActive: {
-    color: colors.greenDark,
-    fontWeight: "700"
-  },
   captureExpandRow: {
     alignItems: "center",
     flexDirection: "row",
@@ -400,59 +354,6 @@ export const styles = StyleSheet.create({
   },
   accountPickerBlock: {
     gap: 8
-  },
-  accountChipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8
-  },
-  accountChip: {
-    alignItems: "center",
-    backgroundColor: colors.canvas,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 6,
-    minHeight: 38,
-    paddingHorizontal: 10
-  },
-  accountChipActive: {
-    backgroundColor: colors.mint,
-    borderColor: colors.green
-  },
-  accountChipText: {
-    color: colors.muted,
-    fontSize: 13,
-    fontWeight: "800",
-    letterSpacing: 0
-  },
-  accountChipTextActive: {
-    color: colors.greenDark
-  },
-  accountMark: {
-    alignItems: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    height: 32,
-    justifyContent: "center",
-    width: 32
-  },
-  accountMarkSmall: {
-    borderRadius: 6,
-    height: 24,
-    width: 24
-  },
-  accountMarkText: {
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 0,
-    lineHeight: 13,
-    textAlign: "center"
-  },
-  accountMarkTextSmall: {
-    fontSize: 9,
-    lineHeight: 11
   },
   accountTitleRow: {
     alignItems: "center",
@@ -507,13 +408,6 @@ export const styles = StyleSheet.create({
     borderLeftWidth: 1,
     justifyContent: "center",
     minWidth: 44
-  },
-  microLabel: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0,
-    textTransform: "uppercase"
   },
   repeatChip: {
     backgroundColor: colors.surface,
@@ -717,56 +611,6 @@ export const styles = StyleSheet.create({
     borderBottomRightRadius: 0,
     borderBottomWidth: 0
   },
-  momentRow: {
-    alignItems: "center",
-    borderBottomColor: colors.faint,
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    gap: 12,
-    minHeight: 68,
-    padding: 14
-  },
-  momentIcon: {
-    alignItems: "center",
-    backgroundColor: colors.mint,
-    borderRadius: 8,
-    height: 38,
-    justifyContent: "center",
-    width: 38
-  },
-  incomeMomentIcon: {
-    backgroundColor: colors.surfaceInfo
-  },
-  momentText: {
-    flex: 1,
-    gap: 3
-  },
-  momentTitle: {
-    color: colors.ink,
-    fontSize: 15,
-    fontWeight: "800",
-    letterSpacing: 0
-  },
-  momentMeta: {
-    color: colors.muted,
-    fontSize: 12,
-    lineHeight: 16
-  },
-  repeatHint: {
-    color: colors.blue,
-    fontSize: 12,
-    fontWeight: "800",
-    lineHeight: 16
-  },
-  momentAmount: {
-    color: colors.greenDark,
-    fontSize: 15,
-    fontWeight: "900",
-    letterSpacing: 0
-  },
-  incomeText: {
-    color: colors.blue
-  },
   expenseText: {
     color: colors.coral
   },
@@ -780,39 +624,12 @@ export const styles = StyleSheet.create({
     letterSpacing: 0,
     textTransform: "uppercase"
   },
-  rowActions: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 12,
-    justifyContent: "flex-end",
-    paddingBottom: 12,
-    paddingHorizontal: 14
-  },
-  textButton: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 5,
-    minHeight: 32
-  },
-  textButtonLabel: {
-    color: colors.greenDark,
-    fontSize: 13,
-    fontWeight: "800"
-  },
-  deleteText: {
-    color: colors.coral
-  },
   editPanel: {
     backgroundColor: colors.canvas,
     borderTopColor: colors.line,
     borderTopWidth: 1,
     gap: 10,
     padding: 14
-  },
-  editActions: {
-    flexDirection: "row",
-    gap: 10,
-    justifyContent: "flex-end"
   },
   inlineEditor: {
     backgroundColor: colors.canvas,
@@ -822,75 +639,6 @@ export const styles = StyleSheet.create({
     marginHorizontal: -14,
     marginTop: 12,
     padding: 14
-  },
-  confirmBackdrop: {
-    alignItems: "center",
-    backgroundColor: "rgba(24, 32, 28, 0.36)",
-    flex: 1,
-    justifyContent: "center",
-    padding: 24
-  },
-  confirmCard: {
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 12,
-    maxWidth: 360,
-    padding: 18,
-    width: "100%",
-    ...shadows.soft
-  },
-  confirmIcon: {
-    alignItems: "center",
-    backgroundColor: colors.surfaceDanger,
-    borderColor: colors.borderDanger,
-    borderRadius: 8,
-    borderWidth: 1,
-    height: 44,
-    justifyContent: "center",
-    width: 44
-  },
-  confirmTitle: {
-    color: colors.ink,
-    fontSize: 18,
-    fontWeight: "900",
-    letterSpacing: 0,
-    lineHeight: 24
-  },
-  confirmBody: {
-    color: colors.muted,
-    fontSize: 14,
-    lineHeight: 20
-  },
-  confirmActions: {
-    flexDirection: "row",
-    gap: 10,
-    justifyContent: "flex-end",
-    marginTop: 4
-  },
-  confirmCancelButton: {
-    alignItems: "center",
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 44,
-    paddingHorizontal: 16
-  },
-  confirmDeleteButton: {
-    alignItems: "center",
-    backgroundColor: colors.coral,
-    borderRadius: 8,
-    justifyContent: "center",
-    minHeight: 44,
-    paddingHorizontal: 18
-  },
-  confirmDeleteText: {
-    color: colors.surface,
-    fontSize: 14,
-    fontWeight: "900",
-    letterSpacing: 0
   },
   budgetRow: {
     borderBottomColor: colors.faint,
@@ -954,36 +702,6 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 8,
     padding: 16
-  },
-  patternCalm: {
-    backgroundColor: colors.surface,
-    borderColor: colors.line
-  },
-  patternNotice: {
-    backgroundColor: colors.surfaceInfo,
-    borderColor: colors.borderInfo
-  },
-  patternWarm: {
-    backgroundColor: colors.surfaceWarning,
-    borderColor: colors.borderWarning
-  },
-  patternTitleRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8
-  },
-  patternTitle: {
-    color: colors.ink,
-    flex: 1,
-    fontSize: 16,
-    fontWeight: "800",
-    letterSpacing: 0,
-    lineHeight: 22
-  },
-  patternDetail: {
-    color: colors.muted,
-    fontSize: 14,
-    lineHeight: 20
   },
   recapBlock: {
     borderTopColor: "rgba(24,32,28,0.08)",
@@ -1204,38 +922,6 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "800"
   },
-  emptyState: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 8,
-    justifyContent: "center",
-    minHeight: 112,
-    padding: 18
-  },
-  emptyText: {
-    color: colors.muted,
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center"
-  },
-  emptyActionButton: {
-    alignItems: "center",
-    borderColor: colors.green,
-    borderRadius: 8,
-    borderWidth: 1,
-    minHeight: 38,
-    justifyContent: "center",
-    paddingHorizontal: 12
-  },
-  emptyActionText: {
-    color: colors.greenDark,
-    fontSize: 13,
-    fontWeight: "800",
-    letterSpacing: 0
-  },
   tabBar: {
     backgroundColor: "rgba(247, 248, 244, 0.96)",
     borderTopColor: colors.line,
@@ -1271,3 +957,8 @@ export const styles = StyleSheet.create({
     color: colors.greenDark
   }
 });
+
+export const styles = {
+  ...componentStyles,
+  ...screenStyles
+};

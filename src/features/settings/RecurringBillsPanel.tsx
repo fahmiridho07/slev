@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { AccountPicker, ContextPicker, DeleteConfirmDialog, EmptyState } from "../../components";
+import { AccountPicker, ContextPicker, DeleteConfirmDialog, EmptyState, ListActionRow } from "../../components";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { MoneyAccount, RecurringBill, SpendingContext } from "../spendingMemory.types";
@@ -132,28 +132,25 @@ export function RecurringBillsPanel({
             <View
               key={bill.id}
               style={[
-                styles.analyticsRow,
                 index > 0 && styles.listPanelContinued,
                 index < recurringBills.length - 1 && styles.listPanelMiddle
               ]}
             >
-              <View style={styles.analyticsRowHeader}>
-                <Text style={styles.analyticsTitle}>{bill.label}</Text>
-                <Text style={styles.analyticsAmount}>{formatRupiah(bill.amount)}</Text>
-              </View>
-              <Text style={styles.settingCopy}>
-                {bill.context} · day {bill.dayOfMonth}{bill.accountLabel ? ` · ${bill.accountLabel}` : ""} · {bill.active ? "Active" : "Paused"}
-              </Text>
-              <View style={styles.editActions}>
-                <Pressable onPress={() => editBill(bill)} style={styles.textButton}>
-                  <Ionicons name="create-outline" size={16} color={colors.greenDark} />
-                  <Text style={styles.textButtonLabel}>Edit</Text>
-                </Pressable>
-                <Pressable onPress={() => setPendingDeleteBill(bill)} style={styles.textButton}>
-                  <Ionicons name="trash-outline" size={16} color={colors.coral} />
-                  <Text style={[styles.textButtonLabel, styles.deleteText]}>Delete</Text>
-                </Pressable>
-              </View>
+              <ListActionRow
+                accessibilityLabel={`Edit bill ${bill.label}`}
+                onDelete={() => setPendingDeleteBill(bill)}
+                onPress={() => editBill(bill)}
+              >
+                <View style={styles.analyticsRow}>
+                  <View style={styles.analyticsRowHeader}>
+                    <Text style={styles.analyticsTitle}>{bill.label}</Text>
+                    <Text style={styles.analyticsAmount}>{formatRupiah(bill.amount)}</Text>
+                  </View>
+                  <Text style={styles.settingCopy}>
+                    {bill.context} · day {bill.dayOfMonth}{bill.accountLabel ? ` · ${bill.accountLabel}` : ""} · {bill.active ? "Active" : "Paused"}
+                  </Text>
+                </View>
+              </ListActionRow>
             </View>
           ))}
         </View>

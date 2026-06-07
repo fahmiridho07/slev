@@ -1,7 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { DeleteConfirmDialog, EmptyState } from "../../components";
+import { DeleteConfirmDialog, EmptyState, ListActionRow } from "../../components";
 import { getPercentWidthStyle } from "../../lib/analysis";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
@@ -76,23 +75,19 @@ export function SavingsGoalsPanel({
             const progress = goal.targetAmount > 0 ? goal.savedAmount / goal.targetAmount : 0;
             return (
               <View key={goal.id} style={styles.goalCard}>
-                <View style={styles.analyticsRowHeader}>
-                  <Text style={styles.analyticsTitle}>{goal.label}</Text>
-                  <Text style={styles.analyticsAmount}>{formatRupiah(goal.savedAmount)} / {formatRupiah(goal.targetAmount)}</Text>
-                </View>
-                <View style={styles.progressTrack}>
-                  <View style={[styles.trendFill, getPercentWidthStyle(progress)]} />
-                </View>
-                <View style={styles.editActions}>
-                  <Pressable onPress={() => editGoal(goal)} style={styles.textButton}>
-                    <Ionicons name="create-outline" size={16} color={colors.greenDark} />
-                    <Text style={styles.textButtonLabel}>Edit</Text>
-                  </Pressable>
-                  <Pressable onPress={() => setPendingDeleteGoal(goal)} style={styles.textButton}>
-                    <Ionicons name="trash-outline" size={16} color={colors.coral} />
-                    <Text style={[styles.textButtonLabel, styles.deleteText]}>Delete</Text>
-                  </Pressable>
-                </View>
+                <ListActionRow
+                  accessibilityLabel={`Edit goal ${goal.label}`}
+                  onDelete={() => setPendingDeleteGoal(goal)}
+                  onPress={() => editGoal(goal)}
+                >
+                  <View style={styles.analyticsRowHeader}>
+                    <Text style={styles.analyticsTitle}>{goal.label}</Text>
+                    <Text style={styles.analyticsAmount}>{formatRupiah(goal.savedAmount)} / {formatRupiah(goal.targetAmount)}</Text>
+                  </View>
+                  <View style={styles.progressTrack}>
+                    <View style={[styles.trendFill, getPercentWidthStyle(progress)]} />
+                  </View>
+                </ListActionRow>
               </View>
             );
           })}
