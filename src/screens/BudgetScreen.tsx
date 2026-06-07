@@ -229,7 +229,7 @@ function BudgetScreenComponent({
                 onDeleteLimit={(category) => void actions.removeCategoryBudget(category)}
                 onOpenSettings={onOpenSettings}
                 onSaveCategoryMode={(category, mode) => void actions.changeCategoryMode(category, mode)}
-                onSaveLimit={(category, amountText, period) => void actions.saveCategoryBudget(category, amountText, period)}
+                onSaveLimit={(category, amountText, period) => actions.saveCategoryBudget(category, amountText, period)}
               />
             )}
           </View>
@@ -239,7 +239,7 @@ function BudgetScreenComponent({
         <SavingsGoalsPanel
           savingsGoals={savingsGoals}
           onDeleteGoal={(id) => void actions.removeSavingsGoal(id)}
-          onSaveGoal={(input) => void actions.saveGoal(input)}
+          onSaveGoal={(input) => actions.saveGoal(input)}
         />
       )}
       {activeBudgetTab === "balance" && (
@@ -249,8 +249,8 @@ function BudgetScreenComponent({
           balanceSnapshots={balanceSnapshots}
           projectedBalanceSnapshots={projectedBalanceSnapshots}
           onDeleteAccount={(id) => void actions.removeAccount(id)}
-          onSaveAccount={(input) => void actions.saveAccount(input)}
-          onSaveBalance={(input) => void actions.saveBalance(input)}
+          onSaveAccount={(input) => actions.saveAccount(input)}
+          onSaveBalance={(input) => actions.saveBalance(input)}
         />
       )}
     </StickyTabScreen>

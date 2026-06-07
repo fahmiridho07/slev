@@ -4,6 +4,12 @@ import { CategoryModeValue } from "../features/app.types";
 import { getCaptureValidationError, getShortcutValidationError } from "../features/capture/captureValidation";
 import { CaptureFormValues } from "../features/capture/types";
 import { getMemoryEditValidationError } from "../features/memory/memoryValidation";
+import {
+  getAccountValidationError,
+  getBalanceSnapshotValidationError,
+  getGoalValidationError,
+  getLimitValidationError
+} from "../features/budget/budgetValidation";
 import { getBillValidationError, getCategoryValidationError } from "../features/settings/settingsValidation";
 import { FormActionResult } from "../lib/formValidation";
 import {
@@ -22,14 +28,14 @@ import {
 } from "../services/recurringBillsRepository";
 import {
   getAccountKeepOneToast,
-  getAccountNeedNameToast,
+
   getAccountRemovedToast,
   getAccountSavedToast,
   getBackupExportFailedToast,
   getBackupImportedToast,
   getBackupInvalidJsonToast,
   getBackupReadyToast,
-  getBalanceNeedFieldsToast,
+
   getBalanceSavedToast,
   getBillLoggedPartialToast,
   getBillLoggedToast,
@@ -41,12 +47,12 @@ import {
   getCategorySavedToast,
   getClearAllToast,
   getExpenseSavedToast,
-  getGoalNeedFieldsToast,
+
   getGoalRemovedToast,
   getGoalSavedToast,
   getIncomeSavedToast,
   getLimitMarkedAsToast,
-  getLimitNeedAmountToast,
+
   getLimitRemovedToast,
   getLimitSavedToast,
   getMemoryRemovedToast,
@@ -392,19 +398,20 @@ export function createFinanceActions(
     kind: MoneyAccount["kind"];
     label: string;
     tier?: MoneyAccount["tier"];
-  }) {
-    if (!input.label.trim()) {
-      setMessage(getAccountNeedNameToast());
-      return;
+  }): Promise<FormActionResult<"label">> {
+    const validationError = getAccountValidationError(input.label);
+    if (validationError) {
+      return { ok: false, validation: validationError };
     }
 
     const { data: updated, persisted } = await saveMoneyAccount(input);
     if (!persisted) {
       notifyWriteFailure(STORAGE_KEYS.accounts);
-      return;
+      return { ok: false };
     }
     dispatch({ type: "set_accounts", accounts: updated });
     setMessage(getAccountSavedToast(input.label.trim()));
+    return { ok: true };
   }
 
   async function removeAccount(id: string) {
@@ -448,20 +455,29 @@ export function createFinanceActions(
     setMessage(getCategoryRemovedToast(category.label));
   }
 
-  async function saveCategoryBudget(category: SpendingContext, amountTextValue: string, period: BudgetPeriod) {
+  async function saveCategoryBudget(
+    category: SpendingContext,
+    amountTextValue: string,
+    period: BudgetPeriod
+  ): Promise<FormActionResult<"amount">> {
+    const validationError = getLimitValidationError(amountTextValue);
+    if (validationError) {
+      return { ok: false, validation: validationError };
+    }
+
     const limitAmount = parseAmountInput(amountTextValue);
     if (!limitAmount) {
-      setMessage(getLimitNeedAmountToast());
-      return;
+      return { ok: false };
     }
 
     const { data: updated, persisted } = await saveBudgetLimit({ category, limitAmount, period });
     if (!persisted) {
       notifyWriteFailure(STORAGE_KEYS.budgetLimits);
-      return;
+      return { ok: false };
     }
     dispatch({ type: "set_budget_limits", budgetLimits: updated });
     setMessage(getLimitSavedToast(category, period));
+    return { ok: true };
   }
 
   async function removeCategoryBudget(category: SpendingContext) {
@@ -513,11 +529,15 @@ export function createFinanceActions(
     label: string;
     savedAmount: string;
     targetAmount: string;
-  }) {
+  }): Promise<FormActionResult<"label" | "targetAmount">> {
+    const validationError = getGoalValidationError(input);
+    if (validationError) {
+      return { ok: false, validation: validationError };
+    }
+
     const targetAmount = parseAmountInput(input.targetAmount);
-    if (!input.label.trim() || !targetAmount) {
-      setMessage(getGoalNeedFieldsToast());
-      return;
+    if (!targetAmount) {
+      return { ok: false };
     }
 
     const { data: updated, persisted } = await saveSavingsGoal({
@@ -528,10 +548,11 @@ export function createFinanceActions(
     });
     if (!persisted) {
       notifyWriteFailure(STORAGE_KEYS.savingsGoals);
-      return;
+      return { ok: false };
     }
     dispatch({ type: "set_savings_goals", savingsGoals: updated });
     notifySuccess(getGoalSavedToast());
+    return { ok: true };
   }
 
   async function removeSavingsGoal(id: string) {
@@ -634,11 +655,18 @@ export function createFinanceActions(
     setMessage(getBillLoggedToast(saved.amount, bill.label));
   }
 
-  async function saveBalance(input: { accountLabel: string; amount: string }) {
+  async function saveBalance(input: {
+    accountLabel: string;
+    amount: string;
+  }): Promise<FormActionResult<"accountLabel" | "amount">> {
+    const validationError = getBalanceSnapshotValidationError(input);
+    if (validationError) {
+      return { ok: false, validation: validationError };
+    }
+
     const amount = parseAmountInput(input.amount);
-    if (!input.accountLabel.trim() || !amount) {
-      setMessage(getBalanceNeedFieldsToast());
-      return;
+    if (!amount) {
+      return { ok: false };
     }
 
     const { data: updated, persisted } = await saveBalanceSnapshot({
@@ -647,10 +675,11 @@ export function createFinanceActions(
     });
     if (!persisted) {
       notifyWriteFailure(STORAGE_KEYS.balanceSnapshots);
-      return;
+      return { ok: false };
     }
     dispatch({ type: "set_balance_snapshots", balanceSnapshots: updated });
     notifySuccess(getBalanceSavedToast());
+    return { ok: true };
   }
 
   async function answerPattern(patternId: string, response: PatternFeedbackResponse) {

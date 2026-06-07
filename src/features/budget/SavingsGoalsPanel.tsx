@@ -7,7 +7,10 @@ import { getPercentWidthStyle } from "../../lib/analysis";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { SavingsGoal } from "../spendingMemory.types";
+import { hapticWarning } from "../../lib/haptics";
+import { FormValidationError } from "../../lib/formValidation";
 import { useTheme } from "../../hooks/useTheme";
+import { GoalFieldError } from "./budgetValidation";
 
 export function SavingsGoalsPanel({
   savingsGoals,
@@ -21,7 +24,7 @@ export function SavingsGoalsPanel({
     label: string;
     savedAmount: string;
     targetAmount: string;
-  }) => void;
+  }) => Promise<{ ok: boolean; validation?: FormValidationError<GoalFieldError> }>;
 }) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const goalsStrings = strings.budget.goals;
@@ -30,6 +33,7 @@ export function SavingsGoalsPanel({
   const [targetAmount, setTargetAmount] = useState("");
   const [savedAmount, setSavedAmount] = useState("");
   const [pendingDeleteGoal, setPendingDeleteGoal] = useState<SavingsGoal | null>(null);
+  const [fieldError, setFieldError] = useState<FormValidationError<GoalFieldError> | null>(null);
   const { dismiss: dismissGoalsHint, visible: showGoalsHint } = useListActionsHint("goals", savingsGoals.length > 0);
 
   function editGoal(goal: SavingsGoal) {
@@ -44,6 +48,19 @@ export function SavingsGoalsPanel({
     setGoalLabel("");
     setTargetAmount("");
     setSavedAmount("");
+    setFieldError(null);
+  }
+
+  function clearFieldError(field?: GoalFieldError) {
+    setFieldError((current) => {
+      if (!current) {
+        return current;
+      }
+      if (!field || current.field === field) {
+        return null;
+      }
+      return current;
+    });
   }
 
   return (
@@ -51,22 +68,46 @@ export function SavingsGoalsPanel({
       <View style={styles.capturePanel}>
         <Text style={componentStyles.microLabel}>{editingGoalId ? goalsStrings.editGoal : goalsStrings.newGoal}</Text>
         <TextInput
-          accessibilityLabel={goalsStrings.goalNameA11y}
-          onChangeText={setGoalLabel}
+          accessibilityLabel={
+            fieldError?.field === "label"
+              ? `${goalsStrings.goalNameA11y}. ${fieldError.message}`
+              : goalsStrings.goalNameA11y
+          }
+          onChangeText={(value) => {
+            clearFieldError("label");
+            setGoalLabel(value);
+          }}
           placeholder={goalsStrings.goalNamePlaceholder}
           placeholderTextColor={colors.muted}
           style={styles.input}
           value={goalLabel}
         />
+        {fieldError?.field === "label" && (
+          <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+            {fieldError.message}
+          </Text>
+        )}
         <TextInput
-          accessibilityLabel={goalsStrings.targetAmountA11y}
+          accessibilityLabel={
+            fieldError?.field === "targetAmount"
+              ? `${goalsStrings.targetAmountA11y}. ${fieldError.message}`
+              : goalsStrings.targetAmountA11y
+          }
           keyboardType="number-pad"
-          onChangeText={(value) => setTargetAmount(formatAmountInput(value))}
+          onChangeText={(value) => {
+            clearFieldError("targetAmount");
+            setTargetAmount(formatAmountInput(value));
+          }}
           placeholder={goalsStrings.targetAmountPlaceholder}
           placeholderTextColor={colors.muted}
           style={styles.input}
           value={targetAmount}
         />
+        {fieldError?.field === "targetAmount" && (
+          <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+            {fieldError.message}
+          </Text>
+        )}
         <TextInput
           accessibilityLabel={goalsStrings.savedSoFarA11y}
           keyboardType="number-pad"
@@ -84,8 +125,22 @@ export function SavingsGoalsPanel({
           )}
           <Pressable
             onPress={() => {
-              onSaveGoal({ id: editingGoalId, label: goalLabel, savedAmount, targetAmount });
-              resetDraft();
+              void (async () => {
+                const result = await onSaveGoal({
+                  id: editingGoalId,
+                  label: goalLabel,
+                  savedAmount,
+                  targetAmount
+                });
+                if (!result.ok) {
+                  hapticWarning();
+                  if (result.validation) {
+                    setFieldError(result.validation);
+                  }
+                  return;
+                }
+                resetDraft();
+              })();
             }}
             style={styles.smallPrimaryButton}
           >

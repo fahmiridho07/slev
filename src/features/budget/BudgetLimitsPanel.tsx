@@ -8,8 +8,11 @@ import { formatAmountInput } from "../../lib/formatMoney";
 import { getModeByCategory } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { BudgetLimit, BudgetPeriod, CategoryMode, ExpenseCategory, SpendingContext, SpendingMoment } from "../spendingMemory.types";
+import { hapticWarning } from "../../lib/haptics";
+import { FormValidationError } from "../../lib/formValidation";
 import { useTheme } from "../../hooks/useTheme";
 import { getProgressFillStyle } from "../../theme/styles/fillStyles";
+import { LimitFieldError } from "./budgetValidation";
 
 export function BudgetLimitsPanel({
   budgetLimits,
@@ -32,7 +35,11 @@ export function BudgetLimitsPanel({
   onDeleteLimit: (category: SpendingContext) => void;
   onOpenSettings: () => void;
   onSaveCategoryMode: (category: SpendingContext, mode: CategoryModeValue) => void;
-  onSaveLimit: (category: SpendingContext, amountText: string, period: BudgetPeriod) => void;
+  onSaveLimit: (
+    category: SpendingContext,
+    amountText: string,
+    period: BudgetPeriod
+  ) => Promise<{ ok: boolean; validation?: FormValidationError<LimitFieldError> }>;
 }) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const limitsStrings = strings.budget.limits;
@@ -41,6 +48,7 @@ export function BudgetLimitsPanel({
   const [draftAmount, setDraftAmount] = useState("");
   const [draftPeriod, setDraftPeriod] = useState<BudgetPeriod>("weekly");
   const [pendingDeleteCategory, setPendingDeleteCategory] = useState<ExpenseCategory | null>(null);
+  const [limitFieldError, setLimitFieldError] = useState<FormValidationError<LimitFieldError> | null>(null);
   const limitByCategory = useMemo(
     () => new Map(budgetLimits.map((limit) => [limit.category, limit])),
     [budgetLimits]
@@ -71,6 +79,7 @@ export function BudgetLimitsPanel({
     setEditingCategory((current) => (current === category ? null : category));
     setDraftAmount(limit ? formatAmountInput(String(limit.limitAmount)) : "");
     setDraftPeriod(limit?.period ?? "weekly");
+    setLimitFieldError(null);
   }
 
   function periodLabel(period: BudgetPeriod) {
@@ -145,14 +154,26 @@ export function BudgetLimitsPanel({
           {editingCategory === row.category && (
             <View style={styles.inlineEditor}>
               <TextInput
-                accessibilityLabel={formatString(limitsStrings.limitAmountA11y, { category: row.category })}
+                accessibilityLabel={
+                  limitFieldError?.field === "amount"
+                    ? `${formatString(limitsStrings.limitAmountA11y, { category: row.category })}. ${limitFieldError.message}`
+                    : formatString(limitsStrings.limitAmountA11y, { category: row.category })
+                }
                 keyboardType="number-pad"
-                onChangeText={(value) => setDraftAmount(formatAmountInput(value))}
+                onChangeText={(value) => {
+                  setLimitFieldError((current) => (current?.field === "amount" ? null : current));
+                  setDraftAmount(formatAmountInput(value));
+                }}
                 placeholder={limitsStrings.limitAmountPlaceholder}
                 placeholderTextColor={colors.muted}
                 style={styles.input}
                 value={draftAmount}
               />
+              {limitFieldError?.field === "amount" && (
+                <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+                  {limitFieldError.message}
+                </Text>
+              )}
               <SegmentedControl
                 compact
                 options={[
@@ -181,8 +202,18 @@ export function BudgetLimitsPanel({
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => {
-                    onSaveLimit(row.category, draftAmount, draftPeriod);
-                    setEditingCategory(null);
+                    void (async () => {
+                      const result = await onSaveLimit(row.category, draftAmount, draftPeriod);
+                      if (!result.ok) {
+                        hapticWarning();
+                        if (result.validation) {
+                          setLimitFieldError(result.validation);
+                        }
+                        return;
+                      }
+                      setLimitFieldError(null);
+                      setEditingCategory(null);
+                    })();
                   }}
                   style={styles.smallPrimaryButton}
                 >

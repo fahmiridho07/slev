@@ -22,7 +22,10 @@ import {
 } from "../../lib/financeEngine";
 import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { AccountTier, BalanceSnapshot, MoneyAccount } from "../spendingMemory.types";
+import { hapticWarning } from "../../lib/haptics";
+import { FormValidationError } from "../../lib/formValidation";
 import { useTheme } from "../../hooks/useTheme";
+import { AccountFieldError, BalanceFieldError } from "./budgetValidation";
 
 function getAccountKindLabel(kind: MoneyAccount["kind"], strings: AppStrings) {
   switch (kind) {
@@ -57,8 +60,11 @@ export function BalancePanel({
     kind: MoneyAccount["kind"];
     label: string;
     tier?: MoneyAccount["tier"];
-  }) => void;
-  onSaveBalance: (input: { accountLabel: string; amount: string }) => void;
+  }) => Promise<{ ok: boolean; validation?: FormValidationError<AccountFieldError> }>;
+  onSaveBalance: (input: {
+    accountLabel: string;
+    amount: string;
+  }) => Promise<{ ok: boolean; validation?: FormValidationError<BalanceFieldError> }>;
 }) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const balanceStrings = strings.budget.balance;
@@ -70,6 +76,8 @@ export function BalancePanel({
   const [accountDraftHub, setAccountDraftHub] = useState<"hub" | "pocket">("pocket");
   const [accountDraftTier, setAccountDraftTier] = useState<AccountTier>("tracked");
   const [pendingDeleteAccount, setPendingDeleteAccount] = useState<MoneyAccount | null>(null);
+  const [balanceFieldError, setBalanceFieldError] = useState<FormValidationError<BalanceFieldError> | null>(null);
+  const [accountFieldError, setAccountFieldError] = useState<FormValidationError<AccountFieldError> | null>(null);
   const currentBalanceTotal = useMemo(() => getLatestBalanceTotal(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
   const manualBalanceTotal = useMemo(() => getLatestBalanceTotal(balanceSnapshots), [balanceSnapshots]);
   const currentBalances = useMemo(() => getLatestBalanceSnapshots(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
@@ -107,6 +115,19 @@ export function BalancePanel({
     setAccountDraftKind("bank");
     setAccountDraftHub("pocket");
     setAccountDraftTier("tracked");
+    setAccountFieldError(null);
+  }
+
+  function clearBalanceFieldError(field?: BalanceFieldError) {
+    setBalanceFieldError((current) => {
+      if (!current) {
+        return current;
+      }
+      if (!field || current.field === field) {
+        return null;
+      }
+      return current;
+    });
   }
 
   const renderAccountItem = useCallback(
@@ -226,23 +247,53 @@ export function BalancePanel({
           accounts={accounts}
           label={strings.common.account}
           selected={accountLabel}
-          onSelect={setAccountLabel}
+          onSelect={(value) => {
+            clearBalanceFieldError("accountLabel");
+            setAccountLabel(value);
+          }}
         />
+        {balanceFieldError?.field === "accountLabel" && (
+          <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+            {balanceFieldError.message}
+          </Text>
+        )}
         <TextInput
-          accessibilityLabel={balanceStrings.currentBalancePlaceholder}
+          accessibilityLabel={
+            balanceFieldError?.field === "amount"
+              ? `${balanceStrings.currentBalancePlaceholder}. ${balanceFieldError.message}`
+              : balanceStrings.currentBalancePlaceholder
+          }
           keyboardType="number-pad"
-          onChangeText={(value) => setAmount(formatAmountInput(value))}
+          onChangeText={(value) => {
+            clearBalanceFieldError("amount");
+            setAmount(formatAmountInput(value));
+          }}
           placeholder={balanceStrings.currentBalancePlaceholder}
           placeholderTextColor={colors.muted}
           style={styles.input}
           value={amount}
         />
+        {balanceFieldError?.field === "amount" && (
+          <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+            {balanceFieldError.message}
+          </Text>
+        )}
         <Pressable
           accessibilityLabel={balanceStrings.saveSnapshotA11y}
           accessibilityRole="button"
           onPress={() => {
-            onSaveBalance({ accountLabel, amount });
-            setAmount("");
+            void (async () => {
+              const result = await onSaveBalance({ accountLabel, amount });
+              if (!result.ok) {
+                hapticWarning();
+                if (result.validation) {
+                  setBalanceFieldError(result.validation);
+                }
+                return;
+              }
+              setBalanceFieldError(null);
+              setAmount("");
+            })();
           }}
           style={styles.primaryButton}
         >
@@ -256,13 +307,25 @@ export function BalancePanel({
           {editingAccountId ? balanceStrings.editAccount : balanceStrings.addAccount}
         </Text>
         <TextInput
-          accessibilityLabel={balanceStrings.accountPlaceholder}
-          onChangeText={setAccountDraftLabel}
+          accessibilityLabel={
+            accountFieldError?.field === "label"
+              ? `${balanceStrings.accountPlaceholder}. ${accountFieldError.message}`
+              : balanceStrings.accountPlaceholder
+          }
+          onChangeText={(value) => {
+            setAccountFieldError((current) => (current?.field === "label" ? null : current));
+            setAccountDraftLabel(value);
+          }}
           placeholder={balanceStrings.accountPlaceholder}
           placeholderTextColor={colors.muted}
           style={styles.input}
           value={accountDraftLabel}
         />
+        {accountFieldError?.field === "label" && (
+          <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+            {accountFieldError.message}
+          </Text>
+        )}
         <SegmentedControl
           compact
           options={[
@@ -303,14 +366,23 @@ export function BalancePanel({
           )}
           <Pressable
             onPress={() => {
-              onSaveAccount({
-                id: editingAccountId,
-                isIncomeHub: accountDraftHub === "hub",
-                kind: accountDraftKind,
-                label: accountDraftLabel,
-                tier: accountDraftTier
-              });
-              resetAccountDraft();
+              void (async () => {
+                const result = await onSaveAccount({
+                  id: editingAccountId,
+                  isIncomeHub: accountDraftHub === "hub",
+                  kind: accountDraftKind,
+                  label: accountDraftLabel,
+                  tier: accountDraftTier
+                });
+                if (!result.ok) {
+                  hapticWarning();
+                  if (result.validation) {
+                    setAccountFieldError(result.validation);
+                  }
+                  return;
+                }
+                resetAccountDraft();
+              })();
             }}
             style={styles.smallPrimaryButton}
           >

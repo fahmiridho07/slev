@@ -1,8 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { SpendingContext, SpendingPattern } from "../features/spendingMemory.types";
-import { lightColors } from "../theme/palettes";
-import { componentStyles as defaultComponentStyles } from "../theme/styles/components";
 import type { ColorTokens } from "../theme/types";
+import type { createComponentStyles } from "../theme/styles/components";
 
 export function contextIcon(context: SpendingContext): keyof typeof Ionicons.glyphMap {
   if (context === "Meal") return "restaurant-outline";
@@ -21,7 +20,7 @@ export function patternIcon(tone: SpendingPattern["tone"]): keyof typeof Ionicon
   return "leaf-outline";
 }
 
-export function patternColor(tone: SpendingPattern["tone"], colors: ColorTokens = lightColors): string {
+export function patternColor(tone: SpendingPattern["tone"], colors: ColorTokens): string {
   if (tone === "notice") return colors.blue;
   if (tone === "warm") return colors.amber;
   return colors.greenDark;
@@ -29,7 +28,7 @@ export function patternColor(tone: SpendingPattern["tone"], colors: ColorTokens 
 
 export function getPatternToneStyle(
   tone: SpendingPattern["tone"],
-  styles = defaultComponentStyles
+  styles: ReturnType<typeof createComponentStyles>
 ) {
   if (tone === "notice") return styles.patternNotice;
   if (tone === "warm") return styles.patternWarm;
