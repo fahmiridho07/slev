@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useCallback, useMemo, useState } from "react";
 import { Pressable, SectionList, Text, TextInput, View } from "react-native";
-import { DeleteConfirmDialog, EmptyState, MomentRow } from "../components";
+import { DeleteConfirmDialog, EmptyState, MomentRow, ScreenHero } from "../components";
+import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { MomentEditForm } from "../features/memory/MomentEditForm";
 import { SpendingMoment } from "../features/spendingMemory.types";
 import { buildRepeatHints, filterMoments, getMomentTitle, groupMomentsByRecallRange } from "../lib/analysis";
@@ -63,6 +64,16 @@ function MemoryScreenComponent() {
 
   const repeatHints = useMemo(() => buildRepeatHints(moments), [moments]);
   const filteredMoments = useMemo(() => filterMoments(moments, query), [moments, query]);
+  const thisMonthCount = useMemo(() => {
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
+    return moments.filter((moment) => Date.parse(moment.occurredAt) >= monthStart).length;
+  }, [moments]);
+  const thisMonthExpense = useMemo(() => {
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
+    return moments
+      .filter((moment) => moment.type === "expense" && Date.parse(moment.occurredAt) >= monthStart)
+      .reduce((sum, moment) => sum + moment.amount, 0);
+  }, [moments]);
   const sections = useMemo<MemorySection[]>(
     () =>
       groupMomentsByRecallRange(filteredMoments).map((group) => ({
@@ -118,9 +129,12 @@ function MemoryScreenComponent() {
   const listHeader = useMemo(
     () => (
       <>
-        <View style={styles.heroPanel}>
-          <Text style={styles.kickerDark}>Memory</Text>
-        </View>
+        <ScreenHero
+          hint={`${thisMonthCount} moment${thisMonthCount === 1 ? "" : "s"} saved this month`}
+          kicker="Spending memory"
+          value={thisMonthExpense > 0 ? formatCompactRupiah(thisMonthExpense) : undefined}
+          valueTone="danger"
+        />
         {moments.length > 0 && (
           <TextInput
             onChangeText={setQuery}
@@ -132,7 +146,7 @@ function MemoryScreenComponent() {
         )}
       </>
     ),
-    [moments.length, query]
+    [moments.length, query, thisMonthCount, thisMonthExpense]
   );
 
   const listEmpty = useMemo(() => {

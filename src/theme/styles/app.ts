@@ -95,28 +95,28 @@ export const styles = StyleSheet.create({
   pulseItem: {
     borderRadius: 8,
     borderWidth: 1,
-    flexBasis: "30%",
+    flexBasis: "47%",
     flexGrow: 1,
-    gap: 12,
-    minHeight: 108,
-    minWidth: 138,
+    gap: 8,
+    minHeight: 96,
+    minWidth: 0,
     padding: 14
   },
   pulseItemIncome: {
-    backgroundColor: "#f2fbf4",
-    borderColor: "#c3e3cc"
+    backgroundColor: colors.surfacePositive,
+    borderColor: colors.borderMint
   },
   pulseItemDanger: {
-    backgroundColor: "#fff1ee",
-    borderColor: "#f3c8c0"
+    backgroundColor: colors.surfaceDanger,
+    borderColor: colors.borderDanger
   },
   pulseItemSpending: {
-    backgroundColor: "#fff8e8",
-    borderColor: "#f3dfad"
+    backgroundColor: colors.surfaceExpense,
+    borderColor: colors.borderDanger
   },
   pulseItemBalance: {
-    backgroundColor: "#eef6fa",
-    borderColor: "#cfe3ed"
+    backgroundColor: colors.surfaceInfo,
+    borderColor: colors.borderInfo
   },
   pulseTopRow: {
     alignItems: "center",
@@ -134,19 +134,18 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.mint
   },
   pulseIconDanger: {
-    backgroundColor: "#ffe0da"
+    backgroundColor: colors.iconDanger
   },
   pulseIconSpending: {
-    backgroundColor: "#ffe9bd"
+    backgroundColor: colors.iconExpense
   },
   pulseIconBalance: {
-    backgroundColor: "#d9edf6"
+    backgroundColor: colors.iconInfo
   },
   pulseLabel: {
     color: colors.muted,
-    flex: 1,
     fontSize: 12,
-    fontWeight: "900",
+    fontWeight: "700",
     letterSpacing: 0,
     lineHeight: 16
   },
@@ -185,7 +184,7 @@ export const styles = StyleSheet.create({
   },
   pulseHero: {
     backgroundColor: colors.mint,
-    borderColor: "#c3e3cc",
+    borderColor: colors.borderMint,
     borderRadius: 8,
     borderWidth: 1,
     flexBasis: "100%",
@@ -196,7 +195,7 @@ export const styles = StyleSheet.create({
     color: colors.greenDark,
     flex: 1,
     fontSize: 12,
-    fontWeight: "900",
+    fontWeight: "700",
     letterSpacing: 0,
     textTransform: "uppercase"
   },
@@ -238,14 +237,7 @@ export const styles = StyleSheet.create({
   kicker: {
     color: colors.greenDark,
     fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 0,
-    textTransform: "uppercase"
-  },
-  kickerDark: {
-    color: colors.greenDark,
-    fontSize: 12,
-    fontWeight: "800",
+    fontWeight: "700",
     letterSpacing: 0,
     textTransform: "uppercase"
   },
@@ -288,8 +280,8 @@ export const styles = StyleSheet.create({
     padding: 12
   },
   captureTypeTileActive: {
-    backgroundColor: "#f2fbf4",
-    borderColor: "#c3e3cc"
+    backgroundColor: colors.surfacePositive,
+    borderColor: colors.borderMint
   },
   captureTypeIconBadge: {
     alignItems: "center",
@@ -383,12 +375,25 @@ export const styles = StyleSheet.create({
   segmentButtonText: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: "800",
+    fontWeight: "600",
     letterSpacing: 0,
     textAlign: "center"
   },
   segmentButtonTextActive: {
-    color: colors.greenDark
+    color: colors.greenDark,
+    fontWeight: "700"
+  },
+  captureExpandRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 6,
+    justifyContent: "center",
+    minHeight: 40
+  },
+  captureExpandText: {
+    color: colors.greenDark,
+    fontSize: 13,
+    fontWeight: "700"
   },
   transferPickerBlock: {
     gap: 12
@@ -482,8 +487,8 @@ export const styles = StyleSheet.create({
   },
   templateChip: {
     alignItems: "stretch",
-    backgroundColor: colors.mint,
-    borderColor: "#c3e3cc",
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
     borderRadius: 8,
     borderWidth: 1,
     flexDirection: "row",
@@ -498,21 +503,21 @@ export const styles = StyleSheet.create({
   },
   templateRemoveButton: {
     alignItems: "center",
-    borderLeftColor: "#c3e3cc",
+    borderLeftColor: colors.line,
     borderLeftWidth: 1,
     justifyContent: "center",
-    minWidth: 30
+    minWidth: 44
   },
   microLabel: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: "800",
+    fontWeight: "700",
     letterSpacing: 0,
     textTransform: "uppercase"
   },
   repeatChip: {
-    backgroundColor: colors.mint,
-    borderColor: "#c3e3cc",
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
     borderRadius: 8,
     borderWidth: 1,
     gap: 2,
@@ -663,11 +668,23 @@ export const styles = StyleSheet.create({
   },
   heroPanel: {
     backgroundColor: colors.mint,
-    borderColor: "#c3e3cc",
+    borderColor: colors.borderMint,
     borderRadius: 8,
     borderWidth: 1,
-    padding: 18,
-    gap: 8
+    gap: 6,
+    padding: 18
+  },
+  heroValue: {
+    color: colors.ink,
+    fontSize: 28,
+    fontWeight: "800",
+    letterSpacing: 0,
+    lineHeight: 34
+  },
+  heroHint: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20
   },
   heroTitle: {
     color: colors.ink,
@@ -718,7 +735,7 @@ export const styles = StyleSheet.create({
     width: 38
   },
   incomeMomentIcon: {
-    backgroundColor: "#eef6fa"
+    backgroundColor: colors.surfaceInfo
   },
   momentText: {
     flex: 1,
@@ -759,7 +776,7 @@ export const styles = StyleSheet.create({
   groupTitle: {
     color: colors.muted,
     fontSize: 13,
-    fontWeight: "800",
+    fontWeight: "700",
     letterSpacing: 0,
     textTransform: "uppercase"
   },
@@ -826,8 +843,8 @@ export const styles = StyleSheet.create({
   },
   confirmIcon: {
     alignItems: "center",
-    backgroundColor: "#fff1ee",
-    borderColor: "#f3c8c0",
+    backgroundColor: colors.surfaceDanger,
+    borderColor: colors.borderDanger,
     borderRadius: 8,
     borderWidth: 1,
     height: 44,
@@ -943,12 +960,12 @@ export const styles = StyleSheet.create({
     borderColor: colors.line
   },
   patternNotice: {
-    backgroundColor: "#eef6fa",
-    borderColor: "#cfe3ed"
+    backgroundColor: colors.surfaceInfo,
+    borderColor: colors.borderInfo
   },
   patternWarm: {
-    backgroundColor: "#fff8e8",
-    borderColor: "#f3dfad"
+    backgroundColor: colors.surfaceWarning,
+    borderColor: colors.borderWarning
   },
   patternTitleRow: {
     alignItems: "center",
@@ -1095,7 +1112,7 @@ export const styles = StyleSheet.create({
     padding: 14
   },
   cashflowRowRecent: {
-    backgroundColor: "#f3f7f0"
+    backgroundColor: colors.surfacePositive
   },
   cashflowBars: {
     gap: 8
@@ -1126,7 +1143,7 @@ export const styles = StyleSheet.create({
     height: 9
   },
   expenseFill: {
-    backgroundColor: colors.amber,
+    backgroundColor: colors.coral,
     borderRadius: 8,
     height: 9
   },
@@ -1174,7 +1191,7 @@ export const styles = StyleSheet.create({
   dangerButton: {
     alignItems: "center",
     alignSelf: "flex-start",
-    borderColor: "#f3c8c0",
+    borderColor: colors.borderDanger,
     borderRadius: 8,
     borderWidth: 1,
     flexDirection: "row",

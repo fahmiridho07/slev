@@ -1,13 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { memo, useState } from "react";
+import React, { memo, useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { SegmentedControl } from "../components";
+import { ScreenHero, SegmentedControl } from "../components";
 import { AllocationPanel } from "../features/budget/AllocationPanel";
 import { BalancePanel } from "../features/budget/BalancePanel";
 import { BudgetLimitsPanel } from "../features/budget/BudgetLimitsPanel";
 import { MonthlyPlanPanel } from "../features/budget/MonthlyPlanPanel";
 import { SavingsGoalsPanel } from "../features/budget/SavingsGoalsPanel";
 import { BudgetTabKey } from "../features/app.types";
+import { formatSignedCompactRupiah } from "../lib/formatMoney";
+import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
 import { colors } from "../theme/colors";
 import { styles } from "../theme/styles/app";
@@ -18,7 +20,15 @@ type BudgetScreenProps = {
 
 function BudgetScreenComponent({ onOpenSettings }: BudgetScreenProps) {
   const actions = useActions();
-  const { accountDrift, categoryLabels, monthlySummary, projectedBalanceSnapshots } = useDerived();
+  const {
+    accountDrift,
+    allocationPlan,
+    categoryLabels,
+    hasMonthlyPlan,
+    latestBalanceTotal,
+    monthlySummary,
+    projectedBalanceSnapshots
+  } = useDerived();
   const {
     accounts,
     balanceSnapshots,
@@ -46,11 +56,61 @@ function BudgetScreenComponent({ onOpenSettings }: BudgetScreenProps) {
   const [activeBudgetTab, setActiveBudgetTab] = useState<BudgetTabKey>("plan");
   const [showCategoryLimits, setShowCategoryLimits] = useState(false);
 
+  const goalsSavedTotal = savingsGoals.reduce((sum, goal) => sum + goal.savedAmount, 0);
+  const goalsTargetTotal = savingsGoals.reduce((sum, goal) => sum + goal.targetAmount, 0);
+
+  const hero = useMemo(() => {
+    if (activeBudgetTab === "balance") {
+      return {
+        hint: "From snapshots plus logged movements",
+        kicker: "Estimated balance",
+        value: formatCompactRupiah(latestBalanceTotal),
+        valueTone: "balance" as const
+      };
+    }
+    if (activeBudgetTab === "goals") {
+      return savingsGoals.length > 0
+        ? {
+            hint: `${savingsGoals.length} goal${savingsGoals.length === 1 ? "" : "s"} in progress`,
+            kicker: "Saved toward goals",
+            value: `${formatCompactRupiah(goalsSavedTotal)} / ${formatCompactRupiah(goalsTargetTotal)}`,
+            valueTone: "income" as const
+          }
+        : {
+            hint: "Add a target when you are ready",
+            kicker: "Savings goals",
+            value: undefined,
+            valueTone: "default" as const
+          };
+    }
+    if (hasMonthlyPlan) {
+      return {
+        hint: `${formatCompactRupiah(monthlySummary.flexibleExpense)} flexible spent this month`,
+        kicker: "Flexible remaining",
+        value: formatSignedCompactRupiah(allocationPlan.flexibleRemaining),
+        valueTone: allocationPlan.flexibleRemaining < 0 ? ("danger" as const) : ("income" as const)
+      };
+    }
+    return {
+      hint: "Expected income, fixed costs, and savings target",
+      kicker: "Monthly plan",
+      value: undefined,
+      valueTone: "default" as const
+    };
+  }, [
+    activeBudgetTab,
+    allocationPlan.flexibleRemaining,
+    goalsSavedTotal,
+    goalsTargetTotal,
+    hasMonthlyPlan,
+    latestBalanceTotal,
+    monthlySummary.flexibleExpense,
+    savingsGoals.length
+  ]);
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-      <View style={styles.heroPanel}>
-        <Text style={styles.kickerDark}>Money plan</Text>
-      </View>
+      <ScreenHero hint={hero.hint} kicker={hero.kicker} value={hero.value} valueTone={hero.valueTone} />
 
       <SegmentedControl
         options={[
@@ -59,6 +119,7 @@ function BudgetScreenComponent({ onOpenSettings }: BudgetScreenProps) {
           { label: "Goals", value: "goals" }
         ]}
         selected={activeBudgetTab}
+        stretch
         onSelect={setActiveBudgetTab}
       />
 

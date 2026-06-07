@@ -8,6 +8,7 @@ export { FeedbackButton } from "./FeedbackButton";
 export { MomentRow } from "./MomentRow";
 export { ObservationPanel } from "./ObservationPanel";
 export { getPatternToneStyle, patternColor, patternIcon } from "./presentation";
+export { ScreenHero } from "./ScreenHero";
 export { SectionHeader } from "./SectionHeader";
 export { SegmentedControl } from "./SegmentedControl";
 export { SwipeActionRow } from "./SwipeActionRow";

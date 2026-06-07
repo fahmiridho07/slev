@@ -52,36 +52,17 @@ export function HomeMoneyPulse({
         )}
       </View>
       <View style={[styles.pulseItem, netIsNegative ? styles.pulseItemDanger : styles.pulseItemIncome]}>
-        <View style={styles.pulseTopRow}>
-          <View style={[styles.pulseIconBadge, netIsNegative ? styles.pulseIconDanger : styles.pulseIconIncome]}>
-            <Ionicons
-              name={netIsNegative ? "trending-down-outline" : "trending-up-outline"}
-              size={17}
-              color={netIsNegative ? colors.coral : colors.greenDark}
-            />
-          </View>
-          <Text style={styles.pulseLabel}>Net left this month</Text>
-        </View>
+        <Text style={styles.pulseLabel}>Net left this month</Text>
         <Text style={[styles.pulseValue, netIsNegative ? styles.pulseValueDanger : styles.pulseValueIncome]}>
           {formatSignedCompactRupiah(monthlySummary.net)}
         </Text>
       </View>
       <View style={[styles.pulseItem, styles.pulseItemSpending]}>
-        <View style={styles.pulseTopRow}>
-          <View style={[styles.pulseIconBadge, styles.pulseIconSpending]}>
-            <Ionicons name="card-outline" size={17} color={colors.coral} />
-          </View>
-          <Text style={styles.pulseLabel}>Spending</Text>
-        </View>
+        <Text style={styles.pulseLabel}>Spending</Text>
         <Text style={[styles.pulseValue, styles.pulseValueDanger]}>{formatCompactRupiah(monthlySummary.expense)}</Text>
       </View>
       <View style={[styles.pulseItem, styles.pulseItemBalance]}>
-        <View style={styles.pulseTopRow}>
-          <View style={[styles.pulseIconBadge, styles.pulseIconBalance]}>
-            <Ionicons name="wallet-outline" size={17} color={colors.blue} />
-          </View>
-          <Text style={styles.pulseLabel}>Est. balance</Text>
-        </View>
+        <Text style={styles.pulseLabel}>Est. balance</Text>
         <Text style={[styles.pulseValue, styles.pulseValueBalance]}>{formatCompactRupiah(latestBalanceTotal)}</Text>
         {runwayMonths !== null ? (
           <Text style={styles.pulseLabel}>~{runwayMonths} months of runway</Text>

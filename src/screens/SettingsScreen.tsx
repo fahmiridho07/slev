@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useCallback, useMemo, useState } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
-import { DeleteConfirmDialog, EmptyState, SwipeActionRow } from "../components";
+import { DeleteConfirmDialog, EmptyState, ScreenHero, SwipeActionRow } from "../components";
 import { ExpenseCategory } from "../features/spendingMemory.types";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
 import { getCategoryDeleteBody } from "../lib/analysis";
@@ -79,10 +79,11 @@ function SettingsScreenComponent() {
 
     return (
       <>
-        <View style={styles.heroPanel}>
-          <Text style={styles.kickerDark}>Settings</Text>
-          <Text style={styles.settingCopy}>{momentCount} money memor{momentCount === 1 ? "y" : "ies"} saved on this device.</Text>
-        </View>
+        <ScreenHero
+          hint={`${accounts.length} account${accounts.length === 1 ? "" : "s"} · ${recurringBills.length} recurring bill${recurringBills.length === 1 ? "" : "s"}`}
+          kicker="Settings"
+          value={`${momentCount} memor${momentCount === 1 ? "y" : "ies"}`}
+        />
 
         {corruptIssues.length > 0 && (
           <View style={styles.capturePanel}>

@@ -53,6 +53,11 @@ export function BalancePanel({
     () => summarizeBalanceByTier({ accounts, snapshots: projectedBalanceSnapshots }),
     [accounts, projectedBalanceSnapshots]
   );
+  const balanceByLabel = useMemo(() => {
+    const map = new Map<string, number>();
+    currentBalances.forEach((snapshot) => map.set(snapshot.accountLabel, snapshot.amount));
+    return map;
+  }, [currentBalances]);
 
   useEffect(() => {
     const labels = accounts.map((account) => account.label);
@@ -80,12 +85,23 @@ export function BalancePanel({
   }
 
   const renderAccountItem = useCallback(
-    ({ item: account }: { item: MoneyAccount }) => (
+    ({ item: account }: { item: MoneyAccount }) => {
+      const balance = balanceByLabel.get(account.label);
+      const accountMeta = account.isIncomeHub
+        ? "Income hub"
+        : account.tier === "ephemeral"
+          ? "Ephemeral pocket"
+          : `${account.kind.charAt(0).toUpperCase()}${account.kind.slice(1)}`;
+
+      return (
       <View style={styles.analyticsRow}>
         <View style={styles.analyticsRowHeader}>
-          <AccountTitle kind={account.kind} label={account.label} />
+          <View style={styles.budgetTitleBlock}>
+            <AccountTitle kind={account.kind} label={account.label} />
+            <Text style={styles.settingCopy}>{accountMeta}</Text>
+          </View>
           <Text style={styles.analyticsAmount}>
-            {account.isIncomeHub ? "Income hub" : account.tier === "ephemeral" ? "Ephemeral" : account.kind}
+            {balance !== undefined ? formatCompactRupiah(balance) : "No activity"}
           </Text>
         </View>
         <View style={styles.editActions}>
@@ -99,8 +115,9 @@ export function BalancePanel({
           </Pressable>
         </View>
       </View>
-    ),
-    []
+      );
+    },
+    [balanceByLabel]
   );
 
   const renderBalanceItem = useCallback(

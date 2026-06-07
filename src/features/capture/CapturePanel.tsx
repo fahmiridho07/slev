@@ -14,6 +14,12 @@ type CapturePanelProps = {
   onOpenSettings: () => void;
 };
 
+function getSaveLabel(entryType: "expense" | "income" | "transfer") {
+  if (entryType === "income") return "Save income";
+  if (entryType === "transfer") return "Save transfer";
+  return "Save expense";
+}
+
 function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
   const actions = useActions();
   const { categoryLabels, repeatSuggestions } = useDerived();
@@ -35,13 +41,21 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
     saveTemplate
   } = useCaptureForm();
 
+  const [expanded, setExpanded] = useState(false);
   const [noteOpen, setNoteOpen] = useState(Boolean(form.note));
 
   useEffect(() => {
     if (form.note) {
       setNoteOpen(true);
+      setExpanded(true);
     }
   }, [form.note]);
+
+  useEffect(() => {
+    if (form.entryType !== "expense") {
+      setExpanded(true);
+    }
+  }, [form.entryType]);
 
   const handleSave = useCallback(async () => {
     const saved = await save();
@@ -51,7 +65,7 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
   }, [save]);
 
   const showRepeatSuggestions = form.entryType === "expense" && repeatSuggestions.length > 0;
-  const showQuickAdd = manualTemplates.length > 0 || showRepeatSuggestions;
+  const showQuickAdd = expanded && (manualTemplates.length > 0 || showRepeatSuggestions);
 
   return (
     <View style={styles.capturePanel}>
@@ -63,13 +77,23 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
             <View style={styles.templateGrid}>
               {manualTemplates.slice(0, 6).map((template) => (
                 <View key={template.id} style={styles.templateChip}>
-                  <Pressable onPress={() => applyTemplate(template)} style={styles.templateMain}>
+                  <Pressable
+                    accessibilityLabel={`Apply shortcut ${getTemplateLabel(template)}`}
+                    accessibilityRole="button"
+                    onPress={() => applyTemplate(template)}
+                    style={styles.templateMain}
+                  >
                     <Text style={styles.repeatText}>{getTemplateLabel(template)}</Text>
                     <Text style={styles.repeatAmount}>
                       {template.amount > 0 ? formatRupiah(template.amount) : template.type === "income" ? "Income" : template.context}
                     </Text>
                   </Pressable>
-                  <Pressable onPress={() => actions.removeManualTemplate(template.id)} style={styles.templateRemoveButton}>
+                  <Pressable
+                    accessibilityLabel={`Remove shortcut ${getTemplateLabel(template)}`}
+                    accessibilityRole="button"
+                    onPress={() => actions.removeManualTemplate(template.id)}
+                    style={styles.templateRemoveButton}
+                  >
                     <Ionicons name="close-outline" size={14} color={colors.muted} />
                   </Pressable>
                 </View>
@@ -88,7 +112,7 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
           )}
         </View>
       )}
-      <CaptureTypePicker onSelect={changeEntryType} selected={form.entryType} />
+      {expanded && <CaptureTypePicker onSelect={changeEntryType} selected={form.entryType} />}
 
       <View style={styles.amountRow}>
         <Text style={styles.currencyPrefix}>Rp</Text>
@@ -102,7 +126,7 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
         />
       </View>
 
-      {form.entryType === "transfer" ? (
+      {expanded && form.entryType === "transfer" ? (
         <View style={styles.transferPickerBlock}>
           <AccountPicker
             accounts={accounts}
@@ -117,7 +141,7 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
             onSelect={(value) => patch({ toAccount: value })}
           />
         </View>
-      ) : form.entryType === "income" ? (
+      ) : expanded && form.entryType === "income" ? (
         <TextInput
           onChangeText={(value) => patch({ source: value })}
           placeholder="Source, optional"
@@ -125,7 +149,7 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
           style={styles.input}
           value={form.source}
         />
-      ) : (
+      ) : expanded ? (
         <TextInput
           onChangeText={(value) => patch({ label: value })}
           placeholder="Label, optional"
@@ -133,9 +157,9 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
           style={styles.input}
           value={form.label}
         />
-      )}
+      ) : null}
 
-      {form.entryType !== "transfer" && (
+      {expanded && form.entryType !== "transfer" && (
         <AccountPicker
           accounts={accounts}
           label={form.entryType === "income" ? "Received in" : "Paid from"}
@@ -165,32 +189,58 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
         )
       )}
 
-      {noteOpen ? (
-        <TextInput
-          multiline
-          onChangeText={(value) => patch({ note: value })}
-          placeholder="Tiny note, optional"
-          placeholderTextColor={colors.muted}
-          style={[styles.input, styles.noteInput]}
-          value={form.note}
-        />
-      ) : (
-        <Pressable accessibilityRole="button" onPress={() => setNoteOpen(true)} style={styles.addNoteButton}>
-          <Ionicons name="create-outline" size={16} color={colors.muted} />
-          <Text style={styles.addNoteText}>Add a note</Text>
-        </Pressable>
+      {expanded && (
+        noteOpen ? (
+          <TextInput
+            multiline
+            onChangeText={(value) => patch({ note: value })}
+            placeholder="Tiny note, optional"
+            placeholderTextColor={colors.muted}
+            style={[styles.input, styles.noteInput]}
+            value={form.note}
+          />
+        ) : (
+          <Pressable accessibilityRole="button" onPress={() => setNoteOpen(true)} style={styles.addNoteButton}>
+            <Ionicons name="create-outline" size={16} color={colors.muted} />
+            <Text style={styles.addNoteText}>Add a note</Text>
+          </Pressable>
+        )
       )}
 
       <Pressable accessibilityRole="button" onPress={() => void handleSave()} style={styles.primaryButton}>
         <Ionicons name="checkmark-circle-outline" size={20} color={colors.surface} />
-        <Text style={styles.primaryButtonText}>
-          {form.entryType === "income" ? "Save income" : form.entryType === "transfer" ? "Save transfer" : "Save memory"}
-        </Text>
+        <Text style={styles.primaryButtonText}>{getSaveLabel(form.entryType)}</Text>
       </Pressable>
-      <Pressable accessibilityRole="button" onPress={saveTemplate} style={styles.secondaryInlineButton}>
-        <Ionicons name="bookmark-outline" size={16} color={colors.greenDark} />
-        <Text style={styles.textButtonLabel}>Save as shortcut</Text>
-      </Pressable>
+
+      {expanded ? (
+        <>
+          <Pressable accessibilityRole="button" onPress={saveTemplate} style={styles.secondaryInlineButton}>
+            <Ionicons name="bookmark-outline" size={16} color={colors.greenDark} />
+            <Text style={styles.textButtonLabel}>Save as shortcut</Text>
+          </Pressable>
+          {form.entryType === "expense" && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: true }}
+              onPress={() => setExpanded(false)}
+              style={styles.captureExpandRow}
+            >
+              <Text style={styles.captureExpandText}>Fewer options</Text>
+              <Ionicons name="chevron-up-outline" size={16} color={colors.greenDark} />
+            </Pressable>
+          )}
+        </>
+      ) : (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ expanded: false }}
+          onPress={() => setExpanded(true)}
+          style={styles.captureExpandRow}
+        >
+          <Text style={styles.captureExpandText}>More options</Text>
+          <Ionicons name="chevron-down-outline" size={16} color={colors.greenDark} />
+        </Pressable>
+      )}
     </View>
   );
 }

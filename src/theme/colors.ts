@@ -10,7 +10,20 @@ export const colors = {
   greenDark: "#14543a",
   coral: "#f36f56",
   amber: "#f4b94f",
-  blue: "#4c7d9b"
+  blue: "#4c7d9b",
+  surfacePositive: "#f2fbf4",
+  surfaceDanger: "#fff1ee",
+  surfaceExpense: "#fff1ee",
+  surfaceWarning: "#fff8e8",
+  surfaceInfo: "#eef6fa",
+  borderMint: "#c3e3cc",
+  borderDanger: "#f3c8c0",
+  borderWarning: "#f3dfad",
+  borderInfo: "#cfe3ed",
+  iconDanger: "#ffe0da",
+  iconExpense: "#ffe0da",
+  iconWarning: "#ffe9bd",
+  iconInfo: "#d9edf6"
 };
 
 export const shadows = {

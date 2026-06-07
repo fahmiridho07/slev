@@ -43,12 +43,13 @@ export const componentStyles = StyleSheet.create({
   segmentButtonText: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: "800",
+    fontWeight: "600",
     letterSpacing: 0,
     textAlign: "center"
   },
   segmentButtonTextActive: {
-    color: colors.greenDark
+    color: colors.greenDark,
+    fontWeight: "700"
   },
   swipeRowShell: {
     backgroundColor: colors.surface,
@@ -98,8 +99,8 @@ export const componentStyles = StyleSheet.create({
   },
   confirmIcon: {
     alignItems: "center",
-    backgroundColor: "#fff1ee",
-    borderColor: "#f3c8c0",
+    backgroundColor: colors.surfaceDanger,
+    borderColor: colors.borderDanger,
     borderRadius: 8,
     borderWidth: 1,
     height: 44,
@@ -158,7 +159,7 @@ export const componentStyles = StyleSheet.create({
   microLabel: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: "800",
+    fontWeight: "700",
     letterSpacing: 0,
     textTransform: "uppercase"
   },
@@ -310,12 +311,12 @@ export const componentStyles = StyleSheet.create({
     borderColor: colors.line
   },
   patternNotice: {
-    backgroundColor: "#eef6fa",
-    borderColor: "#cfe3ed"
+    backgroundColor: colors.surfaceInfo,
+    borderColor: colors.borderInfo
   },
   patternWarm: {
-    backgroundColor: "#fff8e8",
-    borderColor: "#f3dfad"
+    backgroundColor: colors.surfaceWarning,
+    borderColor: colors.borderWarning
   },
   patternTitleRow: {
     alignItems: "center",
@@ -373,7 +374,7 @@ export const componentStyles = StyleSheet.create({
     width: 38
   },
   incomeMomentIcon: {
-    backgroundColor: "#eef6fa"
+    backgroundColor: colors.surfaceInfo
   },
   momentText: {
     flex: 1,

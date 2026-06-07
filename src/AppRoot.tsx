@@ -40,7 +40,15 @@ export function AppRoot() {
     shallowEqual
   );
   const [activeTab, setActiveTab] = useState<TabKey>("home");
-  const openSettings = () => setActiveTab("settings");
+  const [returnTab, setReturnTab] = useState<TabKey>("home");
+  const openSettings = () => {
+    if (activeTab !== "settings") {
+      setReturnTab(activeTab);
+    }
+    setActiveTab("settings");
+  };
+  const closeSettings = () => setActiveTab(returnTab);
+  const inSettings = activeTab === "settings";
 
   return (
     <>
@@ -57,18 +65,19 @@ export function AppRoot() {
                 <Image source={SLEV_MARK} style={styles.brandMark} />
                 <View>
                   <Text style={styles.brandName}>{BRAND.name}</Text>
-                  <Text style={styles.brandLine}>Spending memory</Text>
+                  <Text style={styles.brandLine}>{inSettings ? "Settings" : "Spending memory"}</Text>
                 </View>
               </View>
               <Pressable
+                accessibilityLabel={inSettings ? "Back" : "Open settings"}
                 accessibilityRole="button"
-                onPress={openSettings}
-                style={[styles.iconButton, activeTab === "settings" && styles.iconButtonActive]}
+                onPress={inSettings ? closeSettings : openSettings}
+                style={[styles.iconButton, inSettings && styles.iconButtonActive]}
               >
                 <Ionicons
-                  name="settings-outline"
+                  name={inSettings ? "chevron-back-outline" : "settings-outline"}
                   size={20}
-                  color={activeTab === "settings" ? colors.greenDark : colors.muted}
+                  color={inSettings ? colors.greenDark : colors.muted}
                 />
               </Pressable>
             </View>
@@ -90,10 +99,12 @@ export function AppRoot() {
 
           <View style={styles.tabBar}>
             {tabs.map((tab) => {
-              const isActive = activeTab === tab.key;
+              const isActive = !inSettings && activeTab === tab.key;
               return (
                 <Pressable
+                  accessibilityLabel={tab.label}
                   accessibilityRole="button"
+                  accessibilityState={{ selected: isActive }}
                   key={tab.key}
                   onPress={() => setActiveTab(tab.key)}
                   style={[styles.tabItem, isActive && styles.tabItemActive]}
