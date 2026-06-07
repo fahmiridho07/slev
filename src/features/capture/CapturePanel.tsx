@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { AccountPicker, ContextPicker, EmptyState } from "../../components";
 import { CaptureTypePicker } from "./CaptureTypePicker";
 import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
-import { getFrequentAccountLabels, getTemplateLabel } from "../../lib/analysis";
+import { getTemplateLabel } from "../../lib/analysis";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
 import { colors } from "../../theme/colors";
 import { styles } from "../../theme/styles/app";
@@ -17,17 +17,12 @@ type CapturePanelProps = {
 function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
   const actions = useActions();
   const { categoryLabels, repeatSuggestions } = useDerived();
-  const { accounts, manualTemplates, moments } = useFinanceSelector(
+  const { accounts, manualTemplates } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
-      manualTemplates: state.manualTemplates,
-      moments: state.moments
+      manualTemplates: state.manualTemplates
     }),
     shallowEqual
-  );
-  const quickSources = useMemo(
-    () => getFrequentAccountLabels(moments, accounts),
-    [moments, accounts]
   );
   const {
     form,
@@ -123,27 +118,6 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
           style={styles.input}
           value={form.label}
         />
-      )}
-
-      {form.entryType !== "transfer" && quickSources.length > 0 && (
-        <View style={styles.repeatBlock}>
-          <Text style={styles.microLabel}>Quick source</Text>
-          <View style={styles.suggestionRow}>
-            {quickSources.map((label) => {
-              const selected = form.accountLabel === label;
-              return (
-                <Pressable
-                  key={label}
-                  accessibilityRole="button"
-                  onPress={() => patch({ accountLabel: label })}
-                  style={[styles.repeatChip, selected && styles.accountChipActive]}
-                >
-                  <Text style={[styles.repeatText, selected && styles.accountChipTextActive]}>{label}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
       )}
 
       {form.entryType !== "transfer" && (
