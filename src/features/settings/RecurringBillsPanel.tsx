@@ -6,6 +6,7 @@ import { useListActionsHint } from "../../hooks/useListActionsHint";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { MoneyAccount, RecurringBill, SpendingContext } from "../spendingMemory.types";
+import { formatString } from "../../i18n";
 import { useTheme } from "../../hooks/useTheme";
 
 export function RecurringBillsPanel({
@@ -62,25 +63,23 @@ export function RecurringBillsPanel({
 
   return (
     <View style={styles.capturePanel}>
-      <Text style={styles.microLabel}>Recurring bills</Text>
-      <Text style={styles.settingCopy}>
-        Monthly bills you expect each cycle. They show on Home when a payment is coming up.
-      </Text>
+      <Text style={styles.microLabel}>{strings.settings.bills.title}</Text>
+      <Text style={styles.settingCopy}>{strings.settings.bills.intro}</Text>
 
-      <Text style={styles.microLabel}>{editingBillId ? "Edit bill" : "Add bill"}</Text>
+      <Text style={styles.microLabel}>{editingBillId ? strings.settings.bills.edit : strings.settings.bills.add}</Text>
       <TextInput
-        accessibilityLabel="Bill name"
+        accessibilityLabel={strings.settings.bills.nameA11y}
         onChangeText={setLabel}
-        placeholder="Bill name, e.g. Internet"
+        placeholder={strings.settings.bills.namePlaceholder}
         placeholderTextColor={colors.muted}
         style={styles.input}
         value={label}
       />
       <TextInput
-        accessibilityLabel="Bill amount"
+        accessibilityLabel={strings.settings.bills.amountA11y}
         keyboardType="number-pad"
         onChangeText={(value) => setAmount(formatAmountInput(value))}
-        placeholder="Amount"
+        placeholder={strings.settings.bills.amount}
         placeholderTextColor={colors.muted}
         style={styles.input}
         value={amount}
@@ -89,29 +88,29 @@ export function RecurringBillsPanel({
         <ContextPicker categories={categoryLabels} onSelect={setContext} selected={context} />
       )}
       {accounts.length > 0 && (
-        <AccountPicker accounts={accounts} label="Account" onSelect={setAccountLabel} selected={accountLabel} />
+        <AccountPicker accounts={accounts} label={strings.common.account} onSelect={setAccountLabel} selected={accountLabel} />
       )}
       <TextInput
         keyboardType="number-pad"
         onChangeText={setDayOfMonth}
-        placeholder="Day of month (1-31)"
+        placeholder={strings.settings.bills.dayPlaceholder}
         placeholderTextColor={colors.muted}
         style={styles.input}
         value={dayOfMonth}
       />
       <Pressable
-        accessibilityLabel={active ? "Bill active" : "Bill paused"}
+        accessibilityLabel={active ? strings.settings.bills.active : strings.settings.bills.paused}
         accessibilityRole="button"
         onPress={() => setActive((current) => !current)}
         style={styles.secondaryInlineButton}
       >
         <Ionicons name={active ? "checkmark-circle-outline" : "ellipse-outline"} size={16} color={colors.greenDark} />
-        <Text style={styles.secondaryButtonText}>{active ? "Active" : "Paused"}</Text>
+        <Text style={styles.secondaryButtonText}>{active ? strings.settings.bills.active : strings.settings.bills.paused}</Text>
       </Pressable>
       <View style={styles.editActions}>
         {editingBillId && (
           <Pressable onPress={resetDraft} style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonText}>Cancel</Text>
+            <Text style={styles.secondaryButtonText}>{strings.common.cancel}</Text>
           </Pressable>
         )}
         <Pressable
@@ -129,12 +128,12 @@ export function RecurringBillsPanel({
           }}
           style={styles.smallPrimaryButton}
         >
-          <Text style={styles.primaryButtonText}>Save bill</Text>
+          <Text style={styles.primaryButtonText}>{strings.settings.bills.save}</Text>
         </Pressable>
       </View>
 
       {recurringBills.length === 0 ? (
-        <EmptyState text="No recurring bills yet. Add one when you know a fixed monthly payment." />
+        <EmptyState text={strings.settings.bills.empty} />
       ) : (
         <>
           {showBillsHint && (
@@ -154,7 +153,7 @@ export function RecurringBillsPanel({
               ]}
             >
               <ListActionRow
-                accessibilityLabel={`Edit bill ${bill.label}`}
+                accessibilityLabel={formatString(strings.settings.bills.editA11y, { label: bill.label })}
                 onDelete={() => setPendingDeleteBill(bill)}
                 onPress={() => editBill(bill)}
               >
@@ -164,7 +163,12 @@ export function RecurringBillsPanel({
                     <Text style={styles.analyticsAmount}>{formatRupiah(bill.amount)}</Text>
                   </View>
                   <Text style={styles.settingCopy}>
-                    {bill.context} · day {bill.dayOfMonth}{bill.accountLabel ? ` · ${bill.accountLabel}` : ""} · {bill.active ? "Active" : "Paused"}
+                    {formatString(strings.settings.bills.rowMeta, {
+                      account: bill.accountLabel ? ` · ${bill.accountLabel}` : "",
+                      context: bill.context,
+                      day: bill.dayOfMonth,
+                      status: bill.active ? strings.settings.bills.active : strings.settings.bills.paused
+                    })}
                   </Text>
                 </View>
               </ListActionRow>
@@ -177,7 +181,7 @@ export function RecurringBillsPanel({
       <DeleteConfirmDialog
         body={
           pendingDeleteBill
-            ? `${pendingDeleteBill.label} will be removed from recurring bills. Logged payments stay in your spending history.`
+            ? formatString(strings.settings.bills.deleteBody, { label: pendingDeleteBill.label })
             : ""
         }
         onCancel={() => setPendingDeleteBill(null)}
@@ -190,7 +194,7 @@ export function RecurringBillsPanel({
             setPendingDeleteBill(null);
           }
         }}
-        title="Delete recurring bill?"
+        title={strings.settings.bills.deleteTitle}
         visible={Boolean(pendingDeleteBill)}
       />
     </View>

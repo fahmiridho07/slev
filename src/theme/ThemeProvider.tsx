@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useEffect, useMemo, useState } from "react";
 import { Appearance } from "react-native";
-import { getStrings, type AppStrings, type Locale } from "../i18n";
+import { getStrings, setRuntimeLocale, type AppStrings, type Locale } from "../i18n";
 import { darkColors, darkShadows, lightColors, lightShadows } from "./palettes";
 import {
   getColorSchemePreference,
@@ -83,8 +83,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setLocale = useCallback((nextLocale: Locale) => {
     setLocaleState(nextLocale);
+    setRuntimeLocale(nextLocale);
     void setLocalePreference(nextLocale);
   }, []);
+
+  useEffect(() => {
+    setRuntimeLocale(locale);
+  }, [locale]);
 
   const theme = useMemo<AppTheme>(() => {
     const { colors, shadows } = paletteForScheme(resolvedScheme);

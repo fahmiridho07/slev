@@ -26,7 +26,7 @@ function buildEditForm(moment: SpendingMoment, accounts: MoneyAccount[]) {
 }
 
 function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormProps) {
-  const { colors, styles } = useTheme();
+  const { colors, strings, styles } = useTheme();
   const actions = useActions();
   const { categoryLabels } = useDerived();
   const accounts = useFinanceSelector((state) => state.accounts);
@@ -57,14 +57,16 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
       <TextInput
         keyboardType="number-pad"
         onChangeText={(value) => setAmountText(formatAmountInput(value))}
-        placeholder="Amount"
+        accessibilityLabel={strings.memory.edit.amount}
+        placeholder={strings.memory.edit.amount}
         placeholderTextColor={colors.muted}
         style={styles.input}
         value={amountText}
       />
       <TextInput
         onChangeText={type === "income" ? setSource : setLabel}
-        placeholder={type === "income" ? "Source" : "Label"}
+        accessibilityLabel={type === "income" ? strings.memory.edit.source : strings.memory.edit.label}
+        placeholder={type === "income" ? strings.memory.edit.source : strings.memory.edit.label}
         placeholderTextColor={colors.muted}
         style={styles.input}
         value={type === "income" ? source : label}
@@ -72,8 +74,8 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
       <SegmentedControl
         compact
         options={[
-          { label: "Expense", value: "expense" },
-          { label: "Income", value: "income" }
+          { label: strings.common.expense, value: "expense" },
+          { label: strings.common.income, value: "income" }
         ]}
         selected={type}
         onSelect={setType}
@@ -83,24 +85,25 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
       )}
       <AccountPicker
         accounts={accounts}
-        label={type === "income" ? "Received in" : "Paid from"}
+        label={type === "income" ? strings.memory.edit.receivedIn : strings.memory.edit.paidFrom}
         selected={accountLabel}
         onSelect={setAccountLabel}
       />
       <TextInput
         multiline
         onChangeText={setNote}
-        placeholder="Note"
+        accessibilityLabel={strings.memory.edit.note}
+        placeholder={strings.memory.edit.note}
         placeholderTextColor={colors.muted}
         style={[styles.input, styles.noteInput]}
         value={note}
       />
       <View style={styles.editActions}>
         <Pressable accessibilityRole="button" onPress={onCancel} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>Cancel</Text>
+          <Text style={styles.secondaryButtonText}>{strings.common.cancel}</Text>
         </Pressable>
-        <Pressable accessibilityRole="button" onPress={() => void save()} style={styles.smallPrimaryButton}>
-          <Text style={styles.primaryButtonText}>Save</Text>
+        <Pressable accessibilityLabel={strings.memory.edit.save} accessibilityRole="button" onPress={() => void save()} style={styles.smallPrimaryButton}>
+          <Text style={styles.primaryButtonText}>{strings.memory.edit.save}</Text>
         </Pressable>
       </View>
     </View>

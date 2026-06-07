@@ -2,7 +2,8 @@ import React, { useMemo, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { DeleteConfirmDialog, EmptyState, ListActionRow, SegmentedControl } from "../../components";
 import { CategoryModeValue } from "../app.types";
-import { getCategoryDeleteBody, getMomentsInPeriod, sumExpenseMoments } from "../../lib/analysis";
+import { getCategoryDeleteMessage } from "../../i18n";
+import { getMomentsInPeriod, sumExpenseMoments } from "../../lib/analysis";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { getModeByCategory } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
@@ -33,7 +34,7 @@ export function BudgetLimitsPanel({
   onSaveCategoryMode: (category: SpendingContext, mode: CategoryModeValue) => void;
   onSaveLimit: (category: SpendingContext, amountText: string, period: BudgetPeriod) => void;
 }) {
-  const { colors, styles } = useTheme();
+  const { colors, strings, styles } = useTheme();
   const [editingCategory, setEditingCategory] = useState<SpendingContext | null>(null);
   const [draftAmount, setDraftAmount] = useState("");
   const [draftPeriod, setDraftPeriod] = useState<BudgetPeriod>("weekly");
@@ -173,7 +174,7 @@ export function BudgetLimitsPanel({
         </View>
       ))}
       <DeleteConfirmDialog
-        body={pendingDeleteCategory ? getCategoryDeleteBody(pendingDeleteCategory) : ""}
+        body={pendingDeleteCategory ? getCategoryDeleteMessage(pendingDeleteCategory) : ""}
         onCancel={() => setPendingDeleteCategory(null)}
         onConfirm={() => {
           if (pendingDeleteCategory) {
@@ -184,7 +185,11 @@ export function BudgetLimitsPanel({
             setPendingDeleteCategory(null);
           }
         }}
-        title={pendingDeleteCategory?.isDefault ? "Remove default category?" : "Delete category?"}
+        title={
+          pendingDeleteCategory?.isDefault
+            ? strings.dialogs.categoryDeleteDefaultTitle
+            : strings.dialogs.categoryDeleteTitle
+        }
         visible={Boolean(pendingDeleteCategory)}
       />
     </View>

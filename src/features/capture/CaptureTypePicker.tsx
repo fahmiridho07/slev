@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { CaptureType } from "../app.types";
 import { useTheme } from "../../hooks/useTheme";
@@ -11,27 +11,6 @@ type CaptureTypeOption = {
   value: CaptureType;
 };
 
-const CAPTURE_TYPE_OPTIONS: CaptureTypeOption[] = [
-  {
-    hint: "Spending you want to track",
-    icon: "card-outline",
-    label: "Expense",
-    value: "expense"
-  },
-  {
-    hint: "Salary, refund, or inflow",
-    icon: "arrow-down-circle-outline",
-    label: "Income",
-    value: "income"
-  },
-  {
-    hint: "Move money between accounts",
-    icon: "swap-horizontal-outline",
-    label: "Transfer",
-    value: "transfer"
-  }
-];
-
 export function CaptureTypePicker({
   selected,
   onSelect
@@ -39,14 +18,38 @@ export function CaptureTypePicker({
   selected: CaptureType;
   onSelect: (value: CaptureType) => void;
 }) {
-  const { colors, styles } = useTheme();
+  const { colors, strings, styles } = useTheme();
+
+  const captureTypeOptions = useMemo<CaptureTypeOption[]>(
+    () => [
+      {
+        hint: strings.capture.type.expenseHint,
+        icon: "card-outline",
+        label: strings.capture.type.expenseLabel,
+        value: "expense"
+      },
+      {
+        hint: strings.capture.type.incomeHint,
+        icon: "arrow-down-circle-outline",
+        label: strings.capture.type.incomeLabel,
+        value: "income"
+      },
+      {
+        hint: strings.capture.type.transferHint,
+        icon: "swap-horizontal-outline",
+        label: strings.capture.type.transferLabel,
+        value: "transfer"
+      }
+    ],
+    [strings.capture.type]
+  );
 
   return (
     <View style={styles.captureTypeBlock}>
-      <Text style={styles.captureTypeLead}>What are you logging?</Text>
-      <Text style={styles.captureTypeCopy}>Tap the kind of money moment you want to save.</Text>
+      <Text style={styles.captureTypeLead}>{strings.capture.type.lead}</Text>
+      <Text style={styles.captureTypeCopy}>{strings.capture.type.copy}</Text>
       <View style={styles.captureTypeGrid}>
-        {CAPTURE_TYPE_OPTIONS.map((option) => {
+        {captureTypeOptions.map((option) => {
           const active = option.value === selected;
           return (
             <Pressable

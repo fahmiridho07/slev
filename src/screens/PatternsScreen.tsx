@@ -9,13 +9,14 @@ import { PatternTabKey } from "../features/app.types";
 import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
 import { useTheme } from "../hooks/useTheme";
+import { formatString } from "../i18n";
 
 type PatternsScreenProps = {
   scrollContentStyle: StyleProp<ViewStyle>;
 };
 
 function PatternsScreenComponent({ scrollContentStyle }: PatternsScreenProps) {
-  const { styles } = useTheme();
+  const { strings, styles } = useTheme();
   const actions = useActions();
   const { feedbackByPattern, latestBalanceTotal, monthlySummary, netWorthTrend, patterns, projectedBalanceSnapshots } =
     useDerived();
@@ -33,8 +34,10 @@ function PatternsScreenComponent({ scrollContentStyle }: PatternsScreenProps) {
   const hero = useMemo(() => {
     if (activePatternTab === "breakdown") {
       return {
-        hint: `${formatCompactRupiah(monthlySummary.income)} income logged this month`,
-        kicker: "Spending this month",
+        hint: formatString(strings.patterns.hero.breakdownHint, {
+          amount: formatCompactRupiah(monthlySummary.income)
+        }),
+        kicker: strings.patterns.hero.breakdownKicker,
         value: formatCompactRupiah(monthlySummary.expense),
         valueTone: "danger" as const,
         variant: "info" as const
@@ -42,21 +45,38 @@ function PatternsScreenComponent({ scrollContentStyle }: PatternsScreenProps) {
     }
     if (activePatternTab === "accounts") {
       return {
-        hint: netWorthTrend.length >= 2 ? "Net-worth trend available below" : "Add balance snapshots for trends",
-        kicker: "Estimated balance",
+        hint:
+          netWorthTrend.length >= 2
+            ? strings.patterns.hero.accountsHintWithTrend
+            : strings.patterns.hero.accountsHintNoTrend,
+        kicker: strings.patterns.hero.accountsKicker,
         value: formatCompactRupiah(latestBalanceTotal),
         valueTone: "balance" as const,
         variant: "info" as const
       };
     }
     return {
-      hint: patterns.length > 0 ? "Tap a pattern to leave quick feedback" : "Patterns appear after a few saved moments",
-      kicker: "Spending recap",
-      value: patterns.length > 0 ? `${patterns.length} pattern${patterns.length === 1 ? "" : "s"}` : undefined,
+      hint:
+        patterns.length > 0
+          ? strings.patterns.hero.recapHintWithPatterns
+          : strings.patterns.hero.recapHintEmpty,
+      kicker: strings.patterns.hero.recapKicker,
+      value:
+        patterns.length > 0
+          ? formatString(strings.patterns.hero.recapValue, { count: patterns.length })
+          : undefined,
       valueTone: "default" as const,
       variant: "surface" as const
     };
-  }, [activePatternTab, latestBalanceTotal, monthlySummary.expense, monthlySummary.income, netWorthTrend.length, patterns.length]);
+  }, [
+    activePatternTab,
+    latestBalanceTotal,
+    monthlySummary.expense,
+    monthlySummary.income,
+    netWorthTrend.length,
+    patterns.length,
+    strings.patterns.hero
+  ]);
 
   return (
     <ScrollView contentContainerStyle={scrollContentStyle}>
@@ -64,9 +84,9 @@ function PatternsScreenComponent({ scrollContentStyle }: PatternsScreenProps) {
 
       <SegmentedControl
         options={[
-          { label: "Recap", value: "overview" },
-          { label: "Spending", value: "breakdown" },
-          { label: "Accounts", value: "accounts" }
+          { label: strings.patterns.tabs.recap, value: "overview" },
+          { label: strings.patterns.tabs.spending, value: "breakdown" },
+          { label: strings.patterns.tabs.accounts, value: "accounts" }
         ]}
         selected={activePatternTab}
         stretch

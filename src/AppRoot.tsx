@@ -182,11 +182,11 @@ export function AppRoot() {
             })}
           </View>
           <DeleteConfirmDialog
-            body="This removes entries, plans, goals, balances, limits, accounts, transfers, and categories from this device."
-            confirmLabel="Clear"
+            body={strings.dialogs.clearAllBody}
+            confirmLabel={strings.dialogs.clearAllConfirm}
             onCancel={() => actions.setClearConfirmVisible(false)}
             onConfirm={() => void actions.confirmClearAll()}
-            title="Clear local finance memory?"
+            title={strings.dialogs.clearAllTitle}
             visible={clearConfirmVisible}
           />
         </KeyboardAvoidingView>

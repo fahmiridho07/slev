@@ -17,7 +17,7 @@ export function PatternOverview({
   patterns: SpendingPattern[];
   onAnswer: (patternId: string, response: PatternFeedbackResponse) => void;
 }) {
-  const { colors, componentStyles, styles } = useTheme();
+  const { colors, componentStyles, strings, styles } = useTheme();
   const enoughForRecap = moments.filter((moment) => moment.type === "expense" && Date.parse(moment.occurredAt) >= Date.now() - 14 * 24 * 60 * 60 * 1000).length >= 6;
   const groups = useMemo(() => groupPatterns(patterns), [patterns]);
 
@@ -43,17 +43,17 @@ export function PatternOverview({
                     <View style={styles.feedbackRow}>
                       <FeedbackButton
                         active={feedbackByPattern.get(pattern.id) === "keep"}
-                        label="Keep"
+                        label={strings.patterns.recap.feedbackKeep}
                         onPress={() => onAnswer(pattern.id, "keep")}
                       />
                       <FeedbackButton
                         active={feedbackByPattern.get(pattern.id) === "less_often"}
-                        label="Less often"
+                        label={strings.patterns.recap.feedbackLessOften}
                         onPress={() => onAnswer(pattern.id, "less_often")}
                       />
                       <FeedbackButton
                         active={feedbackByPattern.get(pattern.id) === "not_sure"}
-                        label="Not sure"
+                        label={strings.patterns.recap.feedbackNotSure}
                         onPress={() => onAnswer(pattern.id, "not_sure")}
                       />
                     </View>

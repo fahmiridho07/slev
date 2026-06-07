@@ -12,6 +12,7 @@ import { formatSignedCompactRupiah } from "../lib/formatMoney";
 import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
 import { useTheme } from "../hooks/useTheme";
+import { formatString } from "../i18n";
 
 type BudgetScreenProps = {
   activeBudgetTab: BudgetTabKey;
@@ -26,7 +27,7 @@ function BudgetScreenComponent({
   onOpenSettings,
   scrollContentStyle
 }: BudgetScreenProps) {
-  const { colors, styles } = useTheme();
+  const { colors, strings, styles } = useTheme();
   const actions = useActions();
   const {
     accountDrift,
@@ -76,8 +77,8 @@ function BudgetScreenComponent({
   const hero = useMemo(() => {
     if (activeBudgetTab === "balance") {
       return {
-        hint: "From snapshots plus logged movements",
-        kicker: "Estimated balance",
+        hint: strings.budget.hero.balanceHint,
+        kicker: strings.budget.hero.balanceKicker,
         value: formatCompactRupiah(latestBalanceTotal),
         valueTone: "balance" as const,
         variant: "info" as const
@@ -86,15 +87,15 @@ function BudgetScreenComponent({
     if (activeBudgetTab === "goals") {
       return savingsGoals.length > 0
         ? {
-            hint: `${savingsGoals.length} goal${savingsGoals.length === 1 ? "" : "s"} in progress`,
-            kicker: "Saved toward goals",
+            hint: formatString(strings.budget.hero.goalsHint, { count: savingsGoals.length }),
+            kicker: strings.budget.hero.goalsKicker,
             value: `${formatCompactRupiah(goalsSavedTotal)} / ${formatCompactRupiah(goalsTargetTotal)}`,
             valueTone: "income" as const,
             variant: "surface" as const
           }
         : {
-            hint: "Add a target when you are ready",
-            kicker: "Savings goals",
+            hint: strings.budget.hero.goalsEmptyHint,
+            kicker: strings.budget.hero.goalsEmptyKicker,
             value: undefined,
             valueTone: "default" as const,
             variant: "surface" as const
@@ -102,17 +103,19 @@ function BudgetScreenComponent({
     }
     if (hasMonthlyPlan) {
       return {
-        hint: `${formatCompactRupiah(monthlySummary.flexibleExpense)} flexible spent this month`,
-        kicker: "Flexible remaining",
+        hint: formatString(strings.budget.hero.flexibleSpent, {
+          amount: formatCompactRupiah(monthlySummary.flexibleExpense)
+        }),
+        kicker: strings.budget.hero.flexibleRemaining,
         value: formatSignedCompactRupiah(allocationPlan.flexibleRemaining),
         valueTone: allocationPlan.flexibleRemaining < 0 ? ("danger" as const) : ("income" as const),
         variant: "mint" as const
       };
     }
     return {
-      actionLabel: "Start with monthly plan",
-      hint: "Expected income, fixed costs, and savings target",
-      kicker: "Monthly plan",
+      actionLabel: strings.budget.hero.noPlanAction,
+      hint: strings.budget.hero.noPlanHint,
+      kicker: strings.budget.hero.noPlanKicker,
       onAction: () => onBudgetTabChange("plan"),
       value: undefined,
       valueTone: "default" as const,
@@ -127,7 +130,8 @@ function BudgetScreenComponent({
     latestBalanceTotal,
     monthlySummary.flexibleExpense,
     onBudgetTabChange,
-    savingsGoals.length
+    savingsGoals.length,
+    strings.budget.hero
   ]);
 
   return (
@@ -144,9 +148,9 @@ function BudgetScreenComponent({
 
       <SegmentedControl
         options={[
-          { label: "Plan", value: "plan" },
-          { label: "Balance", value: "balance" },
-          { label: "Goals", value: "goals" }
+          { label: strings.budget.tabs.plan, value: "plan" },
+          { label: strings.budget.tabs.balance, value: "balance" },
+          { label: strings.budget.tabs.goals, value: "goals" }
         ]}
         selected={activeBudgetTab}
         stretch
@@ -166,7 +170,7 @@ function BudgetScreenComponent({
               onPress={() => setShowAllocationDetails((prev) => !prev)}
               style={styles.planSummaryRow}
             >
-              <Text style={styles.settingTitle}>Allocation details</Text>
+              <Text style={styles.settingTitle}>{strings.budget.plan.allocationDetails}</Text>
               <Ionicons name={showAllocationDetails ? "chevron-up" : "chevron-down"} size={18} color={colors.muted} />
             </Pressable>
             {showAllocationDetails && (
@@ -187,7 +191,7 @@ function BudgetScreenComponent({
               onPress={() => setShowCategoryLimits((prev) => !prev)}
               style={styles.planSummaryRow}
             >
-              <Text style={styles.settingTitle}>Category limits (optional)</Text>
+              <Text style={styles.settingTitle}>{strings.budget.plan.categoryLimitsOptional}</Text>
               <Ionicons name={showCategoryLimits ? "chevron-up" : "chevron-down"} size={18} color={colors.muted} />
             </Pressable>
             {showCategoryLimits && (

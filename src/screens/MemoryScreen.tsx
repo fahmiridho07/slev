@@ -17,6 +17,7 @@ import { buildRepeatHints, filterMoments, getMomentTitle, groupMomentsByRecallRa
 import { AppNavigation } from "../navigation/appNavigation";
 import { useActions, useFinanceSelector } from "../state/useFinance";
 import { useTheme } from "../hooks/useTheme";
+import { formatString } from "../i18n";
 
 type MemoryMomentItemProps = {
   moment: SpendingMoment;
@@ -130,10 +131,10 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
         <ScreenHero
           hint={
             moments.length > 0
-              ? `${thisMonthCount} moment${thisMonthCount === 1 ? "" : "s"} saved this month`
-              : "Saved spending appears here after capture"
+              ? formatString(strings.memory.heroHintWithCount, { count: thisMonthCount })
+              : strings.memory.heroHintEmpty
           }
-          kicker="Spending memory"
+          kicker={strings.memory.heroKicker}
           value={thisMonthExpense > 0 ? formatCompactRupiah(thisMonthExpense) : undefined}
           valueTone="danger"
           variant="surface"
@@ -147,9 +148,9 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
         )}
         {moments.length > 0 && (
           <TextInput
-            accessibilityLabel="Search memories"
+            accessibilityLabel={strings.memory.searchA11y}
             onChangeText={setQuery}
-            placeholder="Search label, context, or amount"
+            placeholder={strings.memory.searchPlaceholder}
             placeholderTextColor={colors.muted}
             style={styles.input}
             value={query}
@@ -157,24 +158,33 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
         )}
       </>
     ),
-    [dismissListHint, moments.length, query, showListHint, strings.listHints.memory, thisMonthCount, thisMonthExpense]
+    [
+      dismissListHint,
+      moments.length,
+      query,
+      showListHint,
+      strings.listHints.memory,
+      strings.memory,
+      thisMonthCount,
+      thisMonthExpense
+    ]
   );
 
   const listEmpty = useMemo(() => {
     if (moments.length === 0) {
       return (
         <EmptyState
-          actionLabel="Go to Home"
+          actionLabel={strings.memory.emptyAction}
           onAction={navigation.openHome}
-          text="No saved spending memory yet."
+          text={strings.memory.emptyText}
         />
       );
     }
     if (filteredMoments.length === 0) {
-      return <EmptyState text="No memory matches that search." />;
+      return <EmptyState text={strings.memory.searchNoResults} />;
     }
     return null;
-  }, [filteredMoments.length, moments.length, navigation.openHome]);
+  }, [filteredMoments.length, moments.length, navigation.openHome, strings.memory]);
 
   return (
     <>
@@ -191,7 +201,11 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
       />
       <BottomSheet
         onClose={cancelEdit}
-        title={editingMoment ? `Edit ${getMomentTitle(editingMoment)}` : "Edit memory"}
+        title={
+          editingMoment
+            ? formatString(strings.memory.editSheetTitleNamed, { title: getMomentTitle(editingMoment) })
+            : strings.memory.editSheetTitle
+        }
         visible={Boolean(editingMoment)}
       >
         {editingMoment ? (
@@ -201,7 +215,7 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
       <DeleteConfirmDialog
         body={
           pendingDeleteMoment
-            ? `${getMomentTitle(pendingDeleteMoment)} will be removed from Memory. Budget and analysis totals will update automatically.`
+            ? formatString(strings.dialogs.memoryDeleteBody, { title: getMomentTitle(pendingDeleteMoment) })
             : ""
         }
         onCancel={() => setPendingDeleteMoment(null)}
@@ -211,7 +225,7 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
             setPendingDeleteMoment(null);
           }
         }}
-        title="Delete memory?"
+        title={strings.dialogs.memoryDeleteTitle}
         visible={Boolean(pendingDeleteMoment)}
       />
     </>

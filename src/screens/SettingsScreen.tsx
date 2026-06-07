@@ -5,7 +5,7 @@ import { DeleteConfirmDialog, EmptyState, ListActionRow, ListActionsOnboardingTi
 import { useListActionsHint } from "../hooks/useListActionsHint";
 import { ExpenseCategory } from "../features/spendingMemory.types";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
-import { getCategoryDeleteBody } from "../lib/analysis";
+import { formatString, getCategoryDeleteMessage } from "../i18n";
 import { listCorruptStorageIssues, StorageHealthIssue } from "../services/storageHealth";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
 import { useTheme } from "../hooks/useTheme";
@@ -71,13 +71,15 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
           <View style={styles.analyticsRow}>
             <View style={styles.analyticsRowHeader}>
               <Text style={styles.analyticsTitle}>{category.label}</Text>
-              <Text style={styles.analyticsAmount}>{category.isDefault ? "Default" : "Custom"}</Text>
+              <Text style={styles.analyticsAmount}>
+                {category.isDefault ? strings.settings.categories.default : strings.settings.categories.custom}
+              </Text>
             </View>
           </View>
         </ListActionRow>
       </View>
     ),
-    [expenseCategories.length]
+    [expenseCategories.length, strings.settings.categories]
   );
 
   const categoryKeyExtractor = useCallback((category: ExpenseCategory) => category.id, []);
@@ -88,9 +90,12 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
     return (
       <>
         <ScreenHero
-          hint={`${accounts.length} account${accounts.length === 1 ? "" : "s"} · ${recurringBills.length} recurring bill${recurringBills.length === 1 ? "" : "s"}`}
-          kicker="Settings"
-          value={`${momentCount} memor${momentCount === 1 ? "y" : "ies"}`}
+          hint={formatString(strings.settings.heroHint, {
+            accounts: accounts.length,
+            bills: recurringBills.length
+          })}
+          kicker={strings.settings.heroKicker}
+          value={formatString(strings.settings.heroValue, { count: momentCount })}
           variant="surface"
         />
 
@@ -125,11 +130,13 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
               />
             )}
             <View style={styles.capturePanel}>
-              <Text style={styles.microLabel}>{editingCategoryId ? "Edit category" : "Add expense category"}</Text>
+              <Text style={styles.microLabel}>
+                {editingCategoryId ? strings.settings.categories.edit : strings.settings.categories.add}
+              </Text>
               <TextInput
-                accessibilityLabel="Category name"
+                accessibilityLabel={strings.settings.categories.nameA11y}
                 onChangeText={setCategoryDraft}
-                placeholder="e.g. Health, Subscriptions, Hobby"
+                placeholder={strings.settings.categories.placeholder}
                 placeholderTextColor={colors.muted}
                 style={styles.input}
                 value={categoryDraft}
@@ -137,7 +144,7 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
               <View style={styles.editActions}>
                 {editingCategoryId && (
                   <Pressable accessibilityRole="button" onPress={resetCategoryDraft} style={styles.secondaryButton}>
-                    <Text style={styles.secondaryButtonText}>Cancel</Text>
+                    <Text style={styles.secondaryButtonText}>{strings.common.cancel}</Text>
                   </Pressable>
                 )}
                 <Pressable
@@ -148,7 +155,7 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
                   }}
                   style={styles.smallPrimaryButton}
                 >
-                  <Text style={styles.primaryButtonText}>Save category</Text>
+                  <Text style={styles.primaryButtonText}>{strings.settings.categories.save}</Text>
                 </Pressable>
               </View>
             </View>
@@ -157,8 +164,8 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
 
         {activeTab === "data" && corruptIssues.length > 0 && (
           <View style={styles.capturePanel}>
-            <Text style={styles.microLabel}>Data health</Text>
-            <Text style={styles.settingCopy}>Some data looks damaged. Export a backup before resetting.</Text>
+            <Text style={styles.microLabel}>{strings.settings.data.healthTitle}</Text>
+            <Text style={styles.settingCopy}>{strings.settings.data.healthCopy}</Text>
             {corruptIssues.map((issue) => (
               <View key={issue.key} style={styles.analyticsRow}>
                 <View style={styles.analyticsRowHeader}>
@@ -171,7 +178,9 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
                   style={styles.textButton}
                 >
                   <Ionicons name="refresh-outline" size={16} color={colors.coral} />
-                  <Text style={[styles.textButtonLabel, { color: colors.coral }]}>Reset this data</Text>
+                  <Text style={[styles.textButtonLabel, { color: colors.coral }]}>
+                    {strings.settings.data.resetThis}
+                  </Text>
                 </Pressable>
               </View>
             ))}
@@ -223,17 +232,17 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
           </View>
 
           <View style={styles.capturePanel}>
-            <Text style={styles.microLabel}>Backup</Text>
-            <Text style={styles.settingCopy}>Export your data as JSON, or paste a backup to restore.</Text>
+            <Text style={styles.microLabel}>{strings.settings.data.backupTitle}</Text>
+            <Text style={styles.settingCopy}>{strings.settings.data.backupCopy}</Text>
             <Pressable accessibilityRole="button" onPress={() => void actions.exportLocalBackup()} style={styles.secondaryInlineButton}>
               <Ionicons name="share-outline" size={16} color={colors.greenDark} />
-              <Text style={styles.secondaryButtonText}>Export JSON backup</Text>
+              <Text style={styles.secondaryButtonText}>{strings.settings.data.export}</Text>
             </Pressable>
             <TextInput
-              accessibilityLabel="Backup JSON"
+              accessibilityLabel={strings.settings.data.importA11y}
               multiline
               onChangeText={setImportDraft}
-              placeholder="Paste a Slev backup JSON here"
+              placeholder={strings.settings.data.importPlaceholder}
               placeholderTextColor={colors.muted}
               style={[styles.input, { minHeight: 120, textAlignVertical: "top" }]}
               value={importDraft}
@@ -244,13 +253,13 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
               onPress={() => setImportConfirmVisible(true)}
               style={[styles.smallPrimaryButton, !importDraft.trim() ? { opacity: 0.5 } : undefined]}
             >
-              <Text style={styles.primaryButtonText}>Import backup</Text>
+              <Text style={styles.primaryButtonText}>{strings.settings.data.import}</Text>
             </Pressable>
           </View>
 
           <Pressable accessibilityRole="button" onPress={() => actions.clearAll()} style={styles.dangerButton}>
             <Ionicons name="trash-outline" size={18} color={colors.coral} />
-            <Text style={styles.dangerButtonText}>Clear local finance memory</Text>
+            <Text style={styles.dangerButtonText}>{strings.settings.data.clearAll}</Text>
           </Pressable>
         </>
       );
@@ -262,8 +271,8 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
     if (activeTab !== "categories") {
       return null;
     }
-    return <EmptyState text="No active categories. Add a category above to start assigning expenses again." />;
-  }, [activeTab]);
+    return <EmptyState text={strings.settings.categories.empty} />;
+  }, [activeTab, strings.settings.categories.empty]);
 
   return (
     <>
@@ -277,7 +286,7 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
         renderItem={renderCategoryItem}
       />
       <DeleteConfirmDialog
-        body={pendingDeleteCategory ? getCategoryDeleteBody(pendingDeleteCategory) : ""}
+        body={pendingDeleteCategory ? getCategoryDeleteMessage(pendingDeleteCategory) : ""}
         onCancel={() => setPendingDeleteCategory(null)}
         onConfirm={() => {
           if (pendingDeleteCategory) {
@@ -288,28 +297,32 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
             setPendingDeleteCategory(null);
           }
         }}
-        title={pendingDeleteCategory?.isDefault ? "Remove default category?" : "Delete category?"}
+        title={
+          pendingDeleteCategory?.isDefault
+            ? strings.dialogs.categoryDeleteDefaultTitle
+            : strings.dialogs.categoryDeleteTitle
+        }
         visible={Boolean(pendingDeleteCategory)}
       />
       <DeleteConfirmDialog
-        body="Importing replaces your current local finance data with the pasted backup."
-        confirmLabel="Import"
+        body={strings.settings.importBody}
+        confirmLabel={strings.settings.importConfirm}
         onCancel={() => setImportConfirmVisible(false)}
         onConfirm={() => {
           void actions.importLocalBackup(importDraft);
           setImportDraft("");
           setImportConfirmVisible(false);
         }}
-        title="Import backup?"
+        title={strings.settings.importTitle}
         visible={importConfirmVisible}
       />
       <DeleteConfirmDialog
         body={
           pendingResetIssue
-            ? `This clears only ${pendingResetIssue.label} on this device. Export a backup first if you want to keep a copy.`
+            ? formatString(strings.settings.data.resetBody, { label: pendingResetIssue.label })
             : ""
         }
-        confirmLabel="Reset"
+        confirmLabel={strings.settings.data.resetConfirm}
         onCancel={() => setPendingResetIssue(null)}
         onConfirm={() => {
           if (pendingResetIssue) {
@@ -317,7 +330,11 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
             setPendingResetIssue(null);
           }
         }}
-        title={pendingResetIssue ? `Reset ${pendingResetIssue.label}?` : "Reset data?"}
+        title={
+          pendingResetIssue
+            ? formatString(strings.settings.data.resetTitle, { label: pendingResetIssue.label })
+            : strings.settings.data.resetTitleFallback
+        }
         visible={Boolean(pendingResetIssue)}
       />
     </>

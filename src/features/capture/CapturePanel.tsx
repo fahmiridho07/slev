@@ -16,14 +16,14 @@ type CapturePanelProps = {
   sheet?: boolean;
 };
 
-function getSaveLabel(entryType: "expense" | "income" | "transfer") {
-  if (entryType === "income") return "Save income";
-  if (entryType === "transfer") return "Save transfer";
-  return "Save expense";
-}
-
 function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: CapturePanelProps) {
-  const { colors, styles } = useTheme();
+  const { colors, strings, styles } = useTheme();
+
+  function getSaveLabel(entryType: "expense" | "income" | "transfer") {
+    if (entryType === "income") return strings.capture.saveIncome;
+    if (entryType === "transfer") return strings.capture.saveTransfer;
+    return strings.capture.saveExpense;
+  }
   const actions = useActions();
   const { categoryLabels, repeatSuggestions } = useDerived();
   const { accounts, manualTemplates } = useFinanceSelector(
@@ -80,10 +80,10 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
 
   return (
     <View style={sheet ? undefined : styles.capturePanel}>
-      {!sheet && <Text style={styles.kicker}>Quick capture</Text>}
+      {!sheet && <Text style={styles.kicker}>{strings.capture.kicker}</Text>}
       {showQuickAdd && (
         <View style={styles.repeatBlock}>
-          <Text style={styles.microLabel}>Quick add</Text>
+          <Text style={styles.microLabel}>{strings.capture.quickAdd}</Text>
           {manualTemplates.length > 0 && (
             <View style={styles.templateGrid}>
               {manualTemplates.slice(0, 6).map((template) => (
@@ -96,7 +96,11 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
                   >
                     <Text style={styles.repeatText}>{getTemplateLabel(template)}</Text>
                     <Text style={styles.repeatAmount}>
-                      {template.amount > 0 ? formatRupiah(template.amount) : template.type === "income" ? "Income" : template.context}
+                      {template.amount > 0
+                        ? formatRupiah(template.amount)
+                        : template.type === "income"
+                          ? strings.capture.income
+                          : template.context}
                     </Text>
                   </Pressable>
                   <Pressable
@@ -134,7 +138,7 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
       <View style={styles.amountRow}>
         <Text style={styles.currencyPrefix}>Rp</Text>
         <TextInput
-          accessibilityLabel="Amount"
+          accessibilityLabel={strings.capture.amountA11y}
           keyboardType="number-pad"
           onChangeText={changeAmountText}
           placeholder="0"
@@ -148,13 +152,13 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
         <View style={styles.transferPickerBlock}>
           <AccountPicker
             accounts={accounts}
-            label="From"
+            label={strings.capture.from}
             selected={form.fromAccount}
             onSelect={(value) => patch({ fromAccount: value })}
           />
           <AccountPicker
             accounts={accounts.filter((account) => account.label !== form.fromAccount)}
-            label="To"
+            label={strings.capture.to}
             selected={form.toAccount === form.fromAccount ? "" : form.toAccount}
             onSelect={(value) => patch({ toAccount: value })}
           />
@@ -162,7 +166,7 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
       ) : expanded && form.entryType === "income" ? (
         <TextInput
           onChangeText={(value) => patch({ source: value })}
-          placeholder="Source, optional"
+          placeholder={strings.capture.sourcePlaceholder}
           placeholderTextColor={colors.muted}
           style={styles.input}
           value={form.source}
@@ -170,7 +174,7 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
       ) : expanded ? (
         <TextInput
           onChangeText={(value) => patch({ label: value })}
-          placeholder="Label, optional"
+          placeholder={strings.capture.labelPlaceholder}
           placeholderTextColor={colors.muted}
           style={styles.input}
           value={form.label}
@@ -180,7 +184,7 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
       {expanded && form.entryType !== "transfer" && (
         <AccountPicker
           accounts={accounts}
-          label={form.entryType === "income" ? "Received in" : "Paid from"}
+          label={form.entryType === "income" ? strings.capture.receivedIn : strings.capture.paidFrom}
           selected={form.accountLabel}
           onSelect={(value) => patch({ accountLabel: value })}
         />
@@ -189,14 +193,14 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
       {form.entryType === "expense" && (
         categoryLabels.length === 0 ? (
           <EmptyState
-            text="No expense categories are active. Add one before saving expenses."
-            actionLabel="Open Settings"
+            text={strings.capture.noCategories}
+            actionLabel={strings.capture.openSettings}
             onAction={onOpenSettings}
           />
         ) : (
           <>
             <View style={styles.contextHeaderRow}>
-              <Text style={styles.microLabel}>Context</Text>
+              <Text style={styles.microLabel}>{strings.capture.context}</Text>
             </View>
             <ContextPicker
               categories={categoryLabels}
@@ -212,7 +216,7 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
           <TextInput
             multiline
             onChangeText={(value) => patch({ note: value })}
-            placeholder="Tiny note, optional"
+            placeholder={strings.capture.notePlaceholder}
             placeholderTextColor={colors.muted}
             style={[styles.input, styles.noteInput]}
             value={form.note}
@@ -220,7 +224,7 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
         ) : (
           <Pressable accessibilityRole="button" onPress={() => setNoteOpen(true)} style={styles.addNoteButton}>
             <Ionicons name="create-outline" size={16} color={colors.muted} />
-            <Text style={styles.addNoteText}>Add a note</Text>
+            <Text style={styles.addNoteText}>{strings.capture.addNote}</Text>
           </Pressable>
         )
       )}
@@ -237,9 +241,14 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
 
       {expanded ? (
         <>
-          <Pressable accessibilityLabel="Save as shortcut" accessibilityRole="button" onPress={saveTemplate} style={styles.secondaryInlineButton}>
+          <Pressable
+            accessibilityLabel={strings.capture.saveAsShortcutA11y}
+            accessibilityRole="button"
+            onPress={saveTemplate}
+            style={styles.secondaryInlineButton}
+          >
             <Ionicons name="bookmark-outline" size={16} color={colors.greenDark} />
-            <Text style={styles.textButtonLabel}>Save as shortcut</Text>
+            <Text style={styles.textButtonLabel}>{strings.capture.saveAsShortcut}</Text>
           </Pressable>
           {!sheet && form.entryType === "expense" && (
             <Pressable
@@ -248,7 +257,7 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
               onPress={() => setExpanded(false)}
               style={styles.captureExpandRow}
             >
-              <Text style={styles.captureExpandText}>Fewer options</Text>
+              <Text style={styles.captureExpandText}>{strings.capture.fewerOptions}</Text>
               <Ionicons name="chevron-up-outline" size={16} color={colors.greenDark} />
             </Pressable>
           )}
@@ -261,7 +270,7 @@ function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: Captu
             onPress={() => setExpanded(true)}
             style={styles.captureExpandRow}
           >
-            <Text style={styles.captureExpandText}>More options</Text>
+            <Text style={styles.captureExpandText}>{strings.capture.moreOptions}</Text>
             <Ionicons name="chevron-down-outline" size={16} color={colors.greenDark} />
           </Pressable>
         )
