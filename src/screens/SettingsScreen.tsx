@@ -17,6 +17,9 @@ import { SettingsTabKey } from "../features/app.types";
 import { ExpenseCategory } from "../features/spendingMemory.types";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
 import { formatString, getCategoryDeleteMessage } from "../i18n";
+import { hapticWarning } from "../lib/haptics";
+import { FormValidationError } from "../lib/formValidation";
+import { CategoryFieldError } from "../features/settings/settingsValidation";
 import { listCorruptStorageIssues, StorageHealthIssue } from "../services/storageHealth";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
 import { useTheme } from "../hooks/useTheme";
@@ -64,6 +67,7 @@ function SettingsScreenComponent({
   const activeTab = activeSettingsTab;
   const [editingCategoryId, setEditingCategoryId] = useState<string | undefined>(undefined);
   const [categoryDraft, setCategoryDraft] = useState("");
+  const [categoryFieldError, setCategoryFieldError] = useState<FormValidationError<CategoryFieldError> | null>(null);
   const [pendingDeleteCategory, setPendingDeleteCategory] = useState<ExpenseCategory | null>(null);
   const [importDraft, setImportDraft] = useState("");
   const [importConfirmVisible, setImportConfirmVisible] = useState(false);
@@ -81,6 +85,7 @@ function SettingsScreenComponent({
   function resetCategoryDraft() {
     setEditingCategoryId(undefined);
     setCategoryDraft("");
+    setCategoryFieldError(null);
   }
 
   const corruptIssues = isReady ? listCorruptStorageIssues() : [];
@@ -93,7 +98,7 @@ function SettingsScreenComponent({
           categoryLabels={categoryLabels}
           recurringBills={recurringBills}
           onDeleteBill={(id) => void actions.removeRecurringBill(id)}
-          onSaveBill={(input) => void actions.saveRecurringBill(input)}
+          onSaveBill={(input) => actions.saveRecurringBill(input)}
         />
       );
     }
@@ -162,13 +167,25 @@ function SettingsScreenComponent({
               {editingCategoryId ? strings.settings.categories.edit : strings.settings.categories.add}
             </Text>
             <TextInput
-              accessibilityLabel={strings.settings.categories.nameA11y}
-              onChangeText={setCategoryDraft}
+              accessibilityLabel={
+                categoryFieldError?.field === "label"
+                  ? `${strings.settings.categories.nameA11y}. ${categoryFieldError.message}`
+                  : strings.settings.categories.nameA11y
+              }
+              onChangeText={(value) => {
+                setCategoryFieldError((current) => (current?.field === "label" ? null : current));
+                setCategoryDraft(value);
+              }}
               placeholder={strings.settings.categories.placeholder}
               placeholderTextColor={colors.muted}
               style={styles.input}
               value={categoryDraft}
             />
+            {categoryFieldError?.field === "label" && (
+              <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+                {categoryFieldError.message}
+              </Text>
+            )}
             <View style={componentStyles.editActions}>
               {editingCategoryId && (
                 <Pressable accessibilityRole="button" onPress={resetCategoryDraft} style={styles.secondaryButton}>
@@ -178,8 +195,17 @@ function SettingsScreenComponent({
               <Pressable
                 accessibilityRole="button"
                 onPress={() => {
-                  void actions.saveCategory({ id: editingCategoryId, label: categoryDraft });
-                  resetCategoryDraft();
+                  void (async () => {
+                    const result = await actions.saveCategory({ id: editingCategoryId, label: categoryDraft });
+                    if (!result.ok) {
+                      hapticWarning();
+                      if (result.validation) {
+                        setCategoryFieldError(result.validation);
+                      }
+                      return;
+                    }
+                    resetCategoryDraft();
+                  })();
                 }}
                 style={styles.smallPrimaryButton}
               >

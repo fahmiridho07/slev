@@ -45,6 +45,7 @@ function CapturePanelComponent({
   );
   const {
     fieldError,
+    shortcutFieldError,
     form,
     patch,
     changeAmountText,
@@ -209,23 +210,45 @@ function CapturePanelComponent({
           )}
         </View>
       ) : expanded && form.entryType === "income" ? (
-        <TextInput
-          accessibilityLabel={strings.capture.sourcePlaceholder}
-          onChangeText={(value) => patch({ source: value })}
-          placeholder={strings.capture.sourcePlaceholder}
-          placeholderTextColor={colors.muted}
-          style={styles.input}
-          value={form.source}
-        />
+        <>
+          <TextInput
+            accessibilityLabel={
+              shortcutFieldError?.field === "shortcutLabel"
+                ? `${strings.capture.sourcePlaceholder}. ${shortcutFieldError.message}`
+                : strings.capture.sourcePlaceholder
+            }
+            onChangeText={(value) => patch({ source: value })}
+            placeholder={strings.capture.sourcePlaceholder}
+            placeholderTextColor={colors.muted}
+            style={styles.input}
+            value={form.source}
+          />
+          {shortcutFieldError?.field === "shortcutLabel" && (
+            <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+              {shortcutFieldError.message}
+            </Text>
+          )}
+        </>
       ) : expanded ? (
-        <TextInput
-          accessibilityLabel={strings.capture.labelPlaceholder}
-          onChangeText={(value) => patch({ label: value })}
-          placeholder={strings.capture.labelPlaceholder}
-          placeholderTextColor={colors.muted}
-          style={styles.input}
-          value={form.label}
-        />
+        <>
+          <TextInput
+            accessibilityLabel={
+              shortcutFieldError?.field === "shortcutLabel"
+                ? `${strings.capture.labelPlaceholder}. ${shortcutFieldError.message}`
+                : strings.capture.labelPlaceholder
+            }
+            onChangeText={(value) => patch({ label: value })}
+            placeholder={strings.capture.labelPlaceholder}
+            placeholderTextColor={colors.muted}
+            style={styles.input}
+            value={form.label}
+          />
+          {shortcutFieldError?.field === "shortcutLabel" && form.entryType === "expense" && (
+            <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+              {shortcutFieldError.message}
+            </Text>
+          )}
+        </>
       ) : null}
 
       {expanded && form.entryType !== "transfer" && (
@@ -298,12 +321,17 @@ function CapturePanelComponent({
           <Pressable
             accessibilityLabel={strings.capture.saveAsShortcutA11y}
             accessibilityRole="button"
-            onPress={saveTemplate}
+            onPress={() => void saveTemplate()}
             style={styles.secondaryInlineButton}
           >
             <Ionicons name="bookmark-outline" size={16} color={colors.greenDark} />
             <Text style={componentStyles.textButtonLabel}>{strings.capture.saveAsShortcut}</Text>
           </Pressable>
+          {shortcutFieldError?.field === "shortcutTransfer" && (
+            <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+              {shortcutFieldError.message}
+            </Text>
+          )}
           {form.entryType === "expense" && (
             <Pressable
               accessibilityRole="button"

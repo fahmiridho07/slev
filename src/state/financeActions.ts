@@ -1,8 +1,11 @@
 import { Share } from "react-native";
 import { hapticSelection, hapticSuccess } from "../lib/haptics";
 import { CategoryModeValue } from "../features/app.types";
-import { getCaptureValidationError } from "../features/capture/captureValidation";
+import { getCaptureValidationError, getShortcutValidationError } from "../features/capture/captureValidation";
 import { CaptureFormValues } from "../features/capture/types";
+import { getMemoryEditValidationError } from "../features/memory/memoryValidation";
+import { getBillValidationError, getCategoryValidationError } from "../features/settings/settingsValidation";
+import { FormActionResult } from "../lib/formValidation";
 import {
   BudgetPeriod,
   EntryType,
@@ -28,15 +31,12 @@ import {
   getBackupReadyToast,
   getBalanceNeedFieldsToast,
   getBalanceSavedToast,
-  getBillInvalidDayToast,
   getBillLoggedPartialToast,
   getBillLoggedToast,
-  getBillNeedFieldsToast,
   getBillRemovedToast,
   getBillSavedToast,
   getBillUnavailableToast,
 
-  getCategoryNeedNameToast,
   getCategoryRemovedToast,
   getCategorySavedToast,
   getClearAllToast,
@@ -49,7 +49,6 @@ import {
   getLimitNeedAmountToast,
   getLimitRemovedToast,
   getLimitSavedToast,
-  getMemoryNeedAmountToast,
   getMemoryRemovedToast,
   getMemoryRestoredToast,
   getPatternFeedbackSavedToast,
@@ -57,10 +56,8 @@ import {
   getPlanSavedToast,
   getResetFailedToast,
   getResetSuccessToast,
-  getShortcutNeedLabelToast,
   getShortcutRemovedToast,
   getShortcutSavedToast,
-  getShortcutTransferUseChipsToast,
   getTransferMovedToast,
   getTransferRemovedToast,
   getWriteFailureToast,
@@ -305,10 +302,14 @@ export function createFinanceActions(
       accountLabel: string;
     }
   ) {
+    const validationError = getMemoryEditValidationError(input.amountText);
+    if (validationError) {
+      return { ok: false as const, validation: validationError };
+    }
+
     const amount = parseAmountInput(input.amountText);
     if (!amount) {
-      setMessage(getMemoryNeedAmountToast());
-      return;
+      return { ok: false as const };
     }
 
     const { data: updated, persisted } = await updateSpendingMoment(id, {
@@ -322,7 +323,7 @@ export function createFinanceActions(
     });
     if (!persisted) {
       notifyWriteFailure(STORAGE_KEYS.moments);
-      return;
+      return { ok: false as const };
     }
     const moment = updated.find((item) => item.id === id);
     if (moment) {
@@ -331,20 +332,21 @@ export function createFinanceActions(
       dispatch({ type: "set_moments", moments: updated });
     }
     notifySuccess(getMemoryUpdatedToast());
+    return { ok: true as const };
   }
 
   async function saveAsTemplate(capture: CaptureFormValues) {
+    const validationError = getShortcutValidationError(capture);
+    if (validationError) {
+      return { ok: false as const, validation: validationError };
+    }
+
     if (capture.entryType === "transfer") {
-      setMessage(getShortcutTransferUseChipsToast());
-      return;
+      return { ok: false as const };
     }
 
     const amount = parseAmountInput(capture.amountText);
     const templateLabel = capture.entryType === "income" ? capture.source.trim() : (capture.label.trim() || capture.context);
-    if (!templateLabel) {
-      setMessage(getShortcutNeedLabelToast());
-      return;
-    }
 
     const { data: updated, persisted } = await saveManualTemplate({
       amount: amount ?? undefined,
@@ -357,10 +359,11 @@ export function createFinanceActions(
     });
     if (!persisted) {
       notifyWriteFailure(STORAGE_KEYS.manualTemplates);
-      return;
+      return { ok: false as const };
     }
     dispatch({ type: "set_manual_templates", manualTemplates: updated });
     setMessage(getShortcutSavedToast(templateLabel));
+    return { ok: true as const };
   }
 
   async function removeManualTemplate(id: string) {
@@ -414,19 +417,20 @@ export function createFinanceActions(
     setMessage(updated.some((account) => account.id === id) ? getAccountKeepOneToast() : getAccountRemovedToast());
   }
 
-  async function saveCategory(input: { id?: string; label: string }) {
-    if (!input.label.trim()) {
-      setMessage(getCategoryNeedNameToast());
-      return;
+  async function saveCategory(input: { id?: string; label: string }): Promise<FormActionResult<"label">> {
+    const validationError = getCategoryValidationError(input.label);
+    if (validationError) {
+      return { ok: false, validation: validationError };
     }
 
     const { data: updated, persisted } = await saveExpenseCategory(input);
     if (!persisted) {
       notifyWriteFailure(STORAGE_KEYS.expenseCategories);
-      return;
+      return { ok: false };
     }
     dispatch({ type: "set_expense_categories", expenseCategories: updated });
     setMessage(getCategorySavedToast(input.label.trim()));
+    return { ok: true };
   }
 
   async function removeCategory(category: ExpenseCategory) {
@@ -549,16 +553,16 @@ export function createFinanceActions(
     dayOfMonth: string;
     active: boolean;
     lastPaidMonth?: string;
-  }) {
+  }): Promise<FormActionResult<"label" | "amount" | "dayOfMonth">> {
+    const validationError = getBillValidationError(input);
+    if (validationError) {
+      return { ok: false, validation: validationError };
+    }
+
     const amount = parseAmountInput(input.amount);
     const dayOfMonth = Number.parseInt(input.dayOfMonth, 10);
-    if (!input.label.trim() || !amount) {
-      setMessage(getBillNeedFieldsToast());
-      return;
-    }
-    if (!Number.isFinite(dayOfMonth) || dayOfMonth < 1 || dayOfMonth > 31) {
-      setMessage(getBillInvalidDayToast());
-      return;
+    if (!amount || !Number.isFinite(dayOfMonth)) {
+      return { ok: false };
     }
 
     const { data: updated, persisted } = await saveRecurringBill({
@@ -573,10 +577,11 @@ export function createFinanceActions(
     });
     if (!persisted) {
       notifyWriteFailure(STORAGE_KEYS.recurringBills);
-      return;
+      return { ok: false };
     }
     dispatch({ type: "set_recurring_bills", recurringBills: updated });
     notifySuccess(getBillSavedToast());
+    return { ok: true };
   }
 
   async function removeRecurringBill(id: string) {

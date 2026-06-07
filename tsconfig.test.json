@@ -17,6 +17,9 @@
     "src/lib/formatMoney.ts",
     "src/lib/spendingMemoryPatterns.ts",
     "src/services/**/*.ts",
+    "src/features/app.types.ts",
+    "src/navigation/appNavigation.ts",
+    "src/navigation/deepLink.ts",
     "src/state/financeReducer.ts",
     "src/state/shallowEqual.ts",
     "tests/**/*.ts"

@@ -4,8 +4,11 @@ import { AccountPicker, ContextPicker, SegmentedControl } from "../../components
 import { EntryType, MoneyAccount, SpendingContext, SpendingMoment } from "../spendingMemory.types";
 import { getDefaultMomentAccount } from "../../lib/analysis";
 import { formatAmountInput } from "../../lib/formatMoney";
+import { hapticWarning } from "../../lib/haptics";
+import { FormValidationError } from "../../lib/formValidation";
 import { useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
 import { useTheme } from "../../hooks/useTheme";
+import { MemoryFieldError } from "./memoryValidation";
 
 type MomentEditFormProps = {
   moment: SpendingMoment;
@@ -38,9 +41,10 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
   const [type, setType] = useState<EntryType>(() => buildEditForm(moment, accounts).type);
   const [source, setSource] = useState(() => buildEditForm(moment, accounts).source);
   const [accountLabel, setAccountLabel] = useState(() => buildEditForm(moment, accounts).accountLabel);
+  const [fieldError, setFieldError] = useState<FormValidationError<MemoryFieldError> | null>(null);
 
   const save = useCallback(async () => {
-    await actions.updateMoment(moment.id, {
+    const result = await actions.updateMoment(moment.id, {
       amountText,
       label,
       context,
@@ -49,6 +53,14 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
       source,
       accountLabel
     });
+    if (!result?.ok) {
+      hapticWarning();
+      if (result?.validation) {
+        setFieldError(result.validation);
+      }
+      return;
+    }
+    setFieldError(null);
     onSaved();
   }, [accountLabel, actions, amountText, context, label, moment.id, note, onSaved, source, type]);
 
@@ -56,13 +68,25 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
     <View style={styles.repeatBlock}>
       <TextInput
         keyboardType="number-pad"
-        onChangeText={(value) => setAmountText(formatAmountInput(value))}
-        accessibilityLabel={strings.memory.edit.amount}
+        onChangeText={(value) => {
+          setFieldError((current) => (current?.field === "amount" ? null : current));
+          setAmountText(formatAmountInput(value));
+        }}
+        accessibilityLabel={
+          fieldError?.field === "amount"
+            ? `${strings.memory.edit.amount}. ${fieldError.message}`
+            : strings.memory.edit.amount
+        }
         placeholder={strings.memory.edit.amount}
         placeholderTextColor={colors.muted}
         style={styles.input}
         value={amountText}
       />
+      {fieldError?.field === "amount" && (
+        <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+          {fieldError.message}
+        </Text>
+      )}
       <TextInput
         onChangeText={type === "income" ? setSource : setLabel}
         accessibilityLabel={type === "income" ? strings.memory.edit.source : strings.memory.edit.label}

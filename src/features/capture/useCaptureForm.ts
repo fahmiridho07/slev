@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { hapticWarning } from "../../lib/haptics";
-import { CaptureValidationError } from "./captureValidation";
+import { CaptureValidationError, CaptureFieldError } from "./captureValidation";
 import { CaptureType } from "../app.types";
 import {
   getDailyPocketLabel,
@@ -45,6 +45,7 @@ export function useCaptureForm() {
 
   const [form, setForm] = useState<CaptureFormValues>(() => buildDefaultCapture([], "Other"));
   const [fieldError, setFieldError] = useState<CaptureValidationError | null>(null);
+  const [shortcutFieldError, setShortcutFieldError] = useState<CaptureValidationError | null>(null);
   const bootstrappedRef = useRef(false);
 
   const clearFieldError = useCallback((field?: CaptureValidationError["field"]) => {
@@ -142,6 +143,18 @@ export function useCaptureForm() {
     });
   }, [accounts]);
 
+  const clearShortcutFieldError = useCallback((field?: CaptureFieldError) => {
+    setShortcutFieldError((current) => {
+      if (!current) {
+        return current;
+      }
+      if (!field || current.field === field) {
+        return null;
+      }
+      return current;
+    });
+  }, []);
+
   const changeAmountText = useCallback((value: string) => {
     clearFieldError("amount");
     setForm((current) => ({ ...current, amountText: formatAmountInput(value) }));
@@ -150,6 +163,7 @@ export function useCaptureForm() {
   const changeEntryType = useCallback(
     (nextType: CaptureType) => {
       clearFieldError();
+      clearShortcutFieldError();
       setForm((current) => {
         const incomeHub = getIncomeHubLabel(accounts);
         const dailyPocket = getDailyPocketLabel(accounts);
@@ -171,7 +185,7 @@ export function useCaptureForm() {
         };
       });
     },
-    [accounts, clearFieldError]
+    [accounts, clearFieldError, clearShortcutFieldError]
   );
 
   const applyRepeat = useCallback(
@@ -249,7 +263,16 @@ export function useCaptureForm() {
   }, [actions, categoryLabels.length, form, resetAfterSave]);
 
   const saveTemplate = useCallback(async () => {
-    await actions.saveAsTemplate(form);
+    const result = await actions.saveAsTemplate(form);
+    if (!result.ok) {
+      hapticWarning();
+      if (result.validation) {
+        setShortcutFieldError(result.validation);
+      }
+      return false;
+    }
+    setShortcutFieldError(null);
+    return true;
   }, [actions, form]);
 
   const patch = useCallback((patchValues: Partial<CaptureFormValues>) => {
@@ -259,11 +282,18 @@ export function useCaptureForm() {
     if ("context" in patchValues) {
       clearFieldError("category");
     }
+    if ("label" in patchValues) {
+      clearShortcutFieldError("shortcutLabel");
+    }
+    if ("source" in patchValues) {
+      clearShortcutFieldError("shortcutLabel");
+    }
     setForm((current) => ({ ...current, ...patchValues }));
-  }, [clearFieldError]);
+  }, [clearFieldError, clearShortcutFieldError]);
 
   return {
     fieldError,
+    shortcutFieldError,
     form,
     patch,
     changeAmountText,

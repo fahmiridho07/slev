@@ -1,17 +1,17 @@
 import {
   getCaptureNeedAmountToast,
   getCaptureNeedCategoryToast,
-  getCaptureNeedTransferAccountsToast
+  getCaptureNeedTransferAccountsToast,
+  getShortcutNeedLabelToast,
+  getShortcutTransferUseChipsToast
 } from "../../i18n";
+import { FormValidationError } from "../../lib/formValidation";
 import { parseAmountInput } from "../../lib/formatMoney";
 import { CaptureFormValues } from "./types";
 
-export type CaptureFieldError = "amount" | "category" | "transferAccounts";
+export type CaptureFieldError = "amount" | "category" | "transferAccounts" | "shortcutLabel" | "shortcutTransfer";
 
-export type CaptureValidationError = {
-  field: CaptureFieldError;
-  message: string;
-};
+export type CaptureValidationError = FormValidationError<CaptureFieldError>;
 
 export function getCaptureValidationError(
   capture: CaptureFormValues,
@@ -30,6 +30,20 @@ export function getCaptureValidationError(
     if (!capture.fromAccount || !capture.toAccount || capture.fromAccount === capture.toAccount) {
       return { field: "transferAccounts", message: getCaptureNeedTransferAccountsToast() };
     }
+  }
+
+  return null;
+}
+
+export function getShortcutValidationError(capture: CaptureFormValues): CaptureValidationError | null {
+  if (capture.entryType === "transfer") {
+    return { field: "shortcutTransfer", message: getShortcutTransferUseChipsToast() };
+  }
+
+  const templateLabel =
+    capture.entryType === "income" ? capture.source.trim() : (capture.label.trim() || capture.context);
+  if (!templateLabel) {
+    return { field: "shortcutLabel", message: getShortcutNeedLabelToast() };
   }
 
   return null;
