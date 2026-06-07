@@ -108,7 +108,8 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     () =>
       buildNetWorthTrend({
         balanceSnapshots: state.balanceSnapshots,
-        projectedSnapshots: projectedBalanceSnapshots
+        projectedSnapshots:
+          state.balanceSnapshots.length > 0 ? projectedBalanceSnapshots : undefined
       }),
     [projectedBalanceSnapshots, state.balanceSnapshots]
   );

@@ -30,7 +30,7 @@ export function TrendsPanel({
     [netWorthTrend]
   );
   const hasSpendingTrend = !trend.months.every((month) => month.amount === 0);
-  const hasNetWorthTrend = netWorthTrend.length > 0;
+  const hasNetWorthTrend = netWorthTrend.length >= 2;
 
   if (!hasSpendingTrend && !hasNetWorthTrend) {
     return <EmptyState text="Trends appear after spending builds across months." />;
