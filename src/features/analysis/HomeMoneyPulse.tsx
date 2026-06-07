@@ -38,15 +38,18 @@ export function HomeMoneyPulse({
 
   return (
     <View style={styles.pulsePanel}>
-      <View style={styles.pulseWideItem}>
-        <View style={[styles.pulseIconBadge, styles.pulseIconSpending]}>
-          <Ionicons name="today-outline" size={17} color={colors.coral} />
+      <View style={styles.pulseHero}>
+        <View style={styles.pulseTopRow}>
+          <View style={[styles.pulseIconBadge, styles.pulseIconSpending]}>
+            <Ionicons name="today-outline" size={17} color={colors.coral} />
+          </View>
+          <Text style={styles.pulseHeroLabel}>Safe to spend today</Text>
         </View>
-        <Text style={styles.pulseSavingsText}>
-          {showSafeToSpend
-            ? `Safe to spend today: ${formatCompactRupiah(dailyFlexibleRoom)}`
-            : "Set a monthly plan to see today's safe-to-spend"}
-        </Text>
+        {showSafeToSpend ? (
+          <Text style={styles.pulseHeroValue}>{formatCompactRupiah(dailyFlexibleRoom)}</Text>
+        ) : (
+          <Text style={styles.pulseHeroHint}>Set a monthly plan to see this</Text>
+        )}
       </View>
       <View style={[styles.pulseItem, netIsNegative ? styles.pulseItemDanger : styles.pulseItemIncome]}>
         <View style={styles.pulseTopRow}>
