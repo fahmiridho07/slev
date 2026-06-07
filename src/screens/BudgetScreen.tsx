@@ -16,7 +16,7 @@ type BudgetScreenProps = {
 
 function BudgetScreenComponent({ onOpenSettings }: BudgetScreenProps) {
   const actions = useActions();
-  const { categoryLabels, monthlySummary, projectedBalanceSnapshots } = useDerived();
+  const { accountDrift, categoryLabels, monthlySummary, projectedBalanceSnapshots } = useDerived();
   const {
     accounts,
     balanceSnapshots,
@@ -102,6 +102,7 @@ function BudgetScreenComponent({ onOpenSettings }: BudgetScreenProps) {
       )}
       {activeBudgetTab === "balance" && (
         <BalancePanel
+          accountDrift={accountDrift}
           accounts={accounts}
           balanceSnapshots={balanceSnapshots}
           projectedBalanceSnapshots={projectedBalanceSnapshots}

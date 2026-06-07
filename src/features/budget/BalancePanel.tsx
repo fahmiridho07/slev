@@ -2,14 +2,20 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { AccountPicker, AccountTitle, DeleteConfirmDialog, EmptyState, SectionHeader, SegmentedControl } from "../../components";
-import { formatAmountInput } from "../../lib/formatMoney";
-import { getLatestBalanceSnapshots, getLatestBalanceTotal, summarizeBalanceByTier } from "../../lib/financeEngine";
+import { formatAmountInput, formatSignedCompactRupiah } from "../../lib/formatMoney";
+import {
+  AccountDriftRow,
+  getLatestBalanceSnapshots,
+  getLatestBalanceTotal,
+  summarizeBalanceByTier
+} from "../../lib/financeEngine";
 import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { AccountTier, BalanceSnapshot, MoneyAccount } from "../spendingMemory.types";
 import { colors } from "../../theme/colors";
 import { styles } from "../../theme/styles/app";
 
 export function BalancePanel({
+  accountDrift,
   accounts,
   balanceSnapshots,
   projectedBalanceSnapshots,
@@ -17,6 +23,7 @@ export function BalancePanel({
   onSaveAccount,
   onSaveBalance
 }: {
+  accountDrift: AccountDriftRow[];
   accounts: MoneyAccount[];
   balanceSnapshots: BalanceSnapshot[];
   projectedBalanceSnapshots: BalanceSnapshot[];
@@ -139,6 +146,27 @@ export function BalancePanel({
           </View>
         )}
       </View>
+
+      {accountDrift.length > 0 && (
+        <View style={styles.settingsPanel}>
+          <View style={styles.settingRow}>
+            <Ionicons name="eye-outline" size={20} color={colors.greenDark} />
+            <View style={styles.settingText}>
+              <Text style={styles.settingTitle}>Worth a quick look</Text>
+              <Text style={styles.settingCopy}>
+                These balances drifted from what you logged. No rush — reconcile when you have a moment.
+              </Text>
+              <View style={styles.repeatBlock}>
+                {accountDrift.map((row) => (
+                  <Text key={`${row.label}-${row.latestSnapshotDate ?? "drift"}`} style={styles.settingCopy}>
+                    {`${row.label}: off by ${formatSignedCompactRupiah(row.difference)}`}
+                  </Text>
+                ))}
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
 
       <View style={styles.capturePanel}>
         <Text style={styles.microLabel}>Balance snapshot</Text>
