@@ -1,18 +1,26 @@
 import React, { useMemo } from "react";
 import { Text, View } from "react-native";
 import { formatString } from "../../i18n";
+import { formatLocaleMonthYear } from "../../i18n/localeDate";
 import { getPercentWidthStyle } from "../../lib/analysis";
 import { FinanceBreakdownRow } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
+import { isCurrentMonthDate } from "../../lib/spendingPeriod";
 import { useTheme } from "../../hooks/useTheme";
 
 type MonthlySpendingChartProps = {
   compactLegend?: boolean;
   hero?: boolean;
+  periodDate?: Date;
   rows: FinanceBreakdownRow[];
 };
 
-export function MonthlySpendingChart({ compactLegend = false, hero = false, rows }: MonthlySpendingChartProps) {
+export function MonthlySpendingChart({
+  compactLegend = false,
+  hero = false,
+  periodDate,
+  rows
+}: MonthlySpendingChartProps) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const chartStrings = strings.patterns.chart;
   const chartColors = useMemo(
@@ -39,6 +47,10 @@ export function MonthlySpendingChart({ compactLegend = false, hero = false, rows
   );
   const total = useMemo(() => rows.reduce((sum, row) => sum + row.amount, 0), [rows]);
   const legendRows = compactLegend ? rows.slice(0, 5) : rows;
+  const chartTitle =
+    periodDate && !isCurrentMonthDate(periodDate)
+      ? formatString(chartStrings.titleMonth, { month: formatLocaleMonthYear(periodDate) })
+      : chartStrings.title;
 
   if (rows.length === 0 || total <= 0) {
     return null;
@@ -63,7 +75,7 @@ export function MonthlySpendingChart({ compactLegend = false, hero = false, rows
       accessible
       style={styles.capturePanel}
     >
-      <Text style={componentStyles.microLabel}>{chartStrings.title}</Text>
+      <Text style={componentStyles.microLabel}>{chartTitle}</Text>
       <Text style={styles.settingCopy}>
         {formatString(chartStrings.totalAcross, { total: formatCompactRupiah(total), count: rows.length })}
       </Text>

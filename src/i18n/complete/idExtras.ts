@@ -349,7 +349,12 @@ export const idExtras: AppStringsExtras = {
       income: "Pemasukan",
       amountShare: "{amount} - {percent}%",
       viewAll: "Lihat semua kategori",
-      viewLess: "Tampilkan lebih sedikit"
+      viewLess: "Tampilkan lebih sedikit",
+      previousMonthA11y: "Bulan sebelumnya, saat ini {month}",
+      nextMonthA11y: "Bulan berikutnya, saat ini {month}",
+      vsLastMonthUp: "Naik {percent}% vs bulan lalu",
+      vsLastMonthDown: "Turun {percent}% vs bulan lalu",
+      vsLastMonthFlat: "Sama dengan bulan lalu"
     },
     trends: {
       empty: "Tren muncul setelah pengeluaran terbentuk lintas bulan.",
@@ -395,6 +400,7 @@ export const idExtras: AppStringsExtras = {
     },
     chart: {
       title: "Bulan ini sekilas",
+      titleMonth: "{month} sekilas",
       totalAcross: "{total} di {count} kategori",
       legendValue: "{amount} · {percent}%",
       a11ySummary: "Grafik pengeluaran: {total} di {count} kategori. {breakdown}"

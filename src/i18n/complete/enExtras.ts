@@ -349,7 +349,12 @@ export const enExtras: AppStringsExtras = {
       income: "Income",
       amountShare: "{amount} - {percent}%",
       viewAll: "View all categories",
-      viewLess: "Show fewer categories"
+      viewLess: "Show fewer categories",
+      previousMonthA11y: "Previous month, currently {month}",
+      nextMonthA11y: "Next month, currently {month}",
+      vsLastMonthUp: "Up {percent}% vs last month",
+      vsLastMonthDown: "Down {percent}% vs last month",
+      vsLastMonthFlat: "Same as last month"
     },
     trends: {
       empty: "Trends appear after spending builds across months.",
@@ -395,6 +400,7 @@ export const enExtras: AppStringsExtras = {
     },
     chart: {
       title: "This month at a glance",
+      titleMonth: "{month} at a glance",
       totalAcross: "{total} across {count} categories",
       legendValue: "{amount} · {percent}%",
       a11ySummary: "Spending chart: {total} across {count} categories. {breakdown}"

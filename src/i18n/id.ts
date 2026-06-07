@@ -289,7 +289,9 @@ export const id: AppStrings = {
     },
     hero: {
       breakdownHint: "{amount} pemasukan tercatat bulan ini",
+      breakdownHintMonth: "{amount} pemasukan tercatat di {month}",
       breakdownKicker: "Pengeluaran bulan ini",
+      breakdownKickerMonth: "Pengeluaran di {month}",
       accountsHintWithTrend: "Tren kekayaan bersih tersedia di bawah",
       accountsHintNoTrend: "Tambahkan snapshot saldo untuk melihat tren",
       accountsKicker: "Estimasi saldo",

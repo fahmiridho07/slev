@@ -17,6 +17,10 @@ export function formatLocaleMonthShort(value: Date | string): string {
   return formatLocaleDate(value, { month: "short" });
 }
 
+export function formatLocaleMonthYear(value: Date | string): string {
+  return formatLocaleDate(value, { month: "short", year: "numeric" });
+}
+
 export function formatLocaleWeekdayDate(key: string): string {
   return formatLocaleDate(`${key}T00:00:00`, {
     weekday: "long",

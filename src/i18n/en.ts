@@ -289,7 +289,9 @@ export const en: AppStrings = {
     },
     hero: {
       breakdownHint: "{amount} income logged this month",
+      breakdownHintMonth: "{amount} income logged in {month}",
       breakdownKicker: "Spending this month",
+      breakdownKickerMonth: "Spending in {month}",
       accountsHintWithTrend: "Net-worth trend available below",
       accountsHintNoTrend: "Add balance snapshots for trends",
       accountsKicker: "Estimated balance",

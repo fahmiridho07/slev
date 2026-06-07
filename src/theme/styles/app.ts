@@ -546,6 +546,51 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     fontWeight: "700",
     lineHeight: 20
   },
+  monthPeriodPicker: {
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 4
+  },
+  monthPeriodButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    justifyContent: "center",
+    minHeight: 44,
+    minWidth: 44
+  },
+  monthPeriodButtonDisabled: {
+    opacity: 0.45
+  },
+  monthPeriodLabel: {
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: "800",
+    textAlign: "center"
+  },
+  monthDeltaBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.mint,
+    borderColor: colors.line,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 5
+  },
+  monthDeltaText: {
+    fontSize: 12,
+    fontWeight: "700"
+  },
+  monthDeltaTextUp: {
+    color: colors.coral
+  },
+  monthDeltaTextDown: {
+    color: colors.greenDark
+  },
   smallPrimaryButton: {
     alignItems: "center",
     backgroundColor: colors.greenDark,

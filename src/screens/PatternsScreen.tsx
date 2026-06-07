@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import React, { memo, useEffect, useMemo, useState } from "react";
 import { StyleProp, ViewStyle } from "react-native";
 import { ScreenHero, ScreenTabBar, StickyTabScreen } from "../components";
 import { AccountAnalysisPanel } from "../features/analysis/AccountAnalysisPanel";
@@ -6,6 +6,8 @@ import { BreakdownPanel } from "../features/analysis/BreakdownPanel";
 import { PatternOverview } from "../features/analysis/PatternOverview";
 
 import { PatternTabKey } from "../features/app.types";
+import { buildCurrentMonthSummary } from "../lib/financeEngine";
+import { getMonthReferenceDate } from "../lib/spendingPeriod";
 import { buildPatternsTabHero } from "../lib/tabHero";
 import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../state/useFinance";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
@@ -28,6 +30,7 @@ function PatternsScreenComponent({
   const { strings } = useTheme();
   const { refreshControl } = usePullToRefresh();
   const actions = useActions();
+  const [breakdownMonthOffset, setBreakdownMonthOffset] = useState(0);
   const { feedbackByPattern, latestBalanceTotal, monthlySummary, netWorthTrend, patterns, projectedBalanceSnapshots } =
     useFinanceDerived(
       (derived) => ({
@@ -40,26 +43,55 @@ function PatternsScreenComponent({
       }),
       shallowEqual
     );
-  const { accounts, balanceSnapshots, moments, transfers } = useFinanceSelector(
+  const { accounts, balanceSnapshots, categoryModes, moments, transfers } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
       balanceSnapshots: state.balanceSnapshots,
+      categoryModes: state.categoryModes,
       moments: state.moments,
       transfers: state.transfers
     }),
     shallowEqual
   );
+
+  useEffect(() => {
+    if (activePatternTab !== "breakdown") {
+      setBreakdownMonthOffset(0);
+    }
+  }, [activePatternTab]);
+
+  const breakdownReferenceDate = useMemo(
+    () => getMonthReferenceDate(breakdownMonthOffset),
+    [breakdownMonthOffset]
+  );
+  const breakdownSummary = useMemo(
+    () => buildCurrentMonthSummary(moments, categoryModes, breakdownReferenceDate),
+    [breakdownReferenceDate, categoryModes, moments]
+  );
   const hero = useMemo(
     () =>
       buildPatternsTabHero({
         activeTab: activePatternTab,
+        breakdownMonthOffset,
+        breakdownReferenceDate,
+        breakdownSummary,
         latestBalanceTotal,
         monthlySummary,
         netWorthTrendLength: netWorthTrend.length,
         patternCount: patterns.length,
         strings
       }),
-    [activePatternTab, latestBalanceTotal, monthlySummary, netWorthTrend.length, patterns.length, strings]
+    [
+      activePatternTab,
+      breakdownMonthOffset,
+      breakdownReferenceDate,
+      breakdownSummary,
+      latestBalanceTotal,
+      monthlySummary,
+      netWorthTrend.length,
+      patterns.length,
+      strings
+    ]
   );
 
   return (
@@ -96,7 +128,13 @@ function PatternsScreenComponent({
           onAnswer={(patternId, response) => void actions.answerPattern(patternId, response)}
         />
       )}
-      {activePatternTab === "breakdown" && <BreakdownPanel moments={moments} />}
+      {activePatternTab === "breakdown" && (
+        <BreakdownPanel
+          moments={moments}
+          monthOffset={breakdownMonthOffset}
+          onMonthOffsetChange={setBreakdownMonthOffset}
+        />
+      )}
       {activePatternTab === "accounts" && (
         <AccountAnalysisPanel
           accounts={accounts}

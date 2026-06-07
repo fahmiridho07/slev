@@ -406,9 +406,14 @@ export type AppStrings = {
       income: string;
       incomeBySource: string;
       incomeEmpty: string;
+      nextMonthA11y: string;
+      previousMonthA11y: string;
       spendingByCategory: string;
       viewAll: string;
       viewLess: string;
+      vsLastMonthDown: string;
+      vsLastMonthFlat: string;
+      vsLastMonthUp: string;
     };
     cashflow: {
       empty: string;
@@ -420,6 +425,7 @@ export type AppStrings = {
       a11ySummary: string;
       legendValue: string;
       title: string;
+      titleMonth: string;
       totalAcross: string;
     };
     generated: {
@@ -457,7 +463,9 @@ export type AppStrings = {
       accountsHintWithTrend: string;
       accountsKicker: string;
       breakdownHint: string;
+      breakdownHintMonth: string;
       breakdownKicker: string;
+      breakdownKickerMonth: string;
       recapHintEmpty: string;
       recapHintWithPatterns: string;
       recapKicker: string;

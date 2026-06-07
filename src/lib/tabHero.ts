@@ -1,4 +1,5 @@
 import type { AppStrings } from "../i18n/types";
+import { formatLocaleMonthYear } from "../i18n/localeDate";
 import { formatSignedCompactRupiah } from "./formatMoney";
 import { formatCompactRupiah } from "./spendingMemoryPatterns";
 import { sumSavingsGoals } from "./savingsGoalsTotals";
@@ -6,6 +7,7 @@ import type { BudgetTabKey, PatternTabKey } from "../features/app.types";
 import type { SavingsGoal } from "../features/spendingMemory.types";
 import type { MonthlySummary } from "../features/app.types";
 import { formatString } from "../i18n";
+import { isCurrentMonthOffset } from "./spendingPeriod";
 
 type HeroConfig = {
   actionLabel?: string;
@@ -78,6 +80,9 @@ export function buildBudgetTabHero(input: {
 
 export function buildPatternsTabHero(input: {
   activeTab: PatternTabKey;
+  breakdownMonthOffset?: number;
+  breakdownReferenceDate?: Date;
+  breakdownSummary?: MonthlySummary;
   latestBalanceTotal: number;
   monthlySummary: MonthlySummary;
   netWorthTrendLength: number;
@@ -86,12 +91,26 @@ export function buildPatternsTabHero(input: {
 }): HeroConfig {
   const { strings } = input;
   if (input.activeTab === "breakdown") {
+    const summary = input.breakdownSummary ?? input.monthlySummary;
+    const monthOffset = input.breakdownMonthOffset ?? 0;
+    const monthLabel = input.breakdownReferenceDate
+      ? formatLocaleMonthYear(input.breakdownReferenceDate)
+      : "";
+    const isCurrentMonth = isCurrentMonthOffset(monthOffset);
+
     return {
-      hint: formatString(strings.patterns.hero.breakdownHint, {
-        amount: formatCompactRupiah(input.monthlySummary.income)
-      }),
-      kicker: strings.patterns.hero.breakdownKicker,
-      value: formatCompactRupiah(input.monthlySummary.expense),
+      hint: isCurrentMonth
+        ? formatString(strings.patterns.hero.breakdownHint, {
+            amount: formatCompactRupiah(summary.income)
+          })
+        : formatString(strings.patterns.hero.breakdownHintMonth, {
+            amount: formatCompactRupiah(summary.income),
+            month: monthLabel
+          }),
+      kicker: isCurrentMonth
+        ? strings.patterns.hero.breakdownKicker
+        : formatString(strings.patterns.hero.breakdownKickerMonth, { month: monthLabel }),
+      value: formatCompactRupiah(summary.expense),
       valueTone: "danger",
       variant: "info"
     };
