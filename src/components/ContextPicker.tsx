@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { CONTEXT_HINTS } from "../data/spendingMemory";
 import { SpendingContext } from "../features/spendingMemory.types";
-import { componentStyles } from "../theme/styles/components";
+import { useTheme } from "../hooks/useTheme";
 
 type ContextPickerProps = {
   categories: SpendingContext[];
@@ -17,6 +17,8 @@ function ContextPickerComponent({
   selected,
   onSelect
 }: ContextPickerProps) {
+  const { componentStyles } = useTheme();
+
   return (
     <View style={componentStyles.contextPickerBlock}>
       <View style={compact ? componentStyles.contextWrapCompact : componentStyles.contextWrap}>

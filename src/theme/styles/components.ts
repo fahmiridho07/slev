@@ -1,9 +1,11 @@
 import { StyleSheet } from "react-native";
-import { colors, shadows } from "../colors";
+import { lightColors, lightShadows } from "../palettes";
+import type { ColorTokens, ShadowTokens } from "../types";
 
 export const SWIPE_DELETE_ACTION_WIDTH = 84;
 
-export const componentStyles = StyleSheet.create({
+export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens) {
+  return StyleSheet.create({
   segmentedControl: {
     backgroundColor: colors.faint,
     borderColor: colors.line,
@@ -511,7 +513,7 @@ export const componentStyles = StyleSheet.create({
     fontWeight: "700"
   },
   sheetBackdrop: {
-    backgroundColor: "rgba(24, 32, 28, 0.36)",
+    backgroundColor: colors.sheetBackdrop,
     flex: 1,
     justifyContent: "flex-end"
   },
@@ -544,4 +546,7 @@ export const componentStyles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700"
   }
-});
+  });
+}
+
+export const componentStyles = createComponentStyles(lightColors, lightShadows);

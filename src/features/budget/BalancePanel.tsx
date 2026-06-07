@@ -21,8 +21,7 @@ import {
 } from "../../lib/financeEngine";
 import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { AccountTier, BalanceSnapshot, MoneyAccount } from "../spendingMemory.types";
-import { colors } from "../../theme/colors";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
 
 export function BalancePanel({
   accountDrift,
@@ -47,6 +46,7 @@ export function BalancePanel({
   }) => void;
   onSaveBalance: (input: { accountLabel: string; amount: string }) => void;
 }) {
+  const { colors, strings, styles } = useTheme();
   const [accountLabel, setAccountLabel] = useState(accounts[0]?.label ?? "");
   const [amount, setAmount] = useState("");
   const [editingAccountId, setEditingAccountId] = useState<string | undefined>(undefined);
@@ -279,7 +279,13 @@ export function BalancePanel({
         </View>
       </View>
 
-      {showAccountsHint && <ListActionsOnboardingTip onDismiss={dismissAccountsHint} />}
+      {showAccountsHint && (
+        <ListActionsOnboardingTip
+          body={strings.listHints.balance_accounts.body}
+          onDismiss={dismissAccountsHint}
+          title={strings.listHints.balance_accounts.title}
+        />
+      )}
       <SectionHeader title="Your accounts" />
       <View style={styles.listPanel}>
         <FlatList

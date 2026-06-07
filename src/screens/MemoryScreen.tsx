@@ -16,8 +16,7 @@ import { SpendingMoment } from "../features/spendingMemory.types";
 import { buildRepeatHints, filterMoments, getMomentTitle, groupMomentsByRecallRange } from "../lib/analysis";
 import { AppNavigation } from "../navigation/appNavigation";
 import { useActions, useFinanceSelector } from "../state/useFinance";
-import { colors } from "../theme/colors";
-import { styles } from "../theme/styles/app";
+import { useTheme } from "../hooks/useTheme";
 
 type MemoryMomentItemProps = {
   moment: SpendingMoment;
@@ -55,6 +54,7 @@ type MemoryScreenProps = {
 };
 
 function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenProps) {
+  const { colors, strings, styles } = useTheme();
   const actions = useActions();
   const moments = useFinanceSelector((state) => state.moments);
 
@@ -138,7 +138,13 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
           valueTone="danger"
           variant="surface"
         />
-        {showListHint && <ListActionsOnboardingTip onDismiss={dismissListHint} />}
+        {showListHint && (
+          <ListActionsOnboardingTip
+            body={strings.listHints.memory.body}
+            onDismiss={dismissListHint}
+            title={strings.listHints.memory.title}
+          />
+        )}
         {moments.length > 0 && (
           <TextInput
             accessibilityLabel="Search memories"
@@ -151,7 +157,7 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
         )}
       </>
     ),
-    [dismissListHint, moments.length, query, showListHint, thisMonthCount, thisMonthExpense]
+    [dismissListHint, moments.length, query, showListHint, strings.listHints.memory, thisMonthCount, thisMonthExpense]
   );
 
   const listEmpty = useMemo(() => {

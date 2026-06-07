@@ -6,8 +6,7 @@ import { getPercentWidthStyle } from "../../lib/analysis";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { SavingsGoal } from "../spendingMemory.types";
-import { colors } from "../../theme/colors";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
 
 export function SavingsGoalsPanel({
   savingsGoals,
@@ -23,6 +22,7 @@ export function SavingsGoalsPanel({
     targetAmount: string;
   }) => void;
 }) {
+  const { colors, strings, styles } = useTheme();
   const [editingGoalId, setEditingGoalId] = useState<string | undefined>(undefined);
   const [goalLabel, setGoalLabel] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
@@ -73,7 +73,13 @@ export function SavingsGoalsPanel({
         <EmptyState text="Savings goals can stay simple: target, current amount, and a small note." />
       ) : (
         <View style={styles.cardGrid}>
-          {showGoalsHint && <ListActionsOnboardingTip onDismiss={dismissGoalsHint} />}
+          {showGoalsHint && (
+            <ListActionsOnboardingTip
+              body={strings.listHints.goals.body}
+              onDismiss={dismissGoalsHint}
+              title={strings.listHints.goals.title}
+            />
+          )}
           {savingsGoals.map((goal) => {
             const progress = goal.targetAmount > 0 ? goal.savedAmount / goal.targetAmount : 0;
             return (

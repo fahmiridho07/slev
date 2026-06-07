@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { Text, View } from "react-native";
 import { getAccountBrand } from "../data/accountBrands";
 import { MoneyAccount } from "../features/spendingMemory.types";
-import { componentStyles } from "../theme/styles/components";
+import { useTheme } from "../hooks/useTheme";
 
 type AccountMarkProps = {
   kind?: MoneyAccount["kind"];
@@ -15,6 +15,7 @@ function AccountMarkComponent({
   label,
   size = "medium"
 }: AccountMarkProps) {
+  const { componentStyles } = useTheme();
   const brand = getAccountBrand(label, kind);
   const markStyle = {
     backgroundColor: brand.backgroundColor,

@@ -7,8 +7,7 @@ import { formatSignedCompactRupiah } from "../../lib/formatMoney";
 import { buildAccountReconciliation, getLatestBalanceSnapshots } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { BalanceSnapshot, MoneyAccount, MoneyTransfer, SpendingMoment } from "../spendingMemory.types";
-import { colors } from "../../theme/colors";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
 import { getReconciliationAmountStyle } from "../../theme/styles/fillStyles";
 
 export function AccountAnalysisPanel({
@@ -26,6 +25,7 @@ export function AccountAnalysisPanel({
   transfers: MoneyTransfer[];
   onDeleteTransfer: (id: string) => void;
 }) {
+  const { colors, styles } = useTheme();
   const currentBalances = useMemo(() => getLatestBalanceSnapshots(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
   const accountActivity = useMemo(() => buildAccountActivity(moments), [moments]);
   const reconciliationRows = useMemo(

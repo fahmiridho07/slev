@@ -6,8 +6,7 @@ import { buildSpendingTrend, getPercentWidthStyle } from "../../lib/analysis";
 import { NetWorthPoint } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { SpendingMoment } from "../spendingMemory.types";
-import { colors } from "../../theme/colors";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
 import { CashflowPanel } from "./CashflowPanel";
 
 function formatTrendDate(isoDate: string): string {
@@ -24,6 +23,7 @@ export function TrendsPanel({
   moments: SpendingMoment[];
   netWorthTrend: NetWorthPoint[];
 }) {
+  const { colors, styles } = useTheme();
   const trend = useMemo(() => buildSpendingTrend(moments), [moments]);
   const netWorthPeak = useMemo(
     () => netWorthTrend.reduce((peak, point) => Math.max(peak, point.total), 0),

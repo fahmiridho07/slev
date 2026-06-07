@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { Pressable, Text, View } from "react-native";
-import { styles } from "../theme/styles/app";
+import { useTheme } from "../hooks/useTheme";
 
 type ScreenHeroProps = {
   actionLabel?: string;
@@ -21,6 +21,7 @@ function ScreenHeroComponent({
   valueTone = "default",
   variant = "mint"
 }: ScreenHeroProps) {
+  const { styles } = useTheme();
   const panelStyle =
     variant === "info" ? styles.heroPanelInfo : variant === "surface" ? styles.heroPanelSurface : styles.heroPanel;
 

@@ -1,12 +1,14 @@
 import React, { memo } from "react";
 import { Text, View } from "react-native";
-import { componentStyles } from "../theme/styles/components";
+import { useTheme } from "../hooks/useTheme";
 
 type SectionHeaderProps = {
   title: string;
 };
 
 function SectionHeaderComponent({ title }: SectionHeaderProps) {
+  const { componentStyles } = useTheme();
+
   return (
     <View style={componentStyles.sectionHeaderBlock}>
       <Text style={componentStyles.sectionTitle}>{title}</Text>

@@ -5,8 +5,7 @@ import { MonthlyPlan, SavingsGoal } from "../spendingMemory.types";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { MonthlySummary } from "../app.types";
-import { colors } from "../../theme/colors";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
 
 type HomeMoneyPulseProps = {
   dailyFlexibleRoom: number;
@@ -29,6 +28,7 @@ export function HomeMoneyPulse({
   runwayMonths,
   savingsGoals
 }: HomeMoneyPulseProps) {
+  const { colors, styles } = useTheme();
   const savingsTarget = monthlyPlan?.savingsTarget ?? 0;
   const netIsNegative = monthlySummary.net < 0;
   const goalsSavedTotal = savingsGoals.reduce((sum, goal) => sum + goal.savedAmount, 0);

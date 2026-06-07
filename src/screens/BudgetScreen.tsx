@@ -11,8 +11,7 @@ import { BudgetTabKey } from "../features/app.types";
 import { formatSignedCompactRupiah } from "../lib/formatMoney";
 import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
-import { colors } from "../theme/colors";
-import { styles } from "../theme/styles/app";
+import { useTheme } from "../hooks/useTheme";
 
 type BudgetScreenProps = {
   activeBudgetTab: BudgetTabKey;
@@ -27,6 +26,7 @@ function BudgetScreenComponent({
   onOpenSettings,
   scrollContentStyle
 }: BudgetScreenProps) {
+  const { colors, styles } = useTheme();
   const actions = useActions();
   const {
     accountDrift,

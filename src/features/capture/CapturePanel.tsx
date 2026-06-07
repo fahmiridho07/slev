@@ -6,12 +6,14 @@ import { CaptureTypePicker } from "./CaptureTypePicker";
 import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { getTemplateLabel } from "../../lib/analysis";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
-import { colors } from "../../theme/colors";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
+import { hapticSuccess } from "../../lib/haptics";
 import { useCaptureForm } from "./useCaptureForm";
 
 type CapturePanelProps = {
   onOpenSettings: () => void;
+  onSaved?: () => void;
+  sheet?: boolean;
 };
 
 function getSaveLabel(entryType: "expense" | "income" | "transfer") {
@@ -20,7 +22,8 @@ function getSaveLabel(entryType: "expense" | "income" | "transfer") {
   return "Save expense";
 }
 
-function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
+function CapturePanelComponent({ onOpenSettings, onSaved, sheet = false }: CapturePanelProps) {
+  const { colors, styles } = useTheme();
   const actions = useActions();
   const { categoryLabels, repeatSuggestions } = useDerived();
   const { accounts, manualTemplates } = useFinanceSelector(
@@ -41,8 +44,14 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
     saveTemplate
   } = useCaptureForm();
 
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(sheet);
   const [noteOpen, setNoteOpen] = useState(Boolean(form.note));
+
+  useEffect(() => {
+    if (sheet) {
+      setExpanded(true);
+    }
+  }, [sheet]);
 
   useEffect(() => {
     if (form.note) {
@@ -60,16 +69,18 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
   const handleSave = useCallback(async () => {
     const saved = await save();
     if (saved) {
+      hapticSuccess();
       setNoteOpen(false);
+      onSaved?.();
     }
-  }, [save]);
+  }, [onSaved, save]);
 
   const showRepeatSuggestions = form.entryType === "expense" && repeatSuggestions.length > 0;
   const showQuickAdd = expanded && (manualTemplates.length > 0 || showRepeatSuggestions);
 
   return (
-    <View style={styles.capturePanel}>
-      <Text style={styles.kicker}>Quick capture</Text>
+    <View style={sheet ? undefined : styles.capturePanel}>
+      {!sheet && <Text style={styles.kicker}>Quick capture</Text>}
       {showQuickAdd && (
         <View style={styles.repeatBlock}>
           <Text style={styles.microLabel}>Quick add</Text>
@@ -103,7 +114,13 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
           {showRepeatSuggestions && (
             <View style={styles.suggestionRow}>
               {repeatSuggestions.map((item) => (
-                <Pressable key={`${item.label}-${item.context}`} onPress={() => applyRepeat(item)} style={styles.repeatChip}>
+                <Pressable
+                  accessibilityLabel={`Repeat ${item.label}`}
+                  accessibilityRole="button"
+                  key={`${item.label}-${item.context}`}
+                  onPress={() => applyRepeat(item)}
+                  style={styles.repeatChip}
+                >
                   <Text style={styles.repeatText}>{item.label}</Text>
                   <Text style={styles.repeatAmount}>{formatCompactRupiah(item.amount)}</Text>
                 </Pressable>
@@ -117,6 +134,7 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
       <View style={styles.amountRow}>
         <Text style={styles.currencyPrefix}>Rp</Text>
         <TextInput
+          accessibilityLabel="Amount"
           keyboardType="number-pad"
           onChangeText={changeAmountText}
           placeholder="0"
@@ -207,18 +225,23 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
         )
       )}
 
-      <Pressable accessibilityRole="button" onPress={() => void handleSave()} style={styles.primaryButton}>
+      <Pressable
+        accessibilityLabel={getSaveLabel(form.entryType)}
+        accessibilityRole="button"
+        onPress={() => void handleSave()}
+        style={styles.primaryButton}
+      >
         <Ionicons name="checkmark-circle-outline" size={20} color={colors.surface} />
         <Text style={styles.primaryButtonText}>{getSaveLabel(form.entryType)}</Text>
       </Pressable>
 
       {expanded ? (
         <>
-          <Pressable accessibilityRole="button" onPress={saveTemplate} style={styles.secondaryInlineButton}>
+          <Pressable accessibilityLabel="Save as shortcut" accessibilityRole="button" onPress={saveTemplate} style={styles.secondaryInlineButton}>
             <Ionicons name="bookmark-outline" size={16} color={colors.greenDark} />
             <Text style={styles.textButtonLabel}>Save as shortcut</Text>
           </Pressable>
-          {form.entryType === "expense" && (
+          {!sheet && form.entryType === "expense" && (
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ expanded: true }}
@@ -231,15 +254,17 @@ function CapturePanelComponent({ onOpenSettings }: CapturePanelProps) {
           )}
         </>
       ) : (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ expanded: false }}
-          onPress={() => setExpanded(true)}
-          style={styles.captureExpandRow}
-        >
-          <Text style={styles.captureExpandText}>More options</Text>
-          <Ionicons name="chevron-down-outline" size={16} color={colors.greenDark} />
-        </Pressable>
+        !sheet && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ expanded: false }}
+            onPress={() => setExpanded(true)}
+            style={styles.captureExpandRow}
+          >
+            <Text style={styles.captureExpandText}>More options</Text>
+            <Ionicons name="chevron-down-outline" size={16} color={colors.greenDark} />
+          </Pressable>
+        )
       )}
     </View>
   );

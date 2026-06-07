@@ -1,8 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo } from "react";
 import { Pressable, Text, View } from "react-native";
-import { colors } from "../theme/colors";
-import { componentStyles } from "../theme/styles/components";
+import { useTheme } from "../hooks/useTheme";
 
 type ListActionsOnboardingTipProps = {
   body?: string;
@@ -10,25 +9,25 @@ type ListActionsOnboardingTipProps = {
   title?: string;
 };
 
-function ListActionsOnboardingTipComponent({
-  body = "Tap any row to edit. Swipe left on a row to delete.",
-  onDismiss,
-  title = "How list actions work"
-}: ListActionsOnboardingTipProps) {
+function ListActionsOnboardingTipComponent({ body, onDismiss, title }: ListActionsOnboardingTipProps) {
+  const { colors, componentStyles, strings } = useTheme();
+  const resolvedTitle = title ?? strings.listHints.memory.title;
+  const resolvedBody = body ?? strings.listHints.memory.body;
+
   return (
     <View style={componentStyles.onboardingTip}>
       <View style={componentStyles.onboardingTipTitleRow}>
         <Ionicons name="hand-left-outline" size={18} color={colors.blue} />
-        <Text style={componentStyles.onboardingTipTitle}>{title}</Text>
+        <Text style={componentStyles.onboardingTipTitle}>{resolvedTitle}</Text>
       </View>
-      <Text style={componentStyles.onboardingTipBody}>{body}</Text>
+      <Text style={componentStyles.onboardingTipBody}>{resolvedBody}</Text>
       <Pressable
-        accessibilityLabel="Dismiss list actions tip"
+        accessibilityLabel={strings.common.gotIt}
         accessibilityRole="button"
         onPress={onDismiss}
         style={componentStyles.onboardingTipAction}
       >
-        <Text style={componentStyles.onboardingTipActionText}>Got it</Text>
+        <Text style={componentStyles.onboardingTipActionText}>{strings.common.gotIt}</Text>
       </Pressable>
     </View>
   );

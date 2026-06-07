@@ -1,8 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo } from "react";
 import { Text, View } from "react-native";
-import { colors } from "../theme/colors";
-import { componentStyles } from "../theme/styles/components";
+import { useTheme } from "../hooks/useTheme";
 import { AccountMark } from "./AccountMark";
 
 type TransferTitleProps = {
@@ -14,6 +13,8 @@ function TransferTitleComponent({
   fromLabel,
   toLabel
 }: TransferTitleProps) {
+  const { colors, componentStyles } = useTheme();
+
   return (
     <View style={componentStyles.transferTitleRow}>
       <AccountMark label={fromLabel} size="small" />

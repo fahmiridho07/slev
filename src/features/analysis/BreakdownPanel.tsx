@@ -5,10 +5,11 @@ import { getPercentWidthStyle } from "../../lib/analysis";
 import { buildMonthlyBreakdown } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { EntryType, SpendingMoment } from "../spendingMemory.types";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
 import { MonthlySpendingChart } from "./MonthlySpendingChart";
 
 export function BreakdownPanel({ moments }: { moments: SpendingMoment[] }) {
+  const { styles } = useTheme();
   const [breakdownType, setBreakdownType] = useState<EntryType>("expense");
   const rows = useMemo(() => buildMonthlyBreakdown(moments, breakdownType), [breakdownType, moments]);
 

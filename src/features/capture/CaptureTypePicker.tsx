@@ -2,8 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { CaptureType } from "../app.types";
-import { colors } from "../../theme/colors";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
 
 type CaptureTypeOption = {
   hint: string;
@@ -40,6 +39,8 @@ export function CaptureTypePicker({
   selected: CaptureType;
   onSelect: (value: CaptureType) => void;
 }) {
+  const { colors, styles } = useTheme();
+
   return (
     <View style={styles.captureTypeBlock}>
       <Text style={styles.captureTypeLead}>What are you logging?</Text>

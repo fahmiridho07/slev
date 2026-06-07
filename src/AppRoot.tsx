@@ -6,22 +6,23 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { DeleteConfirmDialog } from "./components";
 import { BRAND } from "./data/brand";
 import { useLayoutInsets } from "./hooks/useLayoutInsets";
+import { useTheme } from "./hooks/useTheme";
 import { BudgetTabKey } from "./features/app.types";
+import { hapticSelection } from "./lib/haptics";
 import { AppNavigation, AppTabKey } from "./navigation/appNavigation";
 import { BudgetScreen, HomeScreen, MemoryScreen, PatternsScreen, SettingsScreen } from "./screens";
 import { initialFinanceState } from "./state/financeReducer";
 import { shallowEqual, useActions, useFinanceSelector } from "./state/useFinance";
-import { colors } from "./theme/colors";
-import { styles } from "./theme/styles/app";
 
 const SLEV_MARK = require("../assets/brand/slev-mark-transparent.png");
 
-const tabs: { key: AppTabKey; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { key: "home", label: "Home", icon: "home-outline" },
-  { key: "memory", label: "Memory", icon: "albums-outline" },
-  { key: "budget", label: "Budget", icon: "wallet-outline" },
-  { key: "patterns", label: "Analysis", icon: "analytics-outline" }
-];
+const tabIcons: Record<AppTabKey, keyof typeof Ionicons.glyphMap> = {
+  home: "home-outline",
+  memory: "albums-outline",
+  budget: "wallet-outline",
+  patterns: "analytics-outline",
+  settings: "settings-outline"
+};
 
 function FinanceInitializer() {
   const actions = useActions();
@@ -33,6 +34,7 @@ function FinanceInitializer() {
 
 export function AppRoot() {
   const actions = useActions();
+  const { colors, isDark, strings, styles } = useTheme();
   const { clearConfirmVisible, isReady, message } = useFinanceSelector(
     (state) => ({
       clearConfirmVisible: state.clearConfirmVisible,
@@ -46,6 +48,13 @@ export function AppRoot() {
   const [returnTab, setReturnTab] = useState<AppTabKey>("home");
   const [budgetTab, setBudgetTab] = useState<BudgetTabKey>("plan");
   const [toastMessage, setToastMessage] = useState("");
+
+  const tabs: { key: AppTabKey; label: string }[] = [
+    { key: "home", label: strings.tabs.home },
+    { key: "memory", label: strings.tabs.memory },
+    { key: "budget", label: strings.tabs.budget },
+    { key: "patterns", label: strings.tabs.analysis }
+  ];
 
   const openSettings = () => {
     if (activeTab !== "settings") {
@@ -85,10 +94,15 @@ export function AppRoot() {
     return () => clearTimeout(timer);
   }, [isReady, message]);
 
+  function selectTab(tab: AppTabKey) {
+    hapticSelection();
+    setActiveTab(tab);
+  }
+
   return (
     <>
       <FinanceInitializer />
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? "light" : "dark"} />
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -100,11 +114,13 @@ export function AppRoot() {
                 <Image source={SLEV_MARK} style={styles.brandMark} />
                 <View>
                   <Text style={styles.brandName}>{BRAND.name}</Text>
-                  <Text style={styles.brandLine}>{inSettings ? "Settings" : "Spending memory"}</Text>
+                  <Text style={styles.brandLine}>
+                    {inSettings ? strings.brand.settings : strings.brand.tagline}
+                  </Text>
                 </View>
               </View>
               <Pressable
-                accessibilityLabel={inSettings ? "Back" : "Open settings"}
+                accessibilityLabel={inSettings ? strings.common.back : strings.common.openSettings}
                 accessibilityRole="button"
                 onPress={inSettings ? closeSettings : openSettings}
                 style={[styles.iconButton, inSettings && styles.iconButtonActive]}
@@ -122,7 +138,7 @@ export function AppRoot() {
           <View style={styles.content}>
             {!isReady && (
               <View style={styles.bootState}>
-                <Text style={styles.bootText}>Preparing local memory...</Text>
+                <Text style={styles.bootText}>{strings.boot.preparing}</Text>
               </View>
             )}
             {isReady && activeTab === "home" && (
@@ -152,11 +168,11 @@ export function AppRoot() {
                   accessibilityRole="button"
                   accessibilityState={{ selected: isActive }}
                   key={tab.key}
-                  onPress={() => setActiveTab(tab.key)}
+                  onPress={() => selectTab(tab.key)}
                   style={[styles.tabItem, isActive && styles.tabItemActive]}
                 >
                   <Ionicons
-                    name={tab.icon}
+                    name={tabIcons[tab.key]}
                     size={20}
                     color={isActive ? colors.greenDark : colors.muted}
                   />

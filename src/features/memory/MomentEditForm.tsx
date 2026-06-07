@@ -5,8 +5,7 @@ import { EntryType, MoneyAccount, SpendingContext, SpendingMoment } from "../spe
 import { getDefaultMomentAccount } from "../../lib/analysis";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { useActions, useDerived, useFinanceSelector } from "../../state/useFinance";
-import { colors } from "../../theme/colors";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
 
 type MomentEditFormProps = {
   moment: SpendingMoment;
@@ -27,6 +26,7 @@ function buildEditForm(moment: SpendingMoment, accounts: MoneyAccount[]) {
 }
 
 function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormProps) {
+  const { colors, styles } = useTheme();
   const actions = useActions();
   const { categoryLabels } = useDerived();
   const accounts = useFinanceSelector((state) => state.accounts);

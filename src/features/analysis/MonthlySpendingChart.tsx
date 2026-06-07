@@ -3,21 +3,23 @@ import { Text, View } from "react-native";
 import { getPercentWidthStyle } from "../../lib/analysis";
 import { FinanceBreakdownRow } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
-import { colors } from "../../theme/colors";
-import { styles } from "../../theme/styles/app";
-
-const CHART_COLORS = [
-  colors.greenDark,
-  colors.blue,
-  colors.amber,
-  colors.coral,
-  "#7a9e7e",
-  "#9b7bb8",
-  "#6f8ea8",
-  "#c58b5a"
-];
+import { useTheme } from "../../hooks/useTheme";
 
 export function MonthlySpendingChart({ rows }: { rows: FinanceBreakdownRow[] }) {
+  const { colors, styles } = useTheme();
+  const chartColors = useMemo(
+    () => [
+      colors.greenDark,
+      colors.blue,
+      colors.amber,
+      colors.coral,
+      "#7a9e7e",
+      "#9b7bb8",
+      "#6f8ea8",
+      "#c58b5a"
+    ],
+    [colors.amber, colors.blue, colors.coral, colors.greenDark]
+  );
   const total = useMemo(() => rows.reduce((sum, row) => sum + row.amount, 0), [rows]);
 
   if (rows.length === 0 || total <= 0) {
@@ -37,7 +39,7 @@ export function MonthlySpendingChart({ rows }: { rows: FinanceBreakdownRow[] }) 
               style={[
                 styles.chartStackSegment,
                 getPercentWidthStyle(row.share),
-                { backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }
+                { backgroundColor: chartColors[index % chartColors.length] }
               ]}
             />
           ))}
@@ -51,7 +53,7 @@ export function MonthlySpendingChart({ rows }: { rows: FinanceBreakdownRow[] }) 
               <View
                 style={[
                   styles.chartLegendSwatch,
-                  { backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }
+                  { backgroundColor: chartColors[index % chartColors.length] }
                 ]}
               />
               <Text style={styles.chartLegendLabel}>{row.label}</Text>

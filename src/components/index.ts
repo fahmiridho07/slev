@@ -6,6 +6,7 @@ export { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 export { EmptyState } from "./EmptyState";
 export { ListActionRow } from "./ListActionRow";
 export { BottomSheet } from "./BottomSheet";
+export { CaptureFab } from "./CaptureFab";
 export { ListActionsOnboardingTip } from "./ListActionsOnboardingTip";
 export { FeedbackButton } from "./FeedbackButton";
 export { MomentRow } from "./MomentRow";

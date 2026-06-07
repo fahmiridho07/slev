@@ -1,8 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo } from "react";
 import { Pressable, Text, View } from "react-native";
-import { colors } from "../theme/colors";
-import { componentStyles } from "../theme/styles/components";
+import { useTheme } from "../hooks/useTheme";
 
 type EmptyStateProps = {
   actionLabel?: string;
@@ -15,6 +14,8 @@ function EmptyStateComponent({
   onAction,
   text
 }: EmptyStateProps) {
+  const { colors, componentStyles } = useTheme();
+
   return (
     <View style={componentStyles.emptyState}>
       <Ionicons name="leaf-outline" size={22} color={colors.greenDark} />

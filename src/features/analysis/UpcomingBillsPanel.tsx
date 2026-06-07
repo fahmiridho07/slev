@@ -4,8 +4,7 @@ import { Pressable, Text, View } from "react-native";
 import { EmptyState } from "../../components";
 import { UpcomingBill } from "../../lib/recurringBills";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
-import { colors } from "../../theme/colors";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
 
 function formatDueHint(daysUntil: number): string {
   if (daysUntil === 0) return "due today";
@@ -27,6 +26,7 @@ export function UpcomingBillsPanel({
   upcomingBills: UpcomingBill[];
   onLogPayment: (billId: string) => void;
 }) {
+  const { colors, styles } = useTheme();
   const horizonTotal = upcomingBills.reduce((sum, item) => sum + item.bill.amount, 0);
 
   if (upcomingBills.length === 0) {

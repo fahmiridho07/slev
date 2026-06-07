@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
-import { colors } from "../theme/colors";
-import { componentStyles } from "../theme/styles/components";
+import { useTheme } from "../hooks/useTheme";
+import { hapticWarning } from "../lib/haptics";
 
 type DeleteConfirmDialogProps = {
   body: string;
@@ -15,12 +15,20 @@ type DeleteConfirmDialogProps = {
 
 function DeleteConfirmDialogComponent({
   body,
-  confirmLabel = "Delete",
+  confirmLabel,
   onCancel,
   onConfirm,
   title,
   visible
 }: DeleteConfirmDialogProps) {
+  const { colors, componentStyles, strings } = useTheme();
+  const resolvedConfirmLabel = confirmLabel ?? strings.common.delete;
+
+  function handleConfirm() {
+    hapticWarning();
+    onConfirm();
+  }
+
   return (
     <Modal
       animationType="fade"
@@ -36,11 +44,21 @@ function DeleteConfirmDialogComponent({
           <Text style={componentStyles.confirmTitle}>{title}</Text>
           <Text style={componentStyles.confirmBody}>{body}</Text>
           <View style={componentStyles.confirmActions}>
-            <Pressable accessibilityRole="button" onPress={onCancel} style={componentStyles.confirmCancelButton}>
-              <Text style={componentStyles.secondaryButtonText}>Cancel</Text>
+            <Pressable
+              accessibilityLabel={strings.common.cancel}
+              accessibilityRole="button"
+              onPress={onCancel}
+              style={componentStyles.confirmCancelButton}
+            >
+              <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
             </Pressable>
-            <Pressable accessibilityRole="button" onPress={onConfirm} style={componentStyles.confirmDeleteButton}>
-              <Text style={componentStyles.confirmDeleteText}>{confirmLabel}</Text>
+            <Pressable
+              accessibilityLabel={resolvedConfirmLabel}
+              accessibilityRole="button"
+              onPress={handleConfirm}
+              style={componentStyles.confirmDeleteButton}
+            >
+              <Text style={componentStyles.confirmDeleteText}>{resolvedConfirmLabel}</Text>
             </Pressable>
           </View>
         </View>

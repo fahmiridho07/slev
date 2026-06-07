@@ -7,7 +7,7 @@ import { formatSignedCompactRupiah } from "../../lib/formatMoney";
 import { buildAllocationPlan, getLatestBalanceSnapshots } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { BalanceSnapshot, MoneyAccount, MoneyTransfer, MonthlyPlan } from "../spendingMemory.types";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
 import { getAllocationFillStyle } from "../../theme/styles/fillStyles";
 
 export function AllocationPanel({
@@ -27,6 +27,7 @@ export function AllocationPanel({
   transfers: MoneyTransfer[];
   onOpenBalance: () => void;
 }) {
+  const { colors, styles } = useTheme();
   const currentBalances = useMemo(() => getLatestBalanceSnapshots(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
   const allocation = useMemo(
     () =>
@@ -98,7 +99,7 @@ export function AllocationPanel({
                   </View>
                   {row.planned > 0 && (
                     <View style={styles.progressTrack}>
-                      <View style={[styles.progressFill, getAllocationFillStyle(row)]} />
+                      <View style={[styles.progressFill, getAllocationFillStyle(row, colors)]} />
                     </View>
                   )}
                   <Text style={styles.settingCopy}>{rowCopy.detail}</Text>

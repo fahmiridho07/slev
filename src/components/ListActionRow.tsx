@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { Pressable, View, ViewStyle } from "react-native";
-import { componentStyles } from "../theme/styles/components";
+import { useTheme } from "../hooks/useTheme";
 import { SwipeActionRow } from "./SwipeActionRow";
 
 type ListActionRowProps = {
@@ -18,6 +18,7 @@ function ListActionRowComponent({
   onPress,
   style
 }: ListActionRowProps) {
+  const { componentStyles } = useTheme();
   const content = onPress ? (
     <Pressable
       accessibilityLabel={accessibilityLabel}

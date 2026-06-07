@@ -1,8 +1,11 @@
-import React, { memo } from "react";
-import { ScrollView, StyleProp, ViewStyle } from "react-native";
+import React, { memo, useState } from "react";
+import { ScrollView, StyleProp, View, ViewStyle } from "react-native";
+import { BottomSheet, CaptureFab } from "../components";
 import { HomeMoneyPulse } from "../features/analysis/HomeMoneyPulse";
 import { UpcomingBillsPanel } from "../features/analysis/UpcomingBillsPanel";
 import { CapturePanel } from "../features/capture/CapturePanel";
+import { useLayoutInsets } from "../hooks/useLayoutInsets";
+import { useTheme } from "../hooks/useTheme";
 import { AppNavigation } from "../navigation/appNavigation";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
 
@@ -13,7 +16,9 @@ type HomeScreenProps = {
 };
 
 function HomeScreenComponent({ navigation, onOpenSettings, scrollContentStyle }: HomeScreenProps) {
+  const { strings } = useTheme();
   const actions = useActions();
+  const { tabBarHeight } = useLayoutInsets();
   const { allocationPlan, hasMonthlyPlan, latestBalanceTotal, monthlySummary, runwayMonths, upcomingBills } = useDerived();
   const { monthlyPlan, savingsGoals } = useFinanceSelector(
     (state) => ({
@@ -22,27 +27,53 @@ function HomeScreenComponent({ navigation, onOpenSettings, scrollContentStyle }:
     }),
     shallowEqual
   );
+  const [captureOpen, setCaptureOpen] = useState(false);
 
   return (
-    <ScrollView contentContainerStyle={scrollContentStyle} keyboardShouldPersistTaps="handled">
-      <HomeMoneyPulse
-        dailyFlexibleRoom={allocationPlan.dailyFlexibleRoom}
-        hasMonthlyPlan={hasMonthlyPlan}
-        latestBalanceTotal={latestBalanceTotal}
-        monthlyPlan={monthlyPlan}
-        monthlySummary={monthlySummary}
-        onOpenBudgetPlan={navigation.openBudgetPlan}
-        runwayMonths={runwayMonths}
-        savingsGoals={savingsGoals}
-      />
-      <CapturePanel onOpenSettings={onOpenSettings} />
-      {upcomingBills.length > 0 && (
-        <UpcomingBillsPanel
-          upcomingBills={upcomingBills}
-          onLogPayment={(billId) => void actions.logRecurringBillPayment(billId)}
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        contentContainerStyle={[scrollContentStyle, { paddingBottom: tabBarHeight + 88 }]}
+        keyboardShouldPersistTaps="handled"
+      >
+        <HomeMoneyPulse
+          dailyFlexibleRoom={allocationPlan.dailyFlexibleRoom}
+          hasMonthlyPlan={hasMonthlyPlan}
+          latestBalanceTotal={latestBalanceTotal}
+          monthlyPlan={monthlyPlan}
+          monthlySummary={monthlySummary}
+          onOpenBudgetPlan={navigation.openBudgetPlan}
+          runwayMonths={runwayMonths}
+          savingsGoals={savingsGoals}
         />
-      )}
-    </ScrollView>
+        {upcomingBills.length > 0 && (
+          <UpcomingBillsPanel
+            upcomingBills={upcomingBills}
+            onLogPayment={(billId) => void actions.logRecurringBillPayment(billId)}
+          />
+        )}
+      </ScrollView>
+
+      <CaptureFab
+        accessibilityLabel={strings.capture.fabLabel}
+        bottom={tabBarHeight + 12}
+        onPress={() => setCaptureOpen(true)}
+      />
+
+      <BottomSheet
+        onClose={() => setCaptureOpen(false)}
+        title={strings.capture.sheetTitle}
+        visible={captureOpen}
+      >
+        <CapturePanel
+          onOpenSettings={() => {
+            setCaptureOpen(false);
+            onOpenSettings();
+          }}
+          onSaved={() => setCaptureOpen(false)}
+          sheet
+        />
+      </BottomSheet>
+    </View>
   );
 }
 

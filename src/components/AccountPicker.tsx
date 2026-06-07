@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { MoneyAccount } from "../features/spendingMemory.types";
-import { componentStyles } from "../theme/styles/components";
+import { useTheme } from "../hooks/useTheme";
 import { AccountMark } from "./AccountMark";
 
 type AccountPickerProps = {
@@ -17,6 +17,8 @@ function AccountPickerComponent({
   selected,
   onSelect
 }: AccountPickerProps) {
+  const { componentStyles } = useTheme();
+
   return (
     <View style={componentStyles.accountPickerBlock}>
       <Text style={componentStyles.microLabel}>{label}</Text>

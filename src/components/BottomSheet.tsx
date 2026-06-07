@@ -1,7 +1,6 @@
 import React, { memo } from "react";
 import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, View } from "react-native";
-import { colors } from "../theme/colors";
-import { componentStyles } from "../theme/styles/components";
+import { useTheme } from "../hooks/useTheme";
 
 type BottomSheetProps = {
   children: React.ReactNode;
@@ -11,6 +10,8 @@ type BottomSheetProps = {
 };
 
 function BottomSheetComponent({ children, onClose, title, visible }: BottomSheetProps) {
+  const { componentStyles } = useTheme();
+
   return (
     <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
       <Pressable accessibilityLabel="Close sheet" accessibilityRole="button" onPress={onClose} style={componentStyles.sheetBackdrop}>

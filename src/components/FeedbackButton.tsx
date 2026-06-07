@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { Pressable, Text } from "react-native";
-import { componentStyles } from "../theme/styles/components";
+import { useTheme } from "../hooks/useTheme";
 
 type FeedbackButtonProps = {
   active: boolean;
@@ -13,6 +13,8 @@ function FeedbackButtonComponent({
   label,
   onPress
 }: FeedbackButtonProps) {
+  const { componentStyles } = useTheme();
+
   return (
     <Pressable onPress={onPress} style={[componentStyles.feedbackButton, active && componentStyles.feedbackButtonActive]}>
       <Text style={[componentStyles.feedbackText, active && componentStyles.feedbackTextActive]}>{label}</Text>

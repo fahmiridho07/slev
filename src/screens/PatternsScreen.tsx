@@ -8,13 +8,14 @@ import { TrendsPanel } from "../features/analysis/TrendsPanel";
 import { PatternTabKey } from "../features/app.types";
 import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
-import { styles } from "../theme/styles/app";
+import { useTheme } from "../hooks/useTheme";
 
 type PatternsScreenProps = {
   scrollContentStyle: StyleProp<ViewStyle>;
 };
 
 function PatternsScreenComponent({ scrollContentStyle }: PatternsScreenProps) {
+  const { styles } = useTheme();
   const actions = useActions();
   const { feedbackByPattern, latestBalanceTotal, monthlySummary, netWorthTrend, patterns, projectedBalanceSnapshots } =
     useDerived();

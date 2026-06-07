@@ -8,8 +8,7 @@ import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
 import { getCategoryDeleteBody } from "../lib/analysis";
 import { listCorruptStorageIssues, StorageHealthIssue } from "../services/storageHealth";
 import { shallowEqual, useActions, useDerived, useFinanceSelector } from "../state/useFinance";
-import { colors } from "../theme/colors";
-import { styles } from "../theme/styles/app";
+import { useTheme } from "../hooks/useTheme";
 
 type SettingsTabKey = "bills" | "categories" | "data";
 
@@ -18,6 +17,7 @@ type SettingsScreenProps = {
 };
 
 function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
+  const { colorScheme, colors, locale, setColorScheme, setLocale, strings, styles } = useTheme();
   const actions = useActions();
   const { categoryLabels } = useDerived();
   const { accounts, expenseCategories, isReady, moments, recurringBills } = useFinanceSelector(
@@ -96,9 +96,9 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
 
         <SegmentedControl
           options={[
-            { label: "Bills", value: "bills" },
-            { label: "Categories", value: "categories" },
-            { label: "Data", value: "data" }
+            { label: strings.settings.billsTab, value: "bills" },
+            { label: strings.settings.categoriesTab, value: "categories" },
+            { label: strings.settings.dataTab, value: "data" }
           ]}
           selected={activeTab}
           stretch
@@ -117,7 +117,13 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
 
         {activeTab === "categories" && (
           <>
-            {showCategoriesHint && <ListActionsOnboardingTip onDismiss={dismissCategoriesHint} />}
+            {showCategoriesHint && (
+              <ListActionsOnboardingTip
+                body={strings.listHints.settings_categories.body}
+                onDismiss={dismissCategoriesHint}
+                title={strings.listHints.settings_categories.title}
+              />
+            )}
             <View style={styles.capturePanel}>
               <Text style={styles.microLabel}>{editingCategoryId ? "Edit category" : "Add expense category"}</Text>
               <TextInput
@@ -184,13 +190,38 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
     isReady,
     momentCount,
     recurringBills.length,
-    showCategoriesHint
+    showCategoriesHint,
+    strings
   ]);
 
   const listFooter = useMemo(() => {
     if (activeTab === "data") {
       return (
         <>
+          <View style={styles.capturePanel}>
+            <Text style={styles.microLabel}>{strings.appearance.label}</Text>
+            <SegmentedControl
+              options={[
+                { label: strings.appearance.light, value: "light" },
+                { label: strings.appearance.dark, value: "dark" },
+                { label: strings.appearance.system, value: "system" }
+              ]}
+              selected={colorScheme}
+              stretch
+              onSelect={setColorScheme}
+            />
+            <Text style={styles.microLabel}>{strings.locale.label}</Text>
+            <SegmentedControl
+              options={[
+                { label: strings.locale.english, value: "en" },
+                { label: strings.locale.indonesian, value: "id" }
+              ]}
+              selected={locale}
+              stretch
+              onSelect={setLocale}
+            />
+          </View>
+
           <View style={styles.capturePanel}>
             <Text style={styles.microLabel}>Backup</Text>
             <Text style={styles.settingCopy}>Export your data as JSON, or paste a backup to restore.</Text>
@@ -225,7 +256,7 @@ function SettingsScreenComponent({ scrollContentStyle }: SettingsScreenProps) {
       );
     }
     return null;
-  }, [actions, activeTab, importDraft]);
+  }, [actions, activeTab, colorScheme, importDraft, locale, setColorScheme, setLocale, strings]);
 
   const listEmpty = useMemo(() => {
     if (activeTab !== "categories") {

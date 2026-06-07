@@ -5,8 +5,7 @@ import { MonthlySummary } from "../app.types";
 import { formatAmountInput, formatSignedCompactRupiah, parseAmountInput } from "../../lib/formatMoney";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { MonthlyPlan } from "../spendingMemory.types";
-import { colors } from "../../theme/colors";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
 
 export function MonthlyPlanPanel({
   monthlyPlan,
@@ -23,6 +22,7 @@ export function MonthlyPlanPanel({
     savingsTarget: string;
   }) => void;
 }) {
+  const { colors, styles } = useTheme();
   const [expectedIncome, setExpectedIncome] = useState(monthlyPlan ? formatAmountInput(String(monthlyPlan.expectedIncome)) : "");
   const [fixedCosts, setFixedCosts] = useState(monthlyPlan ? formatAmountInput(String(monthlyPlan.fixedCosts)) : "");
   const [savingsTarget, setSavingsTarget] = useState(monthlyPlan ? formatAmountInput(String(monthlyPlan.savingsTarget)) : "");

@@ -1,10 +1,14 @@
 import { TextStyle, ViewStyle } from "react-native";
 import { clampPercent, getPercentWidthStyle } from "../../lib/analysis";
 import { AccountReconciliationRow, AllocationPlan } from "../../lib/financeEngine";
-import { colors } from "../colors";
+import { lightColors } from "../palettes";
+import type { ColorTokens } from "../types";
 import { styles } from "./app";
 
-export function getAllocationFillStyle(row: AllocationPlan["rows"][number]): Pick<ViewStyle, "backgroundColor" | "width"> {
+export function getAllocationFillStyle(
+  row: AllocationPlan["rows"][number],
+  colors: ColorTokens = lightColors
+): Pick<ViewStyle, "backgroundColor" | "width"> {
   const isSpendingRow = row.key === "fixed" || row.key === "flexible";
   const backgroundColor = isSpendingRow
     ? row.progress > 1
@@ -25,9 +29,12 @@ export function getReconciliationAmountStyle(row: AccountReconciliationRow): Pic
   return row.difference > 0 ? styles.incomeText : styles.expenseText;
 }
 
-export function getProgressFillStyle(progress: number): Pick<ViewStyle, "backgroundColor" | "width"> {
+export function getProgressFillStyle(
+  progress: number,
+  colors: ColorTokens = lightColors
+): Pick<ViewStyle, "backgroundColor" | "width"> {
   const clampedProgress = clampPercent(progress);
-  const backgroundColor = progress > 1 ? "#d98272" : progress >= 0.8 ? "#d6a94a" : colors.green;
+  const backgroundColor = progress > 1 ? colors.coral : progress >= 0.8 ? colors.amber : colors.green;
   return {
     backgroundColor,
     width: `${Math.round(clampedProgress * 100)}%` as ViewStyle["width"]

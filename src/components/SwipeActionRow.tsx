@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useCallback, useMemo, useRef } from "react";
 import { Animated, PanResponder, Pressable, Text, View } from "react-native";
-import { colors } from "../theme/colors";
-import { componentStyles, SWIPE_DELETE_ACTION_WIDTH } from "../theme/styles/components";
+import { useTheme } from "../hooks/useTheme";
+import { hapticLight } from "../lib/haptics";
+import { SWIPE_DELETE_ACTION_WIDTH } from "../theme/styles/components";
 
 type SwipeActionRowProps = {
   canDelete: boolean;
@@ -15,6 +16,7 @@ function SwipeActionRowComponent({
   children,
   onDelete
 }: SwipeActionRowProps) {
+  const { colors, componentStyles, strings } = useTheme();
   const translateX = useRef(new Animated.Value(0)).current;
   const isOpenRef = useRef(false);
 
@@ -30,6 +32,12 @@ function SwipeActionRowComponent({
     },
     [translateX]
   );
+
+  const handleDelete = useCallback(() => {
+    hapticLight();
+    animateTo(false);
+    onDelete();
+  }, [animateTo, onDelete]);
 
   const panResponder = useMemo(
     () =>
@@ -68,15 +76,13 @@ function SwipeActionRowComponent({
       {canDelete && (
         <View style={componentStyles.swipeActionBackground}>
           <Pressable
+            accessibilityLabel={strings.common.delete}
             accessibilityRole="button"
-            onPress={() => {
-              animateTo(false);
-              onDelete();
-            }}
+            onPress={handleDelete}
             style={componentStyles.swipeDeleteButton}
           >
             <Ionicons name="trash-outline" size={18} color={colors.surface} />
-            <Text style={componentStyles.swipeDeleteText}>Delete</Text>
+            <Text style={componentStyles.swipeDeleteText}>{strings.common.delete}</Text>
           </Pressable>
         </View>
       )}

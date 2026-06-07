@@ -17,7 +17,14 @@ import {
   runMigrations,
   STORAGE_KEYS
 } from "../src/services/storageSchema";
-import { hasSeenListActionsHint, markListActionsHintSeen } from "../src/services/uiPreferences";
+import {
+  getColorSchemePreference,
+  getLocalePreference,
+  hasSeenListActionsHint,
+  markListActionsHintSeen,
+  setColorSchemePreference,
+  setLocalePreference
+} from "../src/services/uiPreferences";
 
 declare const process: {
   exitCode?: number;
@@ -327,6 +334,36 @@ test("list actions hint persists after dismiss", async () => {
   await markListActionsHintSeen("goals");
   assertEqual(await hasSeenListActionsHint("goals"), true, "hint marked seen");
   assertEqual(await hasSeenListActionsHint("memory"), false, "other hints stay unseen");
+});
+
+test("color scheme preference defaults to system", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  assertEqual(await getColorSchemePreference(), "system", "scheme defaults to system");
+});
+
+test("color scheme preference persists", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await setColorSchemePreference("dark");
+  assertEqual(await getColorSchemePreference(), "dark", "dark scheme stored");
+});
+
+test("locale preference defaults to english", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  assertEqual(await getLocalePreference(), "en", "locale defaults to english");
+});
+
+test("locale preference persists", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await setLocalePreference("id");
+  assertEqual(await getLocalePreference(), "id", "indonesian locale stored");
 });
 
 async function runTests(): Promise<void> {

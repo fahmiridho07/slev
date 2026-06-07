@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Text, View } from "react-native";
 import { MoneyAccount } from "../features/spendingMemory.types";
-import { componentStyles } from "../theme/styles/components";
+import { useTheme } from "../hooks/useTheme";
 import { AccountMark } from "./AccountMark";
 
 type AccountTitleProps = {
@@ -13,6 +13,8 @@ function AccountTitleComponent({
   kind,
   label
 }: AccountTitleProps) {
+  const { componentStyles } = useTheme();
+
   return (
     <View style={componentStyles.accountTitleRow}>
       <AccountMark kind={kind} label={label} />

@@ -1,8 +1,10 @@
 import { StyleSheet } from "react-native";
-import { colors, shadows } from "../colors";
-import { componentStyles } from "./components";
+import { lightColors, lightShadows } from "../palettes";
+import type { ColorTokens, ShadowTokens } from "../types";
+import { createComponentStyles } from "./components";
 
-const screenStyles = StyleSheet.create({
+export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
+  return StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.canvas
@@ -956,10 +958,25 @@ const screenStyles = StyleSheet.create({
   },
   tabLabelActive: {
     color: colors.greenDark
+  },
+  captureFab: {
+    alignItems: "center",
+    backgroundColor: colors.greenDark,
+    borderRadius: 28,
+    height: 56,
+    justifyContent: "center",
+    position: "absolute",
+    right: 20,
+    width: 56,
+    ...shadows.soft
   }
-});
+  });
+}
 
-export const styles = {
-  ...componentStyles,
-  ...screenStyles
-};
+export function createAppStyles(colors: ColorTokens, shadows: ShadowTokens) {
+  const componentStyles = createComponentStyles(colors, shadows);
+  const screenStyles = createScreenStyles(colors, shadows);
+  return { ...componentStyles, ...screenStyles };
+}
+
+export const styles = createAppStyles(lightColors, lightShadows);

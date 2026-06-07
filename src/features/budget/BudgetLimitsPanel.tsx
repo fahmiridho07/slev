@@ -7,8 +7,7 @@ import { formatAmountInput } from "../../lib/formatMoney";
 import { getModeByCategory } from "../../lib/financeEngine";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { BudgetLimit, BudgetPeriod, CategoryMode, ExpenseCategory, SpendingContext, SpendingMoment } from "../spendingMemory.types";
-import { colors } from "../../theme/colors";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
 import { getProgressFillStyle } from "../../theme/styles/fillStyles";
 
 export function BudgetLimitsPanel({
@@ -34,6 +33,7 @@ export function BudgetLimitsPanel({
   onSaveCategoryMode: (category: SpendingContext, mode: CategoryModeValue) => void;
   onSaveLimit: (category: SpendingContext, amountText: string, period: BudgetPeriod) => void;
 }) {
+  const { colors, styles } = useTheme();
   const [editingCategory, setEditingCategory] = useState<SpendingContext | null>(null);
   const [draftAmount, setDraftAmount] = useState("");
   const [draftPeriod, setDraftPeriod] = useState<BudgetPeriod>("weekly");
@@ -117,7 +117,7 @@ export function BudgetLimitsPanel({
 
           {row.limit && (
             <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, getProgressFillStyle(row.progress)]} />
+              <View style={[styles.progressFill, getProgressFillStyle(row.progress, colors)]} />
             </View>
           )}
 

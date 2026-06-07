@@ -1,11 +1,12 @@
 import { useMemo } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { styles } from "../theme/styles/app";
+import { useTheme } from "./useTheme";
 
 const TAB_BAR_BODY_HEIGHT = 74;
 const SCROLL_BOTTOM_BUFFER = 24;
 
 export function useLayoutInsets() {
+  const { styles } = useTheme();
   const insets = useSafeAreaInsets();
 
   return useMemo(() => {
@@ -22,5 +23,5 @@ export function useLayoutInsets() {
       tabBarHeight,
       tabBarStyle
     };
-  }, [insets.bottom]);
+  }, [insets.bottom, styles]);
 }

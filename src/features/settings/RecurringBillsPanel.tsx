@@ -6,8 +6,7 @@ import { useListActionsHint } from "../../hooks/useListActionsHint";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { MoneyAccount, RecurringBill, SpendingContext } from "../spendingMemory.types";
-import { colors } from "../../theme/colors";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
 
 export function RecurringBillsPanel({
   accounts,
@@ -30,6 +29,7 @@ export function RecurringBillsPanel({
     active: boolean;
   }) => void;
 }) {
+  const { colors, strings, styles } = useTheme();
   const [editingBillId, setEditingBillId] = useState<string | undefined>(undefined);
   const [label, setLabel] = useState("");
   const [amount, setAmount] = useState("");
@@ -137,7 +137,13 @@ export function RecurringBillsPanel({
         <EmptyState text="No recurring bills yet. Add one when you know a fixed monthly payment." />
       ) : (
         <>
-          {showBillsHint && <ListActionsOnboardingTip onDismiss={dismissBillsHint} />}
+          {showBillsHint && (
+            <ListActionsOnboardingTip
+              body={strings.listHints.recurring_bills.body}
+              onDismiss={dismissBillsHint}
+              title={strings.listHints.recurring_bills.title}
+            />
+          )}
           <View style={styles.listPanel}>
           {recurringBills.map((bill, index) => (
             <View

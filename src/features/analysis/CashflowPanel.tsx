@@ -5,7 +5,7 @@ import { buildCashflowWeeks, getPercentWidthStyle } from "../../lib/analysis";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
 import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
 import { SpendingMoment } from "../spendingMemory.types";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
 
 export function CashflowPanel({
   moments,
@@ -14,6 +14,7 @@ export function CashflowPanel({
   moments: SpendingMoment[];
   showEmpty?: boolean;
 }) {
+  const { styles } = useTheme();
   const weeks = useMemo(() => buildCashflowWeeks(moments), [moments]);
   const maxWeeklyAmount = useMemo(
     () => Math.max(1, ...weeks.flatMap((week) => [week.income, week.expense])),

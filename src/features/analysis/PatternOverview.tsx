@@ -4,7 +4,7 @@ import { Text, View } from "react-native";
 import { EmptyState, FeedbackButton, getPatternToneStyle, patternColor, patternIcon, SectionHeader } from "../../components";
 import { groupPatterns } from "../../lib/analysis";
 import { PatternFeedbackResponse, SpendingMoment, SpendingPattern } from "../spendingMemory.types";
-import { styles } from "../../theme/styles/app";
+import { useTheme } from "../../hooks/useTheme";
 
 export function PatternOverview({
   feedbackByPattern,
@@ -17,6 +17,7 @@ export function PatternOverview({
   patterns: SpendingPattern[];
   onAnswer: (patternId: string, response: PatternFeedbackResponse) => void;
 }) {
+  const { colors, componentStyles, styles } = useTheme();
   const enoughForRecap = moments.filter((moment) => moment.type === "expense" && Date.parse(moment.occurredAt) >= Date.now() - 14 * 24 * 60 * 60 * 1000).length >= 6;
   const groups = useMemo(() => groupPatterns(patterns), [patterns]);
 
@@ -29,9 +30,9 @@ export function PatternOverview({
           <View key={group.title} style={styles.patternGroup}>
             <SectionHeader title={group.title} />
             {group.items.map((pattern) => (
-              <View key={pattern.id} style={[styles.patternCard, getPatternToneStyle(pattern.tone)]}>
+              <View key={pattern.id} style={[styles.patternCard, getPatternToneStyle(pattern.tone, componentStyles)]}>
                 <View style={styles.patternTitleRow}>
-                  <Ionicons name={patternIcon(pattern.tone)} size={18} color={patternColor(pattern.tone)} />
+                  <Ionicons name={patternIcon(pattern.tone)} size={18} color={patternColor(pattern.tone, colors)} />
                   <Text style={styles.patternTitle}>{pattern.title}</Text>
                 </View>
                 <Text style={styles.patternDetail}>{pattern.detail}</Text>

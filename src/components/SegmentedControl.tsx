@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { componentStyles } from "../theme/styles/components";
+import { useTheme } from "../hooks/useTheme";
 
 type SegmentedControlProps<T extends string> = {
   compact?: boolean;
@@ -17,11 +17,14 @@ function SegmentedControlComponent<T extends string>({
   onSelect,
   stretch = false
 }: SegmentedControlProps<T>) {
+  const { componentStyles } = useTheme();
   const segments = options.map((option) => {
     const active = option.value === selected;
     return (
       <Pressable
+        accessibilityLabel={option.label}
         accessibilityRole="button"
+        accessibilityState={{ selected: active }}
         key={option.value}
         onPress={() => onSelect(option.value)}
         style={[

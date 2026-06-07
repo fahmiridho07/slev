@@ -4,8 +4,7 @@ import { Text, View } from "react-native";
 import { formatTime, getMomentTitle } from "../lib/analysis";
 import { formatMomentAmount } from "../lib/formatMoney";
 import { SpendingMoment } from "../features/spendingMemory.types";
-import { colors } from "../theme/colors";
-import { componentStyles } from "../theme/styles/components";
+import { useTheme } from "../hooks/useTheme";
 import { contextIcon } from "./presentation";
 
 type MomentRowProps = {
@@ -14,6 +13,7 @@ type MomentRowProps = {
 };
 
 function MomentRowComponent({ moment, repeatHint }: MomentRowProps) {
+  const { colors, componentStyles } = useTheme();
   const isIncome = moment.type === "income";
 
   return (
