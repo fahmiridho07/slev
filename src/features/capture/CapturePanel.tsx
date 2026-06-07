@@ -7,6 +7,7 @@ import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { getTemplateLabel } from "../../lib/analysis";
 import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../../state/useFinance";
 import { formatString } from "../../i18n";
+import { useCapturePickerOrder } from "../../hooks/useCapturePickerOrder";
 import { useTheme } from "../../hooks/useTheme";
 import { hapticSuccess } from "../../lib/haptics";
 import { buildCaptureSaveAckBanner, CaptureSaveAck } from "./captureSaveAck";
@@ -41,6 +42,10 @@ function CapturePanelComponent({
       manualTemplates: state.manualTemplates
     }),
     shallowEqual
+  );
+  const { orderedAccounts, orderedCategories, reorderAccounts, reorderCategories } = useCapturePickerOrder(
+    categoryLabels,
+    accounts
   );
   const {
     fieldError,
@@ -172,13 +177,16 @@ function CapturePanelComponent({
       {form.entryType === "transfer" ? (
         <View style={styles.transferPickerBlock}>
           <AccountPicker
-            accounts={accounts}
+            accounts={orderedAccounts}
             label={strings.capture.from}
+            onReorder={reorderAccounts}
+            reorderable
+            reorderHint={strings.capture.reorderHint}
             selected={form.fromAccount}
             onSelect={(value) => patch({ fromAccount: value })}
           />
           <AccountPicker
-            accounts={accounts.filter((account) => account.label !== form.fromAccount)}
+            accounts={orderedAccounts.filter((account) => account.label !== form.fromAccount)}
             label={strings.capture.to}
             selected={form.toAccount === form.fromAccount ? "" : form.toAccount}
             onSelect={(value) => patch({ toAccount: value })}
@@ -233,8 +241,11 @@ function CapturePanelComponent({
 
       {form.entryType !== "transfer" && (
         <AccountPicker
-          accounts={accounts}
+          accounts={orderedAccounts}
           label={form.entryType === "income" ? strings.capture.receivedIn : strings.capture.paidFrom}
+          onReorder={reorderAccounts}
+          reorderable
+          reorderHint={strings.capture.reorderHint}
           selected={form.accountLabel}
           onSelect={(value) => patch({ accountLabel: value })}
         />
@@ -258,9 +269,12 @@ function CapturePanelComponent({
           <>
             <View style={styles.contextHeaderRow}>
               <Text style={componentStyles.microLabel}>{strings.capture.context}</Text>
+              <Text style={styles.captureReorderHint}>{strings.capture.reorderHint}</Text>
             </View>
             <ContextPicker
-              categories={categoryLabels}
+              categories={orderedCategories}
+              onReorder={reorderCategories}
+              reorderable
               selected={form.context}
               onSelect={(value) => patch({ context: value })}
             />

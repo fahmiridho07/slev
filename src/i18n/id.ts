@@ -54,6 +54,7 @@ export const id: AppStrings = {
     noCategories: "Belum ada kategori pengeluaran aktif. Tambahkan dulu sebelum menyimpan.",
     openSettings: "Buka Pengaturan",
     context: "Konteks",
+    reorderHint: "Tahan untuk atur ulang",
     contextHints: {
       Meal: "Makanan, camilan, makan siang",
       Coffee: "Kopi atau teh",

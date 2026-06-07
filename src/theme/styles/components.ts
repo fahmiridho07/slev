@@ -154,6 +154,18 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     backgroundColor: colors.mint,
     borderColor: colors.green
   },
+  chipDragging: {
+    borderColor: colors.greenDark,
+    opacity: 0.92,
+    shadowColor: colors.ink,
+    shadowOffset: { height: 4, width: 0 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8
+  },
+  chipDropTarget: {
+    backgroundColor: colors.mint,
+    borderColor: colors.greenDark
+  },
   accountChipText: {
     color: colors.muted,
     fontSize: 13,

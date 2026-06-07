@@ -54,6 +54,7 @@ export const en: AppStrings = {
     noCategories: "No expense categories are active. Add one before saving expenses.",
     openSettings: "Open Settings",
     context: "Context",
+    reorderHint: "Hold to rearrange",
     contextHints: {
       Meal: "Food, snacks, lunch",
       Coffee: "Coffee or tea runs",

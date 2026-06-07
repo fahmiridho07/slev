@@ -270,6 +270,7 @@ export type AppStrings = {
     paidFrom: string;
     quickAdd: string;
     receivedIn: string;
+    reorderHint: string;
     removeShortcutA11y: string;
     repeatA11y: string;
     saveAsShortcut: string;

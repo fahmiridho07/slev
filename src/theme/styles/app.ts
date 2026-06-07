@@ -502,6 +502,11 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     justifyContent: "space-between",
     gap: 10
   },
+  captureReorderHint: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "600"
+  },
   addNoteButton: {
     alignItems: "center",
     alignSelf: "flex-start",
