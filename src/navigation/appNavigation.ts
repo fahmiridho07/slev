@@ -1,12 +1,12 @@
 import { BudgetTabKey } from "../features/app.types";
 
-export type AppTabKey = "home" | "memory" | "budget" | "patterns" | "settings";
+export type AppTabKey = "home" | "overview" | "budget" | "patterns" | "settings";
 
 export type AppNavigation = {
   openBudgetPlan: () => void;
   openCapture: () => void;
   openHome: () => void;
-  openMemory: () => void;
+  openOverview: () => void;
   openSettings: () => void;
 };
 

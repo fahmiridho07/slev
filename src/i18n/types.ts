@@ -549,7 +549,7 @@ export type AppStrings = {
     analysis: string;
     budget: string;
     home: string;
-    memory: string;
+    overview: string;
   };
   toasts: {
     account: {

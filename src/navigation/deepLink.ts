@@ -3,7 +3,7 @@ import { AppTabKey } from "./appNavigation";
 
 export type DeepLinkTarget =
   | { tab: "home"; openCapture?: boolean }
-  | { tab: "memory" }
+  | { tab: "overview" }
   | { tab: "budget"; budgetTab?: BudgetTabKey }
   | { tab: "patterns"; patternTab?: PatternTabKey }
   | { tab: "settings"; settingsTab?: SettingsTabKey };
@@ -23,7 +23,9 @@ export function parseDeepLink(url: string): DeepLinkTarget | null {
     }
     return { tab: "home" };
   }
-  if (root === "memory") return { tab: "memory" };
+  if (root === "overview" || root === "memory") {
+    return { tab: "overview" };
+  }
   if (root === "settings") {
     const sub = parts[1]?.toLowerCase() as SettingsTabKey | undefined;
     if (sub && SETTINGS_TABS.has(sub)) {
@@ -50,5 +52,18 @@ export function parseDeepLink(url: string): DeepLinkTarget | null {
 }
 
 export function isAppTabKey(value: string): value is AppTabKey {
-  return value === "home" || value === "memory" || value === "budget" || value === "patterns" || value === "settings";
+  return (
+    value === "home"
+    || value === "overview"
+    || value === "budget"
+    || value === "patterns"
+    || value === "settings"
+  );
+}
+
+export function normalizeStoredTabKey(value: string): AppTabKey | null {
+  if (value === "memory") {
+    return "overview";
+  }
+  return isAppTabKey(value) ? value : null;
 }

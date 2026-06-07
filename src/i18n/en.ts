@@ -4,7 +4,7 @@ import type { AppStrings } from "./types";
 export const en: AppStrings = {
   tabs: {
     home: "Home",
-    memory: "Memory",
+    overview: "Overview",
     budget: "Budget",
     analysis: "Analysis"
   },
@@ -176,7 +176,7 @@ export const en: AppStrings = {
   },
   listHints: {
     memory: {
-      title: "Memory list actions",
+      title: "Activity list actions",
       body: "Tap a moment to edit it in a sheet. Swipe left to delete."
     },
     balance_accounts: {
@@ -313,7 +313,7 @@ export const en: AppStrings = {
     categoryDeleteDefault: "{label} will disappear from capture and budget limits. Existing memories stay saved.",
     categoryDeleteCustom: "{label} will be removed from capture and budget limits. Existing memories stay saved.",
     memoryDeleteTitle: "Delete memory?",
-    memoryDeleteBody: "{title} will be removed from Memory. Budget and analysis totals will update automatically."
+    memoryDeleteBody: "{title} will be removed from Overview. Budget and analysis totals will update automatically."
   },
   toasts: enExtras.toasts,
   analysis: enExtras.analysis,

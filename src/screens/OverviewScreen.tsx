@@ -1,40 +1,39 @@
 import React, { memo, useCallback, useMemo, useState } from "react";
 import { SectionList, StyleProp, Text, TextInput, View, ViewStyle } from "react-native";
+import { HomeMoneyPulse } from "../features/analysis/HomeMoneyPulse";
+import { UpcomingBillsPanel } from "../features/analysis/UpcomingBillsPanel";
 import {
   BottomSheet,
   DeleteConfirmDialog,
   EmptyState,
   ListActionRow,
   ListActionsOnboardingTip,
-  MomentRow,
-  ScreenHero
+  MomentRow
 } from "../components";
 import { useListActionsHint } from "../hooks/useListActionsHint";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
-import { formatCompactRupiah } from "../lib/spendingMemoryPatterns";
 import { MomentEditForm } from "../features/memory/MomentEditForm";
 import { SpendingMoment } from "../features/spendingMemory.types";
 import { buildRepeatHints, filterMoments, getMomentTitle, groupMomentsByRecallRange } from "../lib/analysis";
-import { getMonthStartMs } from "../lib/monthBounds";
 import { hapticSelection } from "../lib/haptics";
 import { AppNavigation } from "../navigation/appNavigation";
-import { useActions, useFinanceSelector } from "../state/useFinance";
+import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../state/useFinance";
 import { useTheme } from "../hooks/useTheme";
 import { formatString } from "../i18n";
 
-type MemoryMomentItemProps = {
+type OverviewMomentItemProps = {
   moment: SpendingMoment;
   onDelete: (moment: SpendingMoment) => void;
   onStartEdit: (moment: SpendingMoment) => void;
   repeatHint?: string;
 };
 
-const MemoryMomentItem = memo(function MemoryMomentItem({
+const OverviewMomentItem = memo(function OverviewMomentItem({
   moment,
   onDelete,
   onStartEdit,
   repeatHint
-}: MemoryMomentItemProps) {
+}: OverviewMomentItemProps) {
   const { strings } = useTheme();
 
   return (
@@ -49,23 +48,43 @@ const MemoryMomentItem = memo(function MemoryMomentItem({
   );
 });
 
-type MemorySection = {
+type OverviewSection = {
   data: SpendingMoment[];
   key: string;
   sectionIndex: number;
   title: string;
 };
 
-type MemoryScreenProps = {
+type OverviewScreenProps = {
   navigation: AppNavigation;
+  onOpenSettings: () => void;
   scrollContentStyle: StyleProp<ViewStyle>;
 };
 
-function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenProps) {
+function OverviewScreenComponent({ navigation, onOpenSettings, scrollContentStyle }: OverviewScreenProps) {
   const { colors, strings, styles } = useTheme();
   const { refreshControl } = usePullToRefresh();
   const actions = useActions();
   const moments = useFinanceSelector((state) => state.moments);
+  const { allocationPlan, hasMonthlyPlan, latestBalanceTotal, monthlySummary, runwayMonths, upcomingBills } =
+    useFinanceDerived(
+      (derived) => ({
+        allocationPlan: derived.allocationPlan,
+        hasMonthlyPlan: derived.hasMonthlyPlan,
+        latestBalanceTotal: derived.latestBalanceTotal,
+        monthlySummary: derived.monthlySummary,
+        runwayMonths: derived.runwayMonths,
+        upcomingBills: derived.upcomingBills
+      }),
+      shallowEqual
+    );
+  const { monthlyPlan, savingsGoals } = useFinanceSelector(
+    (state) => ({
+      monthlyPlan: state.monthlyPlan,
+      savingsGoals: state.savingsGoals
+    }),
+    shallowEqual
+  );
 
   const [editingMoment, setEditingMoment] = useState<SpendingMoment | null>(null);
   const [query, setQuery] = useState("");
@@ -74,19 +93,7 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
 
   const repeatHints = useMemo(() => buildRepeatHints(moments), [moments]);
   const filteredMoments = useMemo(() => filterMoments(moments, query), [moments, query]);
-  const monthStart = useMemo(() => getMonthStartMs(), []);
-  const thisMonthCount = useMemo(
-    () => moments.filter((moment) => Date.parse(moment.occurredAt) >= monthStart).length,
-    [moments, monthStart]
-  );
-  const thisMonthExpense = useMemo(
-    () =>
-      moments
-        .filter((moment) => moment.type === "expense" && Date.parse(moment.occurredAt) >= monthStart)
-        .reduce((sum, moment) => sum + moment.amount, 0),
-    [moments, monthStart]
-  );
-  const sections = useMemo<MemorySection[]>(
+  const sections = useMemo<OverviewSection[]>(
     () =>
       groupMomentsByRecallRange(filteredMoments).map((group, sectionIndex) => ({
         key: group.key,
@@ -107,7 +114,7 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
   const handleSaved = useCallback(() => setEditingMoment(null), []);
 
   const renderItem = useCallback(
-    ({ item, index, section }: { item: SpendingMoment; index: number; section: MemorySection }) => (
+    ({ item, index, section }: { item: SpendingMoment; index: number; section: OverviewSection }) => (
       <View
         style={[
           styles.listPanel,
@@ -115,7 +122,7 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
           index < section.data.length - 1 && styles.listPanelMiddle
         ]}
       >
-        <MemoryMomentItem
+        <OverviewMomentItem
           moment={item}
           onDelete={setPendingDeleteMoment}
           onStartEdit={startEditing}
@@ -129,7 +136,7 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
   const keyExtractor = useCallback((item: SpendingMoment) => item.id, []);
 
   const renderSectionHeader = useCallback(
-    ({ section }: { section: MemorySection }) => {
+    ({ section }: { section: OverviewSection }) => {
       return (
         <View style={[styles.memoryGroup, section.sectionIndex > 0 && styles.memorySectionLead]}>
           <Text style={styles.groupTitle}>{section.title}</Text>
@@ -141,19 +148,22 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
 
   const listHeader = useMemo(
     () => (
-      <>
-        <ScreenHero
-          hint={
-            moments.length > 0
-              ? formatString(strings.memory.heroHintWithCount, { count: thisMonthCount })
-              : strings.memory.heroHintEmpty
-          }
-          kicker={strings.memory.heroKicker}
-          value={thisMonthExpense > 0 ? formatCompactRupiah(thisMonthExpense) : undefined}
-          valueTone="danger"
-          variant="surface"
+      <View style={styles.cardStack}>
+        <HomeMoneyPulse
+          dailyFlexibleRoom={allocationPlan.dailyFlexibleRoom}
+          hasMonthlyPlan={hasMonthlyPlan}
+          latestBalanceTotal={latestBalanceTotal}
+          monthlyPlan={monthlyPlan}
+          monthlySummary={monthlySummary}
+          onOpenBudgetPlan={navigation.openBudgetPlan}
+          runwayMonths={runwayMonths}
+          savingsGoals={savingsGoals}
         />
-        <View style={styles.cardStack}>
+        <UpcomingBillsPanel
+          onLogPayment={(billId) => void actions.logRecurringBillPayment(billId)}
+          onOpenSettings={onOpenSettings}
+          upcomingBills={upcomingBills}
+        />
         {showListHint && (
           <ListActionsOnboardingTip
             body={strings.listHints.memory.body}
@@ -171,21 +181,29 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
             value={query}
           />
         )}
-        </View>
-      </>
+      </View>
     ),
     [
-      dismissListHint,
-      moments.length,
-      query,
-      showListHint,
+      actions,
+      allocationPlan.dailyFlexibleRoom,
       colors.muted,
+      dismissListHint,
+      hasMonthlyPlan,
+      latestBalanceTotal,
+      monthlyPlan,
+      monthlySummary,
+      moments.length,
+      navigation.openBudgetPlan,
+      onOpenSettings,
+      query,
+      runwayMonths,
+      savingsGoals,
+      showListHint,
       strings.listHints.memory,
       strings.memory,
       styles.cardStack,
       styles.input,
-      thisMonthCount,
-      thisMonthExpense
+      upcomingBills
     ]
   );
 
@@ -257,4 +275,4 @@ function MemoryScreenComponent({ navigation, scrollContentStyle }: MemoryScreenP
   );
 }
 
-export const MemoryScreen = memo(MemoryScreenComponent);
+export const OverviewScreen = memo(OverviewScreenComponent);

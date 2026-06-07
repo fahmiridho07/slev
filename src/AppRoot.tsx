@@ -20,10 +20,10 @@ import { useLayoutInsets } from "./hooks/useLayoutInsets";
 import { useTheme } from "./hooks/useTheme";
 import { BudgetTabKey, PatternTabKey, SettingsTabKey } from "./features/app.types";
 import { hapticSelection } from "./lib/haptics";
-import { isAppTabKey, parseDeepLink } from "./navigation/deepLink";
+import { normalizeStoredTabKey, parseDeepLink } from "./navigation/deepLink";
 import { AppNavigation, AppTabKey } from "./navigation/appNavigation";
 import { getNavStatePreference, setNavStatePreference } from "./services/uiPreferences";
-import { BudgetScreen, HomeScreen, MemoryScreen, PatternsScreen, SettingsScreen } from "./screens";
+import { BudgetScreen, HomeScreen, OverviewScreen, PatternsScreen, SettingsScreen } from "./screens";
 import { initialFinanceState } from "./state/financeReducer";
 import { shallowEqual, useActions, useFinanceSelector } from "./state/useFinance";
 
@@ -35,7 +35,7 @@ function tabPaneStyle(visible: boolean): StyleProp<ViewStyle> {
 
 const tabIcons: Record<AppTabKey, keyof typeof Ionicons.glyphMap> = {
   home: "home-outline",
-  memory: "albums-outline",
+  overview: "reader-outline",
   budget: "wallet-outline",
   patterns: "analytics-outline",
   settings: "settings-outline"
@@ -74,7 +74,7 @@ export function AppRoot() {
 
   const tabs: { key: AppTabKey; label: string }[] = [
     { key: "home", label: strings.tabs.home },
-    { key: "memory", label: strings.tabs.memory },
+    { key: "overview", label: strings.tabs.overview },
     { key: "budget", label: strings.tabs.budget },
     { key: "patterns", label: strings.tabs.analysis }
   ];
@@ -134,7 +134,7 @@ export function AppRoot() {
       setCaptureFocusRequest((current) => current + 1);
     },
     openHome: () => setActiveTab("home"),
-    openMemory: () => setActiveTab("memory"),
+    openOverview: () => setActiveTab("overview"),
     openSettings
   };
 
@@ -142,14 +142,15 @@ export function AppRoot() {
     let active = true;
     void (async () => {
       const stored = await getNavStatePreference();
-      if (!active || !stored || !isAppTabKey(stored.activeTab) || stored.activeTab === "settings") {
+      const restoredTab = stored ? normalizeStoredTabKey(stored.activeTab) : null;
+      if (!active || !stored || !restoredTab || restoredTab === "settings") {
         if (active) {
           setNavHydrated(true);
         }
         return;
       }
 
-      setActiveTab(stored.activeTab);
+      setActiveTab(restoredTab);
       setBudgetTab(stored.budgetTab);
       setPatternTab(stored.patternTab);
       setSettingsTab(stored.settingsTab);
@@ -289,13 +290,16 @@ export function AppRoot() {
                 <View style={tabPaneStyle(activeTab === "home")}>
                   <HomeScreen
                     captureFocusRequest={captureFocusRequest}
-                    navigation={navigation}
                     onOpenSettings={openSettings}
                     scrollContentStyle={scrollContentStyle}
                   />
                 </View>
-                <View style={tabPaneStyle(activeTab === "memory")}>
-                  <MemoryScreen navigation={navigation} scrollContentStyle={scrollContentStyle} />
+                <View style={tabPaneStyle(activeTab === "overview")}>
+                  <OverviewScreen
+                    navigation={navigation}
+                    onOpenSettings={openSettings}
+                    scrollContentStyle={scrollContentStyle}
+                  />
                 </View>
                 <View style={tabPaneStyle(activeTab === "budget")}>
                   <BudgetScreen

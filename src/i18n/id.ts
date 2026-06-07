@@ -4,7 +4,7 @@ import type { AppStrings } from "./types";
 export const id: AppStrings = {
   tabs: {
     home: "Beranda",
-    memory: "Memori",
+    overview: "Ringkasan",
     budget: "Anggaran",
     analysis: "Analisis"
   },
@@ -176,7 +176,7 @@ export const id: AppStrings = {
   },
   listHints: {
     memory: {
-      title: "Aksi daftar memori",
+      title: "Aksi daftar aktivitas",
       body: "Ketuk momen untuk mengedit di lembar bawah. Geser kiri untuk menghapus."
     },
     balance_accounts: {
@@ -313,7 +313,7 @@ export const id: AppStrings = {
     categoryDeleteDefault: "{label} akan hilang dari pencatatan dan batas anggaran. Memori yang ada tetap tersimpan.",
     categoryDeleteCustom: "{label} akan dihapus dari pencatatan dan batas anggaran. Memori yang ada tetap tersimpan.",
     memoryDeleteTitle: "Hapus memori?",
-    memoryDeleteBody: "{title} akan dihapus dari Memori. Total anggaran dan analisis diperbarui otomatis."
+    memoryDeleteBody: "{title} akan dihapus dari Ringkasan. Total anggaran dan analisis diperbarui otomatis."
   },
   toasts: idExtras.toasts,
   analysis: idExtras.analysis,
