@@ -1,87 +1,105 @@
 # Slev
 
-Slev is a calm manual finance companion.
+**A calm, manual finance companion — local-first, permission-light.**
 
-It is not an accounting app, bank-sync product, or notification-parsing pipeline. The current loop is intentionally manual: save money moments quickly, plan the month lightly, and review patterns without handing the app sensitive phone permissions.
+Log expenses, income, and transfers in seconds. See what’s safe to spend today, review your activity, and keep everything on your device. No bank sync, no notification scraping, no spreadsheet pressure.
 
-## Current Build Includes
+<p align="center">
+  <img src="assets/brand/slev-mark-transparent.png" alt="Slev" width="72" />
+</p>
 
-- Expo + React Native + TypeScript app.
-- Local-only finance memory stored with AsyncStorage.
-- One-time migration from confirmed legacy transactions into spending memory.
-- Capture-first Home screen with expense, income, and transfer entry; amount-only required input.
-- Expense and income entries can be tied to a local account or wallet for pocket-level analysis.
-- Brand-style account badges for common banks and wallets without bundling trademarked logo files.
-- Manual shortcuts for recurring entries and a last-saved undo/edit flow.
-- Practical default context tags plus custom expense categories.
-- Memory timeline with recall grouping, search, compact edit, and delete actions.
-- Money plan area with monthly allocation, soft limits, fixed/flexible category modes, monthly plan, savings goals, and account balance snapshots.
-- Low-density Analysis screen with rule-based recap, category breakdown, account distribution, account reconciliation, weekly cashflow, and trend views.
-- Optional weekly recap responses: Keep, Less often, Not sure.
-- Privacy-first Settings with local category CRUD, no notification listener, no bank access, and no sync required.
+---
 
-## Product Direction
+## What Slev is
 
-The sticky behavior is:
+| | |
+|---|---|
+| **For** | Quick money memory — capture now, understand later |
+| **Storage** | Everything stays on your phone (AsyncStorage) |
+| **Style** | Calm copy, low density, no scores or guilt |
 
-> I can manually understand and adjust my money without maintaining a heavy finance system.
+## What Slev is not
 
-Slev should stay:
+Not an accounting app, bank connector, or auto-import tool. You type what matters; Slev helps you notice patterns without asking for sensitive permissions.
 
-- Calm.
-- Local-first.
-- Permission-light.
-- Low-friction.
-- Useful without complete tracking or passive capture.
-- Free of shame, guilt, scoring, or productivity pressure.
+---
 
-## Run Locally
+## Screens at a glance
 
-Install dependencies first:
+### Home — capture & safe to spend
+
+- **Safe to spend today** — set your balance once; Slev subtracts logged activity and recurring bills, then spreads what’s left across the rest of the month.
+- **Quick capture** — expense, income, or transfer; amount is the only required field.
+- Shortcuts, repeat chips, and undo for the last save.
+
+### Money — activity & trends
+
+- Timeline grouped by *Today*, *Yesterday*, *This week*, *Earlier* — search, edit, swipe to delete.
+- Monthly **cashflow**, **spending by category**, and **income by source**.
+- Optional spending trends when enough history exists.
+
+### Settings
+
+| Tab | Purpose |
+|-----|---------|
+| **Accounts** | Banks, wallets, cash — income hub & pocket labels |
+| **Categories** | Expense categories for capture |
+| **Bills** | Recurring monthly bills (feeds safe-to-spend reserve) |
+| **Appearance** | Theme, language (EN / ID), reduced motion |
+| **Data** | Export / import JSON backup, health checks, clear memory |
+
+---
+
+## Tech stack
+
+- **Expo 54** + **React Native** + **TypeScript**
+- Local persistence via `@react-native-async-storage/async-storage`
+- English & Bahasa Indonesia UI
+
+---
+
+## Get started
+
+**Requirements:** Node.js 18+, npm, and [Expo tooling](https://docs.expo.dev/get-started/installation/) for device builds.
 
 ```bash
+git clone https://github.com/fahmiridho07/financial_tracker.git
+cd financial_tracker
 npm install
-```
-
-Start the app:
-
-```bash
 npm run start
 ```
 
-Run on Android:
+| Command | What it does |
+|---------|----------------|
+| `npm run start` | Expo dev server |
+| `npm run android` | Run on Android |
+| `npm run ios` | Run on iOS |
+| `npm run check` | Typecheck + lint + finance tests |
 
-```bash
-npm run android
-```
+---
 
-Run validation:
+## Privacy
 
-```bash
-npm run typecheck
-npm run test:finance
-```
+- No cloud account required for core use.
+- No bank credentials or notification listener.
+- Backup is a JSON file you export and keep yourself.
 
-If `npm` is not available in the shell but dependencies are installed, the same checks can be run with:
+---
 
-```powershell
-.\node_modules\.bin\tsc.cmd --noEmit
-.\node_modules\.bin\tsc.cmd -p tsconfig.test.json
-node .tmp-tests\tests\financeEngine.test.js
-```
+## Product principles
 
-## Manual-Only Direction
+Slev should stay **calm**, **local-first**, **permission-light**, and **useful without perfect tracking**. Before adding passive capture or sync, it should pass:
 
-The native notification listener module has been removed from the build and from the repository. Slev should stay manual-first unless a future feature can prove it reduces cognitive load without asking for sensitive phone access.
+> Does this reduce cognitive load without turning Slev into a finance system to maintain?
 
-Before reintroducing any passive capture or sync feature, it should pass this product test:
-
-> Does this reduce cognitive load without making Slev feel like a finance system to maintain?
+---
 
 ## Documentation
 
-Start here:
+Deeper product and storage notes: [`docs/project-specification.md`](docs/project-specification.md)
 
-```txt
-docs/project-specification.md
-```
+---
+
+## License
+
+Private project — see repository owner for usage terms.
