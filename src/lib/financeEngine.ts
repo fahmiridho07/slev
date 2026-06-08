@@ -45,7 +45,12 @@ export function getDaysRemainingInMonth(date: Date): number {
   return Math.max(1, daysInMonth - currentDay + 1);
 }
 
-export function getDaysUntilNextPayday(date: Date, paydayDayOfMonth: number): number {
+/**
+ * Returns the next payday date strictly after `date` (start-of-day). If the payday day
+ * has already occurred this month (or is today), rolls to next month. Clamps to month
+ * length so e.g. day 31 maps to Feb 28/29.
+ */
+export function getNextPaydayDate(date: Date, paydayDayOfMonth: number): Date {
   const day = Math.min(Math.max(Math.round(paydayDayOfMonth), 1), 31);
   const startOfToday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const paydayInMonth = (year: number, monthIndex: number): Date => {
@@ -56,7 +61,32 @@ export function getDaysUntilNextPayday(date: Date, paydayDayOfMonth: number): nu
   if (next.getTime() <= startOfToday.getTime()) {
     next = paydayInMonth(startOfToday.getFullYear(), startOfToday.getMonth() + 1);
   }
+  return next;
+}
+
+export function getDaysUntilNextPayday(date: Date, paydayDayOfMonth: number): number {
+  const startOfToday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const next = getNextPaydayDate(date, paydayDayOfMonth);
   const msPerDay = 24 * 60 * 60 * 1000;
   const days = Math.round((next.getTime() - startOfToday.getTime()) / msPerDay);
   return Math.max(1, days);
+}
+
+/**
+ * Returns the next calendar date on or after `date` (start-of-day) whose day-of-month
+ * equals `dayOfMonth`. Unlike getNextPaydayDate, a match that falls on today is returned
+ * as-is (a bill due today is still upcoming). Clamps to month length.
+ */
+export function getNextOccurrenceOfDay(date: Date, dayOfMonth: number): Date {
+  const day = Math.min(Math.max(Math.round(dayOfMonth), 1), 31);
+  const startOfToday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const dayInMonth = (year: number, monthIndex: number): Date => {
+    const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+    return new Date(year, monthIndex, Math.min(day, lastDay));
+  };
+  let next = dayInMonth(startOfToday.getFullYear(), startOfToday.getMonth());
+  if (next.getTime() < startOfToday.getTime()) {
+    next = dayInMonth(startOfToday.getFullYear(), startOfToday.getMonth() + 1);
+  }
+  return next;
 }

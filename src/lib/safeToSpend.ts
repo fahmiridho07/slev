@@ -2,7 +2,7 @@ import { MoneyAccount, MoneyTransfer, RecurringBill, SpendingMoment } from "../f
 import { getTrackedTotalBalance } from "./accountLedger";
 import { safeTime } from "./dateRanges";
 import { getDaysRemainingInMonth, getDaysUntilNextPayday } from "./financeEngine";
-import { getMonthlyBillsTotal } from "./recurringBills";
+import { getBillsReserve } from "./recurringBills";
 
 export type SafeToSpendPace = "under" | "over" | "even" | "unknown";
 
@@ -109,10 +109,12 @@ export function getTypicalDailySpend(
 }
 
 /**
- * Safe-to-spend subtracts active recurring bills as a flat monthly reserve, then spreads
- * what remains across days left in the month. {@link getEffectiveBalance} skips
- * {@link RESERVED_BILL_CONTEXT} expenses so logging a bill payment does not double-count
- * against the reserve. Other expense contexts still reduce effective balance normally.
+ * Safe-to-spend subtracts upcoming recurring bills (those due within the current horizon —
+ * today through the next payday, or month-end when no payday is set) as a reserve, then
+ * spreads what remains across the days left in that horizon. Bills with no due day are
+ * reserved in full, matching the previous flat-monthly behavior. {@link getEffectiveBalance}
+ * still skips {@link RESERVED_BILL_CONTEXT} expenses so logging a bill payment does not
+ * double-count against the reserve; other expense contexts reduce effective balance normally.
  */
 export function buildSafeToSpend({
   accounts,
@@ -132,7 +134,7 @@ export function buildSafeToSpend({
   paydayDayOfMonth?: number;
 }): SafeToSpendResult {
   const effectiveBalance = getEffectiveBalance({ accounts, moments, transfers, referenceDate });
-  const billsReserve = getMonthlyBillsTotal(bills);
+  const billsReserve = getBillsReserve(bills, referenceDate, paydayDayOfMonth);
   const spendableBalance = effectiveBalance - billsReserve;
   const daysLeft =
     paydayDayOfMonth != null
