@@ -110,10 +110,6 @@ export const en: AppStrings = {
     label: "Appearance",
     light: "Light",
     dark: "Dark",
-    planningLabel: "Planning & budgeting",
-    planningHelper: "Turning this off hides budget tools. Your plans, limits, and balances stay saved.",
-    planningOff: "Off",
-    planningOn: "On",
     reduceMotionLabel: "Motion",
     reduceMotionOff: "Full",
     reduceMotionOn: "Reduce",
@@ -208,19 +204,6 @@ export const en: AppStrings = {
     }
   },
   home: {
-    pulse: {
-      safeToSpendToday: "Safe to spend today",
-      setMonthlyPlan: "Set a monthly plan",
-      setMonthlyPlanA11y: "Set a monthly plan",
-      setMonthlyPlanHint: "Set a monthly plan to see this",
-      netLeft: "Net left this month",
-      spending: "Spending",
-      estBalance: "Est. balance",
-      runwayMonths: "~{count} months of runway",
-      runwayHint: "Add a few expenses to estimate runway",
-      savedTowardGoals: "Saved toward goals: {saved} of {target}",
-      monthlySavingsTarget: "Monthly savings target: {amount}"
-    },
     safeToSpend: {
       billsReserve: "Set aside for bills: {amount}",
       setBalancePrompt: "What's your balance right now?",
@@ -240,19 +223,6 @@ export const en: AppStrings = {
       purchasePlaceholder: "Purchase amount",
       affordable: "Yes. After this, your safe daily spend is {amount} until payday.",
       notAffordable: "Not quite safe — this would eat into your daily allowance. Short by {amount}."
-    },
-    bills: {
-      comingUp: "Coming up",
-      empty: "No bills due in the next two weeks. Recurring bills can be added in Settings.",
-      emptyAction: "Add recurring bills",
-      horizonWindow: "Next 14 days",
-      horizonSingle: "{amount} · {due}",
-      horizonMultiple: "{amount} · {count} bills",
-      dueToday: "due today",
-      dueTomorrow: "due tomorrow",
-      dueInDays: "due in {count} days",
-      logPayment: "Log payment",
-      logPaymentA11y: "Log payment for {label}, {amount}, {due}"
     }
   },
   activity: {
@@ -278,32 +248,6 @@ export const en: AppStrings = {
     ...enExtras.memory
   },
   budget: {
-    tabs: {
-      plan: "Plan",
-      balance: "Balance",
-      goals: "Goals"
-    },
-    hero: {
-      balanceHint: "From snapshots plus logged movements",
-      balanceKicker: "Estimated balance",
-      goalsHint: "{count} goal(s) in progress",
-      goalsKicker: "Saved toward goals",
-      goalsEmptyHint: "Add a target when you are ready",
-      goalsEmptyKicker: "Savings goals",
-      flexibleSpent: "{amount} flexible spent this month",
-      flexibleRemaining: "Flexible remaining",
-      noPlanAction: "Start with monthly plan",
-      noPlanHint: "Expected income, fixed costs, and savings target",
-      noPlanKicker: "Monthly plan"
-    },
-    plan: {
-      allocationDetails: "Allocation details",
-      categoryLimitsOptional: "Category limits (optional)",
-      expandAllocationA11y: "Show allocation details",
-      collapseAllocationA11y: "Hide allocation details",
-      expandLimitsA11y: "Show category limits",
-      collapseLimitsA11y: "Hide category limits"
-    },
     ...enExtras.budget
   },
   patterns: {

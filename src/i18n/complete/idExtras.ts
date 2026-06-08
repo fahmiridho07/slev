@@ -49,33 +49,14 @@ export const idExtras: AppStringsExtras = {
       saved: "Kategori {label} tersimpan.",
       removed: "Kategori {label} dihapus."
     },
-    limit: {
-      needAmount: "Masukkan jumlah untuk menyimpan batas ini.",
-      savedWeek: "Batas {category} tersimpan untuk minggu ini.",
-      savedMonth: "Batas {category} tersimpan untuk bulan ini.",
-      removed: "Batas {category} dihapus.",
-      markedAs: "{category} ditandai sebagai {mode}."
-    },
-    plan: {
-      needFields: "Masukkan pendapatan yang diharapkan untuk menyimpan rencana ini.",
-      saved: "Rencana bulanan tersimpan."
-    },
-    goal: {
-      needFields: "Tambahkan nama target dan jumlah target.",
-      saved: "Target tabungan tersimpan.",
-      removed: "Target tabungan dihapus."
-    },
     bill: {
       needFields: "Tambahkan nama dan jumlah tagihan.",
-      invalidDay: "Pilih tanggal bulan antara 1 dan 31.",
       saved: "Tagihan rutin tersimpan.",
-      removed: "Tagihan rutin dihapus.",
-      unavailable: "Tagihan rutin itu tidak tersedia lagi.",
-      logged: "{amount} tercatat untuk {label}."
+      removed: "Tagihan rutin dihapus."
     },
     balance: {
       needFields: "Tambahkan nama akun dan jumlah saldo.",
-      saved: "Snapshot saldo tersimpan."
+      saved: "Saldo tersimpan."
     },
     backup: {
       ready: "Cadangan siap dibagikan atau disimpan.",
@@ -104,101 +85,6 @@ export const idExtras: AppStringsExtras = {
     }
   },
   analysis: {
-    allocation: {
-      action: {
-        setPlan: {
-          title: "Atur amplop bulanan",
-          detail:
-            "Tambahkan pemasukan yang diharapkan, biaya tetap, pengeluaran fleksibel, dan target tabungan untuk bulan ini."
-        },
-        snapshotBalances: {
-          title: "Snapshot saldo dulu",
-          detail:
-            "Tambahkan snapshot cepat untuk BRI, Jago, dompet, dan tunai agar pendanaan saku bisa dicek."
-        },
-        planExceedsIncome: {
-          title: "Rencana di atas pemasukan",
-          detail:
-            "Rencana {amount} di atas pemasukan yang diharapkan. Kurangi satu alokasi atau naikkan pemasukan hanya jika realistis."
-        },
-        flexibleOverPlan: {
-          title: "Anggaran fleksibel sudah terlampaui",
-          detail:
-            "Pengeluaran fleksibel {amount} di atas amplop bulanan. Anggap sisa bulan sebagai periode pengeluaran lebih pelan."
-        },
-        topUpPockets: {
-          title: "Top-up saku terlihat",
-          detail:
-            "Memindahkan hingga {amount} dari hub pemasukan akan mendanai sisa anggaran fleksibel. Snapshot hub menunjukkan {hubBalance}."
-        },
-        hold: {
-          title: "Alokasi stabil",
-          detail:
-            "Saldo saku saat ini menutupi sisa pengeluaran fleksibel. Terus catat seperti biasa dan perbarui snapshot saat saldo berubah."
-        }
-      },
-      row: {
-        incomeTitle: "Pemasukan diterima",
-        incomeNoPlan: "Belum ada pemasukan yang diharapkan untuk bulan ini.",
-        incomeRemaining: "{amount} pemasukan yang diharapkan belum tercatat.",
-        incomeAbovePlan: "Pemasukan {amount} di atas rencana.",
-        fixedTitle: "Biaya tetap",
-        fixedNoPlan: "Belum ada amplop biaya tetap.",
-        fixedRemaining: "Sisa ruang biaya tetap {amount}.",
-        fixedAbovePlan: "Biaya tetap {amount} di atas rencana.",
-        flexibleTitle: "Pengeluaran fleksibel",
-        flexibleNoPlan: "Belum ada amplop pengeluaran fleksibel.",
-        flexibleRemaining: "Sisa pengeluaran fleksibel {amount}.",
-        flexibleAbovePlan: "Pengeluaran fleksibel {amount} di atas rencana.",
-        savingsTitle: "Target tabungan",
-        savingsNoPlan: "Belum ada target tabungan.",
-        savingsStillNeeded: "Masih butuh {amount} untuk mencapai target tabungan.",
-        savingsAboveTarget: "Sisa bersih {amount} di atas target."
-      }
-    },
-    reconciliation: {
-      summary: {
-        noSnapshot: {
-          title: "Belum ada pengecekan saldo",
-          detail:
-            "Tambahkan snapshot saldo dulu. Rekonsiliasi berguna setelah dua snapshot untuk akun yang sama."
-        },
-        needsReview: {
-          title: "Beberapa saldo perlu ditinjau",
-          detail: "{count} akun perlu dicek. Total selisih terlihat {totalGap}."
-        },
-        smallGap: {
-          title: "Selisih saldo kecil terlihat",
-          detail:
-            "{count} akun punya selisih kecil. Bisa jadi biaya, pembulatan, atau satu entri yang hilang."
-        },
-        needsHistory: {
-          title: "Satu snapshot lagi akan membuka pengecekan",
-          detail:
-            "Minimal satu akun hanya punya satu snapshot. Tambahkan snapshot berikutnya untuk membandingkan pergerakan tercatat."
-        },
-        matched: {
-          title: "Pergerakan tercatat cocok dengan saldo",
-          detail: "Snapshot terbaru cocok dengan pergerakan yang tercatat antar pengecekan saldo."
-        }
-      },
-      status: {
-        noSnapshot: "Tanpa snapshot",
-        needsHistory: "Butuh 2 snapshot",
-        matched: "Cocok"
-      },
-      detail: {
-        noSnapshot: "Tambahkan snapshot saldo manual untuk akun ini.",
-        needsHistory:
-          "Tambahkan satu snapshot lagi nanti; Slev akan membandingkan pergerakan antara kedua pengecekan.",
-        movement:
-          "Pergerakan tercatat selama {days} hari: pemasukan {income}, pengeluaran {expense}, transfer masuk {transferIn}, transfer keluar {transferOut}.",
-        higherThanExpected:
-          "Saldo aktual {gap} lebih tinggi dari perkiraan. Periksa pemasukan hilang, transfer masuk, atau pengeluaran berlebih.",
-        lowerThanExpected:
-          "Saldo aktual {gap} lebih rendah dari perkiraan. Periksa pengeluaran hilang, transfer keluar, atau salah ketik saldo."
-      }
-    },
     accounts: {
       unassigned: "Belum ditetapkan"
     },
@@ -212,13 +98,8 @@ export const idExtras: AppStringsExtras = {
       slev_pattern_feedback: "Umpan balik pola",
       slev_accounts: "Akun",
       slev_transfers: "Transfer",
-      slev_budget_limits: "Batas anggaran",
-      slev_monthly_plans: "Rencana bulanan",
       slev_manual_templates: "Pintasan",
-      slev_category_modes: "Mode kategori",
-      slev_savings_goals: "Target tabungan",
       slev_recurring_bills: "Tagihan rutin",
-      slev_balance_snapshots: "Snapshot saldo",
       slev_balance_anchor: "Saldo aman dibelanjakan",
       slev_expense_categories: "Kategori pengeluaran"
     },
@@ -231,21 +112,6 @@ export const idExtras: AppStringsExtras = {
   },
   budget: {
     balance: {
-      estimatedCurrentBalance: "Estimasi saldo saat ini",
-      estimatedCurrentBalanceCopy:
-        "{total} dari snapshot ditambah pemasukan, pengeluaran, dan transfer tercatat.",
-      trackedEphemeralCopy:
-        "Tercatat {tracked} yang direkonsiliasi · Sementara {ephemeral} perkiraan.",
-      worthQuickLook: "Layak dicek sebentar",
-      driftCopy:
-        "Saldo ini menyimpang dari yang Anda catat. Tidak buru-buru — rekonsiliasi saat ada waktu.",
-      driftRow: "{label}: selisih {difference}",
-      manualSnapshotBase: "Basis snapshot manual",
-      manualSnapshotCopy: "{total} dari snapshot tersimpan terbaru.",
-      balanceSnapshot: "Snapshot saldo",
-      currentBalancePlaceholder: "Saldo saat ini",
-      saveSnapshotA11y: "Simpan snapshot saldo",
-      saveSnapshot: "Simpan snapshot",
       editAccount: "Edit akun",
       addAccount: "Tambah akun atau dompet",
       accountPlaceholder: "BRI, Jago, GoPay, Tunai...",
@@ -261,84 +127,12 @@ export const idExtras: AppStringsExtras = {
         "Sementara = sumber pembayaran yang tidak direkonsiliasi ketat (e-wallet kecil).",
       saveAccount: "Simpan akun",
       yourAccounts: "Akun Anda",
-      emptyAccounts:
-        "Pemasukan, pengeluaran, transfer, atau snapshot akan membangun saldo akun di sini.",
-      currentAccountBalances: "Saldo akun saat ini",
-      estimatedFromSnapshot: "Diestimasi dari snapshot terbaru dan pergerakan tercatat.",
       incomeHubMeta: "Hub pemasukan",
       ephemeralPocketMeta: "Saku sementara",
-      noActivity: "Belum ada aktivitas",
       editAccountA11y: "Edit akun {label}",
       deleteAccountTitle: "Hapus akun?",
       deleteAccountBody:
         "{label} akan dihapus dari pemilih akun. Memori yang ada tetap tersimpan."
-    },
-    goals: {
-      editGoal: "Edit target tabungan",
-      newGoal: "Target tabungan baru",
-      goalNameA11y: "Nama target",
-      goalNamePlaceholder: "Nama target",
-      targetAmountA11y: "Jumlah target",
-      targetAmountPlaceholder: "Jumlah target",
-      savedSoFarA11y: "Sudah disimpan",
-      savedSoFarPlaceholder: "Sudah disimpan",
-      emptyGoals:
-        "Target tabungan bisa sederhana: target, jumlah saat ini, dan catatan singkat.",
-      emptyGoalsAction: "Gunakan formulir di atas untuk menambah target pertama",
-      editGoalA11y: "Edit target {label}",
-      deleteGoalTitle: "Hapus target?",
-      deleteGoalBody:
-        "{label} akan dihapus dari target Anda. Ini tidak mengubah memori atau saldo tersimpan."
-    },
-    limits: {
-      emptyNoCategories:
-        "Belum ada kategori pengeluaran aktif, jadi batas anggaran tidak punya tempat melekat.",
-      openSettings: "Buka Pengaturan",
-      setLimit: "Atur",
-      editLimitA11y: "{action} batas untuk {category}",
-      spentOfLimit: "{spent} dari {limit} {period}",
-      noLimitSpent: "Belum ada batas - {spent} bulan ini",
-      fixed: "Tetap",
-      flexible: "Fleksibel",
-      limitAmountPlaceholder: "Jumlah batas",
-      limitAmountA11y: "Jumlah batas untuk {category}",
-      weekly: "Mingguan",
-      monthly: "Bulanan",
-      deleteLimit: "Hapus batas"
-    },
-    monthlyPlan: {
-      title: "Rencana pengeluaran bulanan",
-      wizardTitle: "Atur rencana bulanan Anda",
-      wizardStep: "Langkah {current} dari {total}",
-      wizardNext: "Lanjut",
-      wizardBack: "Kembali",
-      wizardFinish: "Simpan rencana",
-      stepIncomeCopy: "Mulai dari perkiraan pemasukan bulan ini.",
-      stepFixedCopy: "Tambahkan sewa, langganan, dan biaya wajib lainnya.",
-      stepSavingsCopy: "Tetapkan target tabungan, catatan opsional, lalu simpan.",
-      expectedIncome: "Pemasukan yang diharapkan",
-      useLoggedIncome: "Pakai pemasukan tercatat ({amount})",
-      fixedCosts: "Biaya tetap",
-      savingsTarget: "Target tabungan",
-      notePlaceholder: "Satu penyesuaian untuk bulan ini, opsional",
-      flexibleBudget: "Anggaran fleksibel",
-      flexibleRemaining: "Sisa fleksibel",
-      overIncomeBy: "Di atas pemasukan sebesar",
-      savePlan: "Simpan rencana"
-    },
-    allocation: {
-      setPlanEmpty: "Buat rencana bulanan untuk melihat alokasi Anda.",
-      income: "Pemasukan",
-      ofPlanned: "dari {planned}",
-      dailyRoom: "Ruang harian",
-      flexibleUntilMonthEnd: "fleksibel hingga akhir bulan",
-      pocketCash: "Tunai saku",
-      dayCoverage: "cakupan {count} hari",
-      netLeft: "Sisa bersih",
-      againstTarget: "terhadap target",
-      monthlyAllocation: "Alokasi bulanan",
-      estimatedFromLogs: "Diestimasi dari catatan Anda. Tambahkan snapshot untuk kalibrasi.",
-      openBalance: "Buka Saldo"
     }
   },
   patterns: {
@@ -361,7 +155,6 @@ export const idExtras: AppStringsExtras = {
       drilldownTitle: "{category} · {month}",
       drilldownSummary: "{count} entri · {total}",
       drilldownEmpty: "Tidak ada entri di bulan ini",
-      budgetProgressA11y: "Anggaran {label} terpakai {percent}%",
       categoryNewThisMonth: "Baru bulan ini",
       categoryDeltaUp: "+{percent}%",
       categoryDeltaDown: "-{percent}%",
@@ -373,9 +166,6 @@ export const idExtras: AppStringsExtras = {
       advancedTrends: "Tren lanjutan",
       expandAdvancedTrends: "Tampilkan tren lanjutan",
       collapseAdvancedTrends: "Sembunyikan tren lanjutan",
-      netWorthTrend: "Tren kekayaan bersih",
-      snapshotForNetWorth: "Snapshot saldo untuk melihat tren kekayaan bersih.",
-      snapshotAction: "Buka saldo",
       spendingTrend: "Tren pengeluaran",
       currentPaceTitle: "Ritme bulan ini terlihat",
       weeklyCashflow: "Arus kas mingguan",
@@ -387,28 +177,6 @@ export const idExtras: AppStringsExtras = {
       net: "Bersih {amount}",
       income: "Pemasukan",
       expense: "Pengeluaran"
-    },
-    accounts: {
-      intro: "Lihat di mana uang berada dan apakah saldo cocok dengan catatan.",
-      openBalanceAction: "Kelola saldo di Anggaran",
-      hubAndPockets: "Hub dan saku",
-      hubPocketsCopy: "Hub {hub} - saku harian {pockets}.",
-      mostActivePocket: "Saku pengeluaran paling aktif",
-      topSpendingCopy: "{label} punya pengeluaran tercatat {amount} bulan ini.",
-      spendingByAccountEmpty:
-        "Pengeluaran per akun muncul setelah entri menyertakan akun.",
-      reconciliationEmpty:
-        "Rekonsiliasi dimulai setelah snapshot manual pertama.",
-      balanceReconciliation: "Rekonsiliasi saldo",
-      accountMovement: "Pergerakan akun bulan ini",
-      showAccountMovement: "Tampilkan pergerakan akun",
-      hideAccountMovement: "Sembunyikan pergerakan akun",
-      incomeNetCopy: "Pemasukan {income} - bersih {net}",
-      recentTransfers: "Transfer terbaru",
-      expectedActual: "Perkiraan {expected} - aktual {actual}",
-      deleteTransferTitle: "Hapus transfer?",
-      deleteTransferBody: "{amount} dari {from} ke {to} akan dihapus.",
-      deleteTransferA11y: "Hapus transfer dari {from} ke {to}"
     },
     chart: {
       title: "Bulan ini sekilas",

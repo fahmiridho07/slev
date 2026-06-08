@@ -12,10 +12,6 @@ export type AppStrings = {
     dark: string;
     label: string;
     light: string;
-    planningHelper: string;
-    planningLabel: string;
-    planningOff: string;
-    planningOn: string;
     reduceMotionLabel: string;
     reduceMotionOff: string;
     reduceMotionOn: string;
@@ -54,74 +50,11 @@ export type AppStrings = {
     accounts: {
       unassigned: string;
     };
-    allocation: {
-      action: {
-        flexibleOverPlan: { detail: string; title: string };
-        hold: { detail: string; title: string };
-        planExceedsIncome: { detail: string; title: string };
-        setPlan: { detail: string; title: string };
-        snapshotBalances: { detail: string; title: string };
-        topUpPockets: { detail: string; title: string };
-      };
-      row: {
-        fixedAbovePlan: string;
-        fixedNoPlan: string;
-        fixedRemaining: string;
-        fixedTitle: string;
-        flexibleAbovePlan: string;
-        flexibleNoPlan: string;
-        flexibleRemaining: string;
-        flexibleTitle: string;
-        incomeAbovePlan: string;
-        incomeNoPlan: string;
-        incomeRemaining: string;
-        incomeTitle: string;
-        savingsAboveTarget: string;
-        savingsNoPlan: string;
-        savingsStillNeeded: string;
-        savingsTitle: string;
-      };
-    };
-    reconciliation: {
-      detail: {
-        higherThanExpected: string;
-        lowerThanExpected: string;
-        movement: string;
-        needsHistory: string;
-        noSnapshot: string;
-      };
-      status: {
-        matched: string;
-        needsHistory: string;
-        noSnapshot: string;
-      };
-      summary: {
-        matched: { detail: string; title: string };
-        needsHistory: { detail: string; title: string };
-        needsReview: { detail: string; title: string };
-        noSnapshot: { detail: string; title: string };
-        smallGap: { detail: string; title: string };
-      };
-    };
     trends: {
       midpointPace: string;
     };
   };
   budget: {
-    allocation: {
-      againstTarget: string;
-      dailyRoom: string;
-      dayCoverage: string;
-      estimatedFromLogs: string;
-      flexibleUntilMonthEnd: string;
-      income: string;
-      monthlyAllocation: string;
-      netLeft: string;
-      ofPlanned: string;
-      openBalance: string;
-      pocketCash: string;
-      setPlanEmpty: string;
-    };
     balance: {
       accountKindCash: string;
       accountKindOther: string;
@@ -129,111 +62,19 @@ export type AppStrings = {
       accountKindBank: string;
       accountPlaceholder: string;
       addAccount: string;
-      balanceSnapshot: string;
-      currentAccountBalances: string;
-      currentBalancePlaceholder: string;
       deleteAccountBody: string;
       deleteAccountTitle: string;
-      driftCopy: string;
-      driftRow: string;
       editAccount: string;
       editAccountA11y: string;
-      emptyAccounts: string;
       ephemeral: string;
       ephemeralHint: string;
       ephemeralPocketMeta: string;
-      estimatedCurrentBalance: string;
-      estimatedCurrentBalanceCopy: string;
-      estimatedFromSnapshot: string;
       incomeHub: string;
       incomeHubMeta: string;
-      manualSnapshotBase: string;
-      manualSnapshotCopy: string;
-      noActivity: string;
       pocket: string;
       saveAccount: string;
-      saveSnapshot: string;
-      saveSnapshotA11y: string;
       tracked: string;
-      trackedEphemeralCopy: string;
-      worthQuickLook: string;
       yourAccounts: string;
-    };
-    goals: {
-      deleteGoalBody: string;
-      deleteGoalTitle: string;
-      editGoal: string;
-      editGoalA11y: string;
-      emptyGoals: string;
-      emptyGoalsAction: string;
-      goalNameA11y: string;
-      goalNamePlaceholder: string;
-      newGoal: string;
-      savedSoFarA11y: string;
-      savedSoFarPlaceholder: string;
-      targetAmountA11y: string;
-      targetAmountPlaceholder: string;
-    };
-    hero: {
-      balanceHint: string;
-      balanceKicker: string;
-      flexibleRemaining: string;
-      flexibleSpent: string;
-      goalsEmptyHint: string;
-      goalsEmptyKicker: string;
-      goalsHint: string;
-      goalsKicker: string;
-      noPlanAction: string;
-      noPlanHint: string;
-      noPlanKicker: string;
-    };
-    limits: {
-      deleteLimit: string;
-      editLimitA11y: string;
-      emptyNoCategories: string;
-      fixed: string;
-      flexible: string;
-      limitAmountA11y: string;
-      limitAmountPlaceholder: string;
-      monthly: string;
-      noLimitSpent: string;
-      openSettings: string;
-      setLimit: string;
-      spentOfLimit: string;
-      weekly: string;
-    };
-    monthlyPlan: {
-      expectedIncome: string;
-      fixedCosts: string;
-      flexibleBudget: string;
-      flexibleRemaining: string;
-      notePlaceholder: string;
-      overIncomeBy: string;
-      savePlan: string;
-      savingsTarget: string;
-      stepFixedCopy: string;
-      stepIncomeCopy: string;
-      stepSavingsCopy: string;
-      title: string;
-      useLoggedIncome: string;
-      wizardBack: string;
-      wizardFinish: string;
-      wizardNext: string;
-      wizardStep: string;
-      wizardTitle: string;
-    };
-    plan: {
-      allocationDetails: string;
-      categoryLimitsOptional: string;
-      collapseAllocationA11y: string;
-      collapseLimitsA11y: string;
-      expandAllocationA11y: string;
-      expandLimitsA11y: string;
-    };
-    tabs: {
-      balance: string;
-      goals: string;
-      plan: string;
     };
   };
   capture: {
@@ -338,32 +179,6 @@ export type AppStrings = {
     activityDeleteTitle: string;
   };
   home: {
-    bills: {
-      comingUp: string;
-      dueInDays: string;
-      dueToday: string;
-      dueTomorrow: string;
-      empty: string;
-      emptyAction: string;
-      horizonMultiple: string;
-      horizonSingle: string;
-      horizonWindow: string;
-      logPayment: string;
-      logPaymentA11y: string;
-    };
-    pulse: {
-      estBalance: string;
-      monthlySavingsTarget: string;
-      netLeft: string;
-      runwayHint: string;
-      runwayMonths: string;
-      safeToSpendToday: string;
-      savedTowardGoals: string;
-      setMonthlyPlan: string;
-      setMonthlyPlanA11y: string;
-      setMonthlyPlanHint: string;
-      spending: string;
-    };
     safeToSpend: {
       affordable: string;
       balanceAnchor: string;
@@ -404,26 +219,6 @@ export type AppStrings = {
     repeatHint: string;
   };
   patterns: {
-    accounts: {
-      balanceReconciliation: string;
-      deleteTransferA11y: string;
-      deleteTransferBody: string;
-      deleteTransferTitle: string;
-      expectedActual: string;
-      hideAccountMovement: string;
-      hubAndPockets: string;
-      hubPocketsCopy: string;
-      incomeNetCopy: string;
-      intro: string;
-      mostActivePocket: string;
-      accountMovement: string;
-      openBalanceAction: string;
-      recentTransfers: string;
-      reconciliationEmpty: string;
-      showAccountMovement: string;
-      spendingByAccountEmpty: string;
-      topSpendingCopy: string;
-    };
     breakdown: {
       amountShare: string;
       expense: string;
@@ -436,7 +231,6 @@ export type AppStrings = {
       spendingByCategory: string;
       viewAll: string;
       viewLess: string;
-      budgetProgressA11y: string;
       categoryDeltaDown: string;
       categoryDeltaUp: string;
       categoryNewThisMonth: string;
@@ -540,10 +334,7 @@ export type AppStrings = {
       empty: string;
       expandAdvancedTrends: string;
       hideFullCashflow: string;
-      netWorthTrend: string;
       showFullCashflow: string;
-      snapshotAction: string;
-      snapshotForNetWorth: string;
       spendingTrend: string;
       weeklyCashflow: string;
     };
@@ -645,12 +436,9 @@ export type AppStrings = {
       saved: string;
     };
     bill: {
-      invalidDay: string;
-      logged: string;
       needFields: string;
       removed: string;
       saved: string;
-      unavailable: string;
     };
     capture: {
       expenseSaved: string;
@@ -673,18 +461,6 @@ export type AppStrings = {
       cleared: string;
     };
     default: string;
-    goal: {
-      needFields: string;
-      removed: string;
-      saved: string;
-    };
-    limit: {
-      markedAs: string;
-      needAmount: string;
-      removed: string;
-      savedMonth: string;
-      savedWeek: string;
-    };
     boot: {
       failed: string;
     };
@@ -697,10 +473,6 @@ export type AppStrings = {
     };
     refresh: {
       failed: string;
-    };
-    plan: {
-      needFields: string;
-      saved: string;
     };
     reset: {
       failed: string;
@@ -726,14 +498,10 @@ export type AppStringsExtras = Pick<
   AppStrings,
   "analysis" | "storage" | "toasts"
 > & {
-  budget: Pick<
-    AppStrings["budget"],
-    "allocation" | "balance" | "goals" | "limits" | "monthlyPlan"
-  >;
+  budget: Pick<AppStrings["budget"], "balance">;
   memory: Pick<AppStrings["memory"], "groups" | "momentTitle" | "repeatHint">;
   patterns: Pick<
     AppStrings["patterns"],
-    | "accounts"
     | "breakdown"
     | "cashflow"
     | "chart"

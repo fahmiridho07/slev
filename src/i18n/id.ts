@@ -110,10 +110,6 @@ export const id: AppStrings = {
     label: "Tampilan",
     light: "Terang",
     dark: "Gelap",
-    planningLabel: "Perencanaan & anggaran",
-    planningHelper: "Mematikan ini menyembunyikan alat anggaran. Rencana, limit, dan saldo tetap tersimpan.",
-    planningOff: "Mati",
-    planningOn: "Nyala",
     reduceMotionLabel: "Animasi",
     reduceMotionOff: "Penuh",
     reduceMotionOn: "Dikurangi",
@@ -208,19 +204,6 @@ export const id: AppStrings = {
     }
   },
   home: {
-    pulse: {
-      safeToSpendToday: "Aman dibelanjakan hari ini",
-      setMonthlyPlan: "Buat rencana bulanan",
-      setMonthlyPlanA11y: "Buat rencana bulanan",
-      setMonthlyPlanHint: "Buat rencana bulanan untuk melihat ini",
-      netLeft: "Sisa bersih bulan ini",
-      spending: "Pengeluaran",
-      estBalance: "Est. saldo",
-      runwayMonths: "~{count} bulan runway",
-      runwayHint: "Tambahkan beberapa pengeluaran untuk estimasi runway",
-      savedTowardGoals: "Disimpan untuk target: {saved} dari {target}",
-      monthlySavingsTarget: "Target tabungan bulanan: {amount}"
-    },
     safeToSpend: {
       billsReserve: "Disisihkan buat tagihan: {amount}",
       setBalancePrompt: "Berapa saldomu sekarang?",
@@ -240,19 +223,6 @@ export const id: AppStrings = {
       purchasePlaceholder: "Harga barang",
       affordable: "Bisa. Setelah ini, aman harianmu jadi {amount} sampai gajian.",
       notAffordable: "Belum aman — bakal makan jatah harianmu. Kurang {amount}."
-    },
-    bills: {
-      comingUp: "Akan datang",
-      empty: "Tidak ada tagihan dalam dua minggu ke depan. Tagihan rutin bisa ditambahkan di Pengaturan.",
-      emptyAction: "Tambah tagihan rutin",
-      horizonWindow: "14 hari ke depan",
-      horizonSingle: "{amount} · {due}",
-      horizonMultiple: "{amount} · {count} tagihan",
-      dueToday: "jatuh tempo hari ini",
-      dueTomorrow: "jatuh tempo besok",
-      dueInDays: "jatuh tempo {count} hari lagi",
-      logPayment: "Catat pembayaran",
-      logPaymentA11y: "Catat pembayaran {label}, {amount}, {due}"
     }
   },
   activity: {
@@ -278,32 +248,6 @@ export const id: AppStrings = {
     ...idExtras.memory
   },
   budget: {
-    tabs: {
-      plan: "Rencana",
-      balance: "Saldo",
-      goals: "Target"
-    },
-    hero: {
-      balanceHint: "Dari snapshot ditambah pergerakan tercatat",
-      balanceKicker: "Estimasi saldo",
-      goalsHint: "{count} target berjalan",
-      goalsKicker: "Disimpan untuk target",
-      goalsEmptyHint: "Tambahkan target saat siap",
-      goalsEmptyKicker: "Target tabungan",
-      flexibleSpent: "{amount} fleksibel terpakai bulan ini",
-      flexibleRemaining: "Sisa fleksibel",
-      noPlanAction: "Mulai dari rencana bulanan",
-      noPlanHint: "Pemasukan, biaya tetap, dan target tabungan",
-      noPlanKicker: "Rencana bulanan"
-    },
-    plan: {
-      allocationDetails: "Detail alokasi",
-      categoryLimitsOptional: "Batas kategori (opsional)",
-      expandAllocationA11y: "Tampilkan detail alokasi",
-      collapseAllocationA11y: "Sembunyikan detail alokasi",
-      expandLimitsA11y: "Tampilkan batas kategori",
-      collapseLimitsA11y: "Sembunyikan batas kategori"
-    },
     ...idExtras.budget
   },
   patterns: {
