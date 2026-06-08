@@ -5,42 +5,37 @@ import { formatString } from "../../i18n";
 import { MonthlySummary } from "../app.types";
 import { getAllocationActionCopy, getAllocationRowCopy } from "../../lib/analysis";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
-import { buildAllocationPlan, getLatestBalanceSnapshots } from "../../lib/financeEngine";
+import { buildAllocationPlan } from "../../lib/financeEngine";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
-import { BalanceSnapshot, MoneyAccount, MoneyTransfer, MonthlyPlan, type PatternGroup } from "../spendingMemory.types";
+import { MoneyAccount, MoneyTransfer, MonthlyPlan, type PatternGroup } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 import { getAllocationFillStyle } from "../../theme/styles/fillStyles";
 
 export function AllocationPanel({
   accounts,
-  balanceSnapshots,
   monthlyPlan,
   monthlySummary,
-  projectedBalanceSnapshots,
   transfers,
   onOpenBalance,
 }: {
   accounts: MoneyAccount[];
-  balanceSnapshots: BalanceSnapshot[];
   monthlyPlan: MonthlyPlan | null;
   monthlySummary: MonthlySummary;
-  projectedBalanceSnapshots: BalanceSnapshot[];
   transfers: MoneyTransfer[];
   onOpenBalance: () => void;
 }) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const allocationStrings = strings.budget.allocation;
-  const currentBalances = useMemo(() => getLatestBalanceSnapshots(projectedBalanceSnapshots), [projectedBalanceSnapshots]);
   const allocation = useMemo(
     () =>
       buildAllocationPlan({
         accounts,
-        hasBalanceEvidence: balanceSnapshots.length > 0 || monthlySummary.income > 0 || monthlySummary.expense > 0 || transfers.length > 0,
-        latestSnapshots: currentBalances,
+        hasBalanceEvidence: monthlySummary.income > 0 || monthlySummary.expense > 0 || transfers.length > 0,
+        latestSnapshots: [],
         monthlyPlan,
         monthlySummary
       }),
-    [accounts, currentBalances, monthlyPlan, monthlySummary]
+    [accounts, monthlyPlan, monthlySummary, transfers.length]
   );
   const actionCopy = getAllocationActionCopy(allocation);
 
@@ -119,7 +114,7 @@ export function AllocationPanel({
             })}
           </View>
 
-          {balanceSnapshots.length === 0 && (
+          {allocation.nextAction.kind === "snapshot_balances" && (
             <EmptyState
               text={allocationStrings.estimatedFromLogs}
               actionLabel={allocationStrings.openBalance}

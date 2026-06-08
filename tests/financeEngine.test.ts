@@ -1,16 +1,9 @@
 import {
-  AccountReconciliationRow,
-  buildAccountDriftAlerts,
-  buildAccountReconciliation,
   buildAllocationPlan,
   buildCurrentMonthSummary,
   buildMonthlyBreakdown,
   getDaysRemainingInMonth,
-  getLatestBalanceTotal,
-  getLatestBalanceSnapshots,
-  getModeByCategory,
-  getProjectedBalanceSnapshots,
-  summarizeBalanceByTier
+  getModeByCategory
 } from "../src/lib/financeEngine";
 import {
   buildSafeToSpend,
@@ -18,11 +11,8 @@ import {
   simulatePurchase
 } from "../src/lib/safeToSpend";
 import {
-  AccountTier,
-  BalanceSnapshot,
   EntryType,
   MoneyAccount,
-  MoneyTransfer,
   MonthlyPlan,
   SpendingContext,
   SpendingMoment
@@ -84,6 +74,7 @@ test("allocation identifies pocket top-up need from income hub", () => {
       account("BRI", "bank", true),
       account("Jago", "bank", false)
     ],
+    hasBalanceEvidence: true,
     latestSnapshots: [
       snapshot("BRI", 3_000_000, "2026-06-15T01:00:00.000Z"),
       snapshot("Jago", 700_000, "2026-06-15T01:00:00.000Z")
@@ -129,324 +120,6 @@ test("allocation asks for a plan before giving budget guidance", () => {
 
   assertEqual(allocation.nextAction.kind, "set_plan", "missing plan should be the first action");
   assertEqual(allocation.dailyFlexibleRoom, 0, "daily room should stay zero without a plan");
-});
-
-test("reconciliation matches logged movements between two snapshots", () => {
-  const rows = buildAccountReconciliation({
-    accounts: [
-      account("BRI", "bank", true),
-      account("Jago", "bank", false),
-      account("Cash", "cash", false)
-    ],
-    balanceSnapshots: [
-      snapshot("BRI", 5_000_000, "2026-06-01T00:00:00.000Z"),
-      snapshot("BRI", 5_750_000, "2026-06-10T00:00:00.000Z"),
-      snapshot("Jago", 100_000, "2026-06-01T00:00:00.000Z"),
-      snapshot("Jago", 850_000, "2026-06-10T00:00:00.000Z"),
-      snapshot("Cash", 200_000, "2026-06-10T00:00:00.000Z")
-    ],
-    moments: [
-      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
-      moment({ accountLabel: "BRI", amount: 500_000, occurredAt: "2026-06-04T00:00:00.000Z" })
-    ],
-    transfers: [
-      transfer("BRI", "Jago", 750_000, "2026-06-05T00:00:00.000Z")
-    ]
-  });
-  const bri = findReconciliation(rows, "BRI");
-  const jago = findReconciliation(rows, "Jago");
-  const cash = findReconciliation(rows, "Cash");
-
-  assertEqual(bri.status, "matched", "BRI should match logged income, spending, and transfer out");
-  assertEqual(bri.expectedAmount, 5_750_000, "BRI expected amount should use previous balance plus logged delta");
-  assertEqual(jago.status, "matched", "Jago should match transfer in");
-  assertEqual(jago.transferIn, 750_000, "Jago transfer in should be counted");
-  assertEqual(cash.status, "needs_history", "Cash should need another snapshot");
-});
-
-test("buildAccountDriftAlerts surfaces needs_review drift with signed difference", () => {
-  const alerts = buildAccountDriftAlerts({
-    accounts: [account("BRI", "bank", true)],
-    balanceSnapshots: [
-      snapshot("BRI", 5_000_000, "2026-06-01T00:00:00.000Z"),
-      snapshot("BRI", 5_730_000, "2026-06-10T00:00:00.000Z")
-    ],
-    moments: [
-      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
-      moment({ accountLabel: "BRI", amount: 500_000, occurredAt: "2026-06-04T00:00:00.000Z" })
-    ],
-    toleranceAmount: 1_000,
-    transfers: [
-      transfer("BRI", "Jago", 750_000, "2026-06-05T00:00:00.000Z")
-    ]
-  });
-
-  assertEqual(alerts.length, 1, "one drift alert");
-  assertEqual(alerts[0]?.label, "BRI", "drift label");
-  assertEqual(alerts[0]?.difference, -20_000, "signed drift difference");
-  assertEqual(alerts[0]?.latestSnapshotDate, "2026-06-10T00:00:00.000Z", "latest snapshot date");
-});
-
-test("buildAccountDriftAlerts stays empty when balances reconcile", () => {
-  const alerts = buildAccountDriftAlerts({
-    accounts: [
-      account("BRI", "bank", true),
-      account("Jago", "bank", false),
-      account("Cash", "cash", false)
-    ],
-    balanceSnapshots: [
-      snapshot("BRI", 5_000_000, "2026-06-01T00:00:00.000Z"),
-      snapshot("BRI", 5_750_000, "2026-06-10T00:00:00.000Z"),
-      snapshot("Jago", 100_000, "2026-06-01T00:00:00.000Z"),
-      snapshot("Jago", 850_000, "2026-06-10T00:00:00.000Z"),
-      snapshot("Cash", 200_000, "2026-06-10T00:00:00.000Z")
-    ],
-    moments: [
-      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
-      moment({ accountLabel: "BRI", amount: 500_000, occurredAt: "2026-06-04T00:00:00.000Z" })
-    ],
-    transfers: [
-      transfer("BRI", "Jago", 750_000, "2026-06-05T00:00:00.000Z")
-    ]
-  });
-
-  assertEqual(alerts.length, 0, "no drift alerts when reconciliation is clean");
-});
-
-test("buildAccountDriftAlerts exempts ephemeral accounts from drift flags", () => {
-  const balanceSnapshots = [
-    snapshot("GoPay", 50_000, "2026-06-01T00:00:00.000Z"),
-    snapshot("GoPay", 120_000, "2026-06-10T00:00:00.000Z")
-  ];
-  const moments = [
-    moment({ accountLabel: "GoPay", amount: 25_000, occurredAt: "2026-06-04T00:00:00.000Z" })
-  ];
-  const fixture = {
-    balanceSnapshots,
-    moments,
-    toleranceAmount: 1_000,
-    transfers: [] as MoneyTransfer[]
-  };
-  const reconciliation = buildAccountReconciliation({
-    ...fixture,
-    accounts: [account("GoPay", "wallet", false, "ephemeral")]
-  });
-
-  assertEqual(findReconciliation(reconciliation, "GoPay").status, "needs_review", "fixture should need review");
-
-  const ephemeralAlerts = buildAccountDriftAlerts({
-    ...fixture,
-    accounts: [account("GoPay", "wallet", false, "ephemeral")]
-  });
-  const trackedAlerts = buildAccountDriftAlerts({
-    ...fixture,
-    accounts: [account("GoPay", "wallet", false, "tracked")]
-  });
-
-  assertEqual(ephemeralAlerts.length, 0, "ephemeral accounts stay exempt from drift flags");
-  assertEqual(trackedAlerts.length, 1, "tracked account with same drift is surfaced");
-  assertEqual(trackedAlerts[0]?.label, "GoPay", "tracked drift label");
-});
-
-test("buildAccountDriftAlerts still surfaces unknown snapshot labels as tracked", () => {
-  const alerts = buildAccountDriftAlerts({
-    accounts: [account("BRI", "bank", true)],
-    balanceSnapshots: [
-      snapshot("Old wallet", 50_000, "2026-06-01T00:00:00.000Z"),
-      snapshot("Old wallet", 200_000, "2026-06-10T00:00:00.000Z")
-    ],
-    moments: [
-      moment({ accountLabel: "Old wallet", amount: 25_000, occurredAt: "2026-06-04T00:00:00.000Z" })
-    ],
-    toleranceAmount: 1_000,
-    transfers: []
-  });
-
-  assertEqual(alerts.length, 1, "unknown labels without tier still surface drift");
-  assertEqual(alerts[0]?.label, "Old wallet", "unknown label kept");
-});
-
-test("buildAccountDriftAlerts ignores small_gap mismatches", () => {
-  const alerts = buildAccountDriftAlerts({
-    accounts: [account("BRI", "bank", true)],
-    balanceSnapshots: [
-      snapshot("BRI", 5_000_000, "2026-06-01T00:00:00.000Z"),
-      snapshot("BRI", 5_744_000, "2026-06-10T00:00:00.000Z")
-    ],
-    moments: [
-      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
-      moment({ accountLabel: "BRI", amount: 500_000, occurredAt: "2026-06-04T00:00:00.000Z" })
-    ],
-    transfers: [
-      transfer("BRI", "Jago", 750_000, "2026-06-05T00:00:00.000Z")
-    ]
-  });
-  const rows = buildAccountReconciliation({
-    accounts: [account("BRI", "bank", true)],
-    balanceSnapshots: [
-      snapshot("BRI", 5_000_000, "2026-06-01T00:00:00.000Z"),
-      snapshot("BRI", 5_744_000, "2026-06-10T00:00:00.000Z")
-    ],
-    moments: [
-      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
-      moment({ accountLabel: "BRI", amount: 500_000, occurredAt: "2026-06-04T00:00:00.000Z" })
-    ],
-    transfers: [
-      transfer("BRI", "Jago", 750_000, "2026-06-05T00:00:00.000Z")
-    ]
-  });
-
-  assertEqual(findReconciliation(rows, "BRI").status, "small_gap", "fixture should stay a small gap");
-  assertEqual(alerts.length, 0, "small gaps stay hidden");
-});
-
-test("reconciliation flags material gaps for review", () => {
-  const rows = buildAccountReconciliation({
-    accounts: [account("BRI", "bank", true)],
-    balanceSnapshots: [
-      snapshot("BRI", 5_000_000, "2026-06-01T00:00:00.000Z"),
-      snapshot("BRI", 5_730_000, "2026-06-10T00:00:00.000Z")
-    ],
-    moments: [
-      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
-      moment({ accountLabel: "BRI", amount: 500_000, occurredAt: "2026-06-04T00:00:00.000Z" })
-    ],
-    toleranceAmount: 1_000,
-    transfers: [
-      transfer("BRI", "Jago", 750_000, "2026-06-05T00:00:00.000Z")
-    ]
-  });
-  const bri = findReconciliation(rows, "BRI");
-
-  assertEqual(bri.status, "needs_review", "BRI should flag a visible balance gap");
-  assertEqual(bri.difference, -20_000, "difference should show actual minus expected");
-});
-
-test("latest balance snapshots keep the newest snapshot per account", () => {
-  const latest = getLatestBalanceSnapshots([
-    snapshot("BRI", 1_000_000, "2026-06-01T00:00:00.000Z"),
-    snapshot("Jago", 300_000, "2026-06-12T00:00:00.000Z"),
-    snapshot("BRI", 2_000_000, "2026-06-13T00:00:00.000Z")
-  ]);
-
-  assertEqual(latest.length, 2, "latest snapshots should include one row per account");
-  assertEqual(latest[0]?.accountLabel, "BRI", "newest snapshot should be first");
-  assertEqual(latest[0]?.amount, 2_000_000, "newest BRI amount should be kept");
-  assertEqual(latest[1]?.accountLabel, "Jago", "Jago should be retained");
-});
-
-test("getProjectedBalanceSnapshots excludes accounts without a snapshot", () => {
-  const projected = getProjectedBalanceSnapshots({
-    accounts: [
-      account("BRI", "bank", true),
-      account("Jago", "bank", false)
-    ],
-    balanceSnapshots: [],
-    moments: [
-      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
-      moment({ accountLabel: "Jago", amount: 250_000, occurredAt: "2026-06-03T00:00:00.000Z" })
-    ],
-    referenceDate: juneMidpoint,
-    transfers: [
-      transfer("BRI", "Jago", 500_000, "2026-06-04T00:00:00.000Z")
-    ]
-  });
-
-  assertEqual(projected.length, 0, "accounts without snapshots should not be projected from zero");
-});
-
-test("getProjectedBalanceSnapshots projects only accounts with a snapshot baseline", () => {
-  const projected = getProjectedBalanceSnapshots({
-    accounts: [
-      account("BRI", "bank", true),
-      account("Jago", "bank", false)
-    ],
-    balanceSnapshots: [
-      snapshot("BRI", 1_000_000, "2026-06-01T00:00:00.000Z")
-    ],
-    moments: [
-      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
-      moment({ accountLabel: "Jago", amount: 250_000, occurredAt: "2026-06-03T00:00:00.000Z" })
-    ],
-    referenceDate: juneMidpoint,
-    transfers: [
-      transfer("BRI", "Jago", 500_000, "2026-06-04T00:00:00.000Z")
-    ]
-  });
-  const bri = projected.find((row) => row.accountLabel === "BRI");
-  const jago = projected.find((row) => row.accountLabel === "Jago");
-
-  assertEqual(projected.length, 1, "only snapshotted accounts should be projected");
-  assertEqual(bri?.amount, 2_500_000, "BRI projected balance should start from snapshot plus logged delta");
-  assertEqual(jago, undefined, "Jago without a snapshot should stay unknown");
-});
-
-test("summarizeBalanceByTier treats accounts without tier as tracked", () => {
-  const snapshots = [
-    snapshot("BRI", 2_000_000, "2026-06-13T00:00:00.000Z"),
-    snapshot("Jago", 700_000, "2026-06-12T00:00:00.000Z")
-  ];
-  const summary = summarizeBalanceByTier({
-    accounts: [
-      account("BRI", "bank", true),
-      account("Jago", "bank", false)
-    ],
-    snapshots
-  });
-
-  assertEqual(summary.ephemeralTotal, 0, "no ephemeral balance");
-  assertEqual(summary.trackedTotal, 2_700_000, "tracked total should sum all balances");
-  assertEqual(summary.total, 2_700_000, "total should match tracked sum");
-  assertEqual(summary.trackedAccountCount, 2, "both accounts counted as tracked");
-  assertEqual(summary.ephemeralAccountCount, 0, "no ephemeral accounts");
-});
-
-test("summarizeBalanceByTier splits mixed tracked and ephemeral balances", () => {
-  const snapshots = [
-    snapshot("BRI", 2_000_000, "2026-06-13T00:00:00.000Z"),
-    snapshot("GoPay", 150_000, "2026-06-12T00:00:00.000Z")
-  ];
-  const summary = summarizeBalanceByTier({
-    accounts: [
-      account("BRI", "bank", true),
-      account("GoPay", "wallet", false, "ephemeral")
-    ],
-    snapshots
-  });
-
-  assertEqual(summary.trackedTotal, 2_000_000, "tracked portion");
-  assertEqual(summary.ephemeralTotal, 150_000, "ephemeral portion");
-  assertEqual(summary.total, 2_150_000, "combined total");
-  assertEqual(summary.trackedAccountCount, 1, "one tracked account");
-  assertEqual(summary.ephemeralAccountCount, 1, "one ephemeral account");
-});
-
-test("summarizeBalanceByTier counts unknown snapshot labels as tracked", () => {
-  const summary = summarizeBalanceByTier({
-    accounts: [account("BRI", "bank", true)],
-    snapshots: [snapshot("Old wallet", 80_000, "2026-06-10T00:00:00.000Z")]
-  });
-
-  assertEqual(summary.trackedTotal, 80_000, "unknown label defaults to tracked");
-  assertEqual(summary.ephemeralTotal, 0, "no ephemeral balance");
-  assertEqual(summary.trackedAccountCount, 1, "unknown label counted as tracked");
-});
-
-test("summarizeBalanceByTier total matches getLatestBalanceTotal", () => {
-  const snapshots = [
-    snapshot("BRI", 2_000_000, "2026-06-13T00:00:00.000Z"),
-    snapshot("GoPay", 150_000, "2026-06-12T00:00:00.000Z"),
-    snapshot("BRI", 1_000_000, "2026-06-01T00:00:00.000Z")
-  ];
-  const summary = summarizeBalanceByTier({
-    accounts: [
-      account("BRI", "bank", true),
-      account("GoPay", "wallet", false, "ephemeral")
-    ],
-    snapshots
-  });
-
-  assertEqual(summary.total, getLatestBalanceTotal(snapshots), "tier total should match latest balance total");
 });
 
 test("category modes preserve fixed defaults and custom overrides", () => {
@@ -589,19 +262,10 @@ function assertEqual(actual: unknown, expected: unknown, message: string): void 
   }
 }
 
-function findReconciliation(rows: AccountReconciliationRow[], label: string): AccountReconciliationRow {
-  const row = rows.find((item) => item.label === label);
-  if (!row) {
-    throw new Error(`Missing reconciliation row for ${label}.`);
-  }
-  return row;
-}
-
 function account(
   label: string,
   kind: MoneyAccount["kind"],
-  isIncomeHub: boolean,
-  tier?: AccountTier
+  isIncomeHub: boolean
 ): MoneyAccount {
   return {
     createdAt: "2026-06-01T00:00:00.000Z",
@@ -609,8 +273,7 @@ function account(
     isIncomeHub,
     kind,
     label,
-    updatedAt: "2026-06-01T00:00:00.000Z",
-    ...(tier !== undefined ? { tier } : {})
+    updatedAt: "2026-06-01T00:00:00.000Z"
   };
 }
 
@@ -638,28 +301,11 @@ function moment(input: {
   };
 }
 
-function transfer(
-  fromAccount: string,
-  toAccount: string,
-  amount: number,
-  occurredAt: string
-): MoneyTransfer {
-  return {
-    amount,
-    createdAt: occurredAt,
-    fromAccount,
-    id: `transfer-${fromAccount}-${toAccount}-${occurredAt}-${amount}`,
-    occurredAt,
-    toAccount,
-    updatedAt: occurredAt
-  };
-}
-
 function snapshot(
   accountLabel: string,
   amount: number,
   snapshotDate: string
-): BalanceSnapshot {
+) {
   return {
     accountLabel,
     amount,

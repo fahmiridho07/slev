@@ -15,12 +15,8 @@ import {
   formatLocaleWeekdayDate
 } from "../i18n/localeDate";
 import { getRuntimeStrings } from "../i18n/runtime";
-import {
-  AccountReconciliationRow,
-  AllocationPlan
-} from "./financeEngine";
+import { AllocationPlan } from "./financeEngine";
 import { getMonthRange, isWithinRange, sumMoments } from "./dateRanges";
-import { formatSignedCompactRupiah } from "./formatMoney";
 import { formatRupiah } from "./spendingMemoryPatterns";
 
 export { getMonthRange, isWithinRange, sumMoments } from "./dateRanges";
@@ -208,98 +204,6 @@ export function getAllocationRowCopy(row: AllocationPlan["rows"][number]): {
       : formatString(strings.savingsAboveTarget, { amount: formatRupiah(remainingAmount) }),
     title: strings.savingsTitle
   };
-}
-
-export function getReconciliationCopy(rows: AccountReconciliationRow[]): {
-  detail: string;
-  title: string;
-  tone: SpendingPattern["tone"];
-} {
-  const rowsWithSnapshots = rows.filter((row) => row.status !== "no_snapshot");
-  const reviewRows = rows.filter((row) => row.status === "needs_review");
-  const smallGapRows = rows.filter((row) => row.status === "small_gap");
-  const historyRows = rows.filter((row) => row.status === "needs_history");
-  const totalGap = rows.reduce((sum, row) => sum + Math.abs(row.difference ?? 0), 0);
-  const strings = getRuntimeStrings().analysis.reconciliation.summary;
-
-  if (rowsWithSnapshots.length === 0) {
-    return {
-      detail: strings.noSnapshot.detail,
-      title: strings.noSnapshot.title,
-      tone: "calm"
-    };
-  }
-
-  if (reviewRows.length > 0) {
-    return {
-      detail: formatString(strings.needsReview.detail, {
-        count: reviewRows.length,
-        totalGap: formatRupiah(totalGap)
-      }),
-      title: strings.needsReview.title,
-      tone: "notice"
-    };
-  }
-
-  if (smallGapRows.length > 0) {
-    return {
-      detail: formatString(strings.smallGap.detail, { count: smallGapRows.length }),
-      title: strings.smallGap.title,
-      tone: "warm"
-    };
-  }
-
-  if (historyRows.length > 0) {
-    return {
-      detail: strings.needsHistory.detail,
-      title: strings.needsHistory.title,
-      tone: "calm"
-    };
-  }
-
-  return {
-    detail: strings.matched.detail,
-    title: strings.matched.title,
-    tone: "calm"
-  };
-}
-
-export function formatReconciliationDifference(row: AccountReconciliationRow): string {
-  const strings = getRuntimeStrings().analysis.reconciliation.status;
-  if (row.status === "no_snapshot") return strings.noSnapshot;
-  if (row.status === "needs_history") return strings.needsHistory;
-  if (row.status === "matched") return strings.matched;
-  if (row.difference === null) return strings.matched;
-  return formatSignedCompactRupiah(row.difference);
-}
-
-export function getReconciliationDetail(row: AccountReconciliationRow): string {
-  const strings = getRuntimeStrings().analysis.reconciliation.detail;
-  if (row.status === "no_snapshot") {
-    return strings.noSnapshot;
-  }
-
-  if (row.status === "needs_history") {
-    return strings.needsHistory;
-  }
-
-  const movement = formatString(strings.movement, {
-    days: row.daysCovered,
-    income: formatRupiah(row.income),
-    expense: formatRupiah(row.expense),
-    transferIn: formatRupiah(row.transferIn),
-    transferOut: formatRupiah(row.transferOut)
-  });
-  if (row.status === "matched" || row.difference === null) {
-    return movement;
-  }
-
-  const gap = formatRupiah(Math.abs(row.difference));
-  const direction = row.difference > 0
-    ? formatString(strings.higherThanExpected, { gap })
-    : formatString(strings.lowerThanExpected, { gap });
-
-  return `${direction} ${movement}`;
 }
 
 export function buildAccountActivity(moments: SpendingMoment[]): AccountActivityRow[] {

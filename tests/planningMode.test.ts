@@ -22,7 +22,6 @@ const emptyPlanningState = {
   budgetLimits: initialFinanceState.budgetLimits,
   savingsGoals: initialFinanceState.savingsGoals,
   recurringBills: initialFinanceState.recurringBills,
-  balanceSnapshots: initialFinanceState.balanceSnapshots,
   transfers: initialFinanceState.transfers
 };
 
@@ -100,25 +99,6 @@ test("hasExistingPlanningData returns true when recurringBills are present", () 
     }),
     true,
     "recurring bills trigger planning mode"
-  );
-});
-
-test("hasExistingPlanningData returns true when balanceSnapshots are present", () => {
-  assertEqual(
-    hasExistingPlanningData({
-      ...emptyPlanningState,
-      balanceSnapshots: [
-        {
-          id: "snap-1",
-          accountLabel: "BRI",
-          amount: 1_000_000,
-          snapshotDate: "2026-06-01",
-          createdAt: "2026-06-01T00:00:00.000Z"
-        }
-      ]
-    }),
-    true,
-    "balance snapshots trigger planning mode"
   );
 });
 

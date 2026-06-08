@@ -6,12 +6,10 @@ import {
   getDataMaturity,
   dateKey,
   filterMoments,
-  formatReconciliationDifference,
   getAllocationActionCopy,
   getFrequentAccountLabels,
   getMomentsInPeriod,
   getMonthKey,
-  getReconciliationDetail,
   getRepeatSuggestions,
   getMonthMoments,
   getTrackerEmptyReason,
@@ -20,12 +18,7 @@ import {
   sumExpenseMoments,
   sumMoments
 } from "../src/lib/analysis";
-import {
-  AccountReconciliationRow,
-  AllocationPlan,
-  buildAccountReconciliation,
-  DEFAULT_RECONCILIATION_TOLERANCE
-} from "../src/lib/financeEngine";
+import { AllocationPlan } from "../src/lib/financeEngine";
 import { EntryType, MoneyAccount, SpendingContext, SpendingMoment } from "../src/features/spendingMemory.types";
 
 declare const process: {
@@ -395,114 +388,6 @@ test("getAllocationActionCopy returns steady hold messaging", () => {
   assertEqual(copy.tone, "calm", "hold tone");
 });
 
-test("formatReconciliationDifference follows reconciliation status instead of a hardcoded gap", () => {
-  const matchedRow = reconciliationRow({ status: "matched", difference: DEFAULT_RECONCILIATION_TOLERANCE });
-  const smallGapRow = reconciliationRow({
-    status: "small_gap",
-    difference: DEFAULT_RECONCILIATION_TOLERANCE + 1
-  });
-  const reviewRow = reconciliationRow({ status: "needs_review", difference: -25_000 });
-
-  assertEqual(formatReconciliationDifference(matchedRow), "Matched", "matched status keeps calm copy");
-  assertEqual(
-    formatReconciliationDifference(smallGapRow),
-    "+Rp 1.001",
-    "small_gap status shows the signed difference"
-  );
-  assertEqual(
-    formatReconciliationDifference(reviewRow),
-    "-Rp 25.000",
-    "needs_review status shows the signed difference"
-  );
-});
-
-test("getReconciliationDetail follows reconciliation status for gap messaging", () => {
-  const matchedRow = reconciliationRow({
-    status: "matched",
-    difference: 0,
-    daysCovered: 9,
-    income: 2_000_000,
-    expense: 500_000,
-    transferIn: 0,
-    transferOut: 750_000
-  });
-  const reviewRow = reconciliationRow({
-    status: "needs_review",
-    difference: -20_000,
-    daysCovered: 9,
-    income: 2_000_000,
-    expense: 500_000,
-    transferIn: 0,
-    transferOut: 750_000
-  });
-
-  assertEqual(
-    getReconciliationDetail(matchedRow),
-    "Logged movement over 9 day(s): income Rp 2.000.000, spending Rp 500.000, transfer in Rp 0, transfer out Rp 750.000.",
-    "matched status stays on movement copy"
-  );
-  assertEqual(
-    getReconciliationDetail(reviewRow).startsWith(
-      "Actual balance is Rp 20.000 lower than expected. Check missing expense, transfer out, or a balance typo."
-    ),
-    true,
-    "needs_review status adds gap direction before movement copy"
-  );
-});
-
-test("reconciliation copy stays aligned with engine status thresholds", () => {
-  const rows = buildAccountReconciliation({
-    accounts: [{ id: "acct-bri", label: "BRI", kind: "bank", isIncomeHub: true, createdAt: "2026-06-01T00:00:00.000Z", updatedAt: "2026-06-01T00:00:00.000Z" }],
-    balanceSnapshots: [
-      {
-        id: "snapshot-bri-start",
-        accountLabel: "BRI",
-        amount: 5_000_000,
-        snapshotDate: "2026-06-01T00:00:00.000Z",
-        createdAt: "2026-06-01T00:00:00.000Z"
-      },
-      {
-        id: "snapshot-bri-end",
-        accountLabel: "BRI",
-        amount: 5_744_000,
-        snapshotDate: "2026-06-10T00:00:00.000Z",
-        createdAt: "2026-06-10T00:00:00.000Z"
-      }
-    ],
-    moments: [
-      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
-      moment({ accountLabel: "BRI", amount: 500_000, occurredAt: "2026-06-04T00:00:00.000Z" })
-    ],
-    toleranceAmount: DEFAULT_RECONCILIATION_TOLERANCE,
-    transfers: [{
-      id: "transfer-bri-jago",
-      amount: 750_000,
-      fromAccount: "BRI",
-      toAccount: "Jago",
-      occurredAt: "2026-06-05T00:00:00.000Z",
-      createdAt: "2026-06-05T00:00:00.000Z",
-      updatedAt: "2026-06-05T00:00:00.000Z"
-    }]
-  });
-  const bri = rows.find((row) => row.label === "BRI");
-
-  if (!bri) {
-    throw new Error("Missing reconciliation row for BRI.");
-  }
-
-  assertEqual(bri.status, "small_gap", "engine classifies a gap above tolerance as small_gap");
-  assertEqual(
-    formatReconciliationDifference(bri),
-    "-Rp 6.000",
-    "copy layer should not collapse small_gap back to matched"
-  );
-  assertEqual(
-    getReconciliationDetail(bri).includes("Actual balance is Rp 6.000 lower than expected."),
-    true,
-    "copy layer should surface small_gap direction text"
-  );
-});
-
 runTests();
 
 function test(name: string, run: () => void): void {
@@ -575,28 +460,6 @@ function moment(input: {
     source: input.source,
     type: input.type ?? "expense",
     updatedAt: input.occurredAt
-  };
-}
-
-function reconciliationRow(
-  input: Partial<AccountReconciliationRow> & {
-    label?: string;
-    status: AccountReconciliationRow["status"];
-  }
-): AccountReconciliationRow {
-  return {
-    daysCovered: 0,
-    difference: null,
-    expectedAmount: null,
-    expense: 0,
-    income: 0,
-    label: "BRI",
-    latestAmount: null,
-    loggedDelta: 0,
-    previousAmount: null,
-    transferIn: 0,
-    transferOut: 0,
-    ...input
   };
 }
 

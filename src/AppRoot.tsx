@@ -70,7 +70,6 @@ export function AppRoot() {
       isReady: state.isReady,
       message: state.message,
       planningDataState: {
-        balanceSnapshots: state.balanceSnapshots,
         budgetLimits: state.budgetLimits,
         monthlyPlan: state.monthlyPlan,
         recurringBills: state.recurringBills,
@@ -373,13 +372,6 @@ export function AppRoot() {
                   <MoneyScreen
                     activePatternTab={patternTab}
                     navigation={navigation}
-                    onOpenBalance={() => {
-                      if (!effectivePlanningEnabled) {
-                        return;
-                      }
-                      setBudgetTab("balance");
-                      setActiveTab("budget");
-                    }}
                     onOpenSettings={openSettings}
                     onPatternTabChange={setPatternTab}
                     planningEnabled={effectivePlanningEnabled}

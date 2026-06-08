@@ -1,8 +1,5 @@
 import { AccountTier, MoneyAccount, MoneyTransfer } from "../features/spendingMemory.types";
-import {
-  rewriteAccountLabelInBalanceSnapshots,
-  rewriteAccountLabelInManualTemplates
-} from "./manualFinanceRepository";
+import { rewriteAccountLabelInManualTemplates } from "./manualFinanceRepository";
 import { rewriteAccountLabelInRecurringBills } from "./recurringBillsRepository";
 import { rewriteAccountLabelInMoments } from "./spendingMemoryRepository";
 import {
@@ -281,10 +278,6 @@ async function cascadeAccountLabelRename(oldLabel: string, newLabel: string): Pr
     {
       apply: () => rewriteAccountLabelInTransfers(oldLabel, newLabel),
       rollback: () => rewriteAccountLabelInTransfers(newLabel, oldLabel)
-    },
-    {
-      apply: () => rewriteAccountLabelInBalanceSnapshots(oldLabel, newLabel),
-      rollback: () => rewriteAccountLabelInBalanceSnapshots(newLabel, oldLabel)
     },
     {
       apply: () => rewriteAccountLabelInRecurringBills(oldLabel, newLabel),

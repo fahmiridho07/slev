@@ -40,10 +40,6 @@ const CORRUPT_STORAGE_CHECKS: Array<{ check: () => boolean; key: string }> = [
     key: STORAGE_KEYS.recurringBills
   },
   {
-    check: () => isKeyCorrupt(STORAGE_KEYS.balanceSnapshots),
-    key: STORAGE_KEYS.balanceSnapshots
-  },
-  {
     check: () => isKeyCorrupt(STORAGE_KEYS.balanceAnchor),
     key: STORAGE_KEYS.balanceAnchor
   },

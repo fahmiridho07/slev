@@ -4,8 +4,6 @@ import {
   saveMoneyAccount,
   saveMoneyTransfer
 } from "../src/services/accountRepository";
-import { buildAccountReconciliation } from "../src/lib/financeEngine";
-import { listBalanceSnapshots } from "../src/services/manualFinanceRepository";
 import {
   listSpendingMoments,
   runSpendingMemoryV2Migration,
@@ -514,23 +512,6 @@ test("saveMoneyAccount cascades label rename across historical collections", asy
     toAccount: "Jago",
     occurredAt: "2026-06-06T00:00:00.000Z"
   });
-  await writeJson(STORAGE_KEYS.balanceSnapshots, [
-    {
-      id: "snapshot-pocket-end",
-      accountLabel: "Pocket",
-      amount: 25_000,
-      snapshotDate: "2026-06-10T00:00:00.000Z",
-      createdAt: "2026-06-10T00:00:00.000Z"
-    },
-    {
-      id: "snapshot-pocket-start",
-      accountLabel: "Pocket",
-      amount: 100_000,
-      snapshotDate: "2026-06-01T00:00:00.000Z",
-      createdAt: "2026-06-01T00:00:00.000Z"
-    }
-  ]);
-
   const renamed = await saveMoneyAccount({
     id: "acct-pocket",
     label: "Daily Pocket",
@@ -553,36 +534,6 @@ test("saveMoneyAccount cascades label rename across historical collections", asy
   const transfers = await listMoneyTransfers();
   assertEqual(transfers[0]?.fromAccount, "Daily Pocket", "transfer from-account cascaded");
   assertEqual(transfers[0]?.toAccount, "Jago", "transfer to-account unchanged");
-
-  const snapshots = await listBalanceSnapshots();
-  assertEqual(
-    snapshots.every((snapshot) => snapshot.accountLabel !== "Pocket"),
-    true,
-    "no snapshot keeps old label"
-  );
-  assertEqual(
-    snapshots.every((snapshot) => snapshot.accountLabel === "Daily Pocket" || snapshot.accountLabel === "Jago"),
-    true,
-    "snapshots only use current labels"
-  );
-
-  const reconciliation = buildAccountReconciliation({
-    accounts: accounts.filter((account) => account.id === "acct-pocket" || account.id === "acct-jago"),
-    balanceSnapshots: snapshots.filter((snapshot) => snapshot.accountLabel === "Daily Pocket"),
-    moments,
-    transfers
-  });
-
-  assertEqual(
-    reconciliation.some((row) => row.label === "Pocket"),
-    false,
-    "reconciliation no longer shows orphaned old label"
-  );
-  const pocketRow = reconciliation.find((row) => row.label === "Daily Pocket");
-  if (!pocketRow) {
-    throw new Error("Missing reconciliation row for renamed account.");
-  }
-  assertEqual(pocketRow.status, "matched", "renamed account still reconciles");
 });
 
 test("account tier ephemeral persists through save and list", async () => {

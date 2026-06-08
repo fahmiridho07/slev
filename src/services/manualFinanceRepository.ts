@@ -1,6 +1,5 @@
 import { DEFAULT_SPENDING_CONTEXTS, normalizeSpendingContext } from "../data/spendingMemory";
 import {
-  BalanceSnapshot,
   CategoryMode,
   EntryType,
   ManualTemplate,
@@ -21,7 +20,6 @@ const MONTHLY_PLANS_KEY = "slev_monthly_plans";
 const MANUAL_TEMPLATES_KEY = "slev_manual_templates";
 const CATEGORY_MODES_KEY = "slev_category_modes";
 const SAVINGS_GOALS_KEY = "slev_savings_goals";
-const BALANCE_SNAPSHOTS_KEY = "slev_balance_snapshots";
 
 type CategoryModeValue = CategoryMode["mode"];
 
@@ -49,11 +47,6 @@ type SavingsGoalInput = {
   label: string;
   savedAmount: number;
   targetAmount: number;
-};
-
-type BalanceSnapshotInput = {
-  accountLabel: string;
-  amount: number;
 };
 
 export async function getMonthlyPlan(month: string): Promise<MonthlyPlan | null> {
@@ -185,49 +178,6 @@ export async function deleteSavingsGoal(id: string): Promise<WriteResult<Savings
   return { data: updated, persisted };
 }
 
-export async function listBalanceSnapshots(): Promise<BalanceSnapshot[]> {
-  const result = await readJson<unknown>(BALANCE_SNAPSHOTS_KEY);
-  if (result.status !== "ok" || !Array.isArray(result.value)) return [];
-  return result.value
-    .map(normalizeBalanceSnapshot)
-    .filter(isBalanceSnapshot)
-    .sort((a, b) => Date.parse(b.snapshotDate) - Date.parse(a.snapshotDate));
-}
-
-export async function saveBalanceSnapshot(input: BalanceSnapshotInput): Promise<WriteResult<BalanceSnapshot[]>> {
-  const current = await listBalanceSnapshots();
-  const now = new Date().toISOString();
-  const snapshot = normalizeBalanceSnapshot({
-    ...input,
-    id: createId(),
-    snapshotDate: now,
-    createdAt: now
-  });
-  if (!snapshot) return { data: current, persisted: true };
-
-  const updated = [snapshot, ...current].slice(0, 80);
-  const persisted = await writeJson(BALANCE_SNAPSHOTS_KEY, updated);
-  return { data: updated, persisted };
-}
-
-export async function rewriteAccountLabelInBalanceSnapshots(
-  oldLabel: string,
-  newLabel: string
-): Promise<boolean> {
-  if (oldLabel === newLabel) return true;
-
-  const current = await listBalanceSnapshots();
-  let changed = false;
-  const updated = current.map((snapshot) => {
-    if (snapshot.accountLabel !== oldLabel) return snapshot;
-    changed = true;
-    return { ...snapshot, accountLabel: newLabel };
-  });
-  if (!changed) return true;
-
-  return writeJson(BALANCE_SNAPSHOTS_KEY, updated);
-}
-
 export async function rewriteAccountLabelInManualTemplates(
   oldLabel: string,
   newLabel: string
@@ -255,8 +205,7 @@ export async function clearManualFinance(): Promise<boolean> {
     MONTHLY_PLANS_KEY,
     MANUAL_TEMPLATES_KEY,
     CATEGORY_MODES_KEY,
-    SAVINGS_GOALS_KEY,
-    BALANCE_SNAPSHOTS_KEY
+    SAVINGS_GOALS_KEY
   ]);
 }
 
@@ -265,8 +214,7 @@ export function isManualFinanceStorageCorrupt(): boolean {
     isKeyCorrupt(MONTHLY_PLANS_KEY) ||
     isKeyCorrupt(MANUAL_TEMPLATES_KEY) ||
     isKeyCorrupt(CATEGORY_MODES_KEY) ||
-    isKeyCorrupt(SAVINGS_GOALS_KEY) ||
-    isKeyCorrupt(BALANCE_SNAPSHOTS_KEY)
+    isKeyCorrupt(SAVINGS_GOALS_KEY)
   );
 }
 
@@ -352,22 +300,6 @@ function normalizeSavingsGoal(value: unknown): SavingsGoal | null {
   };
 }
 
-function normalizeBalanceSnapshot(value: unknown): BalanceSnapshot | null {
-  const record = toRecord(value);
-  if (!record) return null;
-  const accountLabel = cleanOptionalText(readString(record, "accountLabel") ?? readString(record, "label"));
-  if (!accountLabel) return null;
-  const now = new Date().toISOString();
-
-  return {
-    id: readString(record, "id") ?? createId(),
-    accountLabel,
-    amount: normalizeAmount(readNumber(record, "amount") ?? 0),
-    snapshotDate: readString(record, "snapshotDate") ?? readString(record, "capturedAt") ?? now,
-    createdAt: readString(record, "createdAt") ?? now
-  };
-}
-
 function getDefaultCategoryModes(): CategoryMode[] {
   return DEFAULT_SPENDING_CONTEXTS.map((category) => ({
     category,
@@ -400,10 +332,6 @@ function isCategoryMode(value: CategoryMode | null): value is CategoryMode {
 }
 
 function isSavingsGoal(value: SavingsGoal | null): value is SavingsGoal {
-  return value !== null;
-}
-
-function isBalanceSnapshot(value: BalanceSnapshot | null): value is BalanceSnapshot {
   return value !== null;
 }
 

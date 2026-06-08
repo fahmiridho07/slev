@@ -5,7 +5,6 @@ import type { FinanceState } from "../state/financeReducer";
 
 export type PlanningDataState = Pick<
   FinanceState,
-  | "balanceSnapshots"
   | "budgetLimits"
   | "monthlyPlan"
   | "recurringBills"
@@ -19,7 +18,6 @@ export function hasExistingPlanningData(state: PlanningDataState): boolean {
     state.budgetLimits.length > 0 ||
     state.savingsGoals.length > 0 ||
     state.recurringBills.length > 0 ||
-    state.balanceSnapshots.length > 0 ||
     state.transfers.length > 0
   );
 }

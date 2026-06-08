@@ -2,7 +2,6 @@ import { listMoneyAccounts, listMoneyTransfers } from "./accountRepository";
 import { listBudgetLimits } from "./budgetRepository";
 import { listExpenseCategories } from "./categoryRepository";
 import {
-  listBalanceSnapshots,
   listCategoryModes,
   listManualTemplates,
   listSavingsGoals
@@ -187,7 +186,6 @@ async function normalizeImportedData(): Promise<boolean> {
     writeJson(STORAGE_KEYS.categoryModes, await listCategoryModes()),
     writeJson(STORAGE_KEYS.savingsGoals, await listSavingsGoals()),
     writeJson(STORAGE_KEYS.recurringBills, await listRecurringBills()),
-    writeJson(STORAGE_KEYS.balanceSnapshots, await listBalanceSnapshots()),
     writeJson(STORAGE_KEYS.expenseCategories, await readExpenseCategoriesForExport())
   ]);
 

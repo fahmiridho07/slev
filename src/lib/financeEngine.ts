@@ -1,10 +1,8 @@
 import {
-  AccountTier,
   BalanceSnapshot,
   CategoryMode,
   EntryType,
   MoneyAccount,
-  MoneyTransfer,
   MonthlyPlan,
   SpendingContext,
   SpendingMoment
@@ -12,13 +10,7 @@ import {
 import { DEFAULT_SPENDING_CONTEXTS } from "../data/spendingMemory";
 import { displayContext } from "../i18n/display";
 import { getRuntimeStrings } from "../i18n/runtime";
-import {
-  getMonthRange,
-  isBetweenTimes,
-  isWithinRange,
-  safeTime,
-  sumMoments
-} from "./dateRanges";
+import { getMonthRange, isWithinRange, sumMoments } from "./dateRanges";
 
 export type FinanceCategoryModeValue = CategoryMode["mode"];
 
@@ -79,32 +71,6 @@ export type AllocationPlan = {
   savingsGap: number;
 };
 
-export type AccountReconciliationStatus =
-  | "matched"
-  | "small_gap"
-  | "needs_review"
-  | "needs_history"
-  | "no_snapshot";
-
-export type AccountReconciliationRow = {
-  daysCovered: number;
-  difference: number | null;
-  expectedAmount: number | null;
-  expense: number;
-  income: number;
-  label: string;
-  latestAmount: number | null;
-  latestSnapshotDate?: string;
-  loggedDelta: number;
-  previousAmount: number | null;
-  previousSnapshotDate?: string;
-  status: AccountReconciliationStatus;
-  transferIn: number;
-  transferOut: number;
-};
-
-export const DEFAULT_RECONCILIATION_TOLERANCE = 1000;
-
 export function buildCurrentMonthSummary(
   moments: SpendingMoment[],
   categoryModes: CategoryMode[],
@@ -127,47 +93,6 @@ export function buildCurrentMonthSummary(
     net: income - fixedExpense - flexibleExpense,
     topCategories: breakdown.slice(0, 2).map((row) => ({ amount: row.amount, label: row.label }))
   };
-}
-
-export function getRunwayMonths({
-  latestBalanceTotal,
-  moments,
-  referenceDate = new Date()
-}: {
-  latestBalanceTotal: number;
-  moments: SpendingMoment[];
-  referenceDate?: Date;
-}): number | null {
-  const monthlyExpenses: number[] = [];
-
-  for (let monthOffset = -1; monthOffset >= -3; monthOffset -= 1) {
-    const range = getMonthRange(referenceDate, monthOffset);
-    const expense = sumMoments(
-      moments.filter(
-        (moment) => moment.type === "expense" && isWithinRange(moment.occurredAt, range.start, range.end)
-      )
-    );
-    if (expense > 0) {
-      monthlyExpenses.push(expense);
-    }
-  }
-
-  if (monthlyExpenses.length === 0 || latestBalanceTotal <= 0) {
-    return null;
-  }
-
-  const averageMonthlyExpense =
-    monthlyExpenses.reduce((sum, expense) => sum + expense, 0) / monthlyExpenses.length;
-  if (averageMonthlyExpense <= 0) {
-    return null;
-  }
-
-  const runway = latestBalanceTotal / averageMonthlyExpense;
-  if (!Number.isFinite(runway) || runway <= 0) {
-    return null;
-  }
-
-  return Math.round(runway * 10) / 10;
 }
 
 export function buildMonthlyBreakdown(
@@ -209,201 +134,6 @@ export function getModeByCategory(categoryModes: CategoryMode[]): Map<SpendingCo
   return modes;
 }
 
-export function getLatestBalanceTotal(snapshots: BalanceSnapshot[]): number {
-  return getLatestBalanceSnapshots(snapshots).reduce((sum, snapshot) => sum + snapshot.amount, 0);
-}
-
-export type NetWorthPoint = {
-  date: string;
-  total: number;
-};
-
-export function buildNetWorthTrend({
-  balanceSnapshots,
-  maxPoints = 12,
-  projectedSnapshots
-}: {
-  balanceSnapshots: BalanceSnapshot[];
-  projectedSnapshots?: BalanceSnapshot[];
-  maxPoints?: number;
-}): NetWorthPoint[] {
-  const bucketedSnapshots = dedupeSnapshotsByCalendarDay(balanceSnapshots);
-  const distinctDays = [...new Set(bucketedSnapshots.map((snapshot) => getCalendarDay(snapshot.snapshotDate)))]
-    .filter((day) => day.length > 0)
-    .sort();
-
-  if (distinctDays.length === 0 && !projectedSnapshots?.length) {
-    return [];
-  }
-
-  const points: NetWorthPoint[] = distinctDays.map((day) => {
-    const latestByAccount = new Map<string, { amount: number; time: number }>();
-
-    bucketedSnapshots.forEach((snapshot) => {
-      const snapshotDay = getCalendarDay(snapshot.snapshotDate);
-      if (snapshotDay > day) return;
-
-      const time = safeTime(snapshot.snapshotDate);
-      const current = latestByAccount.get(snapshot.accountLabel);
-      if (!current || time > current.time) {
-        latestByAccount.set(snapshot.accountLabel, { amount: snapshot.amount, time });
-      }
-    });
-
-    const total = [...latestByAccount.values()].reduce((sum, row) => sum + row.amount, 0);
-    return { date: day, total };
-  });
-
-  if (projectedSnapshots?.length) {
-    const todayDate = projectedSnapshots[0]?.snapshotDate ?? new Date().toISOString();
-    const todayDay = getCalendarDay(todayDate);
-    const todayTotal = getLatestBalanceTotal(projectedSnapshots);
-    const lastPoint = points[points.length - 1];
-
-    if (!lastPoint || lastPoint.date !== todayDay) {
-      points.push({ date: todayDay, total: todayTotal });
-    } else {
-      points[points.length - 1] = { date: todayDay, total: todayTotal };
-    }
-  }
-
-  return points.slice(-maxPoints);
-}
-
-export function getProjectedBalanceSnapshots({
-  accounts,
-  balanceSnapshots,
-  moments,
-  referenceDate = new Date(),
-  transfers
-}: {
-  accounts: MoneyAccount[];
-  balanceSnapshots: BalanceSnapshot[];
-  moments: SpendingMoment[];
-  referenceDate?: Date;
-  transfers: MoneyTransfer[];
-}): BalanceSnapshot[] {
-  const latestSnapshots = getLatestBalanceSnapshots(balanceSnapshots);
-  const latestByLabel = new Map(latestSnapshots.map((snapshot) => [snapshot.accountLabel, snapshot]));
-  const accountIndex = new Map(accounts.map((account, index) => [account.label, index]));
-  const labels = new Set<string>();
-  const referenceTime = referenceDate.getTime();
-  const projectedAt = referenceDate.toISOString();
-
-  accounts.forEach((account) => labels.add(account.label));
-  latestSnapshots.forEach((snapshot) => labels.add(snapshot.accountLabel));
-  moments.forEach((moment) => {
-    if (moment.accountLabel) labels.add(moment.accountLabel);
-  });
-  transfers.forEach((transfer) => {
-    labels.add(transfer.fromAccount);
-    labels.add(transfer.toAccount);
-  });
-
-  return Array.from(labels)
-    .flatMap((label) => {
-      const latestSnapshot = latestByLabel.get(label);
-      if (!latestSnapshot) {
-        return [];
-      }
-
-      const baseTime = safeTime(latestSnapshot.snapshotDate);
-      const scopedMoments = moments.filter(
-        (moment) =>
-          moment.accountLabel === label &&
-          isBetweenTimes(moment.occurredAt, baseTime, referenceTime)
-      );
-      const scopedTransfers = transfers.filter(
-        (transfer) => isBetweenTimes(transfer.occurredAt, baseTime, referenceTime)
-      );
-      const income = scopedMoments
-        .filter((moment) => moment.type === "income")
-        .reduce((sum, moment) => sum + moment.amount, 0);
-      const expense = scopedMoments
-        .filter((moment) => moment.type === "expense")
-        .reduce((sum, moment) => sum + moment.amount, 0);
-      const transferIn = scopedTransfers
-        .filter((transfer) => transfer.toAccount === label)
-        .reduce((sum, transfer) => sum + transfer.amount, 0);
-      const transferOut = scopedTransfers
-        .filter((transfer) => transfer.fromAccount === label)
-        .reduce((sum, transfer) => sum + transfer.amount, 0);
-
-      return [{
-        accountLabel: label,
-        amount: Math.round(latestSnapshot.amount + income - expense + transferIn - transferOut),
-        createdAt: latestSnapshot.createdAt,
-        id: `projected-${latestSnapshot.id}`,
-        snapshotDate: projectedAt
-      }];
-    })
-    .sort((a, b) => {
-      const accountDiff =
-        (accountIndex.get(a.accountLabel) ?? Number.MAX_SAFE_INTEGER) -
-        (accountIndex.get(b.accountLabel) ?? Number.MAX_SAFE_INTEGER);
-      return accountDiff !== 0 ? accountDiff : b.amount - a.amount;
-    });
-}
-
-export function getLatestBalanceSnapshots(snapshots: BalanceSnapshot[]): BalanceSnapshot[] {
-  const latestByLabel = new Map<string, BalanceSnapshot>();
-  snapshots.forEach((snapshot) => {
-    const current = latestByLabel.get(snapshot.accountLabel);
-    if (!current || safeTime(snapshot.snapshotDate) > safeTime(current.snapshotDate)) {
-      latestByLabel.set(snapshot.accountLabel, snapshot);
-    }
-  });
-  return Array.from(latestByLabel.values()).sort(
-    (a, b) => safeTime(b.snapshotDate) - safeTime(a.snapshotDate)
-  );
-}
-
-export type TierBalanceSummary = {
-  trackedTotal: number;
-  ephemeralTotal: number;
-  total: number;
-  trackedAccountCount: number;
-  ephemeralAccountCount: number;
-};
-
-export function summarizeBalanceByTier({
-  accounts,
-  snapshots
-}: {
-  accounts: MoneyAccount[];
-  snapshots: BalanceSnapshot[];
-}): TierBalanceSummary {
-  const tierByLabel = new Map(
-    accounts.map((account) => [account.label, account.tier ?? "tracked" as AccountTier])
-  );
-  const latestSnapshots = getLatestBalanceSnapshots(snapshots);
-
-  let trackedTotal = 0;
-  let ephemeralTotal = 0;
-  let trackedAccountCount = 0;
-  let ephemeralAccountCount = 0;
-
-  for (const row of latestSnapshots) {
-    const tier = tierByLabel.get(row.accountLabel) ?? "tracked";
-    if (tier === "ephemeral") {
-      ephemeralTotal += row.amount;
-      ephemeralAccountCount += 1;
-      continue;
-    }
-
-    trackedTotal += row.amount;
-    trackedAccountCount += 1;
-  }
-
-  return {
-    trackedTotal,
-    ephemeralTotal,
-    total: trackedTotal + ephemeralTotal,
-    trackedAccountCount,
-    ephemeralAccountCount
-  };
-}
-
 export function buildAllocationPlan({
   accounts,
   latestSnapshots,
@@ -430,7 +160,6 @@ export function buildAllocationPlan({
   const incomeGap = Math.max(0, expectedIncome - monthlySummary.income);
   const fixedRemaining = fixedBudget - monthlySummary.fixedExpense;
   const flexibleRemaining = flexibleBudget - monthlySummary.flexibleExpense;
-  // Leftover cashflow (income - expense), not explicit savings transfers; true amount saved is deferred.
   const possibleSavings = Math.max(0, monthlySummary.net);
   const savingsGap = savingsTarget - possibleSavings;
   const daysRemaining = getDaysRemainingInMonth(today);
@@ -483,74 +212,6 @@ export function buildAllocationPlan({
   };
 }
 
-export function buildAccountReconciliation({
-  accounts,
-  balanceSnapshots,
-  moments,
-  toleranceAmount = DEFAULT_RECONCILIATION_TOLERANCE,
-  transfers
-}: {
-  accounts: MoneyAccount[];
-  balanceSnapshots: BalanceSnapshot[];
-  moments: SpendingMoment[];
-  toleranceAmount?: number;
-  transfers: MoneyTransfer[];
-}): AccountReconciliationRow[] {
-  const labels = new Set<string>();
-  accounts.forEach((account) => labels.add(account.label));
-  balanceSnapshots.forEach((snapshot) => labels.add(snapshot.accountLabel));
-  moments.forEach((moment) => {
-    if (moment.accountLabel) labels.add(moment.accountLabel);
-  });
-  transfers.forEach((transfer) => {
-    labels.add(transfer.fromAccount);
-    labels.add(transfer.toAccount);
-  });
-
-  return Array.from(labels)
-    .map((label) => buildAccountReconciliationRow({
-      balanceSnapshots,
-      label,
-      moments,
-      toleranceAmount,
-      transfers
-    }))
-    .sort(sortReconciliationRows);
-}
-
-export type AccountDriftRow = {
-  label: string;
-  difference: number;
-  latestSnapshotDate?: string;
-};
-
-export function buildAccountDriftAlerts(args: {
-  accounts: MoneyAccount[];
-  balanceSnapshots: BalanceSnapshot[];
-  moments: SpendingMoment[];
-  transfers: MoneyTransfer[];
-  toleranceAmount?: number;
-}): AccountDriftRow[] {
-  const ephemeralLabels = new Set(
-    args.accounts
-      .filter((account) => account.tier === "ephemeral")
-      .map((account) => account.label)
-  );
-
-  return buildAccountReconciliation(args)
-    .filter(
-      (row) =>
-        row.status === "needs_review" &&
-        row.difference !== null &&
-        !ephemeralLabels.has(row.label)
-    )
-    .map((row) => ({
-      label: row.label,
-      difference: row.difference!,
-      latestSnapshotDate: row.latestSnapshotDate
-    }));
-}
-
 function buildAllocationRow(
   key: AllocationRow["key"],
   planned: number,
@@ -586,166 +247,8 @@ function getAllocationAction({
   return { kind: "hold" };
 }
 
-function buildAccountReconciliationRow({
-  balanceSnapshots,
-  label,
-  moments,
-  toleranceAmount,
-  transfers
-}: {
-  balanceSnapshots: BalanceSnapshot[];
-  label: string;
-  moments: SpendingMoment[];
-  toleranceAmount: number;
-  transfers: MoneyTransfer[];
-}): AccountReconciliationRow {
-  const snapshots = balanceSnapshots
-    .filter((snapshot) => snapshot.accountLabel === label)
-    .sort((a, b) => safeTime(a.snapshotDate) - safeTime(b.snapshotDate));
-  const latest = snapshots[snapshots.length - 1];
-
-  if (!latest) {
-    return {
-      daysCovered: 0,
-      difference: null,
-      expectedAmount: null,
-      expense: 0,
-      income: 0,
-      label,
-      latestAmount: null,
-      loggedDelta: 0,
-      previousAmount: null,
-      status: "no_snapshot",
-      transferIn: 0,
-      transferOut: 0
-    };
-  }
-
-  const previous = snapshots[snapshots.length - 2];
-  if (!previous) {
-    return {
-      daysCovered: 0,
-      difference: null,
-      expectedAmount: null,
-      expense: 0,
-      income: 0,
-      label,
-      latestAmount: latest.amount,
-      latestSnapshotDate: latest.snapshotDate,
-      loggedDelta: 0,
-      previousAmount: null,
-      status: "needs_history",
-      transferIn: 0,
-      transferOut: 0
-    };
-  }
-
-  const startTime = safeTime(previous.snapshotDate);
-  const endTime = safeTime(latest.snapshotDate);
-  const scopedMoments = moments.filter(
-    (moment) =>
-      moment.accountLabel === label &&
-      isBetweenTimes(moment.occurredAt, startTime, endTime)
-  );
-  const scopedTransfers = transfers.filter(
-    (transfer) => isBetweenTimes(transfer.occurredAt, startTime, endTime)
-  );
-  const income = scopedMoments
-    .filter((moment) => moment.type === "income")
-    .reduce((sum, moment) => sum + moment.amount, 0);
-  const expense = scopedMoments
-    .filter((moment) => moment.type === "expense")
-    .reduce((sum, moment) => sum + moment.amount, 0);
-  const transferIn = scopedTransfers
-    .filter((transfer) => transfer.toAccount === label)
-    .reduce((sum, transfer) => sum + transfer.amount, 0);
-  const transferOut = scopedTransfers
-    .filter((transfer) => transfer.fromAccount === label)
-    .reduce((sum, transfer) => sum + transfer.amount, 0);
-  const loggedDelta = income - expense + transferIn - transferOut;
-  const expectedAmount = previous.amount + loggedDelta;
-  const difference = latest.amount - expectedAmount;
-
-  return {
-    daysCovered: getDayDistance(startTime, endTime),
-    difference,
-    expectedAmount,
-    expense,
-    income,
-    label,
-    latestAmount: latest.amount,
-    latestSnapshotDate: latest.snapshotDate,
-    loggedDelta,
-    previousAmount: previous.amount,
-    previousSnapshotDate: previous.snapshotDate,
-    status: getReconciliationStatus(difference, toleranceAmount),
-    transferIn,
-    transferOut
-  };
-}
-
-function getReconciliationStatus(
-  difference: number,
-  toleranceAmount: number
-): AccountReconciliationStatus {
-  const absoluteDifference = Math.abs(difference);
-  if (absoluteDifference <= toleranceAmount) return "matched";
-  if (absoluteDifference <= toleranceAmount * 10) return "small_gap";
-  return "needs_review";
-}
-
-function sortReconciliationRows(
-  a: AccountReconciliationRow,
-  b: AccountReconciliationRow
-): number {
-  const statusWeight: Record<AccountReconciliationStatus, number> = {
-    needs_review: 0,
-    small_gap: 1,
-    matched: 2,
-    needs_history: 3,
-    no_snapshot: 4
-  };
-  const statusDifference = statusWeight[a.status] - statusWeight[b.status];
-  if (statusDifference !== 0) return statusDifference;
-  return Math.abs(b.difference ?? 0) - Math.abs(a.difference ?? 0);
-}
-
 export function getDaysRemainingInMonth(date: Date): number {
   const dayOfMonth = date.getDate();
   const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   return Math.max(1, daysInMonth - dayOfMonth + 1);
-}
-
-function getDayDistance(startTime: number, endTime: number): number {
-  if (!Number.isFinite(startTime) || !Number.isFinite(endTime) || endTime <= startTime) {
-    return 0;
-  }
-  return Math.max(1, Math.round((endTime - startTime) / (24 * 60 * 60 * 1000)));
-}
-
-function getCalendarDay(value: string): string {
-  const time = safeTime(value);
-  if (!Number.isFinite(time) || time === 0) {
-    return "";
-  }
-  return new Date(time).toISOString().slice(0, 10);
-}
-
-function dedupeSnapshotsByCalendarDay(snapshots: BalanceSnapshot[]): BalanceSnapshot[] {
-  const latestByAccountDay = new Map<string, BalanceSnapshot>();
-
-  snapshots.forEach((snapshot) => {
-    const day = getCalendarDay(snapshot.snapshotDate);
-    if (!day) return;
-
-    const key = `${snapshot.accountLabel}|${day}`;
-    const current = latestByAccountDay.get(key);
-    if (!current || safeTime(snapshot.snapshotDate) > safeTime(current.snapshotDate)) {
-      latestByAccountDay.set(key, snapshot);
-    }
-  });
-
-  return Array.from(latestByAccountDay.values()).sort(
-    (left, right) => safeTime(left.snapshotDate) - safeTime(right.snapshotDate)
-  );
 }

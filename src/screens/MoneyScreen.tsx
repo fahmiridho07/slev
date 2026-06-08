@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
-import { ScrollView, SectionList, StyleProp, Text, TextInput, View, ViewStyle } from "react-native";
+import { SectionList, StyleProp, Text, TextInput, View, ViewStyle } from "react-native";
 import {
   BottomSheet,
   DeleteConfirmDialog,
@@ -8,11 +8,9 @@ import {
   ListActionsOnboardingTip,
   MomentRow,
   MonthPeriodPicker,
-  ScreenTabBar,
   SectionHeader,
   SegmentedControl
 } from "../components";
-import { AccountAnalysisPanel } from "../features/analysis/AccountAnalysisPanel";
 import { BreakdownPanel } from "../features/analysis/BreakdownPanel";
 import { CashflowPanel } from "../features/analysis/CashflowPanel";
 import { HomeMoneyPulse } from "../features/analysis/HomeMoneyPulse";
@@ -73,7 +71,6 @@ type ActivitySection = {
 type MoneyScreenProps = {
   activePatternTab: PatternTabKey;
   navigation: AppNavigation;
-  onOpenBalance: () => void;
   onOpenSettings: () => void;
   onPatternTabChange: (tab: PatternTabKey) => void;
   planningEnabled: boolean;
@@ -83,9 +80,8 @@ type MoneyScreenProps = {
 function MoneyScreenComponent({
   activePatternTab,
   navigation,
-  onOpenBalance,
   onOpenSettings,
-  onPatternTabChange,
+  onPatternTabChange: _onPatternTabChange,
   planningEnabled,
   scrollContentStyle
 }: MoneyScreenProps) {
@@ -99,37 +95,25 @@ function MoneyScreenComponent({
   const [pendingDeleteMoment, setPendingDeleteMoment] = useState<SpendingMoment | null>(null);
 
   const moments = useFinanceSelector((state) => state.moments);
-  const { accounts, balanceSnapshots, budgetLimits, categoryModes, monthlyPlan, savingsGoals, transfers } =
+  const { budgetLimits, monthlyPlan, savingsGoals } =
     useFinanceSelector(
       (state) => ({
-        accounts: state.accounts,
-        balanceSnapshots: state.balanceSnapshots,
         budgetLimits: state.budgetLimits,
-        categoryModes: state.categoryModes,
         monthlyPlan: state.monthlyPlan,
-        savingsGoals: state.savingsGoals,
-        transfers: state.transfers
+        savingsGoals: state.savingsGoals
       }),
       shallowEqual
     );
   const {
     allocationPlan,
     hasMonthlyPlan,
-    latestBalanceTotal,
     monthlySummary,
-    netWorthTrend,
-    projectedBalanceSnapshots,
-    runwayMonths,
     upcomingBills
   } = useFinanceDerived(
     (derived) => ({
       allocationPlan: derived.allocationPlan,
       hasMonthlyPlan: derived.hasMonthlyPlan,
-      latestBalanceTotal: derived.latestBalanceTotal,
       monthlySummary: derived.monthlySummary,
-      netWorthTrend: derived.netWorthTrend,
-      projectedBalanceSnapshots: derived.projectedBalanceSnapshots,
-      runwayMonths: derived.runwayMonths,
       upcomingBills: derived.upcomingBills
     }),
     shallowEqual
@@ -156,12 +140,6 @@ function MoneyScreenComponent({
   );
 
   useEffect(() => {
-    if (!planningEnabled && activePatternTab === "accounts") {
-      onPatternTabChange("breakdown");
-    }
-  }, [activePatternTab, onPatternTabChange, planningEnabled]);
-
-  useEffect(() => {
     if (visiblePatternTab !== "breakdown") {
       setBreakdownMonthOffset(0);
     }
@@ -174,17 +152,6 @@ function MoneyScreenComponent({
 
   const cancelEdit = useCallback(() => setEditingMoment(null), []);
   const handleSaved = useCallback(() => setEditingMoment(null), []);
-
-  const patternTabBar = planningEnabled ? (
-    <ScreenTabBar
-      options={[
-        { icon: "pie-chart-outline", label: strings.patterns.tabs.spending, value: "breakdown" },
-        { icon: "card-outline", label: strings.patterns.tabs.accounts, value: "accounts" }
-      ]}
-      selected={visiblePatternTab}
-      onSelect={onPatternTabChange}
-    />
-  ) : null;
 
   const renderItem = useCallback(
     ({ item, index, section }: { item: SpendingMoment; index: number; section: ActivitySection }) => (
@@ -279,15 +246,14 @@ function MoneyScreenComponent({
   const listHeader = useMemo(
     () => (
       <View style={styles.cardStack}>
-        {patternTabBar}
         <HomeMoneyPulse
           dailyFlexibleRoom={allocationPlan.dailyFlexibleRoom}
           hasMonthlyPlan={hasMonthlyPlan}
-          latestBalanceTotal={latestBalanceTotal}
+          latestBalanceTotal={0}
           monthlyPlan={monthlyPlan}
           monthlySummary={monthlySummary}
           onOpenBudgetPlan={planningEnabled ? navigation.openBudgetPlan : undefined}
-          runwayMonths={runwayMonths}
+          runwayMonths={null}
           savingsGoals={savingsGoals}
         />
         {planningEnabled && (
@@ -324,16 +290,13 @@ function MoneyScreenComponent({
       colors.muted,
       dismissListHint,
       hasMonthlyPlan,
-      latestBalanceTotal,
       monthlyPlan,
       monthlySummary,
       moments.length,
       navigation.openBudgetPlan,
       onOpenSettings,
-      patternTabBar,
       planningEnabled,
       query,
-      runwayMonths,
       savingsGoals,
       showListHint,
       strings.activity,
@@ -360,30 +323,6 @@ function MoneyScreenComponent({
     }
     return null;
   }, [filteredMoments.length, moments.length, navigation.openCapture, strings.activity]);
-
-  if (planningEnabled && visiblePatternTab === "accounts") {
-    return (
-      <ScrollView
-        contentContainerStyle={scrollContentStyle}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={refreshControl}
-      >
-        <View style={styles.cardStack}>
-          {patternTabBar}
-          <AccountAnalysisPanel
-            accounts={accounts}
-            balanceSnapshots={balanceSnapshots}
-            moments={moments}
-            netWorthTrend={netWorthTrend}
-            onDeleteTransfer={(id) => void actions.removeTransfer(id)}
-            onOpenBalance={onOpenBalance}
-            projectedBalanceSnapshots={projectedBalanceSnapshots}
-            transfers={transfers}
-          />
-        </View>
-      </ScrollView>
-    );
-  }
 
   return (
     <>

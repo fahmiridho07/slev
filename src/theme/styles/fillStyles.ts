@@ -1,6 +1,6 @@
-import { TextStyle, ViewStyle } from "react-native";
+import { ViewStyle } from "react-native";
 import { clampPercent, getPercentWidthStyle } from "../../lib/analysis";
-import { AccountReconciliationRow, AllocationPlan } from "../../lib/financeEngine";
+import { AllocationPlan } from "../../lib/financeEngine";
 import type { ColorTokens } from "../types";
 
 export function getAllocationFillStyle(
@@ -20,14 +20,6 @@ export function getAllocationFillStyle(
     backgroundColor,
     width: getPercentWidthStyle(row.progress).width
   };
-}
-
-export function getReconciliationAmountStyle(
-  row: AccountReconciliationRow,
-  colors: ColorTokens
-): Pick<TextStyle, "color"> | undefined {
-  if (row.difference === null || Math.abs(row.difference) <= 1000) return undefined;
-  return { color: row.difference > 0 ? colors.blue : colors.coral };
 }
 
 export function getProgressFillStyle(

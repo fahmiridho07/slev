@@ -1,7 +1,6 @@
 import { getDefaultToastMessage } from "../i18n/toasts";
 import { BalanceAnchor } from "../services/balanceAnchorRepository";
 import {
-  BalanceSnapshot,
   BudgetLimit,
   CategoryMode,
   ExpenseCategory,
@@ -17,7 +16,6 @@ import {
 
 export type FinanceState = {
   balanceAnchor: BalanceAnchor | null;
-  balanceSnapshots: BalanceSnapshot[];
   bootError: string | null;
   budgetLimits: BudgetLimit[];
   categoryModes: CategoryMode[];
@@ -38,7 +36,6 @@ export type FinanceState = {
 
 export const initialFinanceState: FinanceState = {
   balanceAnchor: null,
-  balanceSnapshots: [],
   bootError: null,
   budgetLimits: [],
   categoryModes: [],
@@ -78,7 +75,6 @@ export type FinanceAction =
   | { type: "set_manual_templates"; manualTemplates: ManualTemplate[] }
   | { type: "set_recurring_bills"; recurringBills: RecurringBill[] }
   | { type: "set_savings_goals"; savingsGoals: SavingsGoal[] }
-  | { type: "set_balance_snapshots"; balanceSnapshots: BalanceSnapshot[] }
   | { type: "set_balance_anchor"; balanceAnchor: FinanceState["balanceAnchor"] }
   | { type: "set_accounts"; accounts: MoneyAccount[] }
   | { type: "set_transfers"; transfers: MoneyTransfer[] }
@@ -132,8 +128,6 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       return { ...state, recurringBills: action.recurringBills };
     case "set_savings_goals":
       return { ...state, savingsGoals: action.savingsGoals };
-    case "set_balance_snapshots":
-      return { ...state, balanceSnapshots: action.balanceSnapshots };
     case "set_balance_anchor":
       return { ...state, balanceAnchor: action.balanceAnchor };
     case "set_accounts":
@@ -146,7 +140,6 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       return {
         ...state,
         balanceAnchor: null,
-        balanceSnapshots: [],
         budgetLimits: [],
         categoryModes: [],
         clearConfirmVisible: false,

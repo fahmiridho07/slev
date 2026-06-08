@@ -2,16 +2,9 @@ import React, { createContext, useEffect, useMemo, useReducer, useRef } from "re
 
 import { getUpcomingBills, UpcomingBill } from "../lib/recurringBills";
 import {
-  AccountDriftRow,
   AllocationPlan,
-  buildAccountDriftAlerts,
   buildAllocationPlan,
-  buildCurrentMonthSummary,
-  buildNetWorthTrend,
-  getLatestBalanceSnapshots,
-  getLatestBalanceTotal,
-  getProjectedBalanceSnapshots,
-  getRunwayMonths
+  buildCurrentMonthSummary
 } from "../lib/financeEngine";
 
 import { getCategoryLabels } from "../services/categoryRepository";
@@ -21,16 +14,11 @@ import { createDerivedStore, DerivedStore } from "./derivedStore";
 import { createFinanceStore, FinanceStore } from "./financeStore";
 
 export type FinanceDerived = {
-  accountDrift: AccountDriftRow[];
   allocationPlan: AllocationPlan;
   categoryLabels: ReturnType<typeof getCategoryLabels>;
   hasMonthlyPlan: boolean;
-  latestBalanceTotal: number;
-  runwayMonths: number | null;
   monthlySummary: ReturnType<typeof buildCurrentMonthSummary>;
-  projectedBalanceSnapshots: ReturnType<typeof getProjectedBalanceSnapshots>;
   upcomingBills: UpcomingBill[];
-  netWorthTrend: ReturnType<typeof buildNetWorthTrend>;
 };
 
 export const ActionsContext = createContext<FinanceActions | null>(null);
@@ -60,43 +48,11 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     () => buildCurrentMonthSummary(state.moments, state.categoryModes),
     [state.moments, state.categoryModes]
   );
-  const projectedBalanceSnapshots = useMemo(
-    () =>
-      getProjectedBalanceSnapshots({
-        accounts: state.accounts,
-        balanceSnapshots: state.balanceSnapshots,
-        moments: state.moments,
-        transfers: state.transfers
-      }),
-    [state.accounts, state.balanceSnapshots, state.moments, state.transfers]
-  );
-  const accountDrift = useMemo(
-    () =>
-      buildAccountDriftAlerts({
-        accounts: state.accounts,
-        balanceSnapshots: state.balanceSnapshots,
-        moments: state.moments,
-        transfers: state.transfers
-      }),
-    [state.accounts, state.balanceSnapshots, state.moments, state.transfers]
-  );
-  const latestBalanceTotal = useMemo(
-    () => getLatestBalanceTotal(projectedBalanceSnapshots),
-    [projectedBalanceSnapshots]
-  );
   const categoryLabels = useMemo(
     () => getCategoryLabels(state.expenseCategories),
     [state.expenseCategories]
   );
   const hasMonthlyPlan = Boolean(state.monthlyPlan);
-  const runwayMonths = useMemo(
-    () =>
-      getRunwayMonths({
-        latestBalanceTotal,
-        moments: state.moments
-      }),
-    [latestBalanceTotal, state.moments]
-  );
   const upcomingBills = useMemo(
     () => getUpcomingBills({ bills: state.recurringBills }),
     [state.recurringBills]
@@ -105,28 +61,17 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     () => upcomingBills.reduce((sum, item) => sum + item.bill.amount, 0),
     [upcomingBills]
   );
-  const netWorthTrend = useMemo(
-    () =>
-      buildNetWorthTrend({
-        balanceSnapshots: state.balanceSnapshots,
-        projectedSnapshots:
-          state.balanceSnapshots.length > 0 ? projectedBalanceSnapshots : undefined
-      }),
-    [projectedBalanceSnapshots, state.balanceSnapshots]
-  );
   const allocationPlan = useMemo(
     () => {
-      const currentBalances = getLatestBalanceSnapshots(projectedBalanceSnapshots);
       const hasBalanceEvidence =
-        state.balanceSnapshots.length > 0
-        || monthlySummary.income > 0
+        monthlySummary.income > 0
         || monthlySummary.expense > 0
         || state.transfers.length > 0;
 
       return buildAllocationPlan({
         accounts: state.accounts,
         hasBalanceEvidence,
-        latestSnapshots: currentBalances,
+        latestSnapshots: [],
         monthlyPlan: state.monthlyPlan,
         monthlySummary,
         upcomingBillsReserve
@@ -134,9 +79,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     },
     [
       monthlySummary,
-      projectedBalanceSnapshots,
       state.accounts,
-      state.balanceSnapshots.length,
       state.monthlyPlan,
       state.transfers.length,
       upcomingBillsReserve
@@ -144,27 +87,17 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   );
   const derived = useMemo<FinanceDerived>(
     () => ({
-      accountDrift,
       allocationPlan,
       categoryLabels,
       hasMonthlyPlan,
-      latestBalanceTotal,
-      runwayMonths,
       monthlySummary,
-      projectedBalanceSnapshots,
-      upcomingBills,
-      netWorthTrend
+      upcomingBills
     }),
     [
-      accountDrift,
       allocationPlan,
       categoryLabels,
       hasMonthlyPlan,
-      latestBalanceTotal,
-      netWorthTrend,
-      runwayMonths,
       monthlySummary,
-      projectedBalanceSnapshots,
       upcomingBills
     ]
   );

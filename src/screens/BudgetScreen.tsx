@@ -30,28 +30,21 @@ function BudgetScreenComponent({
   const { refreshControl } = usePullToRefresh();
   const actions = useActions();
   const {
-    accountDrift,
     allocationPlan,
     categoryLabels,
     hasMonthlyPlan,
-    latestBalanceTotal,
-    monthlySummary,
-    projectedBalanceSnapshots
+    monthlySummary
   } = useFinanceDerived(
     (derived) => ({
-      accountDrift: derived.accountDrift,
       allocationPlan: derived.allocationPlan,
       categoryLabels: derived.categoryLabels,
       hasMonthlyPlan: derived.hasMonthlyPlan,
-      latestBalanceTotal: derived.latestBalanceTotal,
-      monthlySummary: derived.monthlySummary,
-      projectedBalanceSnapshots: derived.projectedBalanceSnapshots
+      monthlySummary: derived.monthlySummary
     }),
     shallowEqual
   );
   const {
     accounts,
-    balanceSnapshots,
     budgetLimits,
     categoryModes,
     expenseCategories,
@@ -62,7 +55,6 @@ function BudgetScreenComponent({
   } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
-      balanceSnapshots: state.balanceSnapshots,
       budgetLimits: state.budgetLimits,
       categoryModes: state.categoryModes,
       expenseCategories: state.expenseCategories,
@@ -88,7 +80,7 @@ function BudgetScreenComponent({
         activeTab: activeBudgetTab,
         allocationFlexibleRemaining: allocationPlan.flexibleRemaining,
         hasMonthlyPlan,
-        latestBalanceTotal,
+        latestBalanceTotal: 0,
         monthlyFlexibleExpense: monthlySummary.flexibleExpense,
         onOpenPlan: () => onBudgetTabChange("plan"),
         savingsGoals,
@@ -98,7 +90,6 @@ function BudgetScreenComponent({
       activeBudgetTab,
       allocationPlan.flexibleRemaining,
       hasMonthlyPlan,
-      latestBalanceTotal,
       monthlySummary.flexibleExpense,
       onBudgetTabChange,
       savingsGoals,
@@ -164,10 +155,8 @@ function BudgetScreenComponent({
             {showAllocationDetails && (
               <AllocationPanel
                 accounts={accounts}
-                balanceSnapshots={balanceSnapshots}
                 monthlyPlan={monthlyPlan}
                 monthlySummary={monthlySummary}
-                projectedBalanceSnapshots={projectedBalanceSnapshots}
                 transfers={transfers}
                 onOpenBalance={() => onBudgetTabChange("balance")}
               />
@@ -213,13 +202,9 @@ function BudgetScreenComponent({
       )}
       {activeBudgetTab === "balance" && (
         <BalancePanel
-          accountDrift={accountDrift}
           accounts={accounts}
-          balanceSnapshots={balanceSnapshots}
-          projectedBalanceSnapshots={projectedBalanceSnapshots}
           onDeleteAccount={(id) => void actions.removeAccount(id)}
           onSaveAccount={(input) => actions.saveAccount(input)}
-          onSaveBalance={(input) => actions.saveBalance(input)}
         />
       )}
     </StickyTabScreen>

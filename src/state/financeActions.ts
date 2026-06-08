@@ -7,7 +7,6 @@ import { getMemoryEditValidationError } from "../features/memory/memoryValidatio
 import {
   getAccountValidationError,
   getBalanceAnchorValidationError,
-  getBalanceSnapshotValidationError,
   getGoalValidationError,
   getLimitValidationError,
   getPlanValidationError
@@ -111,11 +110,9 @@ import {
   deleteManualTemplate,
   deleteSavingsGoal,
   getMonthlyPlan,
-  listBalanceSnapshots,
   listCategoryModes,
   listManualTemplates,
   listSavingsGoals,
-  saveBalanceSnapshot,
   saveCategoryMode,
   saveManualTemplate,
   saveMonthlyPlan,
@@ -161,7 +158,6 @@ export function createFinanceActions(
       storedManualTemplates,
       storedSavingsGoals,
       storedRecurringBills,
-      storedBalanceSnapshots,
       storedBalanceAnchor,
       storedAccounts,
       storedTransfers,
@@ -175,7 +171,6 @@ export function createFinanceActions(
       listManualTemplates(),
       listSavingsGoals(),
       listRecurringBills(),
-      listBalanceSnapshots(),
       getBalanceAnchor(),
       listMoneyAccounts(),
       listMoneyTransfers(),
@@ -193,7 +188,6 @@ export function createFinanceActions(
         manualTemplates: storedManualTemplates,
         savingsGoals: storedSavingsGoals,
         recurringBills: storedRecurringBills,
-        balanceSnapshots: storedBalanceSnapshots,
         balanceAnchor: storedBalanceAnchor,
         accounts: storedAccounts,
         transfers: storedTransfers,
@@ -748,33 +742,6 @@ export function createFinanceActions(
     setMessage(getBillLoggedToast(saved.amount, bill.label));
   }
 
-  async function saveBalance(input: {
-    accountLabel: string;
-    amount: string;
-  }): Promise<FormActionResult<"accountLabel" | "amount">> {
-    const validationError = getBalanceSnapshotValidationError(input);
-    if (validationError) {
-      return { ok: false, validation: validationError };
-    }
-
-    const amount = parseAmountInput(input.amount);
-    if (!amount) {
-      return { ok: false };
-    }
-
-    const { data: updated, persisted } = await saveBalanceSnapshot({
-      amount,
-      accountLabel: input.accountLabel
-    });
-    if (!persisted) {
-      notifyWriteFailure(STORAGE_KEYS.balanceSnapshots);
-      return { ok: false };
-    }
-    dispatch({ type: "set_balance_snapshots", balanceSnapshots: updated });
-    notifySuccess(getBalanceSavedToast());
-    return { ok: true };
-  }
-
   async function setBalanceAnchor(input: {
     amount: string;
   }): Promise<FormActionResult<"accountLabel" | "amount">> {
@@ -916,7 +883,6 @@ export function createFinanceActions(
     removeTransfer,
     saveAccount,
     saveAsTemplate,
-    saveBalance,
     setBalanceAnchor,
     saveCategory,
     saveCategoryBudget,
