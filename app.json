@@ -23,7 +23,7 @@
     "android": {
       "package": "com.slev.app",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/brand/slev-icon.png",
+        "foregroundImage": "./assets/brand/slev-adaptive-foreground.png",
         "backgroundColor": "#f7f8f4"
       },
       "permissions": []
