@@ -571,10 +571,13 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     fontSize: 13,
     fontWeight: "700"
   },
-  sheetBackdrop: {
-    backgroundColor: colors.sheetBackdrop,
+  sheetRoot: {
     flex: 1,
     justifyContent: "flex-end"
+  },
+  sheetBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.sheetBackdrop
   },
   sheetBackdropPressable: {
     ...StyleSheet.absoluteFillObject
