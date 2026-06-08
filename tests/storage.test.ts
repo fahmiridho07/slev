@@ -760,6 +760,105 @@ test("importAllData rolls back touched keys on invalid collection", async () => 
   assertEqual(moments[0]?.label, "Coffee", "original moment restored");
 });
 
+test("importAllData removes collections that were empty before a failed import", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await saveSpendingMoment({
+    amount: 1000,
+    label: "Coffee",
+    context: "Food",
+    type: "expense"
+  });
+  const original = await exportAllData();
+
+  const backup = {
+    ...original,
+    data: {
+      ...original.data,
+      [STORAGE_KEYS.moments]: [
+        {
+          id: "new-moment",
+          amount: 50_000,
+          label: "Lunch",
+          context: "Food",
+          type: "expense",
+          recordedAt: "2026-06-01T00:00:00.000Z"
+        }
+      ],
+      [STORAGE_KEYS.patternFeedback]: [],
+      [STORAGE_KEYS.accounts]: "bad-value"
+    }
+  };
+
+  const result = await importAllData(backup);
+  assertEqual(result.ok, false, "import fails on third collection");
+  if (!result.ok) {
+    assertEqual(result.code, "invalid_collection", "invalid collection code");
+    assertEqual(result.key, STORAGE_KEYS.accounts, "third collection fails validation");
+  }
+
+  const moments = await listSpendingMoments();
+  assertEqual(moments.length, 1, "still one moment");
+  assertEqual(moments[0]?.label, "Coffee", "pre-import moment restored");
+
+  const feedbackRaw = await readRaw(STORAGE_KEYS.patternFeedback);
+  assertEqual(feedbackRaw, null, "empty pre-import collection removed after rollback");
+});
+
+test("importAllData restores pre-import collection data after rollback", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await saveSpendingMoment({
+    amount: 1000,
+    label: "Coffee",
+    context: "Food",
+    type: "expense"
+  });
+  await saveMoneyAccount({
+    label: "Custom Pocket",
+    kind: "wallet",
+    isIncomeHub: false
+  });
+  const original = await exportAllData();
+
+  const backup = {
+    ...original,
+    data: {
+      ...original.data,
+      [STORAGE_KEYS.moments]: [
+        {
+          id: "new-moment",
+          amount: 99_000,
+          label: "Hacked",
+          context: "Food",
+          type: "expense",
+          recordedAt: "2026-06-01T00:00:00.000Z"
+        }
+      ],
+      [STORAGE_KEYS.patternFeedback]: [{ id: "fb-1", patternId: "p1", response: "keep" }],
+      [STORAGE_KEYS.accounts]: "bad-value"
+    }
+  };
+
+  const result = await importAllData(backup);
+  assertEqual(result.ok, false, "import fails before finishing");
+
+  const moments = await listSpendingMoments();
+  assertEqual(moments[0]?.label, "Coffee", "moments restored to pre-import data");
+
+  const accounts = await listMoneyAccounts();
+  assertEqual(
+    accounts.some((account) => account.label === "Custom Pocket"),
+    true,
+    "accounts restored to pre-import data"
+  );
+
+  const feedbackRaw = await readRaw(STORAGE_KEYS.patternFeedback);
+  assertEqual(feedbackRaw, null, "newly written empty-adjacent collection rolled back");
+});
+
 test("importAllData rolls back touched keys when a write fails", async () => {
   const driver = createMemoryDriver({ failWrites: new Set([STORAGE_KEYS.accounts]) });
   setStorageDriver(driver);

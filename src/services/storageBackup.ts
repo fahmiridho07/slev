@@ -3,7 +3,7 @@ import { listExpenseCategories } from "./categoryRepository";
 import { listManualTemplates } from "./manualFinanceRepository";
 import { listRecurringBills } from "./recurringBillsRepository";
 import { listPatternFeedback, listSpendingMoments } from "./spendingMemoryRepository";
-import { clearCorruptFlag, readJson, writeJson } from "./storage";
+import { clearCorruptFlag, readJson, removeKeys, writeJson } from "./storage";
 import {
   EXPORTABLE_STORAGE_KEYS,
   getSchemaVersion,
@@ -130,14 +130,21 @@ async function restoreImportSnapshot(
     keysToRestore.add(failedKey as (typeof EXPORTABLE_STORAGE_KEYS)[number]);
   }
 
+  const keysToRemove: string[] = [];
+
   for (const key of keysToRestore) {
     const value = snapshot.data[key];
     if (value === undefined) {
+      keysToRemove.push(key);
       continue;
     }
     if (isImportableValue(value)) {
       await writeJson(key, value);
     }
+  }
+
+  if (keysToRemove.length > 0) {
+    await removeKeys(keysToRemove);
   }
 
   if (typeof snapshot.schemaVersion === "number") {
