@@ -85,20 +85,30 @@ export function IncomeSourcesAccordion({ moments, monthOffset }: IncomeSourcesAc
               {emptyReason ? (
                 <EmptyState text={getTrackerEmptyCopy(emptyReason, "income", strings.patterns.tracker)} />
               ) : null}
-              <CategoryVerticalBarChart
-                limit={showAllCategories ? rows.length : 5}
-                onPressRow={openRow}
-                rows={rows}
-              />
-              <CategoryBreakdownRows
-                breakdownType="income"
-                moments={moments}
-                onOpenRow={openRow}
-                onToggleShowAll={() => setShowAllCategories((prev) => !prev)}
-                referenceDate={referenceDate}
-                rows={rows}
-                showAllCategories={showAllCategories}
-              />
+              <CategoryVerticalBarChart onPressRow={openRow} rows={rows} />
+              {showAllCategories ? (
+                <CategoryBreakdownRows
+                  breakdownType="income"
+                  moments={moments}
+                  onOpenRow={openRow}
+                  onToggleShowAll={() => setShowAllCategories((prev) => !prev)}
+                  referenceDate={referenceDate}
+                  rows={rows}
+                  showAllCategories={showAllCategories}
+                  skipTopRows={5}
+                />
+              ) : (
+                <CategoryBreakdownRows
+                  breakdownType="income"
+                  moments={moments}
+                  onOpenRow={openRow}
+                  onToggleShowAll={() => setShowAllCategories(true)}
+                  referenceDate={referenceDate}
+                  rows={rows}
+                  showAllCategories={false}
+                  skipTopRows={5}
+                />
+              )}
             </>
           )}
 

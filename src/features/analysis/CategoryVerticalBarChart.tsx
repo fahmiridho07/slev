@@ -1,8 +1,14 @@
 import React, { useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
+import { formatString } from "../../i18n";
 import { getPercentHeightStyle } from "../../lib/analysis";
 import { FinanceBreakdownRow } from "../../lib/financeEngine";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { useTheme } from "../../hooks/useTheme";
+import { getCategoryChartColors } from "./categoryChartColors";
+
+const CHART_COLUMN_LIMIT = 5;
+const MIN_RELATIVE_BAR_HEIGHT = 0.1;
 
 type CategoryVerticalBarChartProps = {
   limit?: number;
@@ -11,84 +17,129 @@ type CategoryVerticalBarChartProps = {
 };
 
 export function CategoryVerticalBarChart({
-  limit = 5,
+  limit = CHART_COLUMN_LIMIT,
   onPressRow,
   rows
 }: CategoryVerticalBarChartProps) {
-  const { colors, styles } = useTheme();
-  const chartColors = useMemo(
-    () => [
-      colors.greenDark,
-      colors.blue,
-      colors.amber,
-      colors.coral,
-      colors.chartSage,
-      colors.chartLilac,
-      colors.chartSlate,
-      colors.chartCopper
-    ],
-    [
-      colors.amber,
-      colors.blue,
-      colors.chartCopper,
-      colors.chartLilac,
-      colors.chartSage,
-      colors.chartSlate,
-      colors.coral,
-      colors.greenDark
-    ]
-  );
+  const { colors, strings, styles } = useTheme();
+  const chartStrings = strings.patterns.chart;
+  const chartColors = useMemo(() => getCategoryChartColors(colors), [colors]);
   const visibleRows = rows.slice(0, limit);
+  const total = useMemo(() => rows.reduce((sum, row) => sum + row.amount, 0), [rows]);
   const maxShare = useMemo(
-    () => Math.max(...visibleRows.map((row) => row.share), 0.01),
+    () => visibleRows.reduce((peak, row) => Math.max(peak, row.share), 0),
     [visibleRows]
   );
 
-  if (visibleRows.length === 0) {
+  if (visibleRows.length === 0 || total <= 0) {
     return null;
   }
 
   return (
-    <View style={styles.chartColumnChart}>
-      {visibleRows.map((row, index) => {
-        const relativeShare = row.share / maxShare;
-        const barColor = chartColors[index % chartColors.length];
-        const column = (
-          <View key={row.key} style={styles.chartColumn}>
-            <View
-              accessibilityLabel={`${row.label}: ${Math.round(row.share * 100)} percent`}
-              accessibilityRole="text"
-              style={styles.chartColumnTrack}
-            >
-              <View
-                style={[
-                  styles.chartColumnFill,
-                  getPercentHeightStyle(relativeShare),
-                  { backgroundColor: barColor }
-                ]}
-              />
+    <View style={styles.chartColumnPanel}>
+      <Text style={styles.chartColumnCaption}>
+        {formatString(chartStrings.totalAcross, {
+          total: formatRupiah(total),
+          count: rows.length
+        })}
+      </Text>
+
+      <View style={styles.chartColumnChart}>
+        {visibleRows.map((row, index) => {
+          const percent = Math.round(row.share * 100);
+          const barColor = chartColors[index % chartColors.length];
+          const relativeShare = maxShare > 0 ? row.share / maxShare : 0;
+          const barHeight =
+            relativeShare > 0 ? Math.max(relativeShare, MIN_RELATIVE_BAR_HEIGHT) : 0;
+
+          const column = (
+            <View style={styles.chartColumn}>
+              <Text style={styles.chartColumnPercent}>{percent}%</Text>
+              <View style={styles.chartColumnTrack}>
+                <View
+                  style={[
+                    styles.chartColumnFill,
+                    getPercentHeightStyle(barHeight),
+                    { backgroundColor: barColor }
+                  ]}
+                />
+              </View>
             </View>
-            <Text numberOfLines={2} style={styles.chartColumnLabel}>
-              {row.label}
-            </Text>
-          </View>
-        );
+          );
 
-        if (!onPressRow) {
-          return column;
-        }
+          if (!onPressRow) {
+            return (
+              <View key={row.key} style={styles.chartColumnPressable}>
+                {column}
+              </View>
+            );
+          }
 
-        return (
-          <Pressable
-            key={row.key}
-            accessibilityRole="button"
-            onPress={() => onPressRow(row)}
-            style={styles.chartColumnPressable}
-          >
-            {column}
-          </Pressable>
-        );
-      })}
+          return (
+            <Pressable
+              key={row.key}
+              accessibilityLabel={`${row.label}: ${formatRupiah(row.amount)}, ${percent} percent`}
+              accessibilityRole="button"
+              onPress={() => onPressRow(row)}
+              style={({ pressed }) => [
+                styles.chartColumnPressable,
+                pressed && styles.chartColumnPressablePressed
+              ]}
+            >
+              {column}
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={styles.chartColumnLegendDivider} />
+
+      <View style={styles.chartLegend}>
+        {visibleRows.map((row, index) => {
+          const percent = Math.round(row.share * 100);
+          const barColor = chartColors[index % chartColors.length];
+          const legendContent = (
+            <>
+              <View style={styles.chartLegendLabelRow}>
+                <View style={[styles.chartLegendSwatch, { backgroundColor: barColor }]} />
+                <Text numberOfLines={1} style={styles.chartLegendLabel}>
+                  {row.label}
+                </Text>
+              </View>
+              <Text style={styles.chartLegendValue}>
+                {formatString(chartStrings.legendValue, {
+                  amount: formatRupiah(row.amount),
+                  percent
+                })}
+              </Text>
+            </>
+          );
+
+          if (!onPressRow) {
+            return (
+              <View key={row.key} style={styles.chartLegendRow}>
+                {legendContent}
+              </View>
+            );
+          }
+
+          return (
+            <Pressable
+              key={row.key}
+              accessibilityLabel={`${row.label}: ${formatRupiah(row.amount)}, ${percent} percent`}
+              accessibilityRole="button"
+              onPress={() => onPressRow(row)}
+              style={({ pressed }) => [
+                styles.chartLegendRow,
+                styles.chartLegendRowPressable,
+                pressed && styles.chartColumnPressablePressed
+              ]}
+            >
+              {legendContent}
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }

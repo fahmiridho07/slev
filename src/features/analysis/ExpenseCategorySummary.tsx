@@ -74,20 +74,31 @@ export function ExpenseCategorySummary({ moments, monthOffset }: ExpenseCategory
       ) : null}
 
       <SectionHeader title={breakdownStrings.spendingByCategory} />
-      <CategoryVerticalBarChart
-        limit={showAllCategories ? rows.length : 5}
-        onPressRow={openRow}
-        rows={rows}
-      />
-      <CategoryBreakdownRows
-        breakdownType="expense"
-        moments={moments}
-        onOpenRow={openRow}
-        onToggleShowAll={() => setShowAllCategories((prev) => !prev)}
-        referenceDate={referenceDate}
-        rows={rows}
-        showAllCategories={showAllCategories}
-      />
+      <CategoryVerticalBarChart onPressRow={openRow} rows={rows} />
+
+      {showAllCategories ? (
+        <CategoryBreakdownRows
+          breakdownType="expense"
+          moments={moments}
+          onOpenRow={openRow}
+          onToggleShowAll={() => setShowAllCategories((prev) => !prev)}
+          referenceDate={referenceDate}
+          rows={rows}
+          showAllCategories={showAllCategories}
+          skipTopRows={5}
+        />
+      ) : (
+        <CategoryBreakdownRows
+          breakdownType="expense"
+          moments={moments}
+          onOpenRow={openRow}
+          onToggleShowAll={() => setShowAllCategories(true)}
+          referenceDate={referenceDate}
+          rows={rows}
+          showAllCategories={false}
+          skipTopRows={5}
+        />
+      )}
 
       <BreakdownDrilldownOverlays
         breakdownType="expense"

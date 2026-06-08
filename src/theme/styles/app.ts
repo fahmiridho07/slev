@@ -935,10 +935,26 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     height: "100%",
     minWidth: 2
   },
+  chartColumnPanel: {
+    backgroundColor: colors.faint,
+    borderColor: colors.line,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 12,
+    padding: 14
+  },
+  chartColumnCaption: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 16,
+    textAlign: "center"
+  },
   chartColumnChart: {
-    flexDirection: "row",
     alignItems: "flex-end",
+    flexDirection: "row",
     gap: 8,
+    justifyContent: "space-between",
     minHeight: 132,
     paddingTop: 4
   },
@@ -946,41 +962,88 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     flex: 1,
     minWidth: 0
   },
+  chartColumnPressablePressed: {
+    opacity: 0.72
+  },
   chartColumn: {
     alignItems: "center",
     flex: 1,
     gap: 8,
     justifyContent: "flex-end",
-    minWidth: 0
+    minWidth: 0,
+    width: "100%"
   },
   chartColumnTrack: {
-    alignSelf: "stretch",
-    backgroundColor: colors.faint,
-    borderRadius: 8,
-    height: 96,
+    alignSelf: "center",
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 10,
+    borderWidth: 1,
+    height: 120,
     justifyContent: "flex-end",
-    maxWidth: 48,
     overflow: "hidden",
     width: "100%"
   },
   chartColumnFill: {
     borderRadius: 8,
-    minHeight: 4,
+    minHeight: 6,
     width: "100%"
   },
-  chartColumnLabel: {
-    color: colors.muted,
-    fontSize: 11,
-    fontWeight: "700",
-    lineHeight: 14,
+  chartColumnPercent: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 16,
     textAlign: "center",
     width: "100%"
+  },
+  chartColumnLegendDivider: {
+    backgroundColor: colors.line,
+    height: 1,
+    width: "100%"
+  },
+  breakdownLegendRow: {
+    alignItems: "center",
+    borderBottomColor: colors.faint,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12
+  },
+  breakdownLegendSwatch: {
+    borderRadius: 999,
+    height: 10,
+    width: 10
+  },
+  breakdownLegendTextBlock: {
+    flex: 1,
+    gap: 2,
+    minWidth: 0
+  },
+  breakdownLegendAmount: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  breakdownLegendMeta: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 16
   },
   chartLegend: {
     gap: 10
   },
   chartLegendRow: {
     gap: 4
+  },
+  chartLegendRowPressable: {
+    borderRadius: 8,
+    marginHorizontal: -4,
+    paddingHorizontal: 4,
+    paddingVertical: 2
   },
   chartLegendLabelRow: {
     alignItems: "center",

@@ -18,6 +18,18 @@ export function formatSignedCompactRupiah(amount: number): string {
   return formatRupiah(0);
 }
 
+export function formatShortRupiah(amount: number): string {
+  if (amount >= 1_000_000) {
+    const millions = amount / 1_000_000;
+    const rounded = millions >= 10 ? Math.round(millions) : Math.round(millions * 10) / 10;
+    return `${rounded} jt`;
+  }
+  if (amount >= 1_000) {
+    return `${Math.round(amount / 1_000)} rb`;
+  }
+  return formatRupiah(amount);
+}
+
 export function formatMomentAmount(moment: SpendingMoment): string {
   return moment.type === "income"
     ? `+${formatRupiah(moment.amount)}`
