@@ -688,6 +688,10 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     backgroundColor: colors.surfaceWarning,
     borderColor: colors.borderWarning
   },
+  purchaseVerdictDanger: {
+    backgroundColor: colors.surfaceDanger,
+    borderColor: colors.borderDanger
+  },
   purchaseVerdictText: {
     flex: 1,
     fontSize: 14,

@@ -59,13 +59,17 @@ function SafeToSpendCardComponent() {
       ? componentStyles.purchaseVerdictNeutral
       : purchaseSimulation.verdict === "affordable"
         ? componentStyles.purchaseVerdictSafe
-        : componentStyles.purchaseVerdictWarn;
+        : purchaseSimulation.verdict === "over_pace"
+          ? componentStyles.purchaseVerdictWarn
+          : componentStyles.purchaseVerdictDanger;
   const verdictColor =
     purchaseSimulation == null
       ? colors.muted
       : purchaseSimulation.verdict === "affordable"
         ? colors.greenDark
-        : colors.amber;
+        : purchaseSimulation.verdict === "over_pace"
+          ? colors.amber
+          : colors.coral;
   const verdictIcon: keyof typeof Ionicons.glyphMap =
     purchaseSimulation == null
       ? "information-circle-outline"
@@ -91,6 +95,14 @@ function SafeToSpendCardComponent() {
     purchaseSimulation != null && safe.safeDaily > 0
       ? Math.max(0, Math.min(1, purchaseSimulation.newSafeDaily / safe.safeDaily))
       : 0;
+  const meterColor =
+    purchaseSimulation == null
+      ? colors.line
+      : purchaseSimulation.newSafeDaily <= 0
+        ? colors.coral
+        : safe.typicalDaily > 0 && purchaseSimulation.newSafeDaily < safe.typicalDaily
+          ? colors.amber
+          : colors.green;
   const meterTrackWidthRef = useRef(0);
   const meterFillWidth = useRef(new Animated.Value(0)).current;
 
@@ -246,7 +258,7 @@ function SafeToSpendCardComponent() {
                     style={[
                       componentStyles.purchaseMeterFill,
                       {
-                        backgroundColor: verdictColor,
+                        backgroundColor: meterColor,
                         width: meterFillWidth
                       }
                     ]}
