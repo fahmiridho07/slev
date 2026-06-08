@@ -4,9 +4,8 @@ import type { AppStrings } from "./types";
 export const en: AppStrings = {
   tabs: {
     home: "Home",
-    overview: "Overview",
-    budget: "Budget",
-    analysis: "Analysis"
+    money: "Money",
+    budget: "Budget"
   },
   brand: {
     tagline: "Spending memory",
@@ -111,6 +110,10 @@ export const en: AppStrings = {
     label: "Appearance",
     light: "Light",
     dark: "Dark",
+    planningLabel: "Planning & budgeting",
+    planningHelper: "Turning this off hides budget tools. Your plans, limits, and balances stay saved.",
+    planningOff: "Off",
+    planningOn: "On",
     reduceMotionLabel: "Motion",
     reduceMotionOff: "Full",
     reduceMotionOn: "Reduce",
@@ -217,6 +220,22 @@ export const en: AppStrings = {
       savedTowardGoals: "Saved toward goals: {saved} of {target}",
       monthlySavingsTarget: "Monthly savings target: {amount}"
     },
+    safeToSpend: {
+      setBalancePrompt: "What's your balance right now?",
+      setBalancePlaceholder: "Current balance",
+      saveBalanceA11y: "Save current balance",
+      heroLabel: "Safe to spend today",
+      balanceAnchor: "Balance now: {amount}",
+      typicalDaily: "Your daily average is {amount}",
+      typicalDailyUncertain: "Rough estimate — need more data",
+      daysLeft: "{count} days left",
+      checkPurchase: "Can I buy something?",
+      checkPurchaseA11y: "Check if a purchase fits your daily allowance",
+      sheetTitle: "Can I afford this?",
+      purchasePlaceholder: "Purchase amount",
+      affordable: "Yes. After this, your safe daily spend is {amount} until payday.",
+      notAffordable: "Not quite safe — this would eat into your daily allowance. Short by {amount}."
+    },
     bills: {
       comingUp: "Coming up",
       empty: "No bills due in the next two weeks. Recurring bills can be added in Settings.",
@@ -287,6 +306,18 @@ export const en: AppStrings = {
       recap: "Recap",
       spending: "Spending",
       accounts: "Accounts"
+    },
+    tracker: {
+      cashflow: "Cashflow",
+      cashflowEmptyMonth: "No income or spending logged this month yet.",
+      cashflowEarlyNew: "Log income or spending and this month's cashflow will take shape.",
+      cashflowEarlyBuilding: "A few entries are in — cashflow fills in as the month goes on.",
+      expenseEmptyMonth: "Nothing spent this month yet.",
+      expenseEarlyNew: "A few expenses logged — category breakdown grows as you keep tracking.",
+      expenseEarlyBuilding: "Spending is light so far — more entries will sharpen this view.",
+      incomeEmptyMonth: "No income logged this month yet.",
+      incomeEarlyNew: "A few income entries logged — sources fill in as you keep tracking.",
+      incomeEarlyBuilding: "Income is light so far — more entries will sharpen this view."
     },
     hero: {
       breakdownHint: "{amount} income logged this month",

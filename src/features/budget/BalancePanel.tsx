@@ -21,7 +21,7 @@ import {
   getLatestBalanceTotal,
   summarizeBalanceByTier
 } from "../../lib/financeEngine";
-import { formatCompactRupiah, formatRupiah } from "../../lib/spendingMemoryPatterns";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { AccountTier, BalanceSnapshot, MoneyAccount } from "../spendingMemory.types";
 import { hapticSelection, hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
@@ -149,7 +149,7 @@ export function BalancePanel({
                 <Text style={styles.settingCopy}>{accountMeta}</Text>
               </View>
               <Text style={styles.analyticsAmount}>
-                {balance !== undefined ? formatCompactRupiah(balance) : balanceStrings.noActivity}
+                {balance !== undefined ? formatRupiah(balance) : balanceStrings.noActivity}
               </Text>
             </View>
           </View>
@@ -185,14 +185,14 @@ export function BalancePanel({
             <Text style={styles.settingTitle}>{balanceStrings.estimatedCurrentBalance}</Text>
             <Text style={styles.settingCopy}>
               {formatString(balanceStrings.estimatedCurrentBalanceCopy, {
-                total: formatCompactRupiah(currentBalanceTotal)
+                total: formatRupiah(currentBalanceTotal)
               })}
             </Text>
             {tierSummary.ephemeralAccountCount > 0 && tierSummary.ephemeralTotal > 0 ? (
               <Text style={styles.settingCopy}>
                 {formatString(balanceStrings.trackedEphemeralCopy, {
-                  tracked: formatCompactRupiah(tierSummary.trackedTotal),
-                  ephemeral: formatCompactRupiah(tierSummary.ephemeralTotal)
+                  tracked: formatRupiah(tierSummary.trackedTotal),
+                  ephemeral: formatRupiah(tierSummary.ephemeralTotal)
                 })}
               </Text>
             ) : null}
@@ -230,7 +230,7 @@ export function BalancePanel({
               <Text style={styles.settingTitle}>{balanceStrings.manualSnapshotBase}</Text>
               <Text style={styles.settingCopy}>
                 {formatString(balanceStrings.manualSnapshotCopy, {
-                  total: formatCompactRupiah(manualBalanceTotal)
+                  total: formatRupiah(manualBalanceTotal)
                 })}
               </Text>
             </View>

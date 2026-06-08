@@ -5,7 +5,7 @@ import { formatString } from "../../i18n";
 import { formatLocaleMonthYear } from "../../i18n/localeDate";
 import { filterBreakdownMoments, getMonthlyBudgetLimit } from "../../lib/breakdownDrilldown";
 import { FinanceBreakdownRow } from "../../lib/financeEngine";
-import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { BudgetLimit, EntryType, SpendingMoment } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 import { getProgressFillStyle } from "../../theme/styles/fillStyles";
@@ -60,7 +60,7 @@ export function CategoryBreakdownSheet({
         <Text style={styles.settingCopy}>
           {formatString(breakdownStrings.drilldownSummary, {
             count: entries.length,
-            total: formatCompactRupiah(row.amount)
+            total: formatRupiah(row.amount)
           })}
         </Text>
 
@@ -68,8 +68,8 @@ export function CategoryBreakdownSheet({
           <View style={styles.breakdownBudgetBlock}>
             <Text style={styles.budgetMeta}>
               {formatString(limitsStrings.spentOfLimit, {
-                spent: formatCompactRupiah(row.amount),
-                limit: formatCompactRupiah(monthlyLimit.limitAmount),
+                spent: formatRupiah(row.amount),
+                limit: formatRupiah(monthlyLimit.limitAmount),
                 period: limitsStrings.monthly
               })}
             </Text>

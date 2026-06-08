@@ -5,7 +5,7 @@ import { formatString } from "../../i18n";
 import { formatLocaleShortDate } from "../../i18n/localeDate";
 import { getPercentWidthStyle } from "../../lib/analysis";
 import { NetWorthPoint } from "../../lib/financeEngine";
-import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { useTheme } from "../../hooks/useTheme";
 
 export function NetWorthTrendSection({
@@ -41,7 +41,7 @@ export function NetWorthTrendSection({
           <View key={point.date} style={styles.analyticsRow}>
             <View style={styles.analyticsRowHeader}>
               <Text style={componentStyles.analyticsTitle}>{formatLocaleShortDate(point.date)}</Text>
-              <Text style={styles.analyticsAmount}>{formatCompactRupiah(point.total)}</Text>
+              <Text style={styles.analyticsAmount}>{formatRupiah(point.total)}</Text>
             </View>
             <ProgressBar
               accessibilityLabel={formatString(strings.common.progressA11y, {

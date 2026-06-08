@@ -1,5 +1,5 @@
 import { SpendingMoment } from "../features/spendingMemory.types";
-import { formatCompactRupiah } from "./spendingMemoryPatterns";
+import { formatRupiah } from "./spendingMemoryPatterns";
 
 export function parseAmountInput(value: string): number | null {
   const amount = Number.parseInt(value.replace(/[^\d]/g, ""), 10);
@@ -13,13 +13,13 @@ export function formatAmountInput(value: string): string {
 }
 
 export function formatSignedCompactRupiah(amount: number): string {
-  if (amount > 0) return `+${formatCompactRupiah(amount)}`;
-  if (amount < 0) return `-${formatCompactRupiah(Math.abs(amount))}`;
-  return formatCompactRupiah(0);
+  if (amount > 0) return `+${formatRupiah(amount)}`;
+  if (amount < 0) return `-${formatRupiah(Math.abs(amount))}`;
+  return formatRupiah(0);
 }
 
 export function formatMomentAmount(moment: SpendingMoment): string {
   return moment.type === "income"
-    ? `+${formatCompactRupiah(moment.amount)}`
-    : formatCompactRupiah(moment.amount);
+    ? `+${formatRupiah(moment.amount)}`
+    : formatRupiah(moment.amount);
 }

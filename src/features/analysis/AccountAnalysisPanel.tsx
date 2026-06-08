@@ -6,7 +6,7 @@ import { formatString } from "../../i18n";
 import { AccountActivityRow, buildAccountActivity, dateKey, formatDate, formatReconciliationDifference, getReconciliationCopy, getReconciliationDetail, getPercentWidthStyle } from "../../lib/analysis";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
 import { buildAccountReconciliation, getLatestBalanceSnapshots, NetWorthPoint } from "../../lib/financeEngine";
-import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { BalanceSnapshot, MoneyAccount, MoneyTransfer, SpendingMoment, type PatternGroup } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 import { getReconciliationAmountStyle } from "../../theme/styles/fillStyles";
@@ -68,8 +68,8 @@ export function AccountAnalysisPanel({
         {row.expectedAmount !== null && row.latestAmount !== null && (
           <Text style={styles.settingCopy}>
             {formatString(accountsStrings.expectedActual, {
-              expected: formatCompactRupiah(row.expectedAmount),
-              actual: formatCompactRupiah(row.latestAmount)
+              expected: formatRupiah(row.expectedAmount),
+              actual: formatRupiah(row.latestAmount)
             })}
           </Text>
         )}
@@ -83,7 +83,7 @@ export function AccountAnalysisPanel({
       <View style={styles.analyticsRow}>
         <View style={styles.analyticsRowHeader}>
           <AccountTitle label={row.label} />
-          <Text style={styles.analyticsAmount}>{formatCompactRupiah(row.expense)}</Text>
+          <Text style={styles.analyticsAmount}>{formatRupiah(row.expense)}</Text>
         </View>
         <ProgressBar
           accessibilityLabel={formatString(strings.common.progressA11y, {
@@ -95,7 +95,7 @@ export function AccountAnalysisPanel({
         />
         <Text style={styles.settingCopy}>
           {formatString(accountsStrings.incomeNetCopy, {
-            income: formatCompactRupiah(row.income),
+            income: formatRupiah(row.income),
             net: formatSignedCompactRupiah(row.net)
           })}
         </Text>
@@ -116,7 +116,7 @@ export function AccountAnalysisPanel({
         <View style={styles.analyticsRow}>
           <View style={styles.analyticsRowHeader}>
             <TransferTitle fromLabel={transfer.fromAccount} toLabel={transfer.toAccount} />
-            <Text style={styles.analyticsAmount}>{formatCompactRupiah(transfer.amount)}</Text>
+            <Text style={styles.analyticsAmount}>{formatRupiah(transfer.amount)}</Text>
           </View>
           <Text style={styles.settingCopy}>
             {formatDate(dateKey(new Date(transfer.occurredAt)))}{transfer.note ? ` - ${transfer.note}` : ""}
@@ -152,8 +152,8 @@ export function AccountAnalysisPanel({
             <Text style={styles.settingTitle}>{accountsStrings.hubAndPockets}</Text>
             <Text style={styles.settingCopy}>
               {formatString(accountsStrings.hubPocketsCopy, {
-                hub: formatCompactRupiah(hubBalance),
-                pockets: formatCompactRupiah(pocketBalance)
+                hub: formatRupiah(hubBalance),
+                pockets: formatRupiah(pocketBalance)
               })}
             </Text>
           </View>
@@ -166,7 +166,7 @@ export function AccountAnalysisPanel({
               {topSpendingAccount
                 ? formatString(accountsStrings.topSpendingCopy, {
                     label: topSpendingAccount.label,
-                    amount: formatCompactRupiah(topSpendingAccount.expense)
+                    amount: formatRupiah(topSpendingAccount.expense)
                   })
                 : accountsStrings.spendingByAccountEmpty}
             </Text>
@@ -255,7 +255,7 @@ export function AccountAnalysisPanel({
         body={
           pendingDeleteTransfer
             ? formatString(accountsStrings.deleteTransferBody, {
-                amount: formatCompactRupiah(pendingDeleteTransfer.amount),
+                amount: formatRupiah(pendingDeleteTransfer.amount),
                 from: pendingDeleteTransfer.fromAccount,
                 to: pendingDeleteTransfer.toAccount
               })

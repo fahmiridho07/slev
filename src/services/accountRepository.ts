@@ -1,4 +1,17 @@
 import { AccountTier, MoneyAccount, MoneyTransfer } from "../features/spendingMemory.types";
+import {
+  rewriteAccountLabelInBalanceSnapshots,
+  rewriteAccountLabelInManualTemplates
+} from "./manualFinanceRepository";
+import { rewriteAccountLabelInRecurringBills } from "./recurringBillsRepository";
+import { rewriteAccountLabelInMoments } from "./spendingMemoryRepository";
+import {
+  cleanOptionalText,
+  createId,
+  readNumber,
+  readString,
+  toRecord
+} from "./storageRecordUtils";
 import { isKeyCorrupt, readJson, removeKeys, WriteResult, writeJson } from "./storage";
 
 const ACCOUNTS_KEY = "slev_accounts";
@@ -53,7 +66,18 @@ export async function saveMoneyAccount(input: AccountInput): Promise<WriteResult
     ...current.filter((item) => item.id !== account.id && item.label.toLowerCase() !== account.label.toLowerCase())
   ];
   const updated = sortAccounts(normalizeIncomeHubs(merged, account.isIncomeHub ? account.id : undefined));
+
+  if (existing && existing.label !== account.label) {
+    const cascaded = await cascadeAccountLabelRename(existing.label, account.label);
+    if (!cascaded) {
+      return { data: current, persisted: false };
+    }
+  }
+
   const persisted = await writeJson(ACCOUNTS_KEY, updated);
+  if (!persisted && existing && existing.label !== account.label) {
+    await cascadeAccountLabelRename(account.label, existing.label);
+  }
   return { data: updated, persisted };
 }
 
@@ -199,20 +223,6 @@ function normalizeAccountTier(value: string | undefined): AccountTier {
   return value === "ephemeral" ? "ephemeral" : "tracked";
 }
 
-function toRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? value as Record<string, unknown> : null;
-}
-
-function readString(record: Record<string, unknown>, key: string): string | undefined {
-  const value = record[key];
-  return typeof value === "string" ? value : undefined;
-}
-
-function readNumber(record: Record<string, unknown>, key: string): number | undefined {
-  const value = record[key];
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
-}
-
 function readBoolean(record: Record<string, unknown>, key: string): boolean | undefined {
   const value = record[key];
   return typeof value === "boolean" ? value : undefined;
@@ -235,11 +245,68 @@ function cleanLabel(value: string | undefined): string | undefined {
   return cleaned ? cleaned.slice(0, 32) : undefined;
 }
 
-function cleanOptionalText(value: string | undefined): string | undefined {
-  const cleaned = String(value ?? "").replace(/\s+/g, " ").trim();
-  return cleaned ? cleaned.slice(0, 80) : undefined;
+async function rewriteAccountLabelInTransfers(oldLabel: string, newLabel: string): Promise<boolean> {
+  if (oldLabel === newLabel) return true;
+
+  const current = await listMoneyTransfers();
+  let changed = false;
+  const updated = current.map((transfer) => {
+    const fromAccount = transfer.fromAccount === oldLabel ? newLabel : transfer.fromAccount;
+    const toAccount = transfer.toAccount === oldLabel ? newLabel : transfer.toAccount;
+    if (fromAccount === transfer.fromAccount && toAccount === transfer.toAccount) {
+      return transfer;
+    }
+    changed = true;
+    return {
+      ...transfer,
+      fromAccount,
+      toAccount,
+      updatedAt: new Date().toISOString()
+    };
+  });
+  if (!changed) return true;
+
+  return writeJson(TRANSFERS_KEY, updated.sort(sortTransfers));
 }
 
-function createId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+async function cascadeAccountLabelRename(oldLabel: string, newLabel: string): Promise<boolean> {
+  const steps: Array<{
+    apply: () => Promise<boolean>;
+    rollback: () => Promise<boolean>;
+  }> = [
+    {
+      apply: () => rewriteAccountLabelInMoments(oldLabel, newLabel),
+      rollback: () => rewriteAccountLabelInMoments(newLabel, oldLabel)
+    },
+    {
+      apply: () => rewriteAccountLabelInTransfers(oldLabel, newLabel),
+      rollback: () => rewriteAccountLabelInTransfers(newLabel, oldLabel)
+    },
+    {
+      apply: () => rewriteAccountLabelInBalanceSnapshots(oldLabel, newLabel),
+      rollback: () => rewriteAccountLabelInBalanceSnapshots(newLabel, oldLabel)
+    },
+    {
+      apply: () => rewriteAccountLabelInRecurringBills(oldLabel, newLabel),
+      rollback: () => rewriteAccountLabelInRecurringBills(newLabel, oldLabel)
+    },
+    {
+      apply: () => rewriteAccountLabelInManualTemplates(oldLabel, newLabel),
+      rollback: () => rewriteAccountLabelInManualTemplates(newLabel, oldLabel)
+    }
+  ];
+
+  const completed: Array<() => Promise<boolean>> = [];
+  for (const step of steps) {
+    const ok = await step.apply();
+    if (!ok) {
+      for (const rollback of completed.reverse()) {
+        await rollback();
+      }
+      return false;
+    }
+    completed.push(step.rollback);
+  }
+
+  return true;
 }

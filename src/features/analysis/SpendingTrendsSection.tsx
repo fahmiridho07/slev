@@ -4,7 +4,7 @@ import { Pressable, Text, View } from "react-native";
 import { EmptyState, ObservationPanel, ProgressBar, SectionHeader } from "../../components";
 import { formatString } from "../../i18n";
 import { buildCashflowWeeks, buildSpendingTrend, getDataMaturity, getPercentWidthStyle } from "../../lib/analysis";
-import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { SpendingMoment, type PatternGroup } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 import { CashflowPanel } from "./CashflowPanel";
@@ -54,7 +54,7 @@ export function SpendingTrendsSection({ moments }: { moments: SpendingMoment[] }
                   <View key={month.key} style={styles.analyticsRow}>
                     <View style={styles.analyticsRowHeader}>
                       <Text style={componentStyles.analyticsTitle}>{month.label}</Text>
-                      <Text style={styles.analyticsAmount}>{formatCompactRupiah(month.amount)}</Text>
+                      <Text style={styles.analyticsAmount}>{formatRupiah(month.amount)}</Text>
                     </View>
                     <ProgressBar
                       accessibilityLabel={formatString(strings.common.progressA11y, {

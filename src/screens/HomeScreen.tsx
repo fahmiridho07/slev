@@ -1,5 +1,6 @@
 import React, { memo, useEffect, useRef } from "react";
 import { ScrollView, StyleProp, View, ViewStyle } from "react-native";
+import { SafeToSpendCard } from "../features/analysis/SafeToSpendCard";
 import { CapturePanel } from "../features/capture/CapturePanel";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { useTheme } from "../hooks/useTheme";
@@ -40,6 +41,7 @@ function HomeScreenComponent({
       keyboardShouldPersistTaps="handled"
       refreshControl={refreshControl}
     >
+      <SafeToSpendCard />
       <View
         onLayout={(event) => {
           captureOffsetRef.current = event.nativeEvent.layout.y;

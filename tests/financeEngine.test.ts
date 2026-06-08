@@ -5,12 +5,18 @@ import {
   buildAllocationPlan,
   buildCurrentMonthSummary,
   buildMonthlyBreakdown,
+  getDaysRemainingInMonth,
   getLatestBalanceTotal,
   getLatestBalanceSnapshots,
   getModeByCategory,
   getProjectedBalanceSnapshots,
   summarizeBalanceByTier
 } from "../src/lib/financeEngine";
+import {
+  buildSafeToSpend,
+  getEffectiveBalance,
+  simulatePurchase
+} from "../src/lib/safeToSpend";
 import {
   AccountTier,
   BalanceSnapshot,
@@ -329,7 +335,7 @@ test("latest balance snapshots keep the newest snapshot per account", () => {
   assertEqual(latest[1]?.accountLabel, "Jago", "Jago should be retained");
 });
 
-test("projected balances include income before any manual snapshot", () => {
+test("getProjectedBalanceSnapshots excludes accounts without a snapshot", () => {
   const projected = getProjectedBalanceSnapshots({
     accounts: [
       account("BRI", "bank", true),
@@ -345,11 +351,34 @@ test("projected balances include income before any manual snapshot", () => {
       transfer("BRI", "Jago", 500_000, "2026-06-04T00:00:00.000Z")
     ]
   });
+
+  assertEqual(projected.length, 0, "accounts without snapshots should not be projected from zero");
+});
+
+test("getProjectedBalanceSnapshots projects only accounts with a snapshot baseline", () => {
+  const projected = getProjectedBalanceSnapshots({
+    accounts: [
+      account("BRI", "bank", true),
+      account("Jago", "bank", false)
+    ],
+    balanceSnapshots: [
+      snapshot("BRI", 1_000_000, "2026-06-01T00:00:00.000Z")
+    ],
+    moments: [
+      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
+      moment({ accountLabel: "Jago", amount: 250_000, occurredAt: "2026-06-03T00:00:00.000Z" })
+    ],
+    referenceDate: juneMidpoint,
+    transfers: [
+      transfer("BRI", "Jago", 500_000, "2026-06-04T00:00:00.000Z")
+    ]
+  });
   const bri = projected.find((row) => row.accountLabel === "BRI");
   const jago = projected.find((row) => row.accountLabel === "Jago");
 
-  assertEqual(bri?.amount, 1_500_000, "BRI projected balance should include income and transfer out");
-  assertEqual(jago?.amount, 250_000, "Jago projected balance should include transfer in and expense");
+  assertEqual(projected.length, 1, "only snapshotted accounts should be projected");
+  assertEqual(bri?.amount, 2_500_000, "BRI projected balance should start from snapshot plus logged delta");
+  assertEqual(jago, undefined, "Jago without a snapshot should stay unknown");
 });
 
 test("summarizeBalanceByTier treats accounts without tier as tracked", () => {
@@ -427,6 +456,98 @@ test("category modes preserve fixed defaults and custom overrides", () => {
   assertEqual(modes.get("Home"), "fixed", "Home should default to fixed");
   assertEqual(modes.get("Coffee"), "flexible", "Coffee should default to flexible");
   assertEqual(modes.get("Meal"), "fixed", "custom mode should override defaults");
+});
+
+test("getEffectiveBalance returns null without balance snapshots", () => {
+  const balance = getEffectiveBalance({
+    accounts: [account("BRI", "bank", true)],
+    balanceSnapshots: [],
+    moments: [],
+    referenceDate: juneMidpoint,
+    transfers: []
+  });
+
+  assertEqual(balance, null, "missing snapshots should surface a set-balance state");
+});
+
+test("buildSafeToSpend computes safeDaily from effective balance and days left", () => {
+  const daysLeft = getDaysRemainingInMonth(juneMidpoint);
+  const safe = buildSafeToSpend({
+    accounts: [account("BRI", "bank", true)],
+    balanceSnapshots: [snapshot("BRI", 1_600_000, "2026-06-15T01:00:00.000Z")],
+    moments: [],
+    referenceDate: juneMidpoint,
+    transfers: []
+  });
+
+  assertEqual(safe.effectiveBalance, 1_600_000, "effective balance should use projected snapshots");
+  assertEqual(safe.daysLeft, daysLeft, "days left should default to month remainder");
+  assertEqual(safe.safeDaily, Math.round(1_600_000 / daysLeft), "safeDaily should divide balance by days left");
+});
+
+test("buildSafeToSpend classifies spending pace against safeDaily", () => {
+  const daysLeft = getDaysRemainingInMonth(juneMidpoint);
+  const baseArgs = {
+    accounts: [account("BRI", "bank", true)],
+    balanceSnapshots: [snapshot("BRI", 1_000_000, "2026-06-15T01:00:00.000Z")],
+    referenceDate: juneMidpoint,
+    transfers: [] as MoneyTransfer[],
+    windowDays: 10
+  };
+  const safeDaily = Math.round(1_000_000 / daysLeft);
+
+  const underSpend = buildSafeToSpend({
+    ...baseArgs,
+    moments: trailingExpenseMoments(safeDaily - 20_000, 10, juneMidpoint)
+  });
+  const overSpend = buildSafeToSpend({
+    ...baseArgs,
+    moments: trailingExpenseMoments(safeDaily + 20_000, 10, juneMidpoint)
+  });
+  const evenSpend = buildSafeToSpend({
+    ...baseArgs,
+    moments: trailingExpenseMoments(safeDaily, 10, juneMidpoint)
+  });
+  const unknownSpend = buildSafeToSpend({
+    accounts: [account("BRI", "bank", true)],
+    balanceSnapshots: [],
+    moments: [],
+    referenceDate: juneMidpoint,
+    transfers: []
+  });
+
+  assertEqual(underSpend.pace, "under", "lower typical spend should pace under safeDaily");
+  assertEqual(overSpend.pace, "over", "higher typical spend should pace over safeDaily");
+  assertEqual(evenSpend.pace, "even", "matching typical spend should pace even");
+  assertEqual(unknownSpend.pace, "unknown", "missing balance should hide pace");
+  assertEqual(unknownSpend.safeDaily, null, "safeDaily should be null without balance evidence");
+});
+
+test("simulatePurchase rejects purchases that break daily coverage even when balance remains", () => {
+  const safe = buildSafeToSpend({
+    accounts: [account("BRI", "bank", true)],
+    balanceSnapshots: [snapshot("BRI", 1_000_000, "2026-06-15T01:00:00.000Z")],
+    moments: trailingExpenseMoments(50_000, 10, juneMidpoint),
+    referenceDate: juneMidpoint,
+    transfers: [],
+    windowDays: 10
+  });
+  const typicalNeed = safe.typicalDaily * safe.daysLeft;
+
+  const tightPurchase = simulatePurchase({ amount: 300_000, safe });
+  const comfortablePurchase = simulatePurchase({ amount: 100_000, safe });
+
+  assertEqual(tightPurchase.remainingBalance, 700_000, "purchase should reduce remaining balance");
+  assertEqual(tightPurchase.remainingBalance >= 0, true, "purchase should still leave non-negative balance");
+  assertEqual(tightPurchase.remainingBalance < typicalNeed, true, "remaining cash should fall short of typical daily needs");
+  assertEqual(tightPurchase.coversTypicalDays, false, "remaining cash should not cover typical daily needs");
+  assertEqual(tightPurchase.affordable, false, "affordable requires balance and daily coverage");
+  assertEqual(comfortablePurchase.affordable, true, "smaller purchase should stay affordable");
+  assertEqual(
+    comfortablePurchase.newSafeDaily,
+    Math.max(0, Math.round(900_000 / safe.daysLeft)),
+    "newSafeDaily should recompute from remaining balance"
+  );
 });
 
 runTests();
@@ -564,4 +685,23 @@ function plan(input: {
 
 function printable(value: unknown): string {
   return typeof value === "string" ? `"${value}"` : JSON.stringify(value);
+}
+
+function trailingExpenseMoments(dailyAmount: number, dayCount: number, referenceDate: Date): SpendingMoment[] {
+  const moments: SpendingMoment[] = [];
+  const windowEnd = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
+
+  for (let offset = 1; offset <= dayCount; offset += 1) {
+    const day = new Date(windowEnd);
+    day.setDate(day.getDate() - offset);
+    moments.push(
+      moment({
+        amount: dailyAmount,
+        context: "Meal",
+        occurredAt: day.toISOString()
+      })
+    );
+  }
+
+  return moments;
 }

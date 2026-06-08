@@ -8,6 +8,7 @@ const LOCALE_KEY = "slev_ui_locale";
 const NAV_STATE_KEY = "slev_ui_nav_state";
 const MEMORY_LIST_HINT_KEY = "slev_ui_memory_list_hint_seen";
 const REDUCE_MOTION_KEY = "slev_ui_reduce_motion";
+const PLANNING_ENABLED_KEY = "slev_ui_planning_enabled";
 
 export type ReduceMotionPreference = "off" | "on" | "system";
 
@@ -37,11 +38,11 @@ const BUDGET_TABS = new Set<BudgetTabKey>(["plan", "balance", "goals"]);
 const PATTERN_TABS = new Set<PatternTabKey>(["breakdown", "accounts"]);
 const SETTINGS_TABS = new Set<SettingsTabKey>(["bills", "categories", "appearance", "data"]);
 
-function parseBudgetTab(value: unknown): BudgetTabKey {
+export function parseBudgetTab(value: unknown): BudgetTabKey {
   return typeof value === "string" && BUDGET_TABS.has(value as BudgetTabKey) ? (value as BudgetTabKey) : "plan";
 }
 
-function parsePatternTab(value: unknown): PatternTabKey {
+export function parsePatternTab(value: unknown): PatternTabKey {
   if (value === "overview" || value === "recap") {
     return "breakdown";
   }
@@ -50,7 +51,7 @@ function parsePatternTab(value: unknown): PatternTabKey {
     : "breakdown";
 }
 
-function parseSettingsTab(value: unknown): SettingsTabKey {
+export function parseSettingsTab(value: unknown): SettingsTabKey {
   return typeof value === "string" && SETTINGS_TABS.has(value as SettingsTabKey)
     ? (value as SettingsTabKey)
     : "bills";
@@ -144,4 +145,19 @@ export async function getNavStatePreference(): Promise<StoredNavState | null> {
 
 export async function setNavStatePreference(state: StoredNavState): Promise<void> {
   await writeRaw(NAV_STATE_KEY, JSON.stringify(state));
+}
+
+export async function getPlanningEnabledPreference(): Promise<boolean | null> {
+  const stored = await readRaw(PLANNING_ENABLED_KEY);
+  if (stored === "1") {
+    return true;
+  }
+  if (stored === "0") {
+    return false;
+  }
+  return null;
+}
+
+export async function setPlanningEnabledPreference(enabled: boolean): Promise<void> {
+  await writeRaw(PLANNING_ENABLED_KEY, enabled ? "1" : "0");
 }

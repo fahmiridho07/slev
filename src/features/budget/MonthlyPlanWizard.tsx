@@ -4,7 +4,7 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { formatString } from "../../i18n";
 import { MonthlySummary } from "../app.types";
 import { formatAmountInput, formatSignedCompactRupiah, parseAmountInput } from "../../lib/formatMoney";
-import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
 import { useTheme } from "../../hooks/useTheme";
@@ -102,7 +102,7 @@ export function MonthlyPlanWizard({
             >
               <Ionicons name="sparkles-outline" size={16} color={colors.greenDark} />
               <Text style={componentStyles.textButtonLabel}>
-                {formatString(planStrings.useLoggedIncome, { amount: formatCompactRupiah(loggedIncome) })}
+                {formatString(planStrings.useLoggedIncome, { amount: formatRupiah(loggedIncome) })}
               </Text>
             </Pressable>
           )}
@@ -147,7 +147,7 @@ export function MonthlyPlanWizard({
           />
           <View style={styles.planSummaryRow}>
             <Text style={styles.settingCopy}>{planStrings.flexibleBudget}</Text>
-            <Text style={componentStyles.analyticsTitle}>{formatCompactRupiah(flexibleBudget)}</Text>
+            <Text style={componentStyles.analyticsTitle}>{formatRupiah(flexibleBudget)}</Text>
           </View>
           <View style={styles.planSummaryRow}>
             <Text style={styles.settingCopy}>{planStrings.flexibleRemaining}</Text>
@@ -158,7 +158,7 @@ export function MonthlyPlanWizard({
           {overCommitted > 0 && (
             <View style={styles.planSummaryRow}>
               <Text style={styles.settingCopy}>{planStrings.overIncomeBy}</Text>
-              <Text style={[componentStyles.analyticsTitle, styles.expenseText]}>{formatCompactRupiah(overCommitted)}</Text>
+              <Text style={[componentStyles.analyticsTitle, styles.expenseText]}>{formatRupiah(overCommitted)}</Text>
             </View>
           )}
         </>

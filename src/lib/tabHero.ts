@@ -1,7 +1,7 @@
 import type { AppStrings } from "../i18n/types";
 import { formatLocaleMonthYear } from "../i18n/localeDate";
 import { formatSignedCompactRupiah } from "./formatMoney";
-import { formatCompactRupiah } from "./spendingMemoryPatterns";
+import { formatRupiah } from "./spendingMemoryPatterns";
 import { sumSavingsGoals } from "./savingsGoalsTotals";
 import type { BudgetTabKey, PatternTabKey } from "../features/app.types";
 import type { SavingsGoal } from "../features/spendingMemory.types";
@@ -34,7 +34,7 @@ export function buildBudgetTabHero(input: {
     return {
       hint: strings.budget.hero.balanceHint,
       kicker: strings.budget.hero.balanceKicker,
-      value: formatCompactRupiah(input.latestBalanceTotal),
+      value: formatRupiah(input.latestBalanceTotal),
       valueTone: "balance",
       variant: "info"
     };
@@ -45,7 +45,7 @@ export function buildBudgetTabHero(input: {
       return {
         hint: formatString(strings.budget.hero.goalsHint, { count: input.savingsGoals.length }),
         kicker: strings.budget.hero.goalsKicker,
-        value: `${formatCompactRupiah(totals.saved)} / ${formatCompactRupiah(totals.target)}`,
+        value: `${formatRupiah(totals.saved)} / ${formatRupiah(totals.target)}`,
         valueTone: "income",
         variant: "surface"
       };
@@ -60,7 +60,7 @@ export function buildBudgetTabHero(input: {
   if (input.hasMonthlyPlan) {
     return {
       hint: formatString(strings.budget.hero.flexibleSpent, {
-        amount: formatCompactRupiah(input.monthlyFlexibleExpense)
+        amount: formatRupiah(input.monthlyFlexibleExpense)
       }),
       kicker: strings.budget.hero.flexibleRemaining,
       value: formatSignedCompactRupiah(input.allocationFlexibleRemaining),
@@ -100,16 +100,16 @@ export function buildPatternsTabHero(input: {
     return {
       hint: isCurrentMonth
         ? formatString(strings.patterns.hero.breakdownHint, {
-            amount: formatCompactRupiah(summary.income)
+            amount: formatRupiah(summary.income)
           })
         : formatString(strings.patterns.hero.breakdownHintMonth, {
-            amount: formatCompactRupiah(summary.income),
+            amount: formatRupiah(summary.income),
             month: monthLabel
           }),
       kicker: isCurrentMonth
         ? strings.patterns.hero.breakdownKicker
         : formatString(strings.patterns.hero.breakdownKickerMonth, { month: monthLabel }),
-      value: formatCompactRupiah(summary.expense),
+      value: formatRupiah(summary.expense),
       valueTone: "danger",
       variant: "info"
     };
@@ -121,7 +121,7 @@ export function buildPatternsTabHero(input: {
           ? strings.patterns.hero.accountsHintWithTrend
           : strings.patterns.hero.accountsHintNoTrend,
       kicker: strings.patterns.hero.accountsKicker,
-      value: formatCompactRupiah(input.latestBalanceTotal),
+      value: formatRupiah(input.latestBalanceTotal),
       valueTone: "balance",
       variant: "info"
     };
@@ -129,10 +129,10 @@ export function buildPatternsTabHero(input: {
   const summary = input.breakdownSummary ?? input.monthlySummary;
   return {
     hint: formatString(strings.patterns.hero.breakdownHint, {
-      amount: formatCompactRupiah(summary.income)
+      amount: formatRupiah(summary.income)
     }),
     kicker: strings.patterns.hero.breakdownKicker,
-    value: formatCompactRupiah(summary.expense),
+    value: formatRupiah(summary.expense),
     valueTone: "danger",
     variant: "info"
   };

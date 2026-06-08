@@ -4,7 +4,7 @@ import { Pressable, Text, View } from "react-native";
 import { MonthlyPlan, SavingsGoal } from "../spendingMemory.types";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
 import { sumSavingsGoals } from "../../lib/savingsGoalsTotals";
-import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { MonthlySummary } from "../app.types";
 import { useTheme } from "../../hooks/useTheme";
 import { formatString } from "../../i18n";
@@ -49,7 +49,7 @@ export function HomeMoneyPulse({
           <Text style={styles.pulseHeroLabel}>{strings.home.pulse.safeToSpendToday}</Text>
         </View>
         {showSafeToSpend ? (
-          <Text style={styles.pulseHeroValue}>{formatCompactRupiah(dailyFlexibleRoom)}</Text>
+          <Text style={styles.pulseHeroValue}>{formatRupiah(dailyFlexibleRoom)}</Text>
         ) : onOpenBudgetPlan ? (
           <Pressable
             accessibilityLabel={strings.home.pulse.setMonthlyPlanA11y}
@@ -70,11 +70,11 @@ export function HomeMoneyPulse({
       </View>
       <View style={[styles.pulseItem, styles.pulseItemSpending]}>
         <Text style={styles.pulseLabel}>{strings.home.pulse.spending}</Text>
-        <Text style={[styles.pulseValue, styles.pulseValueDanger]}>{formatCompactRupiah(monthlySummary.expense)}</Text>
+        <Text style={[styles.pulseValue, styles.pulseValueDanger]}>{formatRupiah(monthlySummary.expense)}</Text>
       </View>
       <View style={[styles.pulseItem, styles.pulseItemBalance]}>
         <Text style={styles.pulseLabel}>{strings.home.pulse.estBalance}</Text>
-        <Text style={[styles.pulseValue, styles.pulseValueBalance]}>{formatCompactRupiah(latestBalanceTotal)}</Text>
+        <Text style={[styles.pulseValue, styles.pulseValueBalance]}>{formatRupiah(latestBalanceTotal)}</Text>
         {runwayMonths !== null ? (
           <Text style={styles.pulseLabel}>
             {formatString(strings.home.pulse.runwayMonths, { count: runwayMonths })}
@@ -90,8 +90,8 @@ export function HomeMoneyPulse({
           </View>
           <Text style={styles.pulseSavingsText}>
             {formatString(strings.home.pulse.savedTowardGoals, {
-              saved: formatCompactRupiah(goalsSavedTotal),
-              target: formatCompactRupiah(goalsTargetTotal)
+              saved: formatRupiah(goalsSavedTotal),
+              target: formatRupiah(goalsTargetTotal)
             })}
           </Text>
         </View>
@@ -103,7 +103,7 @@ export function HomeMoneyPulse({
           </View>
           <Text style={styles.pulseSavingsText}>
             {formatString(strings.home.pulse.monthlySavingsTarget, {
-              amount: formatCompactRupiah(savingsTarget)
+              amount: formatRupiah(savingsTarget)
             })}
           </Text>
         </View>

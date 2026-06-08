@@ -12,6 +12,13 @@ import {
 import { DEFAULT_SPENDING_CONTEXTS } from "../data/spendingMemory";
 import { displayContext } from "../i18n/display";
 import { getRuntimeStrings } from "../i18n/runtime";
+import {
+  getMonthRange,
+  isBetweenTimes,
+  isWithinRange,
+  safeTime,
+  sumMoments
+} from "./dateRanges";
 
 export type FinanceCategoryModeValue = CategoryMode["mode"];
 
@@ -96,7 +103,7 @@ export type AccountReconciliationRow = {
   transferOut: number;
 };
 
-const DEFAULT_RECONCILIATION_TOLERANCE = 1000;
+export const DEFAULT_RECONCILIATION_TOLERANCE = 1000;
 
 export function buildCurrentMonthSummary(
   moments: SpendingMoment[],
@@ -220,40 +227,43 @@ export function buildNetWorthTrend({
   projectedSnapshots?: BalanceSnapshot[];
   maxPoints?: number;
 }): NetWorthPoint[] {
-  const sortedSnapshots = [...balanceSnapshots].sort(
-    (left, right) => safeTime(left.snapshotDate) - safeTime(right.snapshotDate)
-  );
-  const distinctDates = [...new Set(sortedSnapshots.map((snapshot) => snapshot.snapshotDate))]
-    .filter((date) => Number.isFinite(safeTime(date)))
-    .sort((left, right) => safeTime(left) - safeTime(right));
+  const bucketedSnapshots = dedupeSnapshotsByCalendarDay(balanceSnapshots);
+  const distinctDays = [...new Set(bucketedSnapshots.map((snapshot) => getCalendarDay(snapshot.snapshotDate)))]
+    .filter((day) => day.length > 0)
+    .sort();
 
-  if (distinctDates.length === 0 && !projectedSnapshots?.length) {
+  if (distinctDays.length === 0 && !projectedSnapshots?.length) {
     return [];
   }
 
-  const points: NetWorthPoint[] = distinctDates.map((date) => {
-    const asOfTime = safeTime(date);
-    const latestByAccount = new Map<string, number>();
+  const points: NetWorthPoint[] = distinctDays.map((day) => {
+    const latestByAccount = new Map<string, { amount: number; time: number }>();
 
-    sortedSnapshots.forEach((snapshot) => {
-      if (safeTime(snapshot.snapshotDate) <= asOfTime) {
-        latestByAccount.set(snapshot.accountLabel, snapshot.amount);
+    bucketedSnapshots.forEach((snapshot) => {
+      const snapshotDay = getCalendarDay(snapshot.snapshotDate);
+      if (snapshotDay > day) return;
+
+      const time = safeTime(snapshot.snapshotDate);
+      const current = latestByAccount.get(snapshot.accountLabel);
+      if (!current || time > current.time) {
+        latestByAccount.set(snapshot.accountLabel, { amount: snapshot.amount, time });
       }
     });
 
-    const total = [...latestByAccount.values()].reduce((sum, amount) => sum + amount, 0);
-    return { date, total };
+    const total = [...latestByAccount.values()].reduce((sum, row) => sum + row.amount, 0);
+    return { date: day, total };
   });
 
   if (projectedSnapshots?.length) {
     const todayDate = projectedSnapshots[0]?.snapshotDate ?? new Date().toISOString();
+    const todayDay = getCalendarDay(todayDate);
     const todayTotal = getLatestBalanceTotal(projectedSnapshots);
     const lastPoint = points[points.length - 1];
 
-    if (!lastPoint || lastPoint.date !== todayDate) {
-      points.push({ date: todayDate, total: todayTotal });
+    if (!lastPoint || lastPoint.date !== todayDay) {
+      points.push({ date: todayDay, total: todayTotal });
     } else {
-      points[points.length - 1] = { date: todayDate, total: todayTotal };
+      points[points.length - 1] = { date: todayDay, total: todayTotal };
     }
   }
 
@@ -291,16 +301,20 @@ export function getProjectedBalanceSnapshots({
   });
 
   return Array.from(labels)
-    .map((label) => {
+    .flatMap((label) => {
       const latestSnapshot = latestByLabel.get(label);
-      const baseTime = latestSnapshot ? safeTime(latestSnapshot.snapshotDate) : 0;
+      if (!latestSnapshot) {
+        return [];
+      }
+
+      const baseTime = safeTime(latestSnapshot.snapshotDate);
       const scopedMoments = moments.filter(
         (moment) =>
           moment.accountLabel === label &&
-          isBetweenProjectionTimes(moment.occurredAt, baseTime, referenceTime)
+          isBetweenTimes(moment.occurredAt, baseTime, referenceTime)
       );
       const scopedTransfers = transfers.filter(
-        (transfer) => isBetweenProjectionTimes(transfer.occurredAt, baseTime, referenceTime)
+        (transfer) => isBetweenTimes(transfer.occurredAt, baseTime, referenceTime)
       );
       const income = scopedMoments
         .filter((moment) => moment.type === "income")
@@ -315,13 +329,13 @@ export function getProjectedBalanceSnapshots({
         .filter((transfer) => transfer.fromAccount === label)
         .reduce((sum, transfer) => sum + transfer.amount, 0);
 
-      return {
+      return [{
         accountLabel: label,
-        amount: Math.round((latestSnapshot?.amount ?? 0) + income - expense + transferIn - transferOut),
-        createdAt: latestSnapshot?.createdAt ?? projectedAt,
-        id: `projected-${latestSnapshot?.id ?? label}`,
+        amount: Math.round(latestSnapshot.amount + income - expense + transferIn - transferOut),
+        createdAt: latestSnapshot.createdAt,
+        id: `projected-${latestSnapshot.id}`,
         snapshotDate: projectedAt
-      };
+      }];
     })
     .sort((a, b) => {
       const accountDiff =
@@ -696,16 +710,10 @@ function sortReconciliationRows(
   return Math.abs(b.difference ?? 0) - Math.abs(a.difference ?? 0);
 }
 
-function getDaysRemainingInMonth(date: Date): number {
+export function getDaysRemainingInMonth(date: Date): number {
   const dayOfMonth = date.getDate();
   const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   return Math.max(1, daysInMonth - dayOfMonth + 1);
-}
-
-function getMonthRange(date: Date, monthOffset: number): { start: Date; end: Date } {
-  const start = new Date(date.getFullYear(), date.getMonth() + monthOffset, 1);
-  const end = new Date(date.getFullYear(), date.getMonth() + monthOffset + 1, 1);
-  return { start, end };
 }
 
 function getDayDistance(startTime: number, endTime: number): number {
@@ -715,26 +723,29 @@ function getDayDistance(startTime: number, endTime: number): number {
   return Math.max(1, Math.round((endTime - startTime) / (24 * 60 * 60 * 1000)));
 }
 
-function isBetweenTimes(value: string, startTime: number, endTime: number): boolean {
+function getCalendarDay(value: string): string {
   const time = safeTime(value);
-  return time > startTime && time <= endTime;
+  if (!Number.isFinite(time) || time === 0) {
+    return "";
+  }
+  return new Date(time).toISOString().slice(0, 10);
 }
 
-function isBetweenProjectionTimes(value: string, startTime: number, endTime: number): boolean {
-  const time = safeTime(value);
-  return time > startTime && time <= endTime;
-}
+function dedupeSnapshotsByCalendarDay(snapshots: BalanceSnapshot[]): BalanceSnapshot[] {
+  const latestByAccountDay = new Map<string, BalanceSnapshot>();
 
-function isWithinRange(value: string, start: Date, end: Date): boolean {
-  const time = safeTime(value);
-  return time >= start.getTime() && time < end.getTime();
-}
+  snapshots.forEach((snapshot) => {
+    const day = getCalendarDay(snapshot.snapshotDate);
+    if (!day) return;
 
-function sumMoments(moments: SpendingMoment[]): number {
-  return moments.reduce((sum, moment) => sum + moment.amount, 0);
-}
+    const key = `${snapshot.accountLabel}|${day}`;
+    const current = latestByAccountDay.get(key);
+    if (!current || safeTime(snapshot.snapshotDate) > safeTime(current.snapshotDate)) {
+      latestByAccountDay.set(key, snapshot);
+    }
+  });
 
-function safeTime(value: string): number {
-  const time = Date.parse(value);
-  return Number.isFinite(time) ? time : 0;
+  return Array.from(latestByAccountDay.values()).sort(
+    (left, right) => safeTime(left.snapshotDate) - safeTime(right.snapshotDate)
+  );
 }

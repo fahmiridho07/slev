@@ -962,6 +962,20 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     lineHeight: 17,
     paddingLeft: 18
   },
+  chartDonutWrap: {
+    alignItems: "center",
+    paddingVertical: 4
+  },
+  chartDonutWrapHero: {
+    paddingVertical: 8
+  },
+  chartDonutCanvas: {
+    position: "relative"
+  },
+  chartDonutHole: {
+    backgroundColor: colors.surface,
+    position: "absolute"
+  },
   trendFill: {
     backgroundColor: colors.green,
     borderRadius: 8,

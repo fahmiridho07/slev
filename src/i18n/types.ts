@@ -12,6 +12,10 @@ export type AppStrings = {
     dark: string;
     label: string;
     light: string;
+    planningHelper: string;
+    planningLabel: string;
+    planningOff: string;
+    planningOn: string;
     reduceMotionLabel: string;
     reduceMotionOff: string;
     reduceMotionOn: string;
@@ -360,6 +364,22 @@ export type AppStrings = {
       setMonthlyPlanHint: string;
       spending: string;
     };
+    safeToSpend: {
+      affordable: string;
+      balanceAnchor: string;
+      checkPurchase: string;
+      checkPurchaseA11y: string;
+      daysLeft: string;
+      heroLabel: string;
+      notAffordable: string;
+      purchasePlaceholder: string;
+      saveBalanceA11y: string;
+      setBalancePlaceholder: string;
+      setBalancePrompt: string;
+      sheetTitle: string;
+      typicalDaily: string;
+      typicalDailyUncertain: string;
+    };
   };
   listHints: Record<ListActionsHintKey, ListHintCopy>;
   locale: {
@@ -497,6 +517,18 @@ export type AppStrings = {
       recap: string;
       spending: string;
     };
+    tracker: {
+      cashflow: string;
+      cashflowEarlyBuilding: string;
+      cashflowEarlyNew: string;
+      cashflowEmptyMonth: string;
+      expenseEarlyBuilding: string;
+      expenseEarlyNew: string;
+      expenseEmptyMonth: string;
+      incomeEarlyBuilding: string;
+      incomeEarlyNew: string;
+      incomeEmptyMonth: string;
+    };
     trends: {
       advancedTrends: string;
       collapseAdvancedTrends: string;
@@ -579,10 +611,9 @@ export type AppStrings = {
     writeFailureGeneric: string;
   };
   tabs: {
-    analysis: string;
     budget: string;
     home: string;
-    overview: string;
+    money: string;
   };
   toasts: {
     account: {

@@ -6,7 +6,7 @@ import { useTheme } from "../../hooks/useTheme";
 import { formatString } from "../../i18n";
 import { formatLocaleShortDate } from "../../i18n/localeDate";
 import { UpcomingBill } from "../../lib/recurringBills";
-import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 
 export function UpcomingBillsPanel({
   onOpenSettings,
@@ -26,7 +26,7 @@ export function UpcomingBillsPanel({
 
   function formatHorizonSummary(): string {
     const total = upcomingBills.reduce((sum, item) => sum + item.bill.amount, 0);
-    const amount = formatCompactRupiah(total);
+    const amount = formatRupiah(total);
 
     if (upcomingBills.length === 1) {
       return formatString(strings.home.bills.horizonSingle, {
@@ -70,14 +70,14 @@ export function UpcomingBillsPanel({
           <View key={`${item.bill.id}-${item.dueDate}`} style={styles.analyticsRow}>
             <View style={styles.analyticsRowHeader}>
               <Text style={componentStyles.analyticsTitle}>{item.bill.label}</Text>
-              <Text style={styles.analyticsAmount}>{formatCompactRupiah(item.bill.amount)}</Text>
+              <Text style={styles.analyticsAmount}>{formatRupiah(item.bill.amount)}</Text>
             </View>
             <Text style={styles.settingCopy}>
               {formatLocaleShortDate(item.dueDate)} · {formatDueHint(item.daysUntil)}
             </Text>
             <Pressable
               accessibilityLabel={formatString(strings.home.bills.logPaymentA11y, {
-                amount: formatCompactRupiah(item.bill.amount),
+                amount: formatRupiah(item.bill.amount),
                 due: formatDueHint(item.daysUntil),
                 label: item.bill.label
               })}

@@ -24,7 +24,9 @@ test("buildNetWorthTrend carry-forwards balances across irregular snapshot dates
   });
 
   assertEqual(trend.length, 2, "two snapshot dates");
+  assertEqual(trend[0]?.date, "2026-01-15", "first point buckets by calendar day");
   assertEqual(trend[0]?.total, 1_000_000, "first point uses only BRI");
+  assertEqual(trend[1]?.date, "2026-02-10", "second point buckets by calendar day");
   assertEqual(trend[1]?.total, 1_500_000, "second point carries BRI forward with Jago");
 });
 
@@ -38,8 +40,22 @@ test("buildNetWorthTrend appends the projected today point", () => {
   });
 
   assertEqual(trend.length, 2, "history plus today");
-  assertEqual(trend[1]?.date, "2026-06-06T12:00:00.000Z", "today date");
+  assertEqual(trend[1]?.date, "2026-06-06", "today point buckets by calendar day");
   assertEqual(trend[1]?.total, 1_500_000, "today total from projected snapshots");
+});
+
+test("buildNetWorthTrend buckets multiple same-day snapshots to one point", () => {
+  const trend = buildNetWorthTrend({
+    balanceSnapshots: [
+      snapshot("BRI", 1_000_000, "2026-01-15T08:00:00.000Z"),
+      snapshot("BRI", 1_200_000, "2026-01-15T18:00:00.000Z"),
+      snapshot("BRI", 900_000, "2026-01-15T12:00:00.000Z")
+    ]
+  });
+
+  assertEqual(trend.length, 1, "same calendar day collapses to one point");
+  assertEqual(trend[0]?.date, "2026-01-15", "point date uses calendar day");
+  assertEqual(trend[0]?.total, 1_200_000, "latest same-day snapshot should win");
 });
 
 test("buildNetWorthTrend returns an empty series without snapshot history", () => {
@@ -60,8 +76,8 @@ test("buildNetWorthTrend respects maxPoints", () => {
   });
 
   assertEqual(trend.length, 12, "series should cap to maxPoints");
-  assertEqual(trend[0]?.date, "2026-01-04T00:00:00.000Z", "oldest kept point should be fourth day");
-  assertEqual(trend[11]?.date, "2026-01-15T00:00:00.000Z", "newest kept point should be fifteenth day");
+  assertEqual(trend[0]?.date, "2026-01-04", "oldest kept point should be fourth day");
+  assertEqual(trend[11]?.date, "2026-01-15", "newest kept point should be fifteenth day");
 });
 
 for (const { name, run } of tests) {

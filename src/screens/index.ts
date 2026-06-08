@@ -1,5 +1,4 @@
 export { HomeScreen } from "./HomeScreen";
-export { OverviewScreen } from "./OverviewScreen";
+export { MoneyScreen } from "./MoneyScreen";
 export { BudgetScreen } from "./BudgetScreen";
-export { PatternsScreen } from "./PatternsScreen";
 export { SettingsScreen } from "./SettingsScreen";

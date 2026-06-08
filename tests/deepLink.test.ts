@@ -35,16 +35,18 @@ test("parseDeepLink routes settings sub-tabs", () => {
   assertEqual(parseDeepLink("slev://settings"), { tab: "settings" }, "settings root");
 });
 
-test("parseDeepLink routes budget and analysis aliases", () => {
+test("parseDeepLink routes budget and money aliases", () => {
   assertEqual(parseDeepLink("slev://budget/balance"), { tab: "budget", budgetTab: "balance" }, "budget balance");
   assertEqual(parseDeepLink("slev://budget/goals"), { tab: "budget", budgetTab: "goals" }, "budget goals");
   assertEqual(parseDeepLink("slev://budget"), { tab: "budget", budgetTab: "plan" }, "budget default");
-  assertEqual(parseDeepLink("slev://analysis/breakdown"), { tab: "patterns", patternTab: "breakdown" }, "analysis breakdown");
-  assertEqual(parseDeepLink("slev://patterns"), { tab: "patterns", patternTab: "breakdown" }, "patterns root");
-  assertEqual(parseDeepLink("slev://patterns/overview"), { tab: "patterns", patternTab: "breakdown" }, "legacy recap tab");
-  assertEqual(parseDeepLink("slev://analysis/recap"), { tab: "patterns", patternTab: "breakdown" }, "legacy recap alias");
-  assertEqual(parseDeepLink("slev://overview"), { tab: "overview" }, "overview root");
-  assertEqual(parseDeepLink("slev://memory"), { tab: "overview" }, "memory alias");
+  assertEqual(parseDeepLink("slev://money/accounts"), { tab: "money", patternTab: "accounts" }, "money accounts");
+  assertEqual(parseDeepLink("slev://money"), { tab: "money" }, "money root");
+  assertEqual(parseDeepLink("slev://analysis/breakdown"), { tab: "money", patternTab: "breakdown" }, "analysis breakdown");
+  assertEqual(parseDeepLink("slev://patterns"), { tab: "money" }, "patterns root");
+  assertEqual(parseDeepLink("slev://patterns/overview"), { tab: "money", patternTab: "breakdown" }, "legacy recap tab");
+  assertEqual(parseDeepLink("slev://analysis/recap"), { tab: "money", patternTab: "breakdown" }, "legacy recap alias");
+  assertEqual(parseDeepLink("slev://overview"), { tab: "money" }, "overview root");
+  assertEqual(parseDeepLink("slev://memory"), { tab: "money" }, "memory alias");
 });
 
 test("parseDeepLink returns null for unknown routes", () => {
@@ -52,15 +54,18 @@ test("parseDeepLink returns null for unknown routes", () => {
   assertEqual(parseDeepLink(""), null, "empty url");
 });
 
-test("normalizeStoredTabKey migrates legacy memory tab", () => {
-  assertEqual(normalizeStoredTabKey("memory"), "overview", "memory alias");
-  assertEqual(normalizeStoredTabKey("overview"), "overview", "overview key");
+test("normalizeStoredTabKey migrates legacy tab keys to money", () => {
+  assertEqual(normalizeStoredTabKey("memory"), "money", "memory alias");
+  assertEqual(normalizeStoredTabKey("overview"), "money", "overview alias");
+  assertEqual(normalizeStoredTabKey("patterns"), "money", "patterns alias");
+  assertEqual(normalizeStoredTabKey("money"), "money", "money key");
   assertEqual(normalizeStoredTabKey("home"), "home", "home key");
   assertEqual(normalizeStoredTabKey("legacy"), null, "unknown key");
 });
 
 test("isAppTabKey accepts current tab keys only", () => {
-  assertEqual(isAppTabKey("overview"), true, "overview accepted");
+  assertEqual(isAppTabKey("money"), true, "money accepted");
+  assertEqual(isAppTabKey("overview"), false, "overview rejected");
   assertEqual(isAppTabKey("memory"), false, "memory rejected");
   assertEqual(isAppTabKey("settings"), true, "settings accepted");
 });

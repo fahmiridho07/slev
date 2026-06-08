@@ -42,6 +42,28 @@ export async function saveRecurringBill(input: RecurringBillInput): Promise<Writ
   return { data: updated, persisted };
 }
 
+export async function rewriteAccountLabelInRecurringBills(
+  oldLabel: string,
+  newLabel: string
+): Promise<boolean> {
+  if (oldLabel === newLabel) return true;
+
+  const current = await listRecurringBills();
+  let changed = false;
+  const updated = current.map((bill) => {
+    if (bill.accountLabel !== oldLabel) return bill;
+    changed = true;
+    return {
+      ...bill,
+      accountLabel: newLabel,
+      updatedAt: new Date().toISOString()
+    };
+  });
+  if (!changed) return true;
+
+  return writeJson(RECURRING_BILLS_KEY, updated);
+}
+
 export async function clearRecurringBills(): Promise<boolean> {
   return removeKeys([RECURRING_BILLS_KEY]);
 }

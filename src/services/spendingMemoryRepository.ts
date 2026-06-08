@@ -82,6 +82,28 @@ export async function updateSpendingMoment(
   return { data: sortMoments(updated), persisted, found: true };
 }
 
+export async function rewriteAccountLabelInMoments(
+  oldLabel: string,
+  newLabel: string
+): Promise<boolean> {
+  if (oldLabel === newLabel) return true;
+
+  const moments = await listSpendingMoments();
+  let changed = false;
+  const updated = moments.map((moment) => {
+    if (moment.accountLabel !== oldLabel) return moment;
+    changed = true;
+    return {
+      ...moment,
+      accountLabel: newLabel,
+      updatedAt: new Date().toISOString()
+    };
+  });
+  if (!changed) return true;
+
+  return persistSpendingMoments(updated);
+}
+
 export async function deleteSpendingMoment(id: string): Promise<WriteResult<SpendingMoment[]>> {
   const moments = await listSpendingMoments();
   const updated = moments.filter((moment) => moment.id !== id);

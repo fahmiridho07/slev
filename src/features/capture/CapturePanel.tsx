@@ -43,10 +43,7 @@ function CapturePanelComponent({
     }),
     shallowEqual
   );
-  const { orderedAccounts, orderedCategories, reorderAccounts, reorderCategories } = useCapturePickerOrder(
-    categoryLabels,
-    accounts
-  );
+  const { orderedAccounts, orderedCategories } = useCapturePickerOrder(categoryLabels, accounts);
   const {
     fieldError,
     shortcutFieldError,
@@ -179,9 +176,6 @@ function CapturePanelComponent({
           <AccountPicker
             accounts={orderedAccounts}
             label={strings.capture.from}
-            onReorder={reorderAccounts}
-            reorderable
-            reorderHint={strings.capture.reorderHint}
             selected={form.fromAccount}
             onSelect={(value) => patch({ fromAccount: value })}
           />
@@ -243,9 +237,6 @@ function CapturePanelComponent({
         <AccountPicker
           accounts={orderedAccounts}
           label={form.entryType === "income" ? strings.capture.receivedIn : strings.capture.paidFrom}
-          onReorder={reorderAccounts}
-          reorderable
-          reorderHint={strings.capture.reorderHint}
           selected={form.accountLabel}
           onSelect={(value) => patch({ accountLabel: value })}
         />
@@ -267,14 +258,9 @@ function CapturePanelComponent({
           </>
         ) : (
           <>
-            <View style={styles.contextHeaderRow}>
-              <Text style={componentStyles.microLabel}>{strings.capture.context}</Text>
-              <Text style={styles.captureReorderHint}>{strings.capture.reorderHint}</Text>
-            </View>
+            <Text style={componentStyles.microLabel}>{strings.capture.context}</Text>
             <ContextPicker
               categories={orderedCategories}
-              onReorder={reorderCategories}
-              reorderable
               selected={form.context}
               onSelect={(value) => patch({ context: value })}
             />

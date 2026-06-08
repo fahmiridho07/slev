@@ -5,14 +5,13 @@ import {
   BottomSheet,
   DeleteConfirmDialog,
   EmptyState,
-  MonthPeriodPicker,
   ProgressBar,
-  SectionHeader,
-  SegmentedControl
+  SectionHeader
 } from "../../components";
 import { formatString } from "../../i18n";
 import { AppStrings } from "../../i18n/types";
-import { getMomentTitle, getPercentWidthStyle } from "../../lib/analysis";
+import { getMomentTitle, getPercentWidthStyle, getTrackerEmptyReason } from "../../lib/analysis";
+import { getTrackerEmptyCopy } from "../../lib/trackerCopy";
 import {
   buildBreakdownMonthDeltas,
   filterBreakdownMoments,
@@ -24,11 +23,10 @@ import {
 import { FinanceBreakdownRow, buildMonthlyBreakdown } from "../../lib/financeEngine";
 import {
   buildMonthExpenseComparison,
-  getEarliestSpendingMonthOffset,
   getMonthReferenceDate,
   isCurrentMonthOffset
 } from "../../lib/spendingPeriod";
-import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { BudgetLimit, EntryType, SpendingMoment } from "../spendingMemory.types";
 import { MomentEditForm } from "../memory/MomentEditForm";
 import { hapticSelection } from "../../lib/haptics";
@@ -43,10 +41,10 @@ const TOP_CATEGORY_LIMIT = 5;
 const FLAT_DELTA_THRESHOLD = 0.005;
 
 type BreakdownPanelProps = {
+  breakdownType: EntryType;
   budgetLimits: BudgetLimit[];
   moments: SpendingMoment[];
   monthOffset: number;
-  onMonthOffsetChange: (offset: number) => void;
 };
 
 function getDeltaBadgeLabel(
@@ -73,18 +71,20 @@ function getDeltaBadgeLabel(
     : formatString(breakdownStrings.categoryDeltaDown, { percent });
 }
 
-export function BreakdownPanel({ budgetLimits, moments, monthOffset, onMonthOffsetChange }: BreakdownPanelProps) {
+export function BreakdownPanel({ breakdownType, budgetLimits, moments, monthOffset }: BreakdownPanelProps) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const actions = useActions();
   const breakdownStrings = strings.patterns.breakdown;
   const limitsStrings = strings.budget.limits;
-  const [breakdownType, setBreakdownType] = useState<EntryType>("expense");
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [selectedRow, setSelectedRow] = useState<FinanceBreakdownRow | null>(null);
   const [editingMoment, setEditingMoment] = useState<SpendingMoment | null>(null);
   const [pendingDeleteMoment, setPendingDeleteMoment] = useState<SpendingMoment | null>(null);
   const referenceDate = useMemo(() => getMonthReferenceDate(monthOffset), [monthOffset]);
-  const earliestMonthOffset = useMemo(() => getEarliestSpendingMonthOffset(moments), [moments]);
+  const emptyReason = useMemo(
+    () => getTrackerEmptyReason(moments, referenceDate, breakdownType),
+    [breakdownType, moments, referenceDate]
+  );
   const rows = useMemo(
     () => buildMonthlyBreakdown(moments, breakdownType, referenceDate),
     [breakdownType, moments, referenceDate]
@@ -155,14 +155,6 @@ export function BreakdownPanel({ budgetLimits, moments, monthOffset, onMonthOffs
 
   return (
     <View style={styles.analyticsBlock}>
-      <MonthPeriodPicker
-        canGoBack={monthOffset > earliestMonthOffset}
-        canGoForward={!isCurrentMonthOffset(monthOffset)}
-        labelDate={referenceDate}
-        onNext={() => onMonthOffsetChange(monthOffset + 1)}
-        onPrevious={() => onMonthOffsetChange(monthOffset - 1)}
-      />
-
       {deltaLabel && (
         <View style={styles.monthDeltaBadge}>
           <Text
@@ -176,22 +168,23 @@ export function BreakdownPanel({ budgetLimits, moments, monthOffset, onMonthOffs
         </View>
       )}
 
-      <SegmentedControl
-        compact
-        options={[
-          { label: strings.common.expense, value: "expense" },
-          { label: strings.common.income, value: "income" }
-        ]}
-        selected={breakdownType}
-        onSelect={setBreakdownType}
-      />
       {rows.length === 0 ? (
         <EmptyState
-          text={breakdownType === "income" ? breakdownStrings.incomeEmpty : breakdownStrings.expenseEmpty}
+          text={
+            emptyReason
+              ? getTrackerEmptyCopy(emptyReason, breakdownType, strings.patterns.tracker)
+              : breakdownType === "income"
+                ? breakdownStrings.incomeEmpty
+                : breakdownStrings.expenseEmpty
+          }
         />
       ) : (
         <>
-          {breakdownType === "expense" && (
+          {emptyReason && (
+            <EmptyState text={getTrackerEmptyCopy(emptyReason, breakdownType, strings.patterns.tracker)} />
+          )}
+
+          {breakdownType === "expense" && !emptyReason && (
             <MonthlySpendingChart compactLegend hero periodDate={referenceDate} rows={rows} />
           )}
 
@@ -215,7 +208,7 @@ export function BreakdownPanel({ budgetLimits, moments, monthOffset, onMonthOffs
                     <Text style={styles.topIncreaseLabel}>{increase.label}</Text>
                     <Text style={styles.topIncreaseAmount}>
                       {formatString(breakdownStrings.topIncreaseAmount, {
-                        amount: formatCompactRupiah(increase.deltaAmount),
+                        amount: formatRupiah(increase.deltaAmount),
                         percent: increase.deltaPercent ? Math.round(increase.deltaPercent * 100) : 0
                       })}
                     </Text>
@@ -277,7 +270,7 @@ export function BreakdownPanel({ budgetLimits, moments, monthOffset, onMonthOffs
                     <View style={styles.breakdownRowTrailing}>
                       <Text style={styles.analyticsAmount}>
                         {formatString(breakdownStrings.amountShare, {
-                          amount: formatCompactRupiah(row.amount),
+                          amount: formatRupiah(row.amount),
                           percent: Math.round(row.share * 100)
                         })}
                       </Text>
@@ -288,8 +281,8 @@ export function BreakdownPanel({ budgetLimits, moments, monthOffset, onMonthOffs
                   {monthlyLimit && (
                     <Text style={styles.budgetMeta}>
                       {formatString(limitsStrings.spentOfLimit, {
-                        spent: formatCompactRupiah(row.amount),
-                        limit: formatCompactRupiah(monthlyLimit.limitAmount),
+                        spent: formatRupiah(row.amount),
+                        limit: formatRupiah(monthlyLimit.limitAmount),
                         period: limitsStrings.monthly
                       })}
                     </Text>

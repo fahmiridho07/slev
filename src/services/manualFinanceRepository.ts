@@ -8,6 +8,13 @@ import {
   SavingsGoal,
   SpendingContext
 } from "../features/spendingMemory.types";
+import {
+  cleanOptionalText,
+  createId,
+  readNumber,
+  readString,
+  toRecord
+} from "./storageRecordUtils";
 import { isKeyCorrupt, readJson, removeKeys, WriteResult, writeJson } from "./storage";
 
 const MONTHLY_PLANS_KEY = "slev_monthly_plans";
@@ -203,6 +210,46 @@ export async function saveBalanceSnapshot(input: BalanceSnapshotInput): Promise<
   return { data: updated, persisted };
 }
 
+export async function rewriteAccountLabelInBalanceSnapshots(
+  oldLabel: string,
+  newLabel: string
+): Promise<boolean> {
+  if (oldLabel === newLabel) return true;
+
+  const current = await listBalanceSnapshots();
+  let changed = false;
+  const updated = current.map((snapshot) => {
+    if (snapshot.accountLabel !== oldLabel) return snapshot;
+    changed = true;
+    return { ...snapshot, accountLabel: newLabel };
+  });
+  if (!changed) return true;
+
+  return writeJson(BALANCE_SNAPSHOTS_KEY, updated);
+}
+
+export async function rewriteAccountLabelInManualTemplates(
+  oldLabel: string,
+  newLabel: string
+): Promise<boolean> {
+  if (oldLabel === newLabel) return true;
+
+  const current = await listManualTemplates();
+  let changed = false;
+  const updated = current.map((template) => {
+    if (template.accountLabel !== oldLabel) return template;
+    changed = true;
+    return {
+      ...template,
+      accountLabel: newLabel,
+      updatedAt: new Date().toISOString()
+    };
+  });
+  if (!changed) return true;
+
+  return writeJson(MANUAL_TEMPLATES_KEY, updated);
+}
+
 export async function clearManualFinance(): Promise<boolean> {
   return removeKeys([
     MONTHLY_PLANS_KEY,
@@ -340,20 +387,6 @@ function mergeCategoryModes(settings: CategoryMode[]): CategoryMode[] {
   return [...defaultModes, ...customModes];
 }
 
-function toRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? value as Record<string, unknown> : null;
-}
-
-function readString(record: Record<string, unknown>, key: string): string | undefined {
-  const value = record[key];
-  return typeof value === "string" ? value : undefined;
-}
-
-function readNumber(record: Record<string, unknown>, key: string): number | undefined {
-  const value = record[key];
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
-}
-
 function isMonthlyPlan(value: MonthlyPlan | null): value is MonthlyPlan {
   return value !== null;
 }
@@ -382,11 +415,3 @@ function normalizeMonth(value: string | undefined): string {
   return /^\d{4}-\d{2}$/.test(String(value ?? "")) ? String(value) : new Date().toISOString().slice(0, 7);
 }
 
-function cleanOptionalText(value: string | undefined): string | undefined {
-  const cleaned = String(value ?? "").replace(/\s+/g, " ").trim();
-  return cleaned ? cleaned.slice(0, 80) : undefined;
-}
-
-function createId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-}

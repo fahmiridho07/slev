@@ -49,10 +49,6 @@ export function formatRupiah(amount: number): string {
   }).format(Math.round(amount))}`;
 }
 
-export function formatCompactRupiah(amount: number): string {
-  return formatRupiah(amount);
-}
-
 function buildContextChangePatterns(
   thisWeek: SpendingMoment[],
   previousWeek: SpendingMoment[]
@@ -137,7 +133,7 @@ function buildSmallSpendPattern(
       title: strings.generated.smallSpendsTitle,
       detail: formatString(strings.generated.smallSpendsDetail, {
         count: currentSmall.length,
-        total: formatCompactRupiah(currentTotal)
+        total: formatRupiah(currentTotal)
       }),
       tone: "warm",
       recapQuestion: strings.generated.smallSpendsRecap

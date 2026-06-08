@@ -19,8 +19,11 @@ import {
   AccountReconciliationRow,
   AllocationPlan
 } from "./financeEngine";
+import { getMonthRange, isWithinRange, sumMoments } from "./dateRanges";
 import { formatSignedCompactRupiah } from "./formatMoney";
-import { formatCompactRupiah } from "./spendingMemoryPatterns";
+import { formatRupiah } from "./spendingMemoryPatterns";
+
+export { getMonthRange, isWithinRange, sumMoments } from "./dateRanges";
 
 export type CashflowWeek = {
   expense: number;
@@ -32,7 +35,19 @@ export type CashflowWeek = {
 
 export type DataMaturity = "building" | "established" | "new";
 
-export type CashflowWeeksMode = "default" | "full";
+export type CashflowWeeksMode = "default" | "full" | "month";
+
+export type TrackerSegment = "cashflow" | "expense" | "income";
+
+export type TrackerEmptyReason = "empty_month" | "early_building" | "early_new";
+
+const CASHFLOW_MONTH_DAY_RANGES = [
+  { from: 1, to: 7 },
+  { from: 8, to: 14 },
+  { from: 15, to: 21 },
+  { from: 22, to: 28 },
+  { from: 29, to: null as number | null }
+] as const;
 
 export type SpendingTrend = {
   midpointMessage?: string;
@@ -97,7 +112,7 @@ export function getAllocationActionCopy(allocation: AllocationPlan): {
     case "plan_exceeds_income":
       return {
         detail: formatString(strings.planExceedsIncome.detail, {
-          amount: formatCompactRupiah(amount)
+          amount: formatRupiah(amount)
         }),
         title: strings.planExceedsIncome.title,
         tone: "notice"
@@ -105,7 +120,7 @@ export function getAllocationActionCopy(allocation: AllocationPlan): {
     case "flexible_over_plan":
       return {
         detail: formatString(strings.flexibleOverPlan.detail, {
-          amount: formatCompactRupiah(amount)
+          amount: formatRupiah(amount)
         }),
         title: strings.flexibleOverPlan.title,
         tone: "notice"
@@ -113,8 +128,8 @@ export function getAllocationActionCopy(allocation: AllocationPlan): {
     case "top_up_pockets":
       return {
         detail: formatString(strings.topUpPockets.detail, {
-          amount: formatCompactRupiah(amount),
-          hubBalance: formatCompactRupiah(allocation.hubBalance)
+          amount: formatRupiah(amount),
+          hubBalance: formatRupiah(allocation.hubBalance)
         }),
         title: strings.topUpPockets.title,
         tone: "warm"
@@ -144,8 +159,8 @@ export function getAllocationRowCopy(row: AllocationPlan["rows"][number]): {
     }
     return {
       detail: row.remaining > 0
-        ? formatString(strings.incomeRemaining, { amount: formatCompactRupiah(remainingAmount) })
-        : formatString(strings.incomeAbovePlan, { amount: formatCompactRupiah(remainingAmount) }),
+        ? formatString(strings.incomeRemaining, { amount: formatRupiah(remainingAmount) })
+        : formatString(strings.incomeAbovePlan, { amount: formatRupiah(remainingAmount) }),
       title: strings.incomeTitle
     };
   }
@@ -159,8 +174,8 @@ export function getAllocationRowCopy(row: AllocationPlan["rows"][number]): {
     }
     return {
       detail: row.remaining >= 0
-        ? formatString(strings.fixedRemaining, { amount: formatCompactRupiah(remainingAmount) })
-        : formatString(strings.fixedAbovePlan, { amount: formatCompactRupiah(remainingAmount) }),
+        ? formatString(strings.fixedRemaining, { amount: formatRupiah(remainingAmount) })
+        : formatString(strings.fixedAbovePlan, { amount: formatRupiah(remainingAmount) }),
       title: strings.fixedTitle
     };
   }
@@ -174,8 +189,8 @@ export function getAllocationRowCopy(row: AllocationPlan["rows"][number]): {
     }
     return {
       detail: row.remaining >= 0
-        ? formatString(strings.flexibleRemaining, { amount: formatCompactRupiah(remainingAmount) })
-        : formatString(strings.flexibleAbovePlan, { amount: formatCompactRupiah(remainingAmount) }),
+        ? formatString(strings.flexibleRemaining, { amount: formatRupiah(remainingAmount) })
+        : formatString(strings.flexibleAbovePlan, { amount: formatRupiah(remainingAmount) }),
       title: strings.flexibleTitle
     };
   }
@@ -189,8 +204,8 @@ export function getAllocationRowCopy(row: AllocationPlan["rows"][number]): {
 
   return {
     detail: row.remaining > 0
-      ? formatString(strings.savingsStillNeeded, { amount: formatCompactRupiah(remainingAmount) })
-      : formatString(strings.savingsAboveTarget, { amount: formatCompactRupiah(remainingAmount) }),
+      ? formatString(strings.savingsStillNeeded, { amount: formatRupiah(remainingAmount) })
+      : formatString(strings.savingsAboveTarget, { amount: formatRupiah(remainingAmount) }),
     title: strings.savingsTitle
   };
 }
@@ -219,7 +234,7 @@ export function getReconciliationCopy(rows: AccountReconciliationRow[]): {
     return {
       detail: formatString(strings.needsReview.detail, {
         count: reviewRows.length,
-        totalGap: formatCompactRupiah(totalGap)
+        totalGap: formatRupiah(totalGap)
       }),
       title: strings.needsReview.title,
       tone: "notice"
@@ -253,7 +268,8 @@ export function formatReconciliationDifference(row: AccountReconciliationRow): s
   const strings = getRuntimeStrings().analysis.reconciliation.status;
   if (row.status === "no_snapshot") return strings.noSnapshot;
   if (row.status === "needs_history") return strings.needsHistory;
-  if (row.difference === null || Math.abs(row.difference) <= 1000) return strings.matched;
+  if (row.status === "matched") return strings.matched;
+  if (row.difference === null) return strings.matched;
   return formatSignedCompactRupiah(row.difference);
 }
 
@@ -269,16 +285,16 @@ export function getReconciliationDetail(row: AccountReconciliationRow): string {
 
   const movement = formatString(strings.movement, {
     days: row.daysCovered,
-    income: formatCompactRupiah(row.income),
-    expense: formatCompactRupiah(row.expense),
-    transferIn: formatCompactRupiah(row.transferIn),
-    transferOut: formatCompactRupiah(row.transferOut)
+    income: formatRupiah(row.income),
+    expense: formatRupiah(row.expense),
+    transferIn: formatRupiah(row.transferIn),
+    transferOut: formatRupiah(row.transferOut)
   });
-  if (row.difference === null || Math.abs(row.difference) <= 1000) {
+  if (row.status === "matched" || row.difference === null) {
     return movement;
   }
 
-  const gap = formatCompactRupiah(Math.abs(row.difference));
+  const gap = formatRupiah(Math.abs(row.difference));
   const direction = row.difference > 0
     ? formatString(strings.higherThanExpected, { gap })
     : formatString(strings.lowerThanExpected, { gap });
@@ -342,12 +358,65 @@ function filterCashflowWeeks(weeks: CashflowWeek[]): CashflowWeek[] {
   });
 }
 
+function formatCashflowMonthBucketLabel(fromDay: number, toDay: number): string {
+  return fromDay === toDay ? `${fromDay}` : `${fromDay}\u2013${toDay}`;
+}
+
+function buildCashflowMonthBucket(
+  moments: SpendingMoment[],
+  year: number,
+  month: number,
+  fromDay: number,
+  toDay: number
+): CashflowWeek {
+  const start = new Date(year, month, fromDay);
+  const end = new Date(year, month, toDay + 1);
+  const bucketMoments = moments.filter((moment) => isWithinRange(moment.occurredAt, start, end));
+  const income = sumMoments(bucketMoments.filter((moment) => moment.type === "income"));
+  const expense = sumExpenseMoments(bucketMoments);
+  const monthKey = `${year}-${String(month + 1).padStart(2, "0")}`;
+
+  return {
+    expense,
+    income,
+    key: `${monthKey}-${String(fromDay).padStart(2, "0")}-${String(toDay).padStart(2, "0")}`,
+    label: formatCashflowMonthBucketLabel(fromDay, toDay),
+    net: income - expense
+  };
+}
+
+function buildCashflowMonthWeeks(
+  moments: SpendingMoment[],
+  referenceDate: Date,
+  monthOffset = 0
+): CashflowWeek[] {
+  const { start: monthStart, end: monthEnd } = getMonthRange(referenceDate, monthOffset);
+  const year = monthStart.getFullYear();
+  const month = monthStart.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthMoments = moments.filter((moment) => isWithinRange(moment.occurredAt, monthStart, monthEnd));
+
+  return CASHFLOW_MONTH_DAY_RANGES.flatMap(({ from, to }) => {
+    const toDay = to ?? daysInMonth;
+    if (from > daysInMonth) {
+      return [];
+    }
+
+    return [buildCashflowMonthBucket(monthMoments, year, month, from, Math.min(toDay, daysInMonth))];
+  });
+}
+
 export function buildCashflowWeeks(
   moments: SpendingMoment[],
-  options?: { mode?: CashflowWeeksMode; referenceDate?: Date }
+  options?: { mode?: CashflowWeeksMode; referenceDate?: Date; monthOffset?: number }
 ): CashflowWeek[] {
   const mode = options?.mode ?? "default";
   const referenceDate = options?.referenceDate ?? new Date();
+
+  if (mode === "month") {
+    return buildCashflowMonthWeeks(moments, referenceDate, options?.monthOffset ?? 0);
+  }
+
   const currentWeekStart = getStartOfWeek(referenceDate);
 
   if (mode === "full") {
@@ -404,6 +473,38 @@ export function getDataMaturity(moments: SpendingMoment[], referenceDate = new D
   return "building";
 }
 
+export function getMonthMoments(moments: SpendingMoment[], referenceDate: Date): SpendingMoment[] {
+  const { start, end } = getMonthRange(referenceDate, 0);
+  return moments.filter((moment) => isWithinRange(moment.occurredAt, start, end));
+}
+
+export function getTrackerEmptyReason(
+  moments: SpendingMoment[],
+  referenceDate: Date,
+  segment: TrackerSegment
+): TrackerEmptyReason | null {
+  const monthMoments = getMonthMoments(moments, referenceDate);
+  const relevant =
+    segment === "cashflow"
+      ? monthMoments.filter((moment) => moment.type === "income" || moment.type === "expense")
+      : monthMoments.filter((moment) => moment.type === segment);
+
+  if (relevant.length === 0) {
+    return "empty_month";
+  }
+
+  const maturity = getDataMaturity(moments, referenceDate);
+  if (maturity === "new") {
+    return "early_new";
+  }
+
+  if (maturity === "building" && relevant.length < 3) {
+    return "early_building";
+  }
+
+  return null;
+}
+
 export function buildSpendingTrend(moments: SpendingMoment[]): SpendingTrend {
   const today = new Date();
   const months = [-2, -1, 0].map((offset) => {
@@ -453,10 +554,6 @@ export function sumExpenseMoments(moments: SpendingMoment[]): number {
   return sumMoments(moments.filter((moment) => moment.type === "expense"));
 }
 
-export function sumMoments(moments: SpendingMoment[]): number {
-  return moments.reduce((sum, moment) => sum + moment.amount, 0);
-}
-
 export function clampPercent(value: number): number {
   if (!Number.isFinite(value)) return 0;
   return Math.min(1, Math.max(0, value));
@@ -481,17 +578,6 @@ export function getStartOfWeek(date: Date): Date {
   const offset = day === 0 ? -6 : 1 - day;
   start.setDate(start.getDate() + offset);
   return start;
-}
-
-export function getMonthRange(date: Date, monthOffset: number): { start: Date; end: Date } {
-  const start = new Date(date.getFullYear(), date.getMonth() + monthOffset, 1);
-  const end = new Date(date.getFullYear(), date.getMonth() + monthOffset + 1, 1);
-  return { start, end };
-}
-
-export function isWithinRange(value: string, start: Date, end: Date): boolean {
-  const time = Date.parse(value);
-  return time >= start.getTime() && time < end.getTime();
 }
 
 export function getFrequentAccountLabels(
@@ -582,24 +668,13 @@ export function filterMoments(moments: SpendingMoment[], query: string): Spendin
       moment.context,
       moment.note,
       String(moment.amount),
-      formatCompactRupiah(moment.amount)
+      formatRupiah(moment.amount)
     ]
       .filter(Boolean)
       .join(" ")
       .toLowerCase();
     return haystack.includes(normalized);
   });
-}
-
-export function getRepeatHint(moment: SpendingMoment, moments: SpendingMoment[]): string | undefined {
-  if (moment.type === "income") return undefined;
-  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const count = moments.filter(
-    (item) => item.type === "expense" && item.context === moment.context && Date.parse(item.occurredAt) >= weekAgo
-  ).length;
-  return count >= 3
-    ? formatString(getRuntimeStrings().memory.repeatHint, { count })
-    : undefined;
 }
 
 export function buildRepeatHints(moments: SpendingMoment[]): Map<string, string> {

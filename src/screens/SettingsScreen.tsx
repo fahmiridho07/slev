@@ -31,12 +31,16 @@ import { useTheme } from "../hooks/useTheme";
 type SettingsScreenProps = {
   activeSettingsTab: SettingsTabKey;
   onSettingsTabChange: (tab: SettingsTabKey) => void;
+  onTogglePlanning: (next: boolean) => void;
+  planningEnabled: boolean;
   scrollContentStyle: StyleProp<ViewStyle>;
 };
 
 function SettingsScreenComponent({
   activeSettingsTab,
   onSettingsTabChange,
+  onTogglePlanning,
+  planningEnabled,
   scrollContentStyle
 }: SettingsScreenProps) {
   const {
@@ -66,7 +70,18 @@ function SettingsScreenComponent({
   );
   const momentCount = moments.length;
 
-  const activeTab = activeSettingsTab;
+  const activeTab = planningEnabled || activeSettingsTab !== "bills" ? activeSettingsTab : "categories";
+  const settingsTabOptions = useMemo(
+    () => [
+      ...(planningEnabled
+        ? [{ icon: "receipt-outline" as const, label: strings.settings.billsTab, value: "bills" as const }]
+        : []),
+      { icon: "pricetags-outline" as const, label: strings.settings.categoriesTab, value: "categories" as const },
+      { icon: "color-palette-outline" as const, label: strings.settings.appearanceTab, value: "appearance" as const },
+      { icon: "cloud-outline" as const, label: strings.settings.dataTab, value: "data" as const }
+    ],
+    [planningEnabled, strings.settings.appearanceTab, strings.settings.billsTab, strings.settings.categoriesTab, strings.settings.dataTab]
+  );
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
   const [categoryDraft, setCategoryDraft] = useState("");
   const [categoryFieldError, setCategoryFieldError] = useState<FormValidationError<CategoryFieldError> | null>(null);
@@ -158,6 +173,17 @@ function SettingsScreenComponent({
             selected={reduceMotionPreference}
             stretch
             onSelect={setReduceMotionPreference}
+          />
+          <Text style={componentStyles.microLabel}>{strings.appearance.planningLabel}</Text>
+          <Text style={styles.settingCopy}>{strings.appearance.planningHelper}</Text>
+          <SegmentedControl
+            options={[
+              { label: strings.appearance.planningOff, value: "off" },
+              { label: strings.appearance.planningOn, value: "on" }
+            ]}
+            selected={planningEnabled ? "on" : "off"}
+            stretch
+            onSelect={(value) => onTogglePlanning(value === "on")}
           />
         </View>
       );
@@ -359,8 +385,10 @@ function SettingsScreenComponent({
     expenseCategories,
     importDraft,
     importFieldError,
+    onTogglePlanning,
     pickImportFile,
     locale,
+    planningEnabled,
     recurringBills,
     reduceMotionPreference,
     setColorScheme,
@@ -389,12 +417,7 @@ function SettingsScreenComponent({
         scrollContentStyle={scrollContentStyle}
         tabBar={
           <ScreenTabBar
-            options={[
-              { icon: "receipt-outline", label: strings.settings.billsTab, value: "bills" },
-              { icon: "pricetags-outline", label: strings.settings.categoriesTab, value: "categories" },
-              { icon: "color-palette-outline", label: strings.settings.appearanceTab, value: "appearance" },
-              { icon: "cloud-outline", label: strings.settings.dataTab, value: "data" }
-            ]}
+            options={settingsTabOptions}
             selected={activeTab}
             onSelect={onSettingsTabChange}
           />

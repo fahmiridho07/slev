@@ -6,7 +6,7 @@ import { MonthlySummary } from "../app.types";
 import { getAllocationActionCopy, getAllocationRowCopy } from "../../lib/analysis";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
 import { buildAllocationPlan, getLatestBalanceSnapshots } from "../../lib/financeEngine";
-import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { BalanceSnapshot, MoneyAccount, MoneyTransfer, MonthlyPlan, type PatternGroup } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 import { getAllocationFillStyle } from "../../theme/styles/fillStyles";
@@ -63,19 +63,19 @@ export function AllocationPanel({
           <View style={styles.allocationGrid}>
             <View style={styles.allocationMetric}>
               <Text style={componentStyles.microLabel}>{allocationStrings.income}</Text>
-              <Text style={styles.allocationValue}>{formatCompactRupiah(allocation.incomeReceived)}</Text>
+              <Text style={styles.allocationValue}>{formatRupiah(allocation.incomeReceived)}</Text>
               <Text style={styles.settingCopy}>
-                {formatString(allocationStrings.ofPlanned, { planned: formatCompactRupiah(allocation.expectedIncome) })}
+                {formatString(allocationStrings.ofPlanned, { planned: formatRupiah(allocation.expectedIncome) })}
               </Text>
             </View>
             <View style={styles.allocationMetric}>
               <Text style={componentStyles.microLabel}>{allocationStrings.dailyRoom}</Text>
-              <Text style={styles.allocationValue}>{formatCompactRupiah(allocation.dailyFlexibleRoom)}</Text>
+              <Text style={styles.allocationValue}>{formatRupiah(allocation.dailyFlexibleRoom)}</Text>
               <Text style={styles.settingCopy}>{allocationStrings.flexibleUntilMonthEnd}</Text>
             </View>
             <View style={styles.allocationMetric}>
               <Text style={componentStyles.microLabel}>{allocationStrings.pocketCash}</Text>
-              <Text style={styles.allocationValue}>{formatCompactRupiah(allocation.pocketBalance)}</Text>
+              <Text style={styles.allocationValue}>{formatRupiah(allocation.pocketBalance)}</Text>
               <Text style={styles.settingCopy}>
                 {formatString(allocationStrings.dayCoverage, { count: allocation.pocketCoverageDays })}
               </Text>
@@ -98,7 +98,7 @@ export function AllocationPanel({
                   <View style={styles.analyticsRowHeader}>
                     <Text style={componentStyles.analyticsTitle}>{rowCopy.title}</Text>
                     <Text style={styles.analyticsAmount}>
-                      {formatCompactRupiah(row.actual)} / {formatCompactRupiah(row.planned)}
+                      {formatRupiah(row.actual)} / {formatRupiah(row.planned)}
                     </Text>
                   </View>
                   {row.planned > 0 && (

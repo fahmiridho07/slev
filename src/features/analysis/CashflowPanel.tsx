@@ -2,28 +2,48 @@ import React, { useMemo } from "react";
 import { Text, View } from "react-native";
 import { EmptyState } from "../../components";
 import { formatString } from "../../i18n";
-import { buildCashflowWeeks, CashflowWeeksMode, getPercentWidthStyle } from "../../lib/analysis";
+import { buildCashflowWeeks, CashflowWeeksMode, getPercentWidthStyle, getTrackerEmptyReason } from "../../lib/analysis";
+import { getTrackerEmptyCopy } from "../../lib/trackerCopy";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
-import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { SpendingMoment } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 
 export function CashflowPanel({
   moments,
-  mode = "default",
+  mode = "month",
+  referenceDate,
   showEmpty = true
 }: {
   moments: SpendingMoment[];
   mode?: CashflowWeeksMode;
+  referenceDate?: Date;
   showEmpty?: boolean;
 }) {
   const { componentStyles, strings, styles } = useTheme();
   const cashflowStrings = strings.patterns.cashflow;
-  const weeks = useMemo(() => buildCashflowWeeks(moments, { mode }), [mode, moments]);
+  const resolvedReferenceDate = referenceDate ?? new Date();
+  const emptyReason = useMemo(
+    () =>
+      mode === "month"
+        ? getTrackerEmptyReason(moments, resolvedReferenceDate, "cashflow")
+        : null,
+    [mode, moments, resolvedReferenceDate]
+  );
+  const weeks = useMemo(
+    () => buildCashflowWeeks(moments, { mode, referenceDate }),
+    [mode, moments, referenceDate]
+  );
   const maxWeeklyAmount = useMemo(
     () => Math.max(1, ...weeks.flatMap((week) => [week.income, week.expense])),
     [weeks]
   );
+
+  if (emptyReason) {
+    return showEmpty ? (
+      <EmptyState text={getTrackerEmptyCopy(emptyReason, "cashflow", strings.patterns.tracker)} />
+    ) : null;
+  }
 
   if (weeks.every((week) => week.income === 0 && week.expense === 0)) {
     return showEmpty ? <EmptyState text={cashflowStrings.empty} /> : null;
@@ -45,14 +65,14 @@ export function CashflowPanel({
               <View style={styles.cashflowTrack}>
                 <View style={[styles.incomeFill, getPercentWidthStyle(week.income / maxWeeklyAmount)]} />
               </View>
-              <Text style={styles.cashflowAmount}>{formatCompactRupiah(week.income)}</Text>
+              <Text style={styles.cashflowAmount}>{formatRupiah(week.income)}</Text>
             </View>
             <View style={styles.cashflowBarLine}>
               <Text style={styles.cashflowLabel}>{strings.common.expense}</Text>
               <View style={styles.cashflowTrack}>
                 <View style={[styles.expenseFill, getPercentWidthStyle(week.expense / maxWeeklyAmount)]} />
               </View>
-              <Text style={styles.cashflowAmount}>{formatCompactRupiah(week.expense)}</Text>
+              <Text style={styles.cashflowAmount}>{formatRupiah(week.expense)}</Text>
             </View>
           </View>
         </View>

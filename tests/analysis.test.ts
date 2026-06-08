@@ -6,18 +6,26 @@ import {
   getDataMaturity,
   dateKey,
   filterMoments,
+  formatReconciliationDifference,
   getAllocationActionCopy,
   getFrequentAccountLabels,
   getMomentsInPeriod,
   getMonthKey,
-  getRepeatHint,
+  getReconciliationDetail,
   getRepeatSuggestions,
+  getMonthMoments,
+  getTrackerEmptyReason,
   groupMomentsByRecallRange,
   isWithinRange,
   sumExpenseMoments,
   sumMoments
 } from "../src/lib/analysis";
-import { AllocationPlan } from "../src/lib/financeEngine";
+import {
+  AccountReconciliationRow,
+  AllocationPlan,
+  buildAccountReconciliation,
+  DEFAULT_RECONCILIATION_TOLERANCE
+} from "../src/lib/financeEngine";
 import { EntryType, MoneyAccount, SpendingContext, SpendingMoment } from "../src/features/spendingMemory.types";
 
 declare const process: {
@@ -143,21 +151,7 @@ test("getRepeatSuggestions dedupes labels and skips income", () => {
   assertEqual(suggestions[0]?.label, "Latte", "first suggestion");
 });
 
-test("getRepeatHint appears after three same-context expenses in seven days", () => {
-  const now = Date.now();
-  const recent = new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString();
-  const moments = [
-    moment({ amount: 10000, context: "Coffee", occurredAt: recent }),
-    moment({ amount: 12000, context: "Coffee", occurredAt: recent }),
-    moment({ amount: 8000, context: "Coffee", occurredAt: recent })
-  ];
-  const target = moments[0]!;
-
-  assertEqual(getRepeatHint(target, moments), "3 this week", "repeat hint");
-  assertEqual(getRepeatHint({ ...target, type: "income", source: "Salary" }, moments), undefined, "income skipped");
-});
-
-test("buildRepeatHints matches getRepeatHint for every moment in one pass", () => {
+test("buildRepeatHints surfaces repeat context hints in one pass", () => {
   const now = Date.now();
   const recent = new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString();
   const old = new Date(now - 10 * 24 * 60 * 60 * 1000).toISOString();
@@ -170,9 +164,9 @@ test("buildRepeatHints matches getRepeatHint for every moment in one pass", () =
   ];
   const hints = buildRepeatHints(moments);
 
-  moments.forEach((item) => {
-    assertEqual(hints.get(item.id), getRepeatHint(item, moments), `hint for ${item.id}`);
-  });
+  assertEqual(hints.get(moments[0]!.id), "3 this week", "repeat hint for frequent context");
+  assertEqual(hints.get(moments[1]!.id), "3 this week", "repeat hint shared by context");
+  assertEqual(hints.get(moments[2]!.id), "3 this week", "repeat hint shared by context");
   assertEqual(hints.get(moments[3]!.id), undefined, "income omitted from map");
   assertEqual(hints.get(moments[4]!.id), undefined, "stale context omitted from map");
 });
@@ -262,6 +256,55 @@ test("buildCashflowWeeks default mode skips empty weeks outside current month", 
   assertEqual(weeks.length <= 5, true, "default mode stays within current month");
 });
 
+test("buildCashflowWeeks month mode buckets entries across fixed calendar ranges", () => {
+  const referenceDate = new Date("2026-06-15T08:00:00.000Z");
+  const weeks = buildCashflowWeeks(
+    [
+      moment({ amount: 1000, occurredAt: "2026-06-02T08:00:00.000Z" }),
+      moment({ amount: 2000, occurredAt: "2026-06-10T08:00:00.000Z" }),
+      moment({ amount: 3000, occurredAt: "2026-06-18T08:00:00.000Z" }),
+      moment({ amount: 4000, occurredAt: "2026-06-25T08:00:00.000Z" }),
+      moment({ amount: 5000, occurredAt: "2026-06-30T08:00:00.000Z" }),
+      moment({ amount: 90000, type: "income", source: "Salary", occurredAt: "2026-06-05T08:00:00.000Z" }),
+      moment({ amount: 70000, occurredAt: "2026-05-28T08:00:00.000Z" })
+    ],
+    { mode: "month", referenceDate }
+  );
+
+  assertEqual(weeks.length, 5, "June has five date-range buckets");
+  assertEqual(weeks.map((week) => week.label).join(","), "1\u20137,8\u201314,15\u201321,22\u201328,29\u201330", "labels use day ranges");
+  assertEqual(weeks[0]?.expense, 1000, "days 1-7 expense");
+  assertEqual(weeks[0]?.income, 90000, "days 1-7 income");
+  assertEqual(weeks[0]?.net, 89000, "days 1-7 net");
+  assertEqual(weeks[1]?.expense, 2000, "days 8-14 expense");
+  assertEqual(weeks[2]?.expense, 3000, "days 15-21 expense");
+  assertEqual(weeks[3]?.expense, 4000, "days 22-28 expense");
+  assertEqual(weeks[4]?.expense, 5000, "days 29-end expense");
+  assertEqual(weeks.every((week) => Number.isInteger(week.income) && Number.isInteger(week.expense)), true, "amounts stay integer");
+});
+
+test("buildCashflowWeeks month mode sizes the final bucket for month length", () => {
+  const january = buildCashflowWeeks(
+    [moment({ amount: 12000, occurredAt: "2026-01-31T08:00:00.000Z" })],
+    { mode: "month", referenceDate: new Date("2026-01-15T08:00:00.000Z") }
+  );
+  const april = buildCashflowWeeks([], { mode: "month", referenceDate: new Date("2026-04-15T08:00:00.000Z") });
+  const february = buildCashflowWeeks([], { mode: "month", referenceDate: new Date("2026-02-15T08:00:00.000Z") });
+
+  assertEqual(january[january.length - 1]?.label, "29\u201331", "31-day month ends on day 31");
+  assertEqual(january[january.length - 1]?.expense, 12000, "31-day final bucket keeps month-end entry");
+  assertEqual(april[april.length - 1]?.label, "29\u201330", "30-day month ends on day 30");
+  assertEqual(february.length, 4, "28-day February omits the 29-end bucket");
+  assertEqual(february[february.length - 1]?.label, "22\u201328", "28-day month ends on day 28");
+});
+
+test("buildCashflowWeeks month mode returns zeroed buckets for an empty month", () => {
+  const weeks = buildCashflowWeeks([], { mode: "month", referenceDate: new Date("2026-06-15T08:00:00.000Z") });
+
+  assertEqual(weeks.length, 5, "empty month still exposes all ranges");
+  assertEqual(weeks.every((week) => week.income === 0 && week.expense === 0 && week.net === 0), true, "empty month buckets are zeroed");
+});
+
 test("buildSpendingTrend hides empty prior months", () => {
   const trend = buildSpendingTrend([
     moment({ amount: 600000, context: "Meal", occurredAt: "2026-06-04T01:00:00.000Z" }),
@@ -288,11 +331,176 @@ test("getDataMaturity classifies sparse new users", () => {
   );
 });
 
+test("getMonthMoments scopes entries to the reference month", () => {
+  const referenceDate = new Date("2026-06-15T08:00:00.000Z");
+  const monthMoments = getMonthMoments(
+    [
+      moment({ amount: 10000, occurredAt: "2026-06-10T08:00:00.000Z" }),
+      moment({ amount: 12000, occurredAt: "2026-05-28T08:00:00.000Z" })
+    ],
+    referenceDate
+  );
+
+  assertEqual(monthMoments.length, 1, "only June entries remain");
+});
+
+test("getTrackerEmptyReason returns empty_month when the month has no segment data", () => {
+  const referenceDate = new Date("2026-06-15T08:00:00.000Z");
+  assertEqual(
+    getTrackerEmptyReason(
+      [moment({ amount: 12000, occurredAt: "2026-05-28T08:00:00.000Z" })],
+      referenceDate,
+      "expense"
+    ),
+    "empty_month",
+    "other-month expenses do not count"
+  );
+});
+
+test("getTrackerEmptyReason returns early_new for sparse new users", () => {
+  const referenceDate = new Date("2026-06-15T08:00:00.000Z");
+  assertEqual(
+    getTrackerEmptyReason(
+      [moment({ amount: 12000, occurredAt: "2026-06-10T08:00:00.000Z" })],
+      referenceDate,
+      "cashflow"
+    ),
+    "early_new",
+    "first entries stay in calm early-stage copy"
+  );
+});
+
+test("getTrackerEmptyReason returns null once month activity is established enough", () => {
+  const referenceDate = new Date("2026-06-15T08:00:00.000Z");
+  assertEqual(
+    getTrackerEmptyReason(
+      [
+        moment({ amount: 10000, occurredAt: "2026-05-10T08:00:00.000Z" }),
+        moment({ amount: 12000, occurredAt: "2026-04-10T08:00:00.000Z" }),
+        moment({ amount: 14000, occurredAt: "2026-06-10T08:00:00.000Z" }),
+        moment({ amount: 16000, occurredAt: "2026-06-11T08:00:00.000Z" })
+      ],
+      referenceDate,
+      "expense"
+    ),
+    null,
+    "established users see charts even with light current-month activity"
+  );
+});
+
 test("getAllocationActionCopy returns steady hold messaging", () => {
   const copy = getAllocationActionCopy(holdAllocationPlan());
 
   assertEqual(copy.title, "Allocation is steady", "hold title");
   assertEqual(copy.tone, "calm", "hold tone");
+});
+
+test("formatReconciliationDifference follows reconciliation status instead of a hardcoded gap", () => {
+  const matchedRow = reconciliationRow({ status: "matched", difference: DEFAULT_RECONCILIATION_TOLERANCE });
+  const smallGapRow = reconciliationRow({
+    status: "small_gap",
+    difference: DEFAULT_RECONCILIATION_TOLERANCE + 1
+  });
+  const reviewRow = reconciliationRow({ status: "needs_review", difference: -25_000 });
+
+  assertEqual(formatReconciliationDifference(matchedRow), "Matched", "matched status keeps calm copy");
+  assertEqual(
+    formatReconciliationDifference(smallGapRow),
+    "+Rp 1.001",
+    "small_gap status shows the signed difference"
+  );
+  assertEqual(
+    formatReconciliationDifference(reviewRow),
+    "-Rp 25.000",
+    "needs_review status shows the signed difference"
+  );
+});
+
+test("getReconciliationDetail follows reconciliation status for gap messaging", () => {
+  const matchedRow = reconciliationRow({
+    status: "matched",
+    difference: 0,
+    daysCovered: 9,
+    income: 2_000_000,
+    expense: 500_000,
+    transferIn: 0,
+    transferOut: 750_000
+  });
+  const reviewRow = reconciliationRow({
+    status: "needs_review",
+    difference: -20_000,
+    daysCovered: 9,
+    income: 2_000_000,
+    expense: 500_000,
+    transferIn: 0,
+    transferOut: 750_000
+  });
+
+  assertEqual(
+    getReconciliationDetail(matchedRow),
+    "Logged movement over 9 day(s): income Rp 2.000.000, spending Rp 500.000, transfer in Rp 0, transfer out Rp 750.000.",
+    "matched status stays on movement copy"
+  );
+  assertEqual(
+    getReconciliationDetail(reviewRow).startsWith(
+      "Actual balance is Rp 20.000 lower than expected. Check missing expense, transfer out, or a balance typo."
+    ),
+    true,
+    "needs_review status adds gap direction before movement copy"
+  );
+});
+
+test("reconciliation copy stays aligned with engine status thresholds", () => {
+  const rows = buildAccountReconciliation({
+    accounts: [{ id: "acct-bri", label: "BRI", kind: "bank", isIncomeHub: true, createdAt: "2026-06-01T00:00:00.000Z", updatedAt: "2026-06-01T00:00:00.000Z" }],
+    balanceSnapshots: [
+      {
+        id: "snapshot-bri-start",
+        accountLabel: "BRI",
+        amount: 5_000_000,
+        snapshotDate: "2026-06-01T00:00:00.000Z",
+        createdAt: "2026-06-01T00:00:00.000Z"
+      },
+      {
+        id: "snapshot-bri-end",
+        accountLabel: "BRI",
+        amount: 5_744_000,
+        snapshotDate: "2026-06-10T00:00:00.000Z",
+        createdAt: "2026-06-10T00:00:00.000Z"
+      }
+    ],
+    moments: [
+      moment({ accountLabel: "BRI", amount: 2_000_000, occurredAt: "2026-06-02T00:00:00.000Z", type: "income" }),
+      moment({ accountLabel: "BRI", amount: 500_000, occurredAt: "2026-06-04T00:00:00.000Z" })
+    ],
+    toleranceAmount: DEFAULT_RECONCILIATION_TOLERANCE,
+    transfers: [{
+      id: "transfer-bri-jago",
+      amount: 750_000,
+      fromAccount: "BRI",
+      toAccount: "Jago",
+      occurredAt: "2026-06-05T00:00:00.000Z",
+      createdAt: "2026-06-05T00:00:00.000Z",
+      updatedAt: "2026-06-05T00:00:00.000Z"
+    }]
+  });
+  const bri = rows.find((row) => row.label === "BRI");
+
+  if (!bri) {
+    throw new Error("Missing reconciliation row for BRI.");
+  }
+
+  assertEqual(bri.status, "small_gap", "engine classifies a gap above tolerance as small_gap");
+  assertEqual(
+    formatReconciliationDifference(bri),
+    "-Rp 6.000",
+    "copy layer should not collapse small_gap back to matched"
+  );
+  assertEqual(
+    getReconciliationDetail(bri).includes("Actual balance is Rp 6.000 lower than expected."),
+    true,
+    "copy layer should surface small_gap direction text"
+  );
 });
 
 runTests();
@@ -367,6 +575,28 @@ function moment(input: {
     source: input.source,
     type: input.type ?? "expense",
     updatedAt: input.occurredAt
+  };
+}
+
+function reconciliationRow(
+  input: Partial<AccountReconciliationRow> & {
+    label?: string;
+    status: AccountReconciliationRow["status"];
+  }
+): AccountReconciliationRow {
+  return {
+    daysCovered: 0,
+    difference: null,
+    expectedAmount: null,
+    expense: 0,
+    income: 0,
+    label: "BRI",
+    latestAmount: null,
+    loggedDelta: 0,
+    previousAmount: null,
+    transferIn: 0,
+    transferOut: 0,
+    ...input
   };
 }
 

@@ -5,7 +5,7 @@ import { CategoryModeValue } from "../app.types";
 import { formatString, getCategoryDeleteMessage } from "../../i18n";
 import { getMomentsInPeriod, sumExpenseMoments } from "../../lib/analysis";
 import { getModeByCategory } from "../../lib/financeEngine";
-import { formatCompactRupiah } from "../../lib/spendingMemoryPatterns";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { BudgetLimit, BudgetPeriod, CategoryMode, ExpenseCategory, SpendingContext, SpendingMoment } from "../spendingMemory.types";
 import { hapticSelection } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
@@ -111,12 +111,12 @@ export function BudgetLimitsPanel({
                 <Text style={styles.budgetMeta}>
                   {row.limit
                     ? formatString(limitsStrings.spentOfLimit, {
-                        spent: formatCompactRupiah(row.spent),
-                        limit: formatCompactRupiah(row.limit.limitAmount),
+                        spent: formatRupiah(row.spent),
+                        limit: formatRupiah(row.limit.limitAmount),
                         period: periodLabel(row.period)
                       })
                     : formatString(limitsStrings.noLimitSpent, {
-                        spent: formatCompactRupiah(row.spent)
+                        spent: formatRupiah(row.spent)
                       })}
                 </Text>
               </View>

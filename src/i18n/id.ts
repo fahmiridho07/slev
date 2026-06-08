@@ -4,9 +4,8 @@ import type { AppStrings } from "./types";
 export const id: AppStrings = {
   tabs: {
     home: "Beranda",
-    overview: "Ringkasan",
-    budget: "Anggaran",
-    analysis: "Analisis"
+    money: "Uang",
+    budget: "Anggaran"
   },
   brand: {
     tagline: "Memori pengeluaran",
@@ -111,6 +110,10 @@ export const id: AppStrings = {
     label: "Tampilan",
     light: "Terang",
     dark: "Gelap",
+    planningLabel: "Perencanaan & anggaran",
+    planningHelper: "Mematikan ini menyembunyikan alat anggaran. Rencana, limit, dan saldo tetap tersimpan.",
+    planningOff: "Mati",
+    planningOn: "Nyala",
     reduceMotionLabel: "Animasi",
     reduceMotionOff: "Penuh",
     reduceMotionOn: "Dikurangi",
@@ -217,6 +220,22 @@ export const id: AppStrings = {
       savedTowardGoals: "Disimpan untuk target: {saved} dari {target}",
       monthlySavingsTarget: "Target tabungan bulanan: {amount}"
     },
+    safeToSpend: {
+      setBalancePrompt: "Berapa saldomu sekarang?",
+      setBalancePlaceholder: "Saldo sekarang",
+      saveBalanceA11y: "Simpan saldo sekarang",
+      heroLabel: "Aman dibelanjain hari ini",
+      balanceAnchor: "Saldo saat ini {amount}",
+      typicalDaily: "Rata-rata harianmu {amount}",
+      typicalDailyUncertain: "estimasi kasar, butuh lebih banyak data",
+      daysLeft: "{count} hari lagi",
+      checkPurchase: "Bisa beli sesuatu?",
+      checkPurchaseA11y: "Cek apakah pembelian ini masih aman",
+      sheetTitle: "Bisa beli ini?",
+      purchasePlaceholder: "Harga barang",
+      affordable: "Bisa. Setelah ini, aman harianmu jadi {amount} sampai gajian.",
+      notAffordable: "Belum aman — bakal makan jatah harianmu. Kurang {amount}."
+    },
     bills: {
       comingUp: "Akan datang",
       empty: "Tidak ada tagihan dalam dua minggu ke depan. Tagihan rutin bisa ditambahkan di Pengaturan.",
@@ -287,6 +306,18 @@ export const id: AppStrings = {
       recap: "Ringkasan",
       spending: "Pengeluaran",
       accounts: "Akun"
+    },
+    tracker: {
+      cashflow: "Arus kas",
+      cashflowEmptyMonth: "Belum ada pemasukan atau pengeluaran tercatat bulan ini.",
+      cashflowEarlyNew: "Catat pemasukan atau pengeluaran — arus kas bulan ini akan terbentuk.",
+      cashflowEarlyBuilding: "Beberapa entri sudah masuk — arus kas terisi seiring bulan berjalan.",
+      expenseEmptyMonth: "Belum ada pengeluaran bulan ini.",
+      expenseEarlyNew: "Beberapa pengeluaran tercatat — rincian kategori berkembang seiring kamu mencatat.",
+      expenseEarlyBuilding: "Pengeluaran masih ringan — lebih banyak entri akan memperjelas tampilan ini.",
+      incomeEmptyMonth: "Belum ada pemasukan tercatat bulan ini.",
+      incomeEarlyNew: "Beberapa pemasukan tercatat — sumber terisi seiring kamu mencatat.",
+      incomeEarlyBuilding: "Pemasukan masih ringan — lebih banyak entri akan memperjelas tampilan ini."
     },
     hero: {
       breakdownHint: "{amount} pemasukan tercatat bulan ini",

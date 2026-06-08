@@ -1,10 +1,22 @@
-import { listMoneyAccounts, saveMoneyAccount } from "../src/services/accountRepository";
-import { listSpendingMoments, saveSpendingMoment } from "../src/services/spendingMemoryRepository";
+import {
+  listMoneyAccounts,
+  listMoneyTransfers,
+  saveMoneyAccount,
+  saveMoneyTransfer
+} from "../src/services/accountRepository";
+import { buildAccountReconciliation } from "../src/lib/financeEngine";
+import { listBalanceSnapshots } from "../src/services/manualFinanceRepository";
+import {
+  listSpendingMoments,
+  runSpendingMemoryV2Migration,
+  saveSpendingMoment
+} from "../src/services/spendingMemoryRepository";
 import { exportAllData, exportAllDataWithReport, importAllData } from "../src/services/storageBackup";
 import {
   corruptBackupKeyPrefix,
   isKeyCorrupt,
   readJson,
+  readRaw,
   resetStorageDriver,
   setStorageDriver,
   StorageDriver,
@@ -79,6 +91,180 @@ test("corrupt blobs are backed up and left untouched on later writes", async () 
   const blocked = await writeJson("slev_budget_limits", [{ category: "Food", limitAmount: 100000, period: "monthly" }]);
   assertEqual(blocked, false, "corrupt key blocks overwrite");
   assertEqual(driver.store.get("slev_budget_limits"), "{not-json", "original corrupt blob preserved");
+});
+
+test("runMigrations fresh install is a no-op and sets schema version 2", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await runMigrations();
+
+  assertEqual(await getSchemaVersion(), 2, "schema version set");
+  assertEqual(await readRaw(STORAGE_KEYS.migratedV2), "true", "v2 migration flag set");
+  assertEqual(driver.store.get(STORAGE_KEYS.moments), "[]", "empty moments collection initialized");
+  assertEqual((await listSpendingMoments()).length, 0, "no moments created");
+});
+
+test("runSpendingMemoryV2Migration migrates legacy moments with normalization", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await driver.setItem(
+    STORAGE_KEYS.legacyMoments,
+    JSON.stringify([
+      {
+        id: "legacy-m1",
+        amount: 4999.6,
+        label: "  Latte  ",
+        context: "food",
+        type: "purchase",
+        occurredAt: "2026-05-01T00:00:00.000Z",
+        createdAt: "2026-05-01T00:00:00.000Z",
+        updatedAt: "2026-05-01T00:00:00.000Z"
+      }
+    ])
+  );
+
+  await runSpendingMemoryV2Migration();
+  const moments = await listSpendingMoments();
+
+  assertEqual(moments.length, 1, "legacy moment migrated");
+  assertEqual(moments[0]?.id, "legacy-m1", "legacy id preserved");
+  assertEqual(moments[0]?.amount, 5000, "amount rounded");
+  assertEqual(moments[0]?.label, "Latte", "label trimmed");
+  assertEqual(moments[0]?.context, "Meal", "context normalized");
+  assertEqual(moments[0]?.type, "expense", "unknown type coerced to expense");
+  assertEqual(driver.store.has(STORAGE_KEYS.moments), true, "moments persisted to v2 key");
+});
+
+test("runSpendingMemoryV2Migration imports only confirmed positive legacy transactions", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+  const timestamp = "2026-06-01T08:00:00.000Z";
+
+  await driver.setItem(
+    STORAGE_KEYS.legacyTransactions,
+    JSON.stringify([
+      {
+        id: "tx-ok",
+        amount: 45000,
+        merchant: "  Coffee  ",
+        category: "food",
+        status: "confirmed",
+        timestamp,
+        createdAt: timestamp,
+        updatedAt: timestamp
+      },
+      {
+        id: "tx-pending",
+        amount: 10000,
+        merchant: "Pending",
+        category: "Food",
+        status: "pending",
+        timestamp,
+        createdAt: timestamp,
+        updatedAt: timestamp
+      },
+      {
+        id: "tx-zero",
+        amount: 0,
+        merchant: "Zero",
+        category: "Food",
+        status: "confirmed",
+        timestamp,
+        createdAt: timestamp,
+        updatedAt: timestamp
+      }
+    ])
+  );
+
+  await runSpendingMemoryV2Migration();
+  const moments = await listSpendingMoments();
+
+  assertEqual(moments.length, 1, "only one transaction imported");
+  assertEqual(moments[0]?.id, "migrated-tx-ok", "confirmed row mapped to migrated id");
+  assertEqual(moments[0]?.amount, 45000, "confirmed amount preserved");
+  assertEqual(moments[0]?.label, "Coffee", "merchant label normalized");
+  assertEqual(moments[0]?.context, "Meal", "category normalized");
+  assertEqual(moments[0]?.type, "expense", "legacy transactions become expenses");
+});
+
+test("runSpendingMemoryV2Migration is idempotent and does not duplicate migrated data", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+  const timestamp = "2026-06-02T08:00:00.000Z";
+
+  await driver.setItem(
+    STORAGE_KEYS.legacyMoments,
+    JSON.stringify([
+      {
+        id: "legacy-dup",
+        amount: 12000,
+        label: "Snack",
+        context: "Food",
+        type: "expense",
+        occurredAt: timestamp,
+        createdAt: timestamp,
+        updatedAt: timestamp
+      }
+    ])
+  );
+  await driver.setItem(
+    STORAGE_KEYS.legacyTransactions,
+    JSON.stringify([
+      {
+        id: "tx-dup",
+        amount: 8000,
+        merchant: "Tea",
+        category: "Food",
+        status: "confirmed",
+        timestamp,
+        createdAt: timestamp,
+        updatedAt: timestamp
+      }
+    ])
+  );
+
+  await runMigrations();
+  const first = await listSpendingMoments();
+  const firstRaw = driver.store.get(STORAGE_KEYS.moments);
+
+  await runMigrations();
+  const second = await listSpendingMoments();
+  const secondRaw = driver.store.get(STORAGE_KEYS.moments);
+
+  await runSpendingMemoryV2Migration();
+  const third = await listSpendingMoments();
+
+  assertEqual(first.length, 2, "legacy moment and transaction merged");
+  assertEqual(second.length, 2, "second migration keeps row count");
+  assertEqual(JSON.stringify(second), JSON.stringify(first), "second migration preserves data");
+  assertEqual(secondRaw, firstRaw, "stored blob unchanged on second migration");
+  assertEqual(JSON.stringify(third), JSON.stringify(first), "direct v2 migration no-op after flag");
+});
+
+test("runSpendingMemoryV2Migration backs up corrupt legacy transactions without throwing", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+
+  await driver.setItem(STORAGE_KEYS.legacyTransactions, "{bad-json");
+
+  let threw = false;
+  try {
+    await runSpendingMemoryV2Migration();
+  } catch (error) {
+    threw = error instanceof Error;
+  }
+
+  assertEqual(threw, false, "migration does not throw");
+  assertEqual(isKeyCorrupt(STORAGE_KEYS.legacyTransactions), true, "corrupt flag set");
+  const backupKeys = [...driver.store.keys()].filter((key) =>
+    key.startsWith(corruptBackupKeyPrefix(STORAGE_KEYS.legacyTransactions))
+  );
+  assertEqual(backupKeys.length >= 1, true, "corrupt blob backed up");
+  assertEqual(driver.store.get(backupKeys[0]!), "{bad-json", "backup keeps original blob");
+  assertEqual(await readRaw(STORAGE_KEYS.migratedV2), "true", "migration marked complete");
+  assertEqual((await listSpendingMoments()).length, 0, "no transactions imported from corrupt blob");
 });
 
 test("runMigrations is idempotent for legacy spending memory imports", async () => {
@@ -277,6 +463,126 @@ test("legacy stored accounts without tier normalize to tracked", async () => {
   const accounts = await listMoneyAccounts();
   const account = accounts.find((item) => item.id === "legacy-1");
   assertEqual(account?.tier, "tracked", "missing tier defaults to tracked");
+});
+
+test("saveMoneyAccount cascades label rename across historical collections", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+  const timestamp = "2026-06-01T00:00:00.000Z";
+
+  await writeJson(STORAGE_KEYS.accounts, [
+    {
+      id: "acct-hub",
+      label: "BRI",
+      kind: "bank",
+      isIncomeHub: true,
+      tier: "tracked",
+      createdAt: timestamp,
+      updatedAt: timestamp
+    },
+    {
+      id: "acct-pocket",
+      label: "Pocket",
+      kind: "wallet",
+      isIncomeHub: false,
+      tier: "tracked",
+      createdAt: timestamp,
+      updatedAt: timestamp
+    },
+    {
+      id: "acct-jago",
+      label: "Jago",
+      kind: "bank",
+      isIncomeHub: false,
+      tier: "tracked",
+      createdAt: timestamp,
+      updatedAt: timestamp
+    }
+  ]);
+
+  await saveSpendingMoment({
+    amount: 25_000,
+    label: "Snack",
+    context: "Food",
+    type: "expense",
+    accountLabel: "Pocket",
+    occurredAt: "2026-06-05T00:00:00.000Z"
+  });
+  await saveMoneyTransfer({
+    amount: 50_000,
+    fromAccount: "Pocket",
+    toAccount: "Jago",
+    occurredAt: "2026-06-06T00:00:00.000Z"
+  });
+  await writeJson(STORAGE_KEYS.balanceSnapshots, [
+    {
+      id: "snapshot-pocket-end",
+      accountLabel: "Pocket",
+      amount: 25_000,
+      snapshotDate: "2026-06-10T00:00:00.000Z",
+      createdAt: "2026-06-10T00:00:00.000Z"
+    },
+    {
+      id: "snapshot-pocket-start",
+      accountLabel: "Pocket",
+      amount: 100_000,
+      snapshotDate: "2026-06-01T00:00:00.000Z",
+      createdAt: "2026-06-01T00:00:00.000Z"
+    }
+  ]);
+
+  const renamed = await saveMoneyAccount({
+    id: "acct-pocket",
+    label: "Daily Pocket",
+    kind: "wallet",
+    isIncomeHub: false,
+    tier: "tracked"
+  });
+
+  assertEqual(renamed.persisted, true, "rename persisted");
+  const accounts = await listMoneyAccounts();
+  assertEqual(
+    accounts.find((account) => account.id === "acct-pocket")?.label,
+    "Daily Pocket",
+    "account label updated"
+  );
+
+  const moments = await listSpendingMoments();
+  assertEqual(moments[0]?.accountLabel, "Daily Pocket", "moment label cascaded");
+
+  const transfers = await listMoneyTransfers();
+  assertEqual(transfers[0]?.fromAccount, "Daily Pocket", "transfer from-account cascaded");
+  assertEqual(transfers[0]?.toAccount, "Jago", "transfer to-account unchanged");
+
+  const snapshots = await listBalanceSnapshots();
+  assertEqual(
+    snapshots.every((snapshot) => snapshot.accountLabel !== "Pocket"),
+    true,
+    "no snapshot keeps old label"
+  );
+  assertEqual(
+    snapshots.every((snapshot) => snapshot.accountLabel === "Daily Pocket" || snapshot.accountLabel === "Jago"),
+    true,
+    "snapshots only use current labels"
+  );
+
+  const reconciliation = buildAccountReconciliation({
+    accounts: accounts.filter((account) => account.id === "acct-pocket" || account.id === "acct-jago"),
+    balanceSnapshots: snapshots.filter((snapshot) => snapshot.accountLabel === "Daily Pocket"),
+    moments,
+    transfers
+  });
+
+  assertEqual(
+    reconciliation.some((row) => row.label === "Pocket"),
+    false,
+    "reconciliation no longer shows orphaned old label"
+  );
+  const pocketRow = reconciliation.find((row) => row.label === "Daily Pocket");
+  if (!pocketRow) {
+    throw new Error("Missing reconciliation row for renamed account.");
+  }
+  assertEqual(pocketRow.status, "matched", "renamed account still reconciles");
 });
 
 test("account tier ephemeral persists through save and list", async () => {
