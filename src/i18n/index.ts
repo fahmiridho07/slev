@@ -47,7 +47,7 @@ export {
   getTransferRemovedToast,
   getWriteFailureToast
 } from "./toasts";
-export { formatString, plural } from "./format";
+export { formatString } from "./format";
 export { getRuntimeLocale, getRuntimeStrings, setRuntimeLocale } from "./runtime";
 export type { AppStrings, ListHintCopy, Locale } from "./types";
 

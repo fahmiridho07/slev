@@ -911,8 +911,8 @@ test("list actions hint persists after dismiss", async () => {
   const driver = createMemoryDriver();
   setStorageDriver(driver);
 
-  await markListActionsHintSeen("goals");
-  assertEqual(await hasSeenListActionsHint("goals"), true, "hint marked seen");
+  await markListActionsHintSeen("recurring_bills");
+  assertEqual(await hasSeenListActionsHint("recurring_bills"), true, "hint marked seen");
   assertEqual(await hasSeenListActionsHint("memory"), false, "other hints stay unseen");
 });
 

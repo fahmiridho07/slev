@@ -1,5 +1,5 @@
 import { readJson, removeKeys, WriteResult, writeJson } from "./storage";
-import { STORAGE_KEYS } from "./storageSchema";
+import { STORAGE_KEYS } from "./storageKeys";
 
 export type BalanceAnchor = {
   amount: number;

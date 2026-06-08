@@ -11,9 +11,10 @@ import {
   readString,
   toRecord
 } from "./storageRecordUtils";
-import { isKeyCorrupt, readJson, removeKeys, WriteResult, writeJson } from "./storage";
+import { readJson, removeKeys, WriteResult, writeJson } from "./storage";
+import { STORAGE_KEYS } from "./storageKeys";
 
-const MANUAL_TEMPLATES_KEY = "slev_manual_templates";
+const MANUAL_TEMPLATES_KEY = STORAGE_KEYS.manualTemplates;
 
 type ManualTemplateInput = {
   accountLabel?: string;
@@ -79,10 +80,6 @@ export async function rewriteAccountLabelInManualTemplates(
 
 export async function clearManualFinance(): Promise<boolean> {
   return removeKeys([MANUAL_TEMPLATES_KEY]);
-}
-
-export function isManualFinanceStorageCorrupt(): boolean {
-  return isKeyCorrupt(MANUAL_TEMPLATES_KEY);
 }
 
 function normalizeManualTemplate(value: unknown): ManualTemplate | null {

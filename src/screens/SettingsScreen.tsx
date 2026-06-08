@@ -20,7 +20,7 @@ import { ExpenseCategory } from "../features/spendingMemory.types";
 import { CategoryEditForm } from "../features/settings/CategoryEditForm";
 import { BalancePanel } from "../features/budget/BalancePanel";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
-import { formatString, getCategoryDeleteMessage } from "../i18n";
+import { formatString, getCategoryDeleteMessage, getImportErrorToast } from "../i18n";
 import { formatAmountInput, parseAmountInput } from "../lib/formatMoney";
 import { hapticSelection, hapticWarning } from "../lib/haptics";
 import { FormValidationError } from "../lib/formValidation";
@@ -128,8 +128,9 @@ function SettingsScreenComponent({
       setImportDraft(text);
     } catch {
       hapticWarning();
+      actions.setMessage(getImportErrorToast("invalid_backup"));
     }
-  }, []);
+  }, [actions]);
 
   const corruptIssues = isReady ? listCorruptStorageIssues() : [];
 

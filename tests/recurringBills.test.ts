@@ -1,5 +1,5 @@
 import { RecurringBill } from "../src/features/spendingMemory.types";
-import { getMonthlyBillsTotal } from "../src/lib/recurringBills";
+import { getBillsReserve, getMonthlyBillsTotal } from "../src/lib/recurringBills";
 
 declare const process: {
   exitCode?: number;
@@ -23,6 +23,42 @@ test("getMonthlyBillsTotal sums only active bills", () => {
 
 test("getMonthlyBillsTotal returns zero for empty list", () => {
   assertEqual(getMonthlyBillsTotal([]), 0, "empty bills");
+});
+
+test("getBillsReserve keeps bills without dueDay fully reserved", () => {
+  const reserve = getBillsReserve(
+    [buildBill({ label: "Internet", amount: 300_000, active: true })],
+    new Date(2026, 5, 8, 12, 0)
+  );
+
+  assertEqual(reserve, 300_000, "undated bills stay fully reserved");
+});
+
+test("getBillsReserve only keeps due bills inside the month-end horizon", () => {
+  const referenceDate = new Date(2026, 5, 8, 12, 0);
+  const reserve = getBillsReserve(
+    [
+      buildBill({ label: "Due soon", amount: 100_000, active: true, dueDay: 20 }),
+      buildBill({ label: "Already paid", amount: 200_000, active: true, dueDay: 5 })
+    ],
+    referenceDate
+  );
+
+  assertEqual(reserve, 100_000, "passed due day should not reserve again this cycle");
+});
+
+test("getBillsReserve uses payday horizon when configured", () => {
+  const referenceDate = new Date(2026, 5, 8, 12, 0);
+  const reserve = getBillsReserve(
+    [
+      buildBill({ label: "Before payday", amount: 150_000, active: true, dueDay: 20 }),
+      buildBill({ label: "After payday", amount: 250_000, active: true, dueDay: 28 })
+    ],
+    referenceDate,
+    25
+  );
+
+  assertEqual(reserve, 150_000, "only bills due on or before payday should reserve");
 });
 
 test("getMonthlyBillsTotal returns zero when all bills are inactive", () => {
@@ -70,6 +106,7 @@ function buildBill(input: {
   label: string;
   amount: number;
   active?: boolean;
+  dueDay?: number;
 }): RecurringBill {
   const now = "2026-01-01T00:00:00.000Z";
   return {
@@ -77,6 +114,7 @@ function buildBill(input: {
     label: input.label,
     amount: input.amount,
     active: input.active ?? true,
+    ...(input.dueDay !== undefined ? { dueDay: input.dueDay } : {}),
     createdAt: now,
     updatedAt: now
   };

@@ -515,12 +515,19 @@ export function createFinanceActions(
   async function exportLocalBackup() {
     try {
       const { backup, skipped } = await exportAllDataWithReport();
-      await Share.share({
-        message: JSON.stringify(backup, null, 2),
-        title: getBackupShareTitle()
-      });
       const skipWarning = formatSkippedExportWarning(skipped);
-      setMessage(getBackupReadyToast(skipWarning || undefined));
+      const successMessage = getBackupReadyToast(skipWarning || undefined);
+
+      try {
+        await Share.share({
+          message: JSON.stringify(backup, null, 2),
+          title: getBackupShareTitle()
+        });
+      } catch {
+        // Backup was created; a dismissed share sheet should not look like export failed.
+      }
+
+      setMessage(successMessage);
     } catch {
       setMessage(getBackupExportFailedToast());
     }

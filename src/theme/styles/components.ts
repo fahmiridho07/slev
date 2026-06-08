@@ -1,5 +1,4 @@
 import { StyleSheet } from "react-native";
-import { lightColors, lightShadows } from "../palettes";
 import type { ColorTokens, ShadowTokens } from "../types";
 
 export const SWIPE_DELETE_ACTION_WIDTH = 84;
@@ -754,5 +753,3 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
   }
   });
 }
-
-export const componentStyles = createComponentStyles(lightColors, lightShadows);

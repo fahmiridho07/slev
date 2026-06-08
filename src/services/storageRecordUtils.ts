@@ -17,6 +17,7 @@ export function cleanOptionalText(value: string | undefined): string | undefined
   return cleaned ? cleaned.slice(0, 80) : undefined;
 }
 
-export function createId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+export function createId(prefix = ""): string {
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  return prefix ? `${prefix}${suffix}` : suffix;
 }

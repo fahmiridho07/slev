@@ -20,7 +20,3 @@ export function isWithinRange(value: string, start: Date, end: Date): boolean {
   return time >= start.getTime() && time < end.getTime();
 }
 
-export function isBetweenTimes(value: string, startTime: number, endTime: number): boolean {
-  const time = safeTime(value);
-  return time > startTime && time <= endTime;
-}

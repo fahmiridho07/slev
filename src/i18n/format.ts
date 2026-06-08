@@ -5,6 +5,3 @@ export function formatString(template: string, vars: Record<string, string | num
   });
 }
 
-export function plural(count: number, singular: string, pluralForm: string): string {
-  return count === 1 ? singular : pluralForm;
-}

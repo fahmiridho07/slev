@@ -10,9 +10,10 @@ import {
   toRecord
 } from "./storageRecordUtils";
 import { isKeyCorrupt, readJson, removeKeys, WriteResult, writeJson } from "./storage";
+import { STORAGE_KEYS } from "./storageKeys";
 
-const ACCOUNTS_KEY = "slev_accounts";
-const TRANSFERS_KEY = "slev_transfers";
+const ACCOUNTS_KEY = STORAGE_KEYS.accounts;
+const TRANSFERS_KEY = STORAGE_KEYS.transfers;
 
 type AccountInput = {
   id?: string;

@@ -15,6 +15,7 @@ node_modules/
 dist/
 web-build/
 .tmp-tests/
+terminals/
 
 # Env / secrets
 .env

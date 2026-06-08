@@ -18,8 +18,7 @@
           "image": "./assets/brand/slev-splash.png",
           "resizeMode": "contain"
         }
-      ],
-      "expo-font"
+      ]
     ],
     "android": {
       "package": "com.slev.app",

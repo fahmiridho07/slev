@@ -3,7 +3,7 @@ import { listMoneyAccounts } from "./accountRepository";
 import { getBalanceAnchor } from "./balanceAnchorRepository";
 import { listSpendingMoments, persistSpendingMomentsForMigration } from "./spendingMemoryRepository";
 import { readJson, writeJson } from "./storage";
-import { STORAGE_KEYS } from "./storageSchema";
+import { STORAGE_KEYS } from "./storageKeys";
 
 export async function runAccountLedgerV3Migration(): Promise<void> {
   const accounts = await listMoneyAccounts();

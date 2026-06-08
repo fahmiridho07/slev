@@ -15,7 +15,8 @@ import {
   setLocalePreference,
   setPaydayDayPreference as persistPaydayDayPreference,
   setReduceMotionPreference as persistReduceMotionPreference,
-  setSpendBufferPreference as persistSpendBufferPreference
+  setSpendBufferPreference as persistSpendBufferPreference,
+  UI_PREFERENCE_KEYS
 } from "../services/uiPreferences";
 import { createScreenStyles } from "./styles/app";
 import { createComponentStyles } from "./styles/components";
@@ -91,7 +92,12 @@ function resolveReduceMotion(
   return systemReduceMotion;
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+type ThemeProviderProps = {
+  children: React.ReactNode;
+  onPreferenceWriteFailure?: (storageKey: string) => void;
+};
+
+export function ThemeProvider({ children, onPreferenceWriteFailure }: ThemeProviderProps) {
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>("system");
   const [locale, setLocaleState] = useState<Locale>("en");
   const [reduceMotionPreference, setReduceMotionPreferenceState] =
@@ -151,31 +157,68 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const reduceMotion = resolveReduceMotion(reduceMotionPreference, systemReduceMotion);
 
   const setColorScheme = useCallback((scheme: ColorScheme) => {
+    const previous = colorScheme;
     setColorSchemeState(scheme);
     setSystemScheme(resolveScheme(scheme));
-    void setColorSchemePreference(scheme);
-  }, []);
+    void setColorSchemePreference(scheme).then((persisted) => {
+      if (persisted) {
+        return;
+      }
+      setColorSchemeState(previous);
+      setSystemScheme(resolveScheme(previous));
+      onPreferenceWriteFailure?.(UI_PREFERENCE_KEYS.colorScheme);
+    });
+  }, [colorScheme, onPreferenceWriteFailure]);
 
   const setLocale = useCallback((nextLocale: Locale) => {
+    const previous = locale;
     setLocaleState(nextLocale);
     setRuntimeLocale(nextLocale);
-    void setLocalePreference(nextLocale);
-  }, []);
+    void setLocalePreference(nextLocale).then((persisted) => {
+      if (persisted) {
+        return;
+      }
+      setLocaleState(previous);
+      setRuntimeLocale(previous);
+      onPreferenceWriteFailure?.(UI_PREFERENCE_KEYS.locale);
+    });
+  }, [locale, onPreferenceWriteFailure]);
 
   const setReduceMotionPreference = useCallback((preference: ReduceMotionPreference) => {
+    const previous = reduceMotionPreference;
     setReduceMotionPreferenceState(preference);
-    void persistReduceMotionPreference(preference);
-  }, []);
+    void persistReduceMotionPreference(preference).then((persisted) => {
+      if (persisted) {
+        return;
+      }
+      setReduceMotionPreferenceState(previous);
+      onPreferenceWriteFailure?.(UI_PREFERENCE_KEYS.reduceMotion);
+    });
+  }, [onPreferenceWriteFailure, reduceMotionPreference]);
 
   const setPaydayDay = useCallback((day: number | null) => {
+    const previous = paydayDayOfMonth;
     setPaydayDayState(day);
-    void persistPaydayDayPreference(day);
-  }, []);
+    void persistPaydayDayPreference(day).then((persisted) => {
+      if (persisted) {
+        return;
+      }
+      setPaydayDayState(previous);
+      onPreferenceWriteFailure?.(UI_PREFERENCE_KEYS.paydayDay);
+    });
+  }, [onPreferenceWriteFailure, paydayDayOfMonth]);
 
   const setSpendBuffer = useCallback((amount: number) => {
+    const previous = spendBuffer;
     setSpendBufferState(amount);
-    void persistSpendBufferPreference(amount);
-  }, []);
+    void persistSpendBufferPreference(amount).then((persisted) => {
+      if (persisted) {
+        return;
+      }
+      setSpendBufferState(previous);
+      onPreferenceWriteFailure?.(UI_PREFERENCE_KEYS.spendBuffer);
+    });
+  }, [onPreferenceWriteFailure, spendBuffer]);
 
   useEffect(() => {
     setRuntimeLocale(locale);

@@ -20,7 +20,6 @@ export type StoredNavState = {
 
 export type ListActionsHintKey =
   | "balance_accounts"
-  | "goals"
   | "memory"
   | "recurring_bills"
   | "settings_categories";
@@ -28,7 +27,6 @@ export type ListActionsHintKey =
 const LIST_ACTIONS_HINT_KEYS: Record<ListActionsHintKey, string> = {
   memory: MEMORY_LIST_HINT_KEY,
   balance_accounts: "slev_ui_balance_list_hint_seen",
-  goals: "slev_ui_goals_list_hint_seen",
   recurring_bills: "slev_ui_bills_list_hint_seen",
   settings_categories: "slev_ui_settings_categories_hint_seen"
 };
@@ -48,18 +46,8 @@ export async function hasSeenListActionsHint(key: ListActionsHintKey): Promise<b
   return (await readRaw(LIST_ACTIONS_HINT_KEYS[key])) === "1";
 }
 
-export async function markListActionsHintSeen(key: ListActionsHintKey): Promise<void> {
-  await writeRaw(LIST_ACTIONS_HINT_KEYS[key], "1");
-}
-
-/** @deprecated Use hasSeenListActionsHint("memory") */
-export async function hasSeenMemoryListHint(): Promise<boolean> {
-  return hasSeenListActionsHint("memory");
-}
-
-/** @deprecated Use markListActionsHintSeen("memory") */
-export async function markMemoryListHintSeen(): Promise<void> {
-  await markListActionsHintSeen("memory");
+export async function markListActionsHintSeen(key: ListActionsHintKey): Promise<boolean> {
+  return writeRaw(LIST_ACTIONS_HINT_KEYS[key], "1");
 }
 
 export async function getColorSchemePreference(): Promise<ColorScheme> {
@@ -70,8 +58,8 @@ export async function getColorSchemePreference(): Promise<ColorScheme> {
   return "system";
 }
 
-export async function setColorSchemePreference(scheme: ColorScheme): Promise<void> {
-  await writeRaw(COLOR_SCHEME_KEY, scheme);
+export async function setColorSchemePreference(scheme: ColorScheme): Promise<boolean> {
+  return writeRaw(COLOR_SCHEME_KEY, scheme);
 }
 
 export function detectDeviceLocale(): Locale {
@@ -91,8 +79,8 @@ export async function getLocalePreference(): Promise<Locale> {
   return detectDeviceLocale();
 }
 
-export async function setLocalePreference(locale: Locale): Promise<void> {
-  await writeRaw(LOCALE_KEY, locale);
+export async function setLocalePreference(locale: Locale): Promise<boolean> {
+  return writeRaw(LOCALE_KEY, locale);
 }
 
 export async function getReduceMotionPreference(): Promise<ReduceMotionPreference> {
@@ -103,8 +91,8 @@ export async function getReduceMotionPreference(): Promise<ReduceMotionPreferenc
   return "system";
 }
 
-export async function setReduceMotionPreference(preference: ReduceMotionPreference): Promise<void> {
-  await writeRaw(REDUCE_MOTION_KEY, preference);
+export async function setReduceMotionPreference(preference: ReduceMotionPreference): Promise<boolean> {
+  return writeRaw(REDUCE_MOTION_KEY, preference);
 }
 
 export async function getNavStatePreference(): Promise<StoredNavState | null> {
@@ -128,8 +116,8 @@ export async function getNavStatePreference(): Promise<StoredNavState | null> {
   }
 }
 
-export async function setNavStatePreference(state: StoredNavState): Promise<void> {
-  await writeRaw(NAV_STATE_KEY, JSON.stringify(state));
+export async function setNavStatePreference(state: StoredNavState): Promise<boolean> {
+  return writeRaw(NAV_STATE_KEY, JSON.stringify(state));
 }
 
 export async function getPaydayDayPreference(): Promise<number | null> {
@@ -139,13 +127,12 @@ export async function getPaydayDayPreference(): Promise<number | null> {
   return Number.isFinite(parsed) && parsed >= 1 && parsed <= 31 ? parsed : null;
 }
 
-export async function setPaydayDayPreference(day: number | null): Promise<void> {
+export async function setPaydayDayPreference(day: number | null): Promise<boolean> {
   if (day === null) {
-    await writeRaw(PAYDAY_DAY_KEY, "");
-    return;
+    return writeRaw(PAYDAY_DAY_KEY, "");
   }
   const clamped = Math.min(Math.max(Math.round(day), 1), 31);
-  await writeRaw(PAYDAY_DAY_KEY, String(clamped));
+  return writeRaw(PAYDAY_DAY_KEY, String(clamped));
 }
 
 export async function getSpendBufferPreference(): Promise<number> {
@@ -155,7 +142,16 @@ export async function getSpendBufferPreference(): Promise<number> {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 
-export async function setSpendBufferPreference(amount: number): Promise<void> {
+export async function setSpendBufferPreference(amount: number): Promise<boolean> {
   const normalized = Number.isFinite(amount) ? Math.max(0, Math.round(amount)) : 0;
-  await writeRaw(SPEND_BUFFER_KEY, normalized > 0 ? String(normalized) : "");
+  return writeRaw(SPEND_BUFFER_KEY, normalized > 0 ? String(normalized) : "");
 }
+
+export const UI_PREFERENCE_KEYS = {
+  colorScheme: COLOR_SCHEME_KEY,
+  locale: LOCALE_KEY,
+  navState: NAV_STATE_KEY,
+  reduceMotion: REDUCE_MOTION_KEY,
+  paydayDay: PAYDAY_DAY_KEY,
+  spendBuffer: SPEND_BUFFER_KEY
+} as const;

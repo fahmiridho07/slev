@@ -1,5 +1,4 @@
 import { StyleSheet } from "react-native";
-import { lightColors, lightShadows } from "../palettes";
 import type { ColorTokens, ShadowTokens } from "../types";
 export const CARD_STACK_GAP = 12;
 
@@ -1234,5 +1233,3 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   }
   });
 }
-
-export const styles = createScreenStyles(lightColors, lightShadows);

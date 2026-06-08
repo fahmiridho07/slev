@@ -1,13 +1,7 @@
 process.env.TZ = "Asia/Jakarta";
 
 import { EntryType, SpendingContext, SpendingMoment } from "../src/features/spendingMemory.types";
-import {
-  buildBreakdownMonthDeltas,
-  filterBreakdownMoments,
-  getBreakdownDeltaBadgeKind,
-  getTopBreakdownIncreases,
-  shouldShowBreakdownDeltaBadge
-} from "../src/lib/breakdownDrilldown";
+import { filterBreakdownMoments } from "../src/lib/breakdownDrilldown";
 
 declare const process: {
   env: Record<string, string | undefined>;
@@ -53,42 +47,6 @@ test("filterBreakdownMoments groups income by source", () => {
 
   assertEqual(entries.length, 1, "entry count");
   assertEqual(entries[0]?.source, "Salary", "source");
-});
-
-test("buildBreakdownMonthDeltas compares category totals across months", () => {
-  const referenceDate = new Date(2026, 5, 15, 12, 0);
-  const deltas = buildBreakdownMonthDeltas(
-    [
-      moment({ amount: 100_000, context: "Food", occurredAt: new Date(2026, 4, 10).toISOString() }),
-      moment({ amount: 150_000, context: "Food", occurredAt: new Date(2026, 5, 10).toISOString() }),
-      moment({ amount: 50_000, context: "Transport", occurredAt: new Date(2026, 5, 12).toISOString() })
-    ],
-    "expense",
-    0,
-    referenceDate
-  );
-
-  assertEqual(deltas.get("Food")?.deltaAmount, 50_000, "food delta");
-  assertEqual(deltas.get("Food")?.deltaPercent, 0.5, "food percent");
-  assertEqual(getBreakdownDeltaBadgeKind(deltas.get("Food")), "up", "food badge");
-  assertEqual(getBreakdownDeltaBadgeKind(deltas.get("Transport")), "new", "transport badge");
-});
-
-test("getTopBreakdownIncreases ranks positive movers", () => {
-  const rows = [
-    { amount: 150_000, key: "Food", label: "Food", share: 0.75 },
-    { amount: 50_000, key: "Transport", label: "Transport", share: 0.25 }
-  ];
-  const deltas = new Map([
-    ["Food", { currentAmount: 150_000, previousAmount: 100_000, deltaAmount: 50_000, deltaPercent: 0.5 }],
-    ["Transport", { currentAmount: 50_000, previousAmount: 80_000, deltaAmount: -30_000, deltaPercent: -0.375 }]
-  ]);
-
-  const top = getTopBreakdownIncreases(rows, deltas, 2);
-  assertEqual(top.length, 1, "top length");
-  assertEqual(top[0]?.key, "Food", "top key");
-  assertEqual(shouldShowBreakdownDeltaBadge(deltas.get("Food")), true, "food visible");
-  assertEqual(shouldShowBreakdownDeltaBadge(deltas.get("Transport")), true, "transport visible");
 });
 
 let passed = 0;

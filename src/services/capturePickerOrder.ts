@@ -37,8 +37,8 @@ export async function getCapturePickerOrder(): Promise<CapturePickerOrder> {
   }
 }
 
-export async function setCapturePickerOrder(order: CapturePickerOrder): Promise<void> {
-  await writeRaw(
+export async function setCapturePickerOrder(order: CapturePickerOrder): Promise<boolean> {
+  return writeRaw(
     CAPTURE_PICKER_ORDER_KEY,
     JSON.stringify({
       categoryKeys: order.categoryKeys,

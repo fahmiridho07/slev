@@ -1,6 +1,7 @@
 import { RecurringBill } from "../features/spendingMemory.types";
 import { readJson, removeKeys, WriteResult, writeJson } from "./storage";
-import { STORAGE_KEYS } from "./storageSchema";
+import { STORAGE_KEYS } from "./storageKeys";
+import { createId } from "./storageRecordUtils";
 
 const RECURRING_BILLS_KEY = STORAGE_KEYS.recurringBills;
 
@@ -24,7 +25,7 @@ export async function saveRecurringBill(input: RecurringBillInput): Promise<Writ
   const existing = input.id ? current.find((bill) => bill.id === input.id) : undefined;
   const bill = normalizeRecurringBill({
     ...input,
-    id: input.id ?? createId(),
+    id: input.id ?? createId("bill-"),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now
   });
@@ -69,7 +70,7 @@ function normalizeRecurringBill(source: unknown): RecurringBill | null {
       : undefined;
 
   return {
-    id: record.id ?? createId(),
+    id: record.id ?? createId("bill-"),
     label,
     amount,
     active: record.active !== false,
@@ -81,8 +82,4 @@ function normalizeRecurringBill(source: unknown): RecurringBill | null {
 
 function isRecurringBill(value: RecurringBill | null): value is RecurringBill {
   return value !== null;
-}
-
-function createId(): string {
-  return `bill-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }

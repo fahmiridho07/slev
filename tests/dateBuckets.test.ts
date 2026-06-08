@@ -2,12 +2,12 @@ process.env.TZ = "Asia/Jakarta";
 
 import { EntryType, SpendingContext, SpendingMoment } from "../src/features/spendingMemory.types";
 import {
-  buildCashflowWeeks,
   dateKey,
   getStartOfWeek,
   getWeekRange,
   groupMomentsByRecallRange,
-  isWithinRange
+  isWithinRange,
+  sumMoments
 } from "../src/lib/analysis";
 import { buildMonthlyBreakdown } from "../src/lib/financeEngine";
 
@@ -83,20 +83,19 @@ test("week bucketing places Sunday night and Monday morning into the correct Mon
     "Sunday night is not in Monday's week"
   );
 
-  const weeks = buildCashflowWeeks(
-    [
-      moment({ amount: 11_000, occurredAt: sundayNight.toISOString(), id: "sun" }),
-      moment({ amount: 22_000, occurredAt: mondayMorning.toISOString(), id: "mon" })
-    ],
-    { mode: "full" }
+  const moments = [
+    moment({ amount: 11_000, occurredAt: sundayNight.toISOString(), id: "sun" }),
+    moment({ amount: 22_000, occurredAt: mondayMorning.toISOString(), id: "mon" })
+  ];
+  const sundayExpense = sumMoments(
+    moments.filter((item) => isWithinRange(item.occurredAt, sundayWeek.start, sundayWeek.end))
   );
-  const sundayWeekKey = dateKey(sundayWeek.start);
-  const mondayWeekKey = dateKey(mondayWeek.start);
-  const sundayBucket = weeks.find((week) => week.key === sundayWeekKey);
-  const mondayBucket = weeks.find((week) => week.key === mondayWeekKey);
+  const mondayExpense = sumMoments(
+    moments.filter((item) => isWithinRange(item.occurredAt, mondayWeek.start, mondayWeek.end))
+  );
 
-  assertEqual(sundayBucket?.expense, 11_000, "cashflow week keeps Sunday night expense");
-  assertEqual(mondayBucket?.expense, 22_000, "cashflow week keeps Monday morning expense");
+  assertEqual(sundayExpense, 11_000, "Sunday night expense stays in its week");
+  assertEqual(mondayExpense, 22_000, "Monday morning expense stays in the new week");
 });
 
 for (const { name, run } of tests) {

@@ -1,4 +1,10 @@
-import { buildMonthlyBreakdown, getDaysRemainingInMonth } from "../src/lib/financeEngine";
+import {
+  buildMonthlyBreakdown,
+  getDaysRemainingInMonth,
+  getDaysUntilNextPayday,
+  getNextOccurrenceOfDay,
+  getNextPaydayDate
+} from "../src/lib/financeEngine";
 import {
   buildSafeToSpend,
   getEffectiveBalance,
@@ -25,6 +31,40 @@ type TestCase = {
 const tests: TestCase[] = [];
 const juneMidpoint = new Date("2026-06-15T08:00:00.000Z");
 const defaultOpeningSetAt = "2026-01-01T00:00:00.000Z";
+
+test("getDaysUntilNextPayday counts days until the next payday", () => {
+  const referenceDate = new Date(2026, 5, 8, 12, 0);
+
+  assertEqual(getDaysUntilNextPayday(referenceDate, 25), 17, "payday later this month");
+  assertEqual(getDaysUntilNextPayday(referenceDate, 8), 30, "payday today rolls to next month");
+  assertEqual(getDaysUntilNextPayday(referenceDate, 5), 27, "payday earlier this month rolls forward");
+  assertEqual(getDaysUntilNextPayday(new Date(2026, 1, 15, 12, 0), 31), 13, "payday 31 clamps in February");
+});
+
+test("getNextPaydayDate and getNextOccurrenceOfDay handle month-end clamping", () => {
+  const referenceDate = new Date(2026, 5, 8, 12, 0);
+
+  assertEqual(getNextPaydayDate(referenceDate, 25).getDate(), 25, "next payday stays in June");
+  assertEqual(getNextOccurrenceOfDay(referenceDate, 20).getDate(), 20, "bill due later this month");
+  assertEqual(getNextOccurrenceOfDay(referenceDate, 8).getDate(), 8, "bill due today stays today");
+  assertEqual(getNextOccurrenceOfDay(referenceDate, 5).getMonth(), 6, "passed due day rolls to July");
+});
+
+test("buildSafeToSpend uses payday horizon when payday is configured", () => {
+  const referenceDate = new Date(2026, 5, 8, 12, 0);
+  const safe = buildSafeToSpend({
+    accounts: [hubAccount(1_000_000, "2026-06-08T01:00:00.000Z")],
+    bills: [{ id: "b1", label: "Rent", amount: 200_000, active: true, dueDay: 20, createdAt: "x", updatedAt: "x" }],
+    moments: [],
+    transfers: [],
+    referenceDate,
+    paydayDayOfMonth: 25
+  });
+
+  assertEqual(safe.daysLeft, 17, "days left should follow payday horizon");
+  assertEqual(safe.billsReserve, 200_000, "bill due before payday should stay reserved");
+  assertEqual(safe.safeDaily, Math.round(800_000 / 17), "safeDaily should divide by payday days left");
+});
 
 test("breakdown groups current-month expenses and calculates shares", () => {
   const rows = buildMonthlyBreakdown(

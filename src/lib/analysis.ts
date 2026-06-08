@@ -8,51 +8,18 @@ import {
   SpendingPattern
 } from "../features/spendingMemory.types";
 import { formatString } from "../i18n/format";
-import {
-  formatLocaleMonthShort,
-  formatLocaleShortDate,
-  formatLocaleTime,
-  formatLocaleWeekdayDate
-} from "../i18n/localeDate";
+import { formatLocaleTime, formatLocaleWeekdayDate } from "../i18n/localeDate";
 import { getRuntimeStrings } from "../i18n/runtime";
 import { getMonthRange, isWithinRange, sumMoments } from "./dateRanges";
 import { formatRupiah } from "./spendingMemoryPatterns";
 
 export { getMonthRange, isWithinRange, sumMoments } from "./dateRanges";
 
-export type CashflowWeek = {
-  expense: number;
-  income: number;
-  key: string;
-  label: string;
-  net: number;
-};
-
 export type DataMaturity = "building" | "established" | "new";
-
-export type CashflowWeeksMode = "default" | "full" | "month";
 
 export type TrackerSegment = "cashflow" | "expense" | "income";
 
 export type TrackerEmptyReason = "empty_month" | "early_building" | "early_new";
-
-const CASHFLOW_MONTH_DAY_RANGES = [
-  { from: 1, to: 7 },
-  { from: 8, to: 14 },
-  { from: 15, to: 21 },
-  { from: 22, to: 28 },
-  { from: 29, to: null as number | null }
-] as const;
-
-export type SpendingTrend = {
-  midpointMessage?: string;
-  months: {
-    amount: number;
-    key: string;
-    label: string;
-    share: number;
-  }[];
-};
 
 export type AccountActivityRow = {
   expense: number;
@@ -112,112 +79,6 @@ export function buildAccountActivity(moments: SpendingMoment[]): AccountActivity
     ...row,
     share: row.expense / maxExpense
   }));
-}
-
-function buildCashflowWeekBucket(moments: SpendingMoment[], start: Date): CashflowWeek {
-  const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const weekMoments = moments.filter((moment) => isWithinRange(moment.occurredAt, start, end));
-  const income = sumMoments(weekMoments.filter((moment) => moment.type === "income"));
-  const expense = sumExpenseMoments(weekMoments);
-  return {
-    expense,
-    income,
-    key: dateKey(start),
-    label: formatLocaleShortDate(start),
-    net: income - expense
-  };
-}
-
-function filterCashflowWeeks(weeks: CashflowWeek[]): CashflowWeek[] {
-  if (weeks.length === 0) {
-    return weeks;
-  }
-
-  return weeks.filter((week, index, arr) => {
-    const isCurrentWeek = index === arr.length - 1;
-    return week.income > 0 || week.expense > 0 || isCurrentWeek;
-  });
-}
-
-function formatCashflowMonthBucketLabel(fromDay: number, toDay: number): string {
-  return fromDay === toDay ? `${fromDay}` : `${fromDay}\u2013${toDay}`;
-}
-
-function buildCashflowMonthBucket(
-  moments: SpendingMoment[],
-  year: number,
-  month: number,
-  fromDay: number,
-  toDay: number
-): CashflowWeek {
-  const start = new Date(year, month, fromDay);
-  const end = new Date(year, month, toDay + 1);
-  const bucketMoments = moments.filter((moment) => isWithinRange(moment.occurredAt, start, end));
-  const income = sumMoments(bucketMoments.filter((moment) => moment.type === "income"));
-  const expense = sumExpenseMoments(bucketMoments);
-  const monthKey = `${year}-${String(month + 1).padStart(2, "0")}`;
-
-  return {
-    expense,
-    income,
-    key: `${monthKey}-${String(fromDay).padStart(2, "0")}-${String(toDay).padStart(2, "0")}`,
-    label: formatCashflowMonthBucketLabel(fromDay, toDay),
-    net: income - expense
-  };
-}
-
-function buildCashflowMonthWeeks(
-  moments: SpendingMoment[],
-  referenceDate: Date,
-  monthOffset = 0
-): CashflowWeek[] {
-  const { start: monthStart, end: monthEnd } = getMonthRange(referenceDate, monthOffset);
-  const year = monthStart.getFullYear();
-  const month = monthStart.getMonth();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const monthMoments = moments.filter((moment) => isWithinRange(moment.occurredAt, monthStart, monthEnd));
-
-  return CASHFLOW_MONTH_DAY_RANGES.flatMap(({ from, to }) => {
-    const toDay = to ?? daysInMonth;
-    if (from > daysInMonth) {
-      return [];
-    }
-
-    return [buildCashflowMonthBucket(monthMoments, year, month, from, Math.min(toDay, daysInMonth))];
-  });
-}
-
-export function buildCashflowWeeks(
-  moments: SpendingMoment[],
-  options?: { mode?: CashflowWeeksMode; referenceDate?: Date; monthOffset?: number }
-): CashflowWeek[] {
-  const mode = options?.mode ?? "default";
-  const referenceDate = options?.referenceDate ?? new Date();
-
-  if (mode === "month") {
-    return buildCashflowMonthWeeks(moments, referenceDate, options?.monthOffset ?? 0);
-  }
-
-  const currentWeekStart = getStartOfWeek(referenceDate);
-
-  if (mode === "full") {
-    const weeks = Array.from({ length: 8 }, (_, index) => {
-      const start = new Date(currentWeekStart.getTime() - (7 - index) * 7 * 24 * 60 * 60 * 1000);
-      return buildCashflowWeekBucket(moments, start);
-    });
-    return filterCashflowWeeks(weeks);
-  }
-
-  const monthStart = getMonthRange(referenceDate, 0).start;
-  let weekStart = getStartOfWeek(monthStart);
-  const weeks: CashflowWeek[] = [];
-
-  while (weekStart.getTime() <= currentWeekStart.getTime()) {
-    weeks.push(buildCashflowWeekBucket(moments, weekStart));
-    weekStart = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
-  }
-
-  return filterCashflowWeeks(weeks);
 }
 
 export function getDataMaturity(moments: SpendingMoment[], referenceDate = new Date()): DataMaturity {
@@ -286,42 +147,6 @@ export function getTrackerEmptyReason(
   return null;
 }
 
-export function buildSpendingTrend(moments: SpendingMoment[]): SpendingTrend {
-  const today = new Date();
-  const months = [-2, -1, 0].map((offset) => {
-    const range = getMonthRange(today, offset);
-    const amount = sumExpenseMoments(
-      moments.filter((moment) => isWithinRange(moment.occurredAt, range.start, range.end))
-    );
-    return {
-      amount,
-      key: dateKey(range.start),
-      label: formatLocaleMonthShort(range.start),
-      share: 0
-    };
-  });
-  const visibleMonths = months.filter((month, index) => month.amount > 0 || index === months.length - 1);
-  const maxAmount = Math.max(1, ...visibleMonths.map((month) => month.amount));
-  const monthsWithShare = visibleMonths.map((month) => ({
-    ...month,
-    share: month.amount / maxAmount
-  }));
-  const currentMonth = monthsWithShare[monthsWithShare.length - 1];
-  const lastMonth = months[months.length - 2];
-  const currentDay = today.getDate();
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const expectedPace = lastMonth.amount * (currentDay / daysInMonth);
-  const midpointMessage =
-    currentDay >= 15 && lastMonth.amount > 0 && currentMonth && currentMonth.amount > expectedPace
-      ? formatString(getRuntimeStrings().analysis.trends.midpointPace, { month: currentMonth.label })
-      : undefined;
-
-  return {
-    midpointMessage,
-    months: monthsWithShare
-  };
-}
-
 export function getMomentsInPeriod(
   moments: SpendingMoment[],
   period: BudgetPeriod,
@@ -338,12 +163,6 @@ export function sumExpenseMoments(moments: SpendingMoment[]): number {
 export function clampPercent(value: number): number {
   if (!Number.isFinite(value)) return 0;
   return Math.min(1, Math.max(0, value));
-}
-
-export function getPercentWidthStyle(value: number): { width: `${number}%` } {
-  const clamped = clampPercent(value);
-  const width = clamped > 0 && clamped < 0.02 ? 2 : Math.round(clamped * 100);
-  return { width: `${width}%` };
 }
 
 export function getPercentHeightStyle(value: number): { height: `${number}%` } {

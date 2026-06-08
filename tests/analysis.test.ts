@@ -1,8 +1,6 @@
 import {
   buildAccountActivity,
-  buildCashflowWeeks,
   buildRepeatHints,
-  buildSpendingTrend,
   getDataMaturity,
   dateKey,
   filterMoments,
@@ -218,93 +216,6 @@ test("buildAccountActivity groups current-month spending by account", () => {
   assertEqual(rows[0]?.label, "Jago", "highest expense first");
   assertEqual(rows[0]?.expense, 50000, "Jago expense");
   assertEqual(rows[1]?.net, 80000, "BRI net income minus expense");
-});
-
-test("buildCashflowWeeks full mode returns filtered weekly buckets with net totals", () => {
-  const weeks = buildCashflowWeeks(
-    [
-      moment({ amount: 30000, occurredAt: new Date().toISOString() }),
-      moment({ amount: 100000, type: "income", source: "Salary", occurredAt: new Date().toISOString() })
-    ],
-    { mode: "full" }
-  );
-
-  assertEqual(weeks.length >= 1, true, "at least current week");
-  const currentWeek = weeks[weeks.length - 1];
-  assertEqual(currentWeek?.income, 100000, "current week income");
-  assertEqual(currentWeek?.expense, 30000, "current week expense");
-  assertEqual(currentWeek?.net, 70000, "current week net");
-});
-
-test("buildCashflowWeeks default mode skips empty weeks outside current month", () => {
-  const referenceDate = new Date("2026-06-15T08:00:00.000Z");
-  const weeks = buildCashflowWeeks(
-    [moment({ amount: 30000, occurredAt: "2026-06-10T08:00:00.000Z" })],
-    { mode: "default", referenceDate }
-  );
-
-  assertEqual(weeks.every((week) => week.income > 0 || week.expense > 0 || week === weeks[weeks.length - 1]), true, "only active or current weeks");
-  assertEqual(weeks.length <= 5, true, "default mode stays within current month");
-});
-
-test("buildCashflowWeeks month mode buckets entries across fixed calendar ranges", () => {
-  const referenceDate = new Date("2026-06-15T08:00:00.000Z");
-  const weeks = buildCashflowWeeks(
-    [
-      moment({ amount: 1000, occurredAt: "2026-06-02T08:00:00.000Z" }),
-      moment({ amount: 2000, occurredAt: "2026-06-10T08:00:00.000Z" }),
-      moment({ amount: 3000, occurredAt: "2026-06-18T08:00:00.000Z" }),
-      moment({ amount: 4000, occurredAt: "2026-06-25T08:00:00.000Z" }),
-      moment({ amount: 5000, occurredAt: "2026-06-30T08:00:00.000Z" }),
-      moment({ amount: 90000, type: "income", source: "Salary", occurredAt: "2026-06-05T08:00:00.000Z" }),
-      moment({ amount: 70000, occurredAt: "2026-05-28T08:00:00.000Z" })
-    ],
-    { mode: "month", referenceDate }
-  );
-
-  assertEqual(weeks.length, 5, "June has five date-range buckets");
-  assertEqual(weeks.map((week) => week.label).join(","), "1\u20137,8\u201314,15\u201321,22\u201328,29\u201330", "labels use day ranges");
-  assertEqual(weeks[0]?.expense, 1000, "days 1-7 expense");
-  assertEqual(weeks[0]?.income, 90000, "days 1-7 income");
-  assertEqual(weeks[0]?.net, 89000, "days 1-7 net");
-  assertEqual(weeks[1]?.expense, 2000, "days 8-14 expense");
-  assertEqual(weeks[2]?.expense, 3000, "days 15-21 expense");
-  assertEqual(weeks[3]?.expense, 4000, "days 22-28 expense");
-  assertEqual(weeks[4]?.expense, 5000, "days 29-end expense");
-  assertEqual(weeks.every((week) => Number.isInteger(week.income) && Number.isInteger(week.expense)), true, "amounts stay integer");
-});
-
-test("buildCashflowWeeks month mode sizes the final bucket for month length", () => {
-  const january = buildCashflowWeeks(
-    [moment({ amount: 12000, occurredAt: "2026-01-31T08:00:00.000Z" })],
-    { mode: "month", referenceDate: new Date("2026-01-15T08:00:00.000Z") }
-  );
-  const april = buildCashflowWeeks([], { mode: "month", referenceDate: new Date("2026-04-15T08:00:00.000Z") });
-  const february = buildCashflowWeeks([], { mode: "month", referenceDate: new Date("2026-02-15T08:00:00.000Z") });
-
-  assertEqual(january[january.length - 1]?.label, "29\u201331", "31-day month ends on day 31");
-  assertEqual(january[january.length - 1]?.expense, 12000, "31-day final bucket keeps month-end entry");
-  assertEqual(april[april.length - 1]?.label, "29\u201330", "30-day month ends on day 30");
-  assertEqual(february.length, 4, "28-day February omits the 29-end bucket");
-  assertEqual(february[february.length - 1]?.label, "22\u201328", "28-day month ends on day 28");
-});
-
-test("buildCashflowWeeks month mode returns zeroed buckets for an empty month", () => {
-  const weeks = buildCashflowWeeks([], { mode: "month", referenceDate: new Date("2026-06-15T08:00:00.000Z") });
-
-  assertEqual(weeks.length, 5, "empty month still exposes all ranges");
-  assertEqual(weeks.every((week) => week.income === 0 && week.expense === 0 && week.net === 0), true, "empty month buckets are zeroed");
-});
-
-test("buildSpendingTrend hides empty prior months", () => {
-  const trend = buildSpendingTrend([
-    moment({ amount: 600000, context: "Meal", occurredAt: "2026-06-04T01:00:00.000Z" }),
-    moment({ amount: 400000, context: "Transport", occurredAt: "2026-06-05T01:00:00.000Z" }),
-    moment({ amount: 500000, context: "Meal", occurredAt: "2026-05-20T01:00:00.000Z" })
-  ]);
-
-  assertEqual(trend.months.length, 2, "current and prior month with data");
-  assertEqual(trend.months[trend.months.length - 1]?.amount, 1000000, "current month expense total");
 });
 
 test("getDataMaturity classifies sparse new users", () => {

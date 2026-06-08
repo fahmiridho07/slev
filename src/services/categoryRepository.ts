@@ -1,8 +1,10 @@
 import { DEFAULT_SPENDING_CONTEXTS, normalizeSpendingContext } from "../data/spendingMemory";
 import { ExpenseCategory, SpendingContext } from "../features/spendingMemory.types";
 import { isKeyCorrupt, readJson, removeKeys, WriteResult, writeJson } from "./storage";
+import { STORAGE_KEYS } from "./storageKeys";
+import { createId, readString, toRecord } from "./storageRecordUtils";
 
-const EXPENSE_CATEGORIES_KEY = "slev_expense_categories";
+const EXPENSE_CATEGORIES_KEY = STORAGE_KEYS.expenseCategories;
 
 type CategoryInput = {
   id?: string;
@@ -164,15 +166,6 @@ function sortCategories(a: ExpenseCategory, b: ExpenseCategory): number {
   return a.label.localeCompare(b.label);
 }
 
-function toRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" ? value as Record<string, unknown> : null;
-}
-
-function readString(record: Record<string, unknown>, key: string): string | undefined {
-  const value = record[key];
-  return typeof value === "string" ? value : undefined;
-}
-
 function readBoolean(record: Record<string, unknown>, key: string): boolean | undefined {
   const value = record[key];
   return typeof value === "boolean" ? value : undefined;
@@ -180,8 +173,4 @@ function readBoolean(record: Record<string, unknown>, key: string): boolean | un
 
 function isStoredExpenseCategory(value: StoredExpenseCategory | null): value is StoredExpenseCategory {
   return value !== null;
-}
-
-function createId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }

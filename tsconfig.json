@@ -10,7 +10,6 @@
   },
   "include": [
     "App.tsx",
-    "src",
-    "scripts"
+    "src"
   ]
 }

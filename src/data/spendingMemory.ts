@@ -11,8 +11,6 @@ export const DEFAULT_SPENDING_CONTEXTS: SpendingContext[] = [
   "Other"
 ];
 
-export const SPENDING_CONTEXTS = DEFAULT_SPENDING_CONTEXTS;
-
 export function normalizeSpendingContext(value: string | undefined): SpendingContext {
   const normalized = String(value ?? "").trim().toLowerCase();
   const match = DEFAULT_SPENDING_CONTEXTS.find((context) => context.toLowerCase() === normalized);

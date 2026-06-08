@@ -207,10 +207,6 @@ export const id: AppStrings = {
       title: "Aksi daftar akun",
       body: "Ketuk akun untuk mengedit nama atau jenis. Geser kiri untuk menghapus akun kustom."
     },
-    goals: {
-      title: "Aksi target tabungan",
-      body: "Ketuk kartu target untuk mengedit jumlah. Geser kiri untuk menghapus target."
-    },
     recurring_bills: {
       title: "Aksi tagihan rutin",
       body: "Ketuk tagihan untuk mengedit jadwal dan jumlah. Geser kiri untuk menghapus tagihan."
@@ -312,7 +308,7 @@ export const id: AppStrings = {
   },
   dialogs: {
     clearAllTitle: "Hapus memori keuangan lokal?",
-    clearAllBody: "Ini menghapus entri, rencana, target, saldo, batas, akun, transfer, dan kategori dari perangkat ini.",
+    clearAllBody: "Ini menghapus entri, rencana, saldo, batas, akun, transfer, dan kategori dari perangkat ini.",
     clearAllConfirm: "Hapus semua",
     categoryDeleteDefaultTitle: "Hapus kategori bawaan?",
     categoryDeleteTitle: "Hapus kategori?",

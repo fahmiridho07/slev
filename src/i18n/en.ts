@@ -207,10 +207,6 @@ export const en: AppStrings = {
       title: "Account list actions",
       body: "Tap an account to edit its label or type. Swipe left to delete custom accounts."
     },
-    goals: {
-      title: "Savings goal actions",
-      body: "Tap a goal card to edit amounts. Swipe left to remove a goal."
-    },
     recurring_bills: {
       title: "Recurring bill actions",
       body: "Tap a bill to edit schedule and amount. Swipe left to delete the bill."
@@ -312,7 +308,7 @@ export const en: AppStrings = {
   },
   dialogs: {
     clearAllTitle: "Clear local finance memory?",
-    clearAllBody: "This removes entries, plans, goals, balances, limits, accounts, transfers, and categories from this device.",
+    clearAllBody: "This removes entries, plans, balances, limits, accounts, transfers, and categories from this device.",
     clearAllConfirm: "Clear",
     categoryDeleteDefaultTitle: "Remove default category?",
     categoryDeleteTitle: "Delete category?",

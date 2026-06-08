@@ -6,13 +6,15 @@ import {
 } from "../features/spendingMemory.types";
 import { normalizeSpendingContext } from "../data/spendingMemory";
 import { isKeyCorrupt, readJson, readRaw, removeKeys, WriteResult, writeJson, writeRaw } from "./storage";
+import { STORAGE_KEYS } from "./storageKeys";
+import { createId } from "./storageRecordUtils";
 
-const MOMENTS_KEY = "slev_entries";
-const LEGACY_MOMENTS_KEY = "slev.spendingMoments.v1";
-const FEEDBACK_KEY = "slev_pattern_feedback";
-const LEGACY_FEEDBACK_KEY = "slev.patternFeedback.v1";
-const V2_MIGRATION_KEY = "slev_migrated_v2";
-const LEGACY_TRANSACTIONS_KEY = "flowtrack.transactions.v1";
+const MOMENTS_KEY = STORAGE_KEYS.moments;
+const LEGACY_MOMENTS_KEY = STORAGE_KEYS.legacyMoments;
+const FEEDBACK_KEY = STORAGE_KEYS.patternFeedback;
+const LEGACY_FEEDBACK_KEY = STORAGE_KEYS.legacyPatternFeedback;
+const V2_MIGRATION_KEY = STORAGE_KEYS.migratedV2;
+const LEGACY_TRANSACTIONS_KEY = STORAGE_KEYS.legacyTransactions;
 
 type MomentInput = {
   amount: number;
@@ -310,8 +312,4 @@ function cleanOptionalText(value: string | undefined): string | undefined {
   const cleaned = String(value ?? "").replace(/\s+/g, " ").trim();
   if (!cleaned || ["Unknown", "Manual entry"].includes(cleaned)) return undefined;
   return cleaned.slice(0, 80);
-}
-
-function createId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
