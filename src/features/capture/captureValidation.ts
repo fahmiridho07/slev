@@ -1,4 +1,5 @@
 import {
+  getCaptureNeedAccountToast,
   getCaptureNeedAmountToast,
   getCaptureNeedCategoryToast,
   getCaptureNeedTransferAccountsToast,
@@ -9,7 +10,13 @@ import { FormValidationError } from "../../lib/formValidation";
 import { parseAmountInput } from "../../lib/formatMoney";
 import { CaptureFormValues } from "./types";
 
-export type CaptureFieldError = "amount" | "category" | "transferAccounts" | "shortcutLabel" | "shortcutTransfer";
+export type CaptureFieldError =
+  | "amount"
+  | "category"
+  | "momentAccount"
+  | "transferAccounts"
+  | "shortcutLabel"
+  | "shortcutTransfer";
 
 export type CaptureValidationError = FormValidationError<CaptureFieldError>;
 
@@ -20,6 +27,12 @@ export function getCaptureValidationError(
   const amount = parseAmountInput(capture.amountText);
   if (!amount) {
     return { field: "amount", message: getCaptureNeedAmountToast() };
+  }
+
+  if (capture.entryType === "expense" || capture.entryType === "income") {
+    if (!capture.accountLabel || !capture.accountLabel.trim()) {
+      return { field: "momentAccount", message: getCaptureNeedAccountToast() };
+    }
   }
 
   if (capture.entryType === "expense" && categoryCount === 0) {

@@ -449,6 +449,7 @@ export type AppStrings = {
       incomeSaved: string;
       incomeSavedFrom: string;
       needAmount: string;
+      needAccount: string;
       needCategory: string;
       needTransferAccounts: string;
       templateReady: string;

@@ -52,6 +52,10 @@ export function getCaptureNeedCategoryToast(): string {
   return getRuntimeStrings().toasts.capture.needCategory;
 }
 
+export function getCaptureNeedAccountToast(): string {
+  return getRuntimeStrings().toasts.capture.needAccount;
+}
+
 export function getCaptureNeedTransferAccountsToast(): string {
   return getRuntimeStrings().toasts.capture.needTransferAccounts;
 }

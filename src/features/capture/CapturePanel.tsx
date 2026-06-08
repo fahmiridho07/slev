@@ -235,12 +235,19 @@ function CapturePanelComponent({
       )}
 
       {form.entryType !== "transfer" && (
-        <AccountPicker
-          accounts={orderedAccounts}
-          label={form.entryType === "income" ? strings.capture.receivedIn : strings.capture.paidFrom}
-          selected={form.accountLabel}
-          onSelect={(value) => patch({ accountLabel: value })}
-        />
+        <>
+          <AccountPicker
+            accounts={orderedAccounts}
+            label={form.entryType === "income" ? strings.capture.receivedIn : strings.capture.paidFrom}
+            selected={form.accountLabel}
+            onSelect={(value) => patch({ accountLabel: value })}
+          />
+          {fieldError?.field === "momentAccount" && (
+            <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+              {fieldError.message}
+            </Text>
+          )}
+        </>
       )}
 
       {form.entryType === "expense" && (

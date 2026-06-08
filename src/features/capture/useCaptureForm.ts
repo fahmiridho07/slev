@@ -47,6 +47,7 @@ export function useCaptureForm() {
   const [fieldError, setFieldError] = useState<CaptureValidationError | null>(null);
   const [shortcutFieldError, setShortcutFieldError] = useState<CaptureValidationError | null>(null);
   const bootstrappedRef = useRef(false);
+  const lastAccountByTypeRef = useRef<{ expense?: string; income?: string }>({});
 
   const clearFieldError = useCallback((field?: CaptureValidationError["field"]) => {
     setFieldError((current) => {
@@ -165,14 +166,25 @@ export function useCaptureForm() {
       clearFieldError();
       clearShortcutFieldError();
       setForm((current) => {
+        const accountLabels = accounts.map((account) => account.label);
         const incomeHub = getIncomeHubLabel(accounts);
         const dailyPocket = getDailyPocketLabel(accounts);
 
         if (nextType === "income") {
-          return { ...current, entryType: nextType, accountLabel: incomeHub };
+          const remembered = lastAccountByTypeRef.current.income;
+          return {
+            ...current,
+            entryType: nextType,
+            accountLabel: remembered && accountLabels.includes(remembered) ? remembered : incomeHub
+          };
         }
         if (nextType === "expense") {
-          return { ...current, entryType: nextType, accountLabel: dailyPocket };
+          const remembered = lastAccountByTypeRef.current.expense;
+          return {
+            ...current,
+            entryType: nextType,
+            accountLabel: remembered && accountLabels.includes(remembered) ? remembered : dailyPocket
+          };
         }
         return {
           ...current,
@@ -208,9 +220,13 @@ export function useCaptureForm() {
 
   const resetAfterSave = useCallback(
     (expenseContext?: SpendingContext) => {
+      const accountLabels = accounts.map((account) => account.label);
       const dailyPocket = getDailyPocketLabel(accounts);
+      const remembered = lastAccountByTypeRef.current.expense;
+      const accountLabel =
+        remembered && accountLabels.includes(remembered) ? remembered : dailyPocket;
       setForm({
-        accountLabel: dailyPocket,
+        accountLabel,
         amountText: "",
         context: expenseContext ?? form.context,
         entryType: "expense",
@@ -249,6 +265,10 @@ export function useCaptureForm() {
     }
     setFieldError(null);
 
+    if (form.entryType === "expense" || form.entryType === "income") {
+      lastAccountByTypeRef.current[form.entryType] = form.accountLabel;
+    }
+
     if (result.resetNote) {
       resetAfterSave(form.context);
       return ack;
@@ -272,6 +292,9 @@ export function useCaptureForm() {
   }, [actions, form]);
 
   const patch = useCallback((patchValues: Partial<CaptureFormValues>) => {
+    if ("accountLabel" in patchValues) {
+      clearFieldError("momentAccount");
+    }
     if ("fromAccount" in patchValues || "toAccount" in patchValues) {
       clearFieldError("transferAccounts");
     }

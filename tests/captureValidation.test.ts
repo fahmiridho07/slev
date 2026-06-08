@@ -51,6 +51,42 @@ test("getCaptureValidationError requires categories for expenses", () => {
   assertField(getCaptureValidationError(baseCapture({ amountText: "10000" }), 0), "category", "no categories");
 });
 
+test("getCaptureValidationError requires account for expenses", () => {
+  assertField(
+    getCaptureValidationError(baseCapture({ amountText: "10000", accountLabel: "" }), 1),
+    "momentAccount",
+    "missing expense account"
+  );
+});
+
+test("getCaptureValidationError requires account for income", () => {
+  assertField(
+    getCaptureValidationError(
+      baseCapture({ amountText: "10000", entryType: "income", accountLabel: "   " }),
+      1
+    ),
+    "momentAccount",
+    "missing income account"
+  );
+});
+
+test("getCaptureValidationError accepts valid expense account", () => {
+  const error = getCaptureValidationError(baseCapture({ amountText: "10000", accountLabel: "Jago" }), 1);
+  if (error !== null) {
+    throw new Error(`expected no validation error, got ${error.field}`);
+  }
+});
+
+test("getCaptureValidationError accepts valid income account", () => {
+  const error = getCaptureValidationError(
+    baseCapture({ amountText: "10000", entryType: "income", accountLabel: "BRI" }),
+    1
+  );
+  if (error !== null) {
+    throw new Error(`expected no validation error, got ${error.field}`);
+  }
+});
+
 test("getCaptureValidationError checks transfer accounts", () => {
   assertField(
     getCaptureValidationError(

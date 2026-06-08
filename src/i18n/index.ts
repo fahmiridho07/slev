@@ -22,6 +22,7 @@ export {
   getBillNeedFieldsToast,
   getBillRemovedToast,
   getBillSavedToast,
+  getCaptureNeedAccountToast,
   getCaptureNeedAmountToast,
   getCaptureNeedCategoryToast,
   getCaptureNeedTransferAccountsToast,

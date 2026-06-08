@@ -5,6 +5,7 @@ export const enExtras: AppStringsExtras = {
     default: "A spending memory can be as small as an amount.",
     capture: {
       needAmount: "Enter an amount to save this memory.",
+      needAccount: "Pick an account first.",
       needCategory: "Add at least one expense category in Settings before saving an expense.",
       needTransferAccounts: "Choose two different accounts for this transfer.",
       transferMoved: "{amount} moved from {from} to {to}.",

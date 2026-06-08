@@ -5,6 +5,7 @@ export const idExtras: AppStringsExtras = {
     default: "Memori pengeluaran bisa sesederhana sebuah jumlah.",
     capture: {
       needAmount: "Masukkan jumlah untuk menyimpan memori ini.",
+      needAccount: "Pilih akun dulu.",
       needCategory: "Tambahkan minimal satu kategori pengeluaran di Pengaturan sebelum menyimpan.",
       needTransferAccounts: "Pilih dua akun berbeda untuk transfer ini.",
       transferMoved: "{amount} dipindahkan dari {from} ke {to}.",
