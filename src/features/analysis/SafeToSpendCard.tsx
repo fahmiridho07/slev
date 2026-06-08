@@ -62,7 +62,9 @@ function SafeToSpendCardComponent() {
         ? componentStyles.purchaseVerdictSafe
         : purchaseSimulation.verdict === "over_pace"
           ? componentStyles.purchaseVerdictWarn
-          : componentStyles.purchaseVerdictDanger;
+          : purchaseSimulation.verdict === "dips_reserve"
+            ? componentStyles.purchaseVerdictCaution
+            : componentStyles.purchaseVerdictDanger;
   const verdictColor =
     purchaseSimulation == null
       ? colors.muted
@@ -78,7 +80,9 @@ function SafeToSpendCardComponent() {
         ? "checkmark-circle"
         : purchaseSimulation.verdict === "over_pace"
           ? "alert-circle"
-          : "close-circle";
+          : purchaseSimulation.verdict === "dips_reserve"
+            ? "warning"
+            : "close-circle";
   const verdictText =
     purchaseSimulation == null
       ? copy.purchaseHint
@@ -89,7 +93,9 @@ function SafeToSpendCardComponent() {
           )
         : purchaseSimulation.verdict === "over_pace"
           ? formatString(copy.overPace, { amount: formatRupiah(purchaseSimulation.newSafeDaily) })
-          : formatString(copy.cannotAfford, { amount: formatRupiah(purchaseSimulation.shortfall) });
+          : purchaseSimulation.verdict === "dips_reserve"
+            ? formatString(copy.dipsReserve, { amount: formatRupiah(purchaseSimulation.shortfall) })
+            : formatString(copy.cannotAfford, { amount: formatRupiah(purchaseSimulation.shortfall) });
 
   const showMeter = purchaseSimulation != null && safe.safeDaily > 0;
   const meterFill =

@@ -239,6 +239,7 @@ export const en: AppStrings = {
       affordableUntilPayday: "Yes. After this, your safe daily spend is {amount} until payday.",
       affordableUntilMonthEnd: "Yes. After this, your safe daily spend is {amount} until month-end.",
       overPace: "Doable, but it'll be tight — your daily drops to {amount}, below your average.",
+      dipsReserve: "Still doable, but it'll eat {amount} from your bills and set-aside.",
       cannotAfford: "This is more than your spendable balance — short by {amount}."
     }
   },

@@ -18,7 +18,7 @@ export type SafeToSpendResult = {
   typicalDaily: number;
 };
 
-export type PurchaseVerdict = "affordable" | "over_pace" | "unaffordable";
+export type PurchaseVerdict = "affordable" | "over_pace" | "dips_reserve" | "unaffordable";
 
 export type SimulatePurchaseResult = {
   affordable: boolean;
@@ -80,6 +80,7 @@ export function getTypicalDailySpend(
   const expenseMoments = moments.filter(
     (moment) =>
       moment.type === "expense" &&
+      moment.context !== RESERVED_BILL_CONTEXT &&
       safeTime(moment.occurredAt) >= startTime &&
       safeTime(moment.occurredAt) < endTime
   );
@@ -173,17 +174,26 @@ export function simulatePurchase({
   safe: SafeToSpendResult;
 }): SimulatePurchaseResult {
   const remainingBalance = safe.spendableBalance - amount;
+  const remainingActual = safe.effectiveBalance - amount;
   const newSafeDaily = Math.max(0, Math.round(remainingBalance / safe.daysLeft));
   const typicalNeed = safe.typicalDaily * safe.daysLeft;
   const coversTypicalDays = remainingBalance >= typicalNeed;
   const verdict: PurchaseVerdict =
-    remainingBalance < 0 ? "unaffordable" : coversTypicalDays ? "affordable" : "over_pace";
+    remainingActual < 0
+      ? "unaffordable"
+      : remainingBalance < 0
+        ? "dips_reserve"
+        : coversTypicalDays
+          ? "affordable"
+          : "over_pace";
   const shortfall =
     verdict === "unaffordable"
-      ? -remainingBalance
-      : verdict === "over_pace"
-        ? Math.max(0, typicalNeed - remainingBalance)
-        : 0;
+      ? -remainingActual
+      : verdict === "dips_reserve"
+        ? -remainingBalance
+        : verdict === "over_pace"
+          ? Math.max(0, typicalNeed - remainingBalance)
+          : 0;
 
   return {
     affordable: verdict === "affordable",

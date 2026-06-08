@@ -196,6 +196,7 @@ export type AppStrings = {
       daysLeft: string;
       heroLabel: string;
       cannotAfford: string;
+      dipsReserve: string;
       overPace: string;
       purchaseHint: string;
       purchasePlaceholder: string;

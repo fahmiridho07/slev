@@ -239,6 +239,7 @@ export const id: AppStrings = {
       affordableUntilPayday: "Bisa. Setelah ini, aman harianmu jadi {amount} sampai gajian.",
       affordableUntilMonthEnd: "Bisa. Setelah ini, aman harianmu jadi {amount} sampai akhir bulan.",
       overPace: "Masih bisa, tapi bakal mepet — jatah harianmu turun ke {amount}, di bawah rata-ratamu.",
+      dipsReserve: "Masih bisa, tapi bakal makan {amount} dari jatah tagihan & tabunganmu.",
       cannotAfford: "Saldomu belum cukup buat ini — kurang {amount}."
     }
   },
