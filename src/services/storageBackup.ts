@@ -181,7 +181,6 @@ async function normalizeImportedData(): Promise<boolean> {
     writeJson(STORAGE_KEYS.accounts, await listMoneyAccounts()),
     writeJson(STORAGE_KEYS.transfers, await listMoneyTransfers()),
     writeJson(STORAGE_KEYS.budgetLimits, await listBudgetLimits()),
-    writeJson(STORAGE_KEYS.monthlyPlans, await readMonthlyPlansForExport()),
     writeJson(STORAGE_KEYS.manualTemplates, await listManualTemplates()),
     writeJson(STORAGE_KEYS.categoryModes, await listCategoryModes()),
     writeJson(STORAGE_KEYS.savingsGoals, await listSavingsGoals()),
@@ -190,11 +189,6 @@ async function normalizeImportedData(): Promise<boolean> {
   ]);
 
   return writes.every(Boolean);
-}
-
-async function readMonthlyPlansForExport(): Promise<unknown> {
-  const result = await readJson(STORAGE_KEYS.monthlyPlans);
-  return result.status === "ok" ? result.value : [];
 }
 
 async function readExpenseCategoriesForExport(): Promise<unknown> {

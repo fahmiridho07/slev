@@ -7,7 +7,6 @@ import {
   ManualTemplate,
   MoneyAccount,
   MoneyTransfer,
-  MonthlyPlan,
   PatternFeedback,
   RecurringBill,
   SavingsGoal,
@@ -27,7 +26,6 @@ export type FinanceState = {
   message: string;
   moments: SpendingMoment[];
   undoToast: SpendingMoment | null;
-  monthlyPlan: MonthlyPlan | null;
   recurringBills: RecurringBill[];
   savingsGoals: SavingsGoal[];
   accounts: MoneyAccount[];
@@ -47,7 +45,6 @@ export const initialFinanceState: FinanceState = {
   message: getDefaultToastMessage(),
   moments: [],
   undoToast: null,
-  monthlyPlan: null,
   recurringBills: [],
   savingsGoals: [],
   accounts: [],
@@ -71,7 +68,6 @@ export type FinanceAction =
   | { type: "set_feedback"; feedback: PatternFeedback[] }
   | { type: "set_budget_limits"; budgetLimits: BudgetLimit[] }
   | { type: "set_category_modes"; categoryModes: CategoryMode[] }
-  | { type: "set_monthly_plan"; monthlyPlan: MonthlyPlan | null }
   | { type: "set_manual_templates"; manualTemplates: ManualTemplate[] }
   | { type: "set_recurring_bills"; recurringBills: RecurringBill[] }
   | { type: "set_savings_goals"; savingsGoals: SavingsGoal[] }
@@ -120,8 +116,6 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       return { ...state, budgetLimits: action.budgetLimits };
     case "set_category_modes":
       return { ...state, categoryModes: action.categoryModes };
-    case "set_monthly_plan":
-      return { ...state, monthlyPlan: action.monthlyPlan };
     case "set_manual_templates":
       return { ...state, manualTemplates: action.manualTemplates };
     case "set_recurring_bills":
@@ -146,7 +140,6 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
         feedback: [],
         manualTemplates: [],
         moments: [],
-        monthlyPlan: null,
         recurringBills: [],
         savingsGoals: [],
         accounts: action.payload.accounts,

@@ -43,44 +43,6 @@ function createTestHarness(seed?: Partial<FinanceState>) {
   };
 }
 
-test("savePlan returns validation error when expected income is missing", async () => {
-  const driver = createMemoryDriver();
-  setStorageDriver(driver);
-  const { actions } = createTestHarness();
-
-  const result = await actions.savePlan({
-    expectedIncome: "",
-    fixedCosts: "",
-    flexibleBudget: "0",
-    note: "",
-    savingsTarget: ""
-  });
-
-  assertEqual(result.ok, false, "save rejected");
-  if (!result.ok) {
-    assertEqual(result.validation?.field, "expectedIncome", "income field flagged");
-  }
-  assertEqual(driver.store.has("slev_monthly_plans"), false, "no plan persisted");
-});
-
-test("savePlan persists plan and updates reducer state", async () => {
-  const driver = createMemoryDriver();
-  setStorageDriver(driver);
-  const { actions, getState } = createTestHarness();
-
-  const result = await actions.savePlan({
-    expectedIncome: "5000000",
-    fixedCosts: "2000000",
-    flexibleBudget: "2000000",
-    note: "June plan",
-    savingsTarget: "1000000"
-  });
-
-  assertEqual(result.ok, true, "save succeeds");
-  assertEqual(getState().monthlyPlan?.expectedIncome, 5000000, "state updated");
-  assertEqual(getState().monthlyPlan?.note, "June plan", "note stored");
-});
-
 test("saveGoal returns validation error when fields are missing", async () => {
   const driver = createMemoryDriver();
   setStorageDriver(driver);

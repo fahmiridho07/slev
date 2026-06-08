@@ -18,26 +18,14 @@ import { AppToast, DeleteConfirmDialog } from "./components";
 import { BRAND } from "./data/brand";
 import { useLayoutInsets } from "./hooks/useLayoutInsets";
 import { useTheme } from "./hooks/useTheme";
-import { BudgetTabKey, PatternTabKey, SettingsTabKey } from "./features/app.types";
+import { SettingsTabKey } from "./features/app.types";
 import { hapticSelection } from "./lib/haptics";
 import { normalizeStoredTabKey, parseDeepLink } from "./navigation/deepLink";
 import { AppNavigation, AppTabKey } from "./navigation/appNavigation";
-import {
-  clampActiveTabForPlanning,
-  clampPatternTabForPlanning,
-  clampSettingsTabForPlanning,
-  hasExistingPlanningData
-} from "./lib/planningMode";
-import {
-  getNavStatePreference,
-  getPlanningEnabledPreference,
-  parseBudgetTab,
-  setNavStatePreference,
-  setPlanningEnabledPreference
-} from "./services/uiPreferences";
-import { BudgetScreen, HomeScreen, MoneyScreen, SettingsScreen } from "./screens";
+import { getNavStatePreference, parseSettingsTab, setNavStatePreference } from "./services/uiPreferences";
+import { HomeScreen, MoneyScreen, SettingsScreen } from "./screens";
 import { initialFinanceState } from "./state/financeReducer";
-import { shallowEqual, useActions, useFinanceSelector } from "./state/useFinance";
+import { useActions, useFinanceSelector } from "./state/useFinance";
 
 const SLEV_MARK = require("../assets/brand/slev-mark-transparent.png");
 
@@ -45,11 +33,9 @@ function tabPaneStyle(visible: boolean): StyleProp<ViewStyle> {
   return visible ? { flex: 1 } : { display: "none" };
 }
 
-const tabIcons: Record<AppTabKey, keyof typeof Ionicons.glyphMap> = {
+const tabIcons: Record<Exclude<AppTabKey, "settings">, keyof typeof Ionicons.glyphMap> = {
   home: "home-outline",
-  money: "cash-outline",
-  budget: "wallet-outline",
-  settings: "settings-outline"
+  money: "cash-outline"
 };
 
 function FinanceInitializer() {
@@ -63,46 +49,28 @@ function FinanceInitializer() {
 export function AppRoot() {
   const actions = useActions();
   const { colors, componentStyles, isDark, strings, styles } = useTheme();
-  const { bootError, clearConfirmVisible, isReady, message, planningDataState, undoToast } = useFinanceSelector(
-    (state) => ({
-      bootError: state.bootError,
-      clearConfirmVisible: state.clearConfirmVisible,
-      isReady: state.isReady,
-      message: state.message,
-      planningDataState: {
-        budgetLimits: state.budgetLimits,
-        monthlyPlan: state.monthlyPlan,
-        recurringBills: state.recurringBills,
-        savingsGoals: state.savingsGoals,
-        transfers: state.transfers
-      },
-      undoToast: state.undoToast
-    }),
-    shallowEqual
-  );
+  const { bootError, clearConfirmVisible, isReady, message, undoToast } = useFinanceSelector((state) => ({
+    bootError: state.bootError,
+    clearConfirmVisible: state.clearConfirmVisible,
+    isReady: state.isReady,
+    message: state.message,
+    undoToast: state.undoToast
+  }));
   const { scrollContentStyle, tabBarStyle } = useLayoutInsets();
   const [activeTab, setActiveTab] = useState<AppTabKey>("home");
   const [returnTab, setReturnTab] = useState<AppTabKey>("home");
-  const [budgetTab, setBudgetTab] = useState<BudgetTabKey>("plan");
-  const [patternTab, setPatternTab] = useState<PatternTabKey>("breakdown");
   const [settingsTab, setSettingsTab] = useState<SettingsTabKey>("bills");
   const [toastMessage, setToastMessage] = useState("");
   const [navHydrated, setNavHydrated] = useState(false);
   const [captureFocusRequest, setCaptureFocusRequest] = useState(0);
-  const [planningPref, setPlanningPref] = useState<boolean | null>(null);
-  const [planningPrefHydrated, setPlanningPrefHydrated] = useState(false);
-  const [effectivePlanningEnabled, setEffectivePlanningEnabled] = useState(false);
 
-  const tabs = useMemo(() => {
-    const items: { key: AppTabKey; label: string }[] = [
-      { key: "home", label: strings.tabs.home },
-      { key: "money", label: strings.tabs.money }
-    ];
-    if (effectivePlanningEnabled) {
-      items.push({ key: "budget", label: strings.tabs.budget });
-    }
-    return items;
-  }, [effectivePlanningEnabled, strings.tabs.budget, strings.tabs.home, strings.tabs.money]);
+  const tabs = useMemo(
+    () => [
+      { key: "home" as const, label: strings.tabs.home },
+      { key: "money" as const, label: strings.tabs.money }
+    ],
+    [strings.tabs.home, strings.tabs.money]
+  );
 
   const openSettings = useCallback(() => {
     setActiveTab((current) => {
@@ -124,53 +92,31 @@ export function AppRoot() {
 
       if (target.tab === "settings") {
         if (target.settingsTab) {
-          setSettingsTab(clampSettingsTabForPlanning(target.settingsTab, effectivePlanningEnabled));
+          setSettingsTab(parseSettingsTab(target.settingsTab));
         }
         openSettings();
         return;
       }
 
+      if (target.tab === "budget") {
+        setActiveTab("money");
+        return;
+      }
+
       if (target.tab === "money") {
         setActiveTab("money");
-        setPatternTab(clampPatternTabForPlanning(target.patternTab, effectivePlanningEnabled));
         return;
       }
 
-      if (target.tab === "budget" && !effectivePlanningEnabled) {
-        setActiveTab("home");
-        return;
-      }
-
-      setActiveTab(clampActiveTabForPlanning(target.tab, effectivePlanningEnabled));
-      if (target.tab === "budget" && target.budgetTab) {
-        setBudgetTab(parseBudgetTab(target.budgetTab));
-      }
+      setActiveTab(target.tab);
       if (target.tab === "home" && target.openCapture) {
         setCaptureFocusRequest((current) => current + 1);
       }
     },
-    [effectivePlanningEnabled, openSettings]
+    [openSettings]
   );
 
-  const handleTogglePlanning = useCallback((next: boolean) => {
-    setEffectivePlanningEnabled(next);
-    setPlanningPref(next);
-    void setPlanningEnabledPreference(next);
-    if (!next) {
-      setActiveTab((tab) => clampActiveTabForPlanning(tab, false));
-      setPatternTab((tab) => clampPatternTabForPlanning(tab, false));
-      setSettingsTab((tab) => clampSettingsTabForPlanning(tab, false));
-    }
-  }, []);
-
   const navigation: AppNavigation = {
-    openBudgetPlan: () => {
-      if (!effectivePlanningEnabled) {
-        return;
-      }
-      setBudgetTab("plan");
-      setActiveTab("budget");
-    },
     openCapture: () => {
       setActiveTab("home");
       setCaptureFocusRequest((current) => current + 1);
@@ -179,38 +125,6 @@ export function AppRoot() {
     openMoney: () => setActiveTab("money"),
     openSettings
   };
-
-  useEffect(() => {
-    void getPlanningEnabledPreference().then((pref) => {
-      setPlanningPref(pref);
-      setPlanningPrefHydrated(true);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!planningPrefHydrated || !isReady) {
-      return;
-    }
-
-    const hasExisting = hasExistingPlanningData(planningDataState);
-    const effective = planningPref === null ? hasExisting : planningPref;
-    setEffectivePlanningEnabled(effective);
-
-    if (planningPref === null && hasExisting) {
-      void setPlanningEnabledPreference(true);
-      setPlanningPref(true);
-    }
-  }, [isReady, planningDataState, planningPref, planningPrefHydrated]);
-
-  useEffect(() => {
-    if (!planningPrefHydrated || !isReady) {
-      return;
-    }
-
-    setActiveTab((tab) => clampActiveTabForPlanning(tab, effectivePlanningEnabled));
-    setPatternTab((tab) => clampPatternTabForPlanning(tab, effectivePlanningEnabled));
-    setSettingsTab((tab) => clampSettingsTabForPlanning(tab, effectivePlanningEnabled));
-  }, [effectivePlanningEnabled, isReady, planningPrefHydrated]);
 
   useEffect(() => {
     let active = true;
@@ -225,9 +139,7 @@ export function AppRoot() {
       }
 
       setActiveTab(restoredTab);
-      setBudgetTab(parseBudgetTab(stored.budgetTab));
-      setPatternTab(stored.patternTab);
-      setSettingsTab(stored.settingsTab);
+      setSettingsTab(parseSettingsTab(stored.settingsTab));
       if (active) {
         setNavHydrated(true);
       }
@@ -244,7 +156,7 @@ export function AppRoot() {
   }, [applyDeepLink]);
 
   useEffect(() => {
-    if (!navHydrated || !planningPrefHydrated || !isReady) {
+    if (!navHydrated || !isReady) {
       return;
     }
 
@@ -253,7 +165,7 @@ export function AppRoot() {
         applyDeepLink(url);
       }
     });
-  }, [applyDeepLink, isReady, navHydrated, planningPrefHydrated]);
+  }, [applyDeepLink, isReady, navHydrated]);
 
   useEffect(() => {
     if (!isReady || !navHydrated) {
@@ -261,11 +173,11 @@ export function AppRoot() {
     }
     void setNavStatePreference({
       activeTab: inSettings ? returnTab : activeTab,
-      budgetTab,
-      patternTab,
+      budgetTab: "plan",
+      patternTab: "breakdown",
       settingsTab
     });
-  }, [activeTab, budgetTab, inSettings, isReady, navHydrated, patternTab, returnTab, settingsTab]);
+  }, [activeTab, inSettings, isReady, navHydrated, returnTab, settingsTab]);
 
   useEffect(() => {
     if (!isReady) {
@@ -290,7 +202,7 @@ export function AppRoot() {
     return () => clearTimeout(timer);
   }, [actions, undoToast]);
 
-  function selectTab(tab: AppTabKey) {
+  function selectTab(tab: Exclude<AppTabKey, "settings">) {
     hapticSelection();
     setActiveTab(tab);
   }
@@ -369,31 +281,14 @@ export function AppRoot() {
                   />
                 </View>
                 <View style={tabPaneStyle(activeTab === "money")}>
-                  <MoneyScreen
-                    activePatternTab={patternTab}
-                    navigation={navigation}
-                    onOpenSettings={openSettings}
-                    onPatternTabChange={setPatternTab}
-                    planningEnabled={effectivePlanningEnabled}
-                    scrollContentStyle={scrollContentStyle}
-                  />
+                  <MoneyScreen navigation={navigation} scrollContentStyle={scrollContentStyle} />
                 </View>
-                {effectivePlanningEnabled ? (
-                  <View style={tabPaneStyle(activeTab === "budget")}>
-                    <BudgetScreen
-                      activeBudgetTab={budgetTab}
-                      onBudgetTabChange={setBudgetTab}
-                      onOpenSettings={openSettings}
-                      scrollContentStyle={scrollContentStyle}
-                    />
-                  </View>
-                ) : null}
                 <View style={tabPaneStyle(activeTab === "settings")}>
                   <SettingsScreen
                     activeSettingsTab={settingsTab}
                     onSettingsTabChange={setSettingsTab}
-                    onTogglePlanning={handleTogglePlanning}
-                    planningEnabled={effectivePlanningEnabled}
+                    onTogglePlanning={() => {}}
+                    planningEnabled={false}
                     scrollContentStyle={scrollContentStyle}
                   />
                 </View>

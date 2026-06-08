@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import { SectionList, StyleProp, Text, TextInput, View, ViewStyle } from "react-native";
 import {
   BottomSheet,
@@ -13,11 +13,8 @@ import {
 } from "../components";
 import { BreakdownPanel } from "../features/analysis/BreakdownPanel";
 import { CashflowPanel } from "../features/analysis/CashflowPanel";
-import { HomeMoneyPulse } from "../features/analysis/HomeMoneyPulse";
-import { UpcomingBillsPanel } from "../features/analysis/UpcomingBillsPanel";
 import { useListActionsHint } from "../hooks/useListActionsHint";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
-import { PatternTabKey } from "../features/app.types";
 import { MomentEditForm } from "../features/memory/MomentEditForm";
 import { SpendingMoment } from "../features/spendingMemory.types";
 import { buildRepeatHints, filterMoments, getMomentTitle, groupMomentsByRecallRange } from "../lib/analysis";
@@ -29,7 +26,7 @@ import {
 } from "../lib/spendingPeriod";
 import { AppNavigation } from "../navigation/appNavigation";
 import { formatString } from "../i18n";
-import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../state/useFinance";
+import { useActions, useFinanceSelector } from "../state/useFinance";
 import { useTheme } from "../hooks/useTheme";
 
 type TrackerView = "cashflow" | "expense" | "income";
@@ -69,20 +66,12 @@ type ActivitySection = {
 };
 
 type MoneyScreenProps = {
-  activePatternTab: PatternTabKey;
   navigation: AppNavigation;
-  onOpenSettings: () => void;
-  onPatternTabChange: (tab: PatternTabKey) => void;
-  planningEnabled: boolean;
   scrollContentStyle: StyleProp<ViewStyle>;
 };
 
 function MoneyScreenComponent({
-  activePatternTab,
   navigation,
-  onOpenSettings,
-  onPatternTabChange: _onPatternTabChange,
-  planningEnabled,
   scrollContentStyle
 }: MoneyScreenProps) {
   const { colors, strings, styles } = useTheme();
@@ -95,31 +84,7 @@ function MoneyScreenComponent({
   const [pendingDeleteMoment, setPendingDeleteMoment] = useState<SpendingMoment | null>(null);
 
   const moments = useFinanceSelector((state) => state.moments);
-  const { budgetLimits, monthlyPlan, savingsGoals } =
-    useFinanceSelector(
-      (state) => ({
-        budgetLimits: state.budgetLimits,
-        monthlyPlan: state.monthlyPlan,
-        savingsGoals: state.savingsGoals
-      }),
-      shallowEqual
-    );
-  const {
-    allocationPlan,
-    hasMonthlyPlan,
-    monthlySummary,
-    upcomingBills
-  } = useFinanceDerived(
-    (derived) => ({
-      allocationPlan: derived.allocationPlan,
-      hasMonthlyPlan: derived.hasMonthlyPlan,
-      monthlySummary: derived.monthlySummary,
-      upcomingBills: derived.upcomingBills
-    }),
-    shallowEqual
-  );
-
-  const visiblePatternTab = planningEnabled ? activePatternTab : "breakdown";
+  const budgetLimits = useFinanceSelector((state) => state.budgetLimits);
   const { dismiss: dismissListHint, visible: showListHint } = useListActionsHint("memory", moments.length > 0);
   const breakdownReferenceDate = useMemo(
     () => getMonthReferenceDate(breakdownMonthOffset),
@@ -138,12 +103,6 @@ function MoneyScreenComponent({
       })),
     [filteredMoments]
   );
-
-  useEffect(() => {
-    if (visiblePatternTab !== "breakdown") {
-      setBreakdownMonthOffset(0);
-    }
-  }, [visiblePatternTab]);
 
   const startEditing = useCallback((moment: SpendingMoment) => {
     hapticSelection();
@@ -246,23 +205,6 @@ function MoneyScreenComponent({
   const listHeader = useMemo(
     () => (
       <View style={styles.cardStack}>
-        <HomeMoneyPulse
-          dailyFlexibleRoom={allocationPlan.dailyFlexibleRoom}
-          hasMonthlyPlan={hasMonthlyPlan}
-          latestBalanceTotal={0}
-          monthlyPlan={monthlyPlan}
-          monthlySummary={monthlySummary}
-          onOpenBudgetPlan={planningEnabled ? navigation.openBudgetPlan : undefined}
-          runwayMonths={null}
-          savingsGoals={savingsGoals}
-        />
-        {planningEnabled && (
-          <UpcomingBillsPanel
-            onLogPayment={(billId) => void actions.logRecurringBillPayment(billId)}
-            onOpenSettings={onOpenSettings}
-            upcomingBills={upcomingBills}
-          />
-        )}
         {trackerSection}
         <SectionHeader title={strings.activity.sectionTitle} />
         {showListHint && (
@@ -285,26 +227,16 @@ function MoneyScreenComponent({
       </View>
     ),
     [
-      actions,
-      allocationPlan.dailyFlexibleRoom,
       colors.muted,
       dismissListHint,
-      hasMonthlyPlan,
-      monthlyPlan,
-      monthlySummary,
       moments.length,
-      navigation.openBudgetPlan,
-      onOpenSettings,
-      planningEnabled,
       query,
-      savingsGoals,
       showListHint,
       strings.activity,
       strings.listHints.memory,
       styles.cardStack,
       styles.input,
-      trackerSection,
-      upcomingBills
+      trackerSection
     ]
   );
 

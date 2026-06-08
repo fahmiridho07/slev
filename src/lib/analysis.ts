@@ -15,7 +15,6 @@ import {
   formatLocaleWeekdayDate
 } from "../i18n/localeDate";
 import { getRuntimeStrings } from "../i18n/runtime";
-import { AllocationPlan } from "./financeEngine";
 import { getMonthRange, isWithinRange, sumMoments } from "./dateRanges";
 import { formatRupiah } from "./spendingMemoryPatterns";
 
@@ -82,128 +81,6 @@ export function getTemplateLabel(template: ManualTemplate): string {
     return template.source || getRuntimeStrings().memory.momentTitle.income;
   }
   return template.label || template.context;
-}
-
-export function getAllocationActionCopy(allocation: AllocationPlan): {
-  detail: string;
-  title: string;
-  tone: SpendingPattern["tone"];
-} {
-  const amount = allocation.nextAction.amount ?? 0;
-  const strings = getRuntimeStrings().analysis.allocation.action;
-
-  switch (allocation.nextAction.kind) {
-    case "set_plan":
-      return {
-        detail: strings.setPlan.detail,
-        title: strings.setPlan.title,
-        tone: "calm"
-      };
-    case "snapshot_balances":
-      return {
-        detail: strings.snapshotBalances.detail,
-        title: strings.snapshotBalances.title,
-        tone: "calm"
-      };
-    case "plan_exceeds_income":
-      return {
-        detail: formatString(strings.planExceedsIncome.detail, {
-          amount: formatRupiah(amount)
-        }),
-        title: strings.planExceedsIncome.title,
-        tone: "notice"
-      };
-    case "flexible_over_plan":
-      return {
-        detail: formatString(strings.flexibleOverPlan.detail, {
-          amount: formatRupiah(amount)
-        }),
-        title: strings.flexibleOverPlan.title,
-        tone: "notice"
-      };
-    case "top_up_pockets":
-      return {
-        detail: formatString(strings.topUpPockets.detail, {
-          amount: formatRupiah(amount),
-          hubBalance: formatRupiah(allocation.hubBalance)
-        }),
-        title: strings.topUpPockets.title,
-        tone: "warm"
-      };
-    case "hold":
-      return {
-        detail: strings.hold.detail,
-        title: strings.hold.title,
-        tone: "calm"
-      };
-  }
-}
-
-export function getAllocationRowCopy(row: AllocationPlan["rows"][number]): {
-  detail: string;
-  title: string;
-} {
-  const remainingAmount = Math.abs(row.remaining);
-  const strings = getRuntimeStrings().analysis.allocation.row;
-
-  if (row.key === "income") {
-    if (row.planned <= 0) {
-      return {
-        detail: strings.incomeNoPlan,
-        title: strings.incomeTitle
-      };
-    }
-    return {
-      detail: row.remaining > 0
-        ? formatString(strings.incomeRemaining, { amount: formatRupiah(remainingAmount) })
-        : formatString(strings.incomeAbovePlan, { amount: formatRupiah(remainingAmount) }),
-      title: strings.incomeTitle
-    };
-  }
-
-  if (row.key === "fixed") {
-    if (row.planned <= 0) {
-      return {
-        detail: strings.fixedNoPlan,
-        title: strings.fixedTitle
-      };
-    }
-    return {
-      detail: row.remaining >= 0
-        ? formatString(strings.fixedRemaining, { amount: formatRupiah(remainingAmount) })
-        : formatString(strings.fixedAbovePlan, { amount: formatRupiah(remainingAmount) }),
-      title: strings.fixedTitle
-    };
-  }
-
-  if (row.key === "flexible") {
-    if (row.planned <= 0) {
-      return {
-        detail: strings.flexibleNoPlan,
-        title: strings.flexibleTitle
-      };
-    }
-    return {
-      detail: row.remaining >= 0
-        ? formatString(strings.flexibleRemaining, { amount: formatRupiah(remainingAmount) })
-        : formatString(strings.flexibleAbovePlan, { amount: formatRupiah(remainingAmount) }),
-      title: strings.flexibleTitle
-    };
-  }
-
-  if (row.planned <= 0) {
-    return {
-      detail: strings.savingsNoPlan,
-      title: strings.savingsTitle
-    };
-  }
-
-  return {
-    detail: row.remaining > 0
-      ? formatString(strings.savingsStillNeeded, { amount: formatRupiah(remainingAmount) })
-      : formatString(strings.savingsAboveTarget, { amount: formatRupiah(remainingAmount) }),
-    title: strings.savingsTitle
-  };
 }
 
 export function buildAccountActivity(moments: SpendingMoment[]): AccountActivityRow[] {

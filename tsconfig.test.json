@@ -18,7 +18,6 @@
     "src/data/spendingMemory.ts",
     "src/features/spendingMemory.types.ts",
     "src/lib/analysis.ts",
-    "src/lib/planningMode.ts",
     "src/lib/dateRanges.ts",
     "src/lib/financeEngine.ts",
     "src/lib/safeToSpend.ts",

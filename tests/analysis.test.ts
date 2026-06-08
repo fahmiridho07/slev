@@ -6,7 +6,6 @@ import {
   getDataMaturity,
   dateKey,
   filterMoments,
-  getAllocationActionCopy,
   getFrequentAccountLabels,
   getMomentsInPeriod,
   getMonthKey,
@@ -18,7 +17,6 @@ import {
   sumExpenseMoments,
   sumMoments
 } from "../src/lib/analysis";
-import { AllocationPlan } from "../src/lib/financeEngine";
 import { EntryType, MoneyAccount, SpendingContext, SpendingMoment } from "../src/features/spendingMemory.types";
 
 declare const process: {
@@ -381,13 +379,6 @@ test("getTrackerEmptyReason returns null once month activity is established enou
   );
 });
 
-test("getAllocationActionCopy returns steady hold messaging", () => {
-  const copy = getAllocationActionCopy(holdAllocationPlan());
-
-  assertEqual(copy.title, "Allocation is steady", "hold title");
-  assertEqual(copy.tone, "calm", "hold tone");
-});
-
 runTests();
 
 function test(name: string, run: () => void): void {
@@ -460,27 +451,6 @@ function moment(input: {
     source: input.source,
     type: input.type ?? "expense",
     updatedAt: input.occurredAt
-  };
-}
-
-function holdAllocationPlan(): AllocationPlan {
-  return {
-    dailyFlexibleRoom: 0,
-    expectedIncome: 0,
-    fixedRemaining: 0,
-    flexibleRemaining: 0,
-    hubBalance: 0,
-    incomeGap: 0,
-    incomeReceived: 0,
-    nextAction: { kind: "hold" },
-    plannedGap: 0,
-    plannedTotal: 0,
-    pocketBalance: 0,
-    pocketCoverageDays: 0,
-    pocketTopUpNeed: 0,
-    possibleSavings: 0,
-    rows: [],
-    savingsGap: 0
   };
 }
 

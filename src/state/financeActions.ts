@@ -8,8 +8,7 @@ import {
   getAccountValidationError,
   getBalanceAnchorValidationError,
   getGoalValidationError,
-  getLimitValidationError,
-  getPlanValidationError
+  getLimitValidationError
 } from "../features/budget/budgetValidation";
 import { getImportJsonValidationError } from "../features/settings/dataValidation";
 import { getBillValidationError, getCategoryValidationError } from "../features/settings/settingsValidation";
@@ -66,7 +65,6 @@ import {
   getPatternFeedbackSavedToast,
   getMemoryUpdatedToast,
   getRefreshFailedToast,
-  getPlanSavedToast,
   getResetFailedToast,
   getResetSuccessToast,
   getShortcutRemovedToast,
@@ -109,13 +107,11 @@ import {
   deleteCategoryMode,
   deleteManualTemplate,
   deleteSavingsGoal,
-  getMonthlyPlan,
   listCategoryModes,
   listManualTemplates,
   listSavingsGoals,
   saveCategoryMode,
   saveManualTemplate,
-  saveMonthlyPlan,
   saveSavingsGoal
 } from "../services/manualFinanceRepository";
 import { exportAllDataWithReport, importAllData } from "../services/storageBackup";
@@ -148,13 +144,11 @@ export function createFinanceActions(
   let reloadPromise: Promise<void> | null = null;
 
   async function performReload() {
-    const currentMonthKey = getMonthKey(new Date());
     const [
       storedMoments,
       storedFeedback,
       storedBudgetLimits,
       storedCategoryModes,
-      storedMonthlyPlan,
       storedManualTemplates,
       storedSavingsGoals,
       storedRecurringBills,
@@ -167,7 +161,6 @@ export function createFinanceActions(
       listPatternFeedback(),
       listBudgetLimits(),
       listCategoryModes(),
-      getMonthlyPlan(currentMonthKey),
       listManualTemplates(),
       listSavingsGoals(),
       listRecurringBills(),
@@ -184,7 +177,6 @@ export function createFinanceActions(
         feedback: storedFeedback,
         budgetLimits: storedBudgetLimits,
         categoryModes: storedCategoryModes,
-        monthlyPlan: storedMonthlyPlan,
         manualTemplates: storedManualTemplates,
         savingsGoals: storedSavingsGoals,
         recurringBills: storedRecurringBills,
@@ -562,41 +554,6 @@ export function createFinanceActions(
     setMessage(getLimitMarkedAsToast(category, mode));
   }
 
-  async function savePlan(input: {
-    fixedCosts: string;
-    flexibleBudget: string;
-    note: string;
-    expectedIncome: string;
-    savingsTarget: string;
-  }): Promise<FormActionResult<"expectedIncome">> {
-    const validationError = getPlanValidationError(input);
-    if (validationError) {
-      return { ok: false, validation: validationError };
-    }
-
-    const expectedIncome = parseAmountInput(input.expectedIncome);
-    if (!expectedIncome) {
-      return { ok: false };
-    }
-
-    const currentMonthKey = getMonthKey(new Date());
-    const { data: saved, persisted } = await saveMonthlyPlan({
-      expectedIncome,
-      fixedCosts: parseAmountInput(input.fixedCosts) ?? 0,
-      flexibleBudget: parseAmountInput(input.flexibleBudget) ?? 0,
-      month: currentMonthKey,
-      note: input.note,
-      savingsTarget: parseAmountInput(input.savingsTarget) ?? 0
-    });
-    if (!persisted) {
-      notifyWriteFailure(STORAGE_KEYS.monthlyPlans);
-      return { ok: false };
-    }
-    dispatch({ type: "set_monthly_plan", monthlyPlan: saved });
-    notifySuccess(getPlanSavedToast());
-    return { ok: true };
-  }
-
   async function saveGoal(input: {
     id?: string;
     label: string;
@@ -889,7 +846,6 @@ export function createFinanceActions(
     saveGoal,
     saveRecurringBill: saveRecurringBillAction,
     saveMoment,
-    savePlan,
     setClearConfirmVisible,
     setMessage,
     updateMoment

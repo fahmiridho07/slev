@@ -1,11 +1,6 @@
 import React, { createContext, useEffect, useMemo, useReducer, useRef } from "react";
 
 import { getUpcomingBills, UpcomingBill } from "../lib/recurringBills";
-import {
-  AllocationPlan,
-  buildAllocationPlan,
-  buildCurrentMonthSummary
-} from "../lib/financeEngine";
 
 import { getCategoryLabels } from "../services/categoryRepository";
 import { createFinanceActions, FinanceActions } from "./financeActions";
@@ -14,10 +9,7 @@ import { createDerivedStore, DerivedStore } from "./derivedStore";
 import { createFinanceStore, FinanceStore } from "./financeStore";
 
 export type FinanceDerived = {
-  allocationPlan: AllocationPlan;
   categoryLabels: ReturnType<typeof getCategoryLabels>;
-  hasMonthlyPlan: boolean;
-  monthlySummary: ReturnType<typeof buildCurrentMonthSummary>;
   upcomingBills: UpcomingBill[];
 };
 
@@ -44,62 +36,20 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
-  const monthlySummary = useMemo(
-    () => buildCurrentMonthSummary(state.moments, state.categoryModes),
-    [state.moments, state.categoryModes]
-  );
   const categoryLabels = useMemo(
     () => getCategoryLabels(state.expenseCategories),
     [state.expenseCategories]
   );
-  const hasMonthlyPlan = Boolean(state.monthlyPlan);
   const upcomingBills = useMemo(
     () => getUpcomingBills({ bills: state.recurringBills }),
     [state.recurringBills]
   );
-  const upcomingBillsReserve = useMemo(
-    () => upcomingBills.reduce((sum, item) => sum + item.bill.amount, 0),
-    [upcomingBills]
-  );
-  const allocationPlan = useMemo(
-    () => {
-      const hasBalanceEvidence =
-        monthlySummary.income > 0
-        || monthlySummary.expense > 0
-        || state.transfers.length > 0;
-
-      return buildAllocationPlan({
-        accounts: state.accounts,
-        hasBalanceEvidence,
-        latestSnapshots: [],
-        monthlyPlan: state.monthlyPlan,
-        monthlySummary,
-        upcomingBillsReserve
-      });
-    },
-    [
-      monthlySummary,
-      state.accounts,
-      state.monthlyPlan,
-      state.transfers.length,
-      upcomingBillsReserve
-    ]
-  );
   const derived = useMemo<FinanceDerived>(
     () => ({
-      allocationPlan,
       categoryLabels,
-      hasMonthlyPlan,
-      monthlySummary,
       upcomingBills
     }),
-    [
-      allocationPlan,
-      categoryLabels,
-      hasMonthlyPlan,
-      monthlySummary,
-      upcomingBills
-    ]
+    [categoryLabels, upcomingBills]
   );
 
   const derivedRef = useRef(derived);

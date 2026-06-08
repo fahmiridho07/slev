@@ -3,7 +3,6 @@ import {
   CategoryMode,
   EntryType,
   ManualTemplate,
-  MonthlyPlan,
   SavingsGoal,
   SpendingContext
 } from "../features/spendingMemory.types";
@@ -16,21 +15,11 @@ import {
 } from "./storageRecordUtils";
 import { isKeyCorrupt, readJson, removeKeys, WriteResult, writeJson } from "./storage";
 
-const MONTHLY_PLANS_KEY = "slev_monthly_plans";
 const MANUAL_TEMPLATES_KEY = "slev_manual_templates";
 const CATEGORY_MODES_KEY = "slev_category_modes";
 const SAVINGS_GOALS_KEY = "slev_savings_goals";
 
 type CategoryModeValue = CategoryMode["mode"];
-
-type MonthlyPlanInput = {
-  expectedIncome: number;
-  fixedCosts: number;
-  flexibleBudget: number;
-  month: string;
-  note?: string;
-  savingsTarget: number;
-};
 
 type ManualTemplateInput = {
   accountLabel?: string;
@@ -48,45 +37,6 @@ type SavingsGoalInput = {
   savedAmount: number;
   targetAmount: number;
 };
-
-export async function getMonthlyPlan(month: string): Promise<MonthlyPlan | null> {
-  const plans = await listMonthlyPlans();
-  return plans.find((plan) => plan.month === normalizeMonth(month)) ?? null;
-}
-
-export async function saveMonthlyPlan(input: MonthlyPlanInput): Promise<WriteResult<MonthlyPlan>> {
-  const plans = await listMonthlyPlans();
-  const existing = plans.find((plan) => plan.month === normalizeMonth(input.month));
-  const now = new Date().toISOString();
-  const plan = normalizeMonthlyPlan({
-    ...input,
-    id: existing?.id ?? createId(),
-    createdAt: existing?.createdAt ?? now,
-    updatedAt: now
-  });
-  if (!plan) {
-    return {
-      data: existing ?? {
-        id: createId(),
-        month: normalizeMonth(input.month),
-        expectedIncome: normalizeAmount(input.expectedIncome),
-        fixedCosts: normalizeAmount(input.fixedCosts),
-        flexibleBudget: normalizeAmount(input.flexibleBudget),
-        savingsTarget: normalizeAmount(input.savingsTarget),
-        note: cleanOptionalText(input.note),
-        createdAt: now,
-        updatedAt: now
-      },
-      persisted: true
-    };
-  }
-  const updated = [
-    plan,
-    ...plans.filter((item) => item.month !== plan.month)
-  ].sort((a, b) => b.month.localeCompare(a.month));
-  const persisted = await writeJson(MONTHLY_PLANS_KEY, updated);
-  return { data: plan, persisted };
-}
 
 export async function listManualTemplates(): Promise<ManualTemplate[]> {
   const result = await readJson<unknown>(MANUAL_TEMPLATES_KEY);
@@ -202,7 +152,6 @@ export async function rewriteAccountLabelInManualTemplates(
 
 export async function clearManualFinance(): Promise<boolean> {
   return removeKeys([
-    MONTHLY_PLANS_KEY,
     MANUAL_TEMPLATES_KEY,
     CATEGORY_MODES_KEY,
     SAVINGS_GOALS_KEY
@@ -211,38 +160,10 @@ export async function clearManualFinance(): Promise<boolean> {
 
 export function isManualFinanceStorageCorrupt(): boolean {
   return (
-    isKeyCorrupt(MONTHLY_PLANS_KEY) ||
     isKeyCorrupt(MANUAL_TEMPLATES_KEY) ||
     isKeyCorrupt(CATEGORY_MODES_KEY) ||
     isKeyCorrupt(SAVINGS_GOALS_KEY)
   );
-}
-
-async function listMonthlyPlans(): Promise<MonthlyPlan[]> {
-  const result = await readJson<unknown>(MONTHLY_PLANS_KEY);
-  if (result.status !== "ok" || !Array.isArray(result.value)) return [];
-  return result.value.map(normalizeMonthlyPlan).filter(isMonthlyPlan);
-}
-
-function normalizeMonthlyPlan(value: unknown): MonthlyPlan | null {
-  const record = toRecord(value);
-  if (!record) return null;
-  const month = normalizeMonth(readString(record, "month") ?? readString(record, "monthKey"));
-  const expectedIncome = readNumber(record, "expectedIncome") ?? readNumber(record, "plannedIncome") ?? 0;
-  const flexibleBudget = readNumber(record, "flexibleBudget") ?? readNumber(record, "flexibleSpending") ?? 0;
-  const now = new Date().toISOString();
-
-  return {
-    id: readString(record, "id") ?? createId(),
-    month,
-    expectedIncome: normalizeAmount(expectedIncome),
-    fixedCosts: normalizeAmount(readNumber(record, "fixedCosts") ?? 0),
-    flexibleBudget: normalizeAmount(flexibleBudget),
-    savingsTarget: normalizeAmount(readNumber(record, "savingsTarget") ?? 0),
-    note: cleanOptionalText(readString(record, "note")),
-    createdAt: readString(record, "createdAt") ?? readString(record, "updatedAt") ?? now,
-    updatedAt: readString(record, "updatedAt") ?? now
-  };
 }
 
 function normalizeManualTemplate(value: unknown): ManualTemplate | null {
@@ -319,10 +240,6 @@ function mergeCategoryModes(settings: CategoryMode[]): CategoryMode[] {
   return [...defaultModes, ...customModes];
 }
 
-function isMonthlyPlan(value: MonthlyPlan | null): value is MonthlyPlan {
-  return value !== null;
-}
-
 function isManualTemplate(value: ManualTemplate | null): value is ManualTemplate {
   return value !== null;
 }
@@ -339,7 +256,5 @@ function normalizeAmount(value: number): number {
   return Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
 }
 
-function normalizeMonth(value: string | undefined): string {
-  return /^\d{4}-\d{2}$/.test(String(value ?? "")) ? String(value) : new Date().toISOString().slice(0, 7);
-}
+
 

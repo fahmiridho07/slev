@@ -80,7 +80,6 @@ test("hydrate merges stored collections without touching ui flags", () => {
         feedback: [],
         budgetLimits: [],
         categoryModes: [],
-        monthlyPlan: null,
         manualTemplates: [],
         recurringBills: [],
         savingsGoals: [],
@@ -120,16 +119,6 @@ test("clear_all resets finance memory but keeps default accounts and categories"
     clearConfirmVisible: true,
     feedback: [{ patternId: "p1", response: "keep", createdAt: "2026-06-01T00:00:00.000Z" }],
     moments: [buildMoment({ amount: 10000, occurredAt: "2026-06-01T01:00:00.000Z" })],
-    monthlyPlan: {
-      createdAt: "2026-06-01T00:00:00.000Z",
-      expectedIncome: 1,
-      fixedCosts: 1,
-      flexibleBudget: 1,
-      id: "plan",
-      month: "2026-06",
-      savingsTarget: 1,
-      updatedAt: "2026-06-01T00:00:00.000Z"
-    },
     message: "Busy"
   };
   const resetAccounts = [{ createdAt: "x", id: "a1", isIncomeHub: true, kind: "bank" as const, label: "BRI", updatedAt: "x" }];
@@ -142,7 +131,6 @@ test("clear_all resets finance memory but keeps default accounts and categories"
   assertEqual(next.balanceAnchor, null, "balance anchor cleared");
   assertEqual(next.moments.length, 0, "moments cleared");
   assertEqual(next.feedback.length, 0, "feedback cleared");
-  assertEqual(next.monthlyPlan, null, "monthly plan cleared");
   assertEqual(next.clearConfirmVisible, false, "dialog closed");
   assertEqual(next.accounts, resetAccounts, "default accounts restored");
   assertEqual(next.expenseCategories, resetCategories, "default categories restored");

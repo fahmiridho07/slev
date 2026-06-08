@@ -58,6 +58,7 @@ test("normalizeStoredTabKey migrates legacy tab keys to money", () => {
   assertEqual(normalizeStoredTabKey("memory"), "money", "memory alias");
   assertEqual(normalizeStoredTabKey("overview"), "money", "overview alias");
   assertEqual(normalizeStoredTabKey("patterns"), "money", "patterns alias");
+  assertEqual(normalizeStoredTabKey("budget"), "money", "budget alias");
   assertEqual(normalizeStoredTabKey("money"), "money", "money key");
   assertEqual(normalizeStoredTabKey("home"), "home", "home key");
   assertEqual(normalizeStoredTabKey("legacy"), null, "unknown key");

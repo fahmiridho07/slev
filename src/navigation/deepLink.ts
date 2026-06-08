@@ -60,11 +60,14 @@ export function parseDeepLink(url: string): DeepLinkTarget | null {
 }
 
 export function isAppTabKey(value: string): value is AppTabKey {
-  return value === "home" || value === "money" || value === "budget" || value === "settings";
+  return value === "home" || value === "money" || value === "settings";
 }
 
 export function normalizeStoredTabKey(value: string): AppTabKey | null {
   if (value === "memory" || value === "overview" || value === "patterns") {
+    return "money";
+  }
+  if (value === "budget") {
     return "money";
   }
   return isAppTabKey(value) ? value : null;

@@ -9,7 +9,7 @@ import {
   groupMomentsByRecallRange,
   isWithinRange
 } from "../src/lib/analysis";
-import { buildCurrentMonthSummary, buildMonthlyBreakdown } from "../src/lib/financeEngine";
+import { buildMonthlyBreakdown } from "../src/lib/financeEngine";
 
 declare const process: {
   env: Record<string, string | undefined>;
@@ -28,14 +28,6 @@ test("month bucketing respects Jakarta local month boundaries", () => {
   const monthEndNight = new Date(2026, 4, 31, 23, 30).toISOString();
   const monthStartMorning = new Date(2026, 5, 1, 0, 30).toISOString();
 
-  const summary = buildCurrentMonthSummary(
-    [
-      moment({ amount: 50_000, occurredAt: monthEndNight }),
-      moment({ amount: 75_000, occurredAt: monthStartMorning })
-    ],
-    [],
-    referenceDate
-  );
   const breakdown = buildMonthlyBreakdown(
     [
       moment({ amount: 50_000, occurredAt: monthEndNight }),
@@ -45,7 +37,6 @@ test("month bucketing respects Jakarta local month boundaries", () => {
     referenceDate
   );
 
-  assertEqual(summary.expense, 75_000, "May 31 23:30 local stays out of June");
   assertEqual(breakdown.reduce((sum, row) => sum + row.amount, 0), 75_000, "June breakdown excludes prior month");
 });
 

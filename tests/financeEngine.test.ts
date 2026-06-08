@@ -1,6 +1,4 @@
 import {
-  buildAllocationPlan,
-  buildCurrentMonthSummary,
   buildMonthlyBreakdown,
   getDaysRemainingInMonth,
   getModeByCategory
@@ -12,8 +10,6 @@ import {
 } from "../src/lib/safeToSpend";
 import {
   EntryType,
-  MoneyAccount,
-  MonthlyPlan,
   SpendingContext,
   SpendingMoment
 } from "../src/features/spendingMemory.types";
@@ -30,27 +26,6 @@ type TestCase = {
 const tests: TestCase[] = [];
 const juneMidpoint = new Date("2026-06-15T08:00:00.000Z");
 
-test("summarizes current month with default and custom category modes", () => {
-  const summary = buildCurrentMonthSummary(
-    [
-      moment({ amount: 10_000_000, occurredAt: "2026-06-02T01:00:00.000Z", source: "Salary", type: "income" }),
-      moment({ amount: 1_500_000, context: "Bills", label: "Rent", occurredAt: "2026-06-03T01:00:00.000Z" }),
-      moment({ amount: 300_000, context: "Meal", occurredAt: "2026-06-04T01:00:00.000Z" }),
-      moment({ amount: 200_000, context: "Transport", occurredAt: "2026-06-05T01:00:00.000Z" }),
-      moment({ amount: 999_000, context: "Meal", occurredAt: "2026-05-20T01:00:00.000Z" })
-    ],
-    [{ category: "Transport", mode: "fixed" }],
-    juneMidpoint
-  );
-
-  assertEqual(summary.income, 10_000_000, "income should include only June income");
-  assertEqual(summary.fixedExpense, 1_700_000, "fixed expense should include Bills and custom-fixed Transport");
-  assertEqual(summary.flexibleExpense, 300_000, "flexible expense should include Meal");
-  assertEqual(summary.expense, 2_000_000, "expense should total fixed and flexible spending");
-  assertEqual(summary.net, 8_000_000, "net should subtract spending from income");
-  assertEqual(summary.topCategories[0]?.label, "Bills", "top category should be Bills");
-});
-
 test("breakdown groups current-month expenses and calculates shares", () => {
   const rows = buildMonthlyBreakdown(
     [
@@ -66,60 +41,6 @@ test("breakdown groups current-month expenses and calculates shares", () => {
   assertEqual(rows[0]?.label, "Meal", "largest row should be first");
   assertEqual(rows[0]?.amount, 600_000, "Meal amount should be grouped");
   assertEqual(rows[0]?.share, 0.6, "Meal share should be 60%");
-});
-
-test("allocation identifies pocket top-up need from income hub", () => {
-  const allocation = buildAllocationPlan({
-    accounts: [
-      account("BRI", "bank", true),
-      account("Jago", "bank", false)
-    ],
-    hasBalanceEvidence: true,
-    latestSnapshots: [
-      snapshot("BRI", 3_000_000, "2026-06-15T01:00:00.000Z"),
-      snapshot("Jago", 700_000, "2026-06-15T01:00:00.000Z")
-    ],
-    monthlyPlan: plan({
-      expectedIncome: 10_000_000,
-      fixedCosts: 2_000_000,
-      flexibleBudget: 2_000_000,
-      savingsTarget: 3_000_000
-    }),
-    monthlySummary: {
-      expense: 2_000_000,
-      fixedExpense: 1_700_000,
-      flexibleExpense: 300_000,
-      income: 10_000_000,
-      net: 8_000_000,
-      topCategories: []
-    },
-    today: juneMidpoint
-  });
-
-  assertEqual(allocation.flexibleRemaining, 1_700_000, "flexible remaining should subtract flexible spending");
-  assertEqual(allocation.dailyFlexibleRoom, 106_250, "daily room should divide remaining flexible by days left in June");
-  assertEqual(allocation.pocketTopUpNeed, 1_000_000, "pocket top-up should compare pocket balance to remaining flexible budget");
-  assertEqual(allocation.nextAction.kind, "top_up_pockets", "next action should recommend funding pockets");
-});
-
-test("allocation asks for a plan before giving budget guidance", () => {
-  const allocation = buildAllocationPlan({
-    accounts: [],
-    latestSnapshots: [],
-    monthlyPlan: null,
-    monthlySummary: {
-      expense: 0,
-      fixedExpense: 0,
-      flexibleExpense: 0,
-      income: 0,
-      net: 0,
-      topCategories: []
-    },
-    today: juneMidpoint
-  });
-
-  assertEqual(allocation.nextAction.kind, "set_plan", "missing plan should be the first action");
-  assertEqual(allocation.dailyFlexibleRoom, 0, "daily room should stay zero without a plan");
 });
 
 test("category modes preserve fixed defaults and custom overrides", () => {
@@ -262,21 +183,6 @@ function assertEqual(actual: unknown, expected: unknown, message: string): void 
   }
 }
 
-function account(
-  label: string,
-  kind: MoneyAccount["kind"],
-  isIncomeHub: boolean
-): MoneyAccount {
-  return {
-    createdAt: "2026-06-01T00:00:00.000Z",
-    id: `account-${label}`,
-    isIncomeHub,
-    kind,
-    label,
-    updatedAt: "2026-06-01T00:00:00.000Z"
-  };
-}
-
 function moment(input: {
   accountLabel?: string;
   amount: number;
@@ -298,38 +204,6 @@ function moment(input: {
     source: input.source,
     type: input.type ?? "expense",
     updatedAt: input.occurredAt
-  };
-}
-
-function snapshot(
-  accountLabel: string,
-  amount: number,
-  snapshotDate: string
-) {
-  return {
-    accountLabel,
-    amount,
-    createdAt: snapshotDate,
-    id: `snapshot-${accountLabel}-${snapshotDate}-${amount}`,
-    snapshotDate
-  };
-}
-
-function plan(input: {
-  expectedIncome: number;
-  fixedCosts: number;
-  flexibleBudget: number;
-  savingsTarget: number;
-}): MonthlyPlan {
-  return {
-    createdAt: "2026-06-01T00:00:00.000Z",
-    expectedIncome: input.expectedIncome,
-    fixedCosts: input.fixedCosts,
-    flexibleBudget: input.flexibleBudget,
-    id: "plan-june",
-    month: "2026-06",
-    savingsTarget: input.savingsTarget,
-    updatedAt: "2026-06-01T00:00:00.000Z"
   };
 }
 

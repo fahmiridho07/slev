@@ -20,10 +20,6 @@ const CORRUPT_STORAGE_CHECKS: Array<{ check: () => boolean; key: string }> = [
   { check: isTransfersStorageCorrupt, key: STORAGE_KEYS.transfers },
   { check: isBudgetLimitsStorageCorrupt, key: STORAGE_KEYS.budgetLimits },
   {
-    check: () => isKeyCorrupt(STORAGE_KEYS.monthlyPlans),
-    key: STORAGE_KEYS.monthlyPlans
-  },
-  {
     check: () => isKeyCorrupt(STORAGE_KEYS.manualTemplates),
     key: STORAGE_KEYS.manualTemplates
   },
