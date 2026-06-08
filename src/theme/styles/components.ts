@@ -617,6 +617,9 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     gap: 14,
     paddingBottom: 8
   },
+  purchaseSheetCard: {
+    minHeight: 300
+  },
   purchaseAmountField: {
     alignItems: "center",
     backgroundColor: colors.faint,

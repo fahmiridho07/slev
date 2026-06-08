@@ -8,13 +8,16 @@ import {
   Modal,
   Platform,
   Pressable,
+  type StyleProp,
   Text,
+  type ViewStyle,
   View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../hooks/useTheme";
 
 type BottomSheetProps = {
+  cardStyle?: StyleProp<ViewStyle>;
   children: React.ReactNode;
   onClose: () => void;
   title: string;
@@ -23,7 +26,7 @@ type BottomSheetProps = {
 
 const ANIM_DURATION = 220;
 
-function BottomSheetComponent({ children, onClose, title, visible }: BottomSheetProps) {
+function BottomSheetComponent({ cardStyle, children, onClose, title, visible }: BottomSheetProps) {
   const { componentStyles, reduceMotion, strings } = useTheme();
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, 12);
@@ -130,6 +133,7 @@ function BottomSheetComponent({ children, onClose, title, visible }: BottomSheet
             onLayout={handleCardLayout}
             style={[
               componentStyles.sheetCard,
+              cardStyle,
               { paddingBottom: bottomInset, transform: [{ translateY }] }
             ]}
           >

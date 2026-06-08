@@ -160,7 +160,12 @@ function SafeToSpendCardComponent() {
         </Pressable>
       </View>
 
-      <BottomSheet onClose={closePurchaseSheet} title={copy.sheetTitle} visible={sheetOpen}>
+      <BottomSheet
+        cardStyle={componentStyles.purchaseSheetCard}
+        onClose={closePurchaseSheet}
+        title={copy.sheetTitle}
+        visible={sheetOpen}
+      >
         <View style={componentStyles.sheetForm}>
           <ScrollView
             contentContainerStyle={componentStyles.purchaseSheet}
