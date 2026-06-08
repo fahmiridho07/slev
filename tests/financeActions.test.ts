@@ -98,6 +98,23 @@ test("saveCategory rejects duplicate default labels", async () => {
   }
 });
 
+test("saveAccount rejects duplicate default labels", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+  const { actions } = createTestHarness({ isReady: true });
+
+  const result = await actions.saveAccount({
+    label: "BRI",
+    kind: "bank",
+    isIncomeHub: false
+  });
+
+  assertEqual(result.ok, false, "duplicate account rejected");
+  if (!result.ok) {
+    assertEqual(result.validation?.field, "label", "label field flagged");
+  }
+});
+
 test("saveMoment persists expense and prepends to state", async () => {
   const driver = createMemoryDriver();
   setStorageDriver(driver);

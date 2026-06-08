@@ -58,6 +58,11 @@ export async function saveMoneyAccount(input: AccountInput): Promise<WriteResult
   });
   if (!account) return { data: current, persisted: true };
 
+  const duplicate = current.find(
+    (item) => item.id !== account.id && item.label.toLowerCase() === account.label.toLowerCase()
+  );
+  if (duplicate) return { data: current, persisted: false, reason: "duplicate" };
+
   const merged = [
     account,
     ...current.filter((item) => item.id !== account.id && item.label.toLowerCase() !== account.label.toLowerCase())

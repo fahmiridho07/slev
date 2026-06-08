@@ -40,7 +40,8 @@ export const enExtras: AppStringsExtras = {
       needName: "Add an account or wallet name.",
       saved: "{label} account saved.",
       keepOne: "Keep at least one account for balances.",
-      removed: "Account removed."
+      removed: "Account removed.",
+      duplicate: "An account with that name already exists."
     },
     category: {
       needName: "Add a category name.",

@@ -40,7 +40,8 @@ export const idExtras: AppStringsExtras = {
       needName: "Tambahkan nama akun atau dompet.",
       saved: "Akun {label} tersimpan.",
       keepOne: "Simpan minimal satu akun untuk saldo.",
-      removed: "Akun dihapus."
+      removed: "Akun dihapus.",
+      duplicate: "Akun dengan nama itu sudah ada."
     },
     category: {
       needName: "Tambahkan nama kategori.",

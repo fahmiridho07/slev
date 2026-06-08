@@ -150,6 +150,10 @@ export function getAccountRemovedToast(): string {
   return getRuntimeStrings().toasts.account.removed;
 }
 
+export function getAccountDuplicateToast(): string {
+  return getRuntimeStrings().toasts.account.duplicate;
+}
+
 export function getCategoryNeedNameToast(): string {
   return getRuntimeStrings().toasts.category.needName;
 }

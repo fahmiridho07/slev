@@ -4,6 +4,7 @@ import {
   saveMoneyAccount,
   saveMoneyTransfer
 } from "../src/services/accountRepository";
+import { listManualTemplates, saveManualTemplate } from "../src/services/manualFinanceRepository";
 import {
   listSpendingMoments,
   runSpendingMemoryV2Migration,
@@ -534,6 +535,123 @@ test("saveMoneyAccount cascades label rename across historical collections", asy
   const transfers = await listMoneyTransfers();
   assertEqual(transfers[0]?.fromAccount, "Daily Pocket", "transfer from-account cascaded");
   assertEqual(transfers[0]?.toAccount, "Jago", "transfer to-account unchanged");
+});
+
+test("saveMoneyAccount rejects rename to an existing account label", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+  const timestamp = "2026-06-01T00:00:00.000Z";
+
+  await writeJson(STORAGE_KEYS.accounts, [
+    {
+      id: "acct-pocket",
+      label: "Pocket",
+      kind: "wallet",
+      isIncomeHub: false,
+      tier: "tracked",
+      createdAt: timestamp,
+      updatedAt: timestamp
+    },
+    {
+      id: "acct-jago",
+      label: "Jago",
+      kind: "bank",
+      isIncomeHub: true,
+      tier: "tracked",
+      createdAt: timestamp,
+      updatedAt: timestamp
+    }
+  ]);
+
+  await saveSpendingMoment({
+    amount: 25_000,
+    label: "Snack",
+    context: "Food",
+    type: "expense",
+    accountLabel: "Pocket",
+    occurredAt: "2026-06-05T00:00:00.000Z"
+  });
+  await saveMoneyTransfer({
+    amount: 50_000,
+    fromAccount: "Pocket",
+    toAccount: "Jago",
+    occurredAt: "2026-06-06T00:00:00.000Z"
+  });
+  await saveManualTemplate({
+    type: "expense",
+    context: "Food",
+    accountLabel: "Pocket",
+    label: "Snack"
+  });
+
+  const result = await saveMoneyAccount({
+    id: "acct-pocket",
+    label: "jago",
+    kind: "wallet",
+    isIncomeHub: false,
+    tier: "tracked"
+  });
+
+  assertEqual(result.persisted, false, "duplicate rename rejected");
+  assertEqual(result.reason, "duplicate", "duplicate reason returned");
+
+  const accounts = await listMoneyAccounts();
+  assertEqual(
+    accounts.some((account) => account.id === "acct-jago" && account.label === "Jago"),
+    true,
+    "existing account kept"
+  );
+  assertEqual(
+    accounts.find((account) => account.id === "acct-pocket")?.label,
+    "Pocket",
+    "renamed account unchanged"
+  );
+
+  const moments = await listSpendingMoments();
+  assertEqual(moments[0]?.accountLabel, "Pocket", "moment not cascaded");
+
+  const transfers = await listMoneyTransfers();
+  assertEqual(transfers[0]?.fromAccount, "Pocket", "transfer not cascaded");
+
+  const templates = await listManualTemplates();
+  assertEqual(templates[0]?.accountLabel, "Pocket", "template not cascaded");
+});
+
+test("saveMoneyAccount rejects new account with existing label", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+  const timestamp = "2026-06-01T00:00:00.000Z";
+
+  await writeJson(STORAGE_KEYS.accounts, [
+    {
+      id: "acct-bri",
+      label: "BRI",
+      kind: "bank",
+      isIncomeHub: true,
+      tier: "tracked",
+      createdAt: timestamp,
+      updatedAt: timestamp
+    }
+  ]);
+
+  const before = await listMoneyAccounts();
+  const result = await saveMoneyAccount({
+    label: "bri",
+    kind: "wallet",
+    isIncomeHub: false,
+    tier: "tracked"
+  });
+
+  assertEqual(result.persisted, false, "duplicate create rejected");
+  assertEqual(result.reason, "duplicate", "duplicate reason returned");
+
+  const after = await listMoneyAccounts();
+  assertEqual(after.length, before.length, "account count unchanged");
+  assertEqual(
+    after.filter((account) => account.label.toLowerCase() === "bri").length,
+    1,
+    "only one BRI account"
+  );
 });
 
 test("account tier ephemeral persists through save and list", async () => {

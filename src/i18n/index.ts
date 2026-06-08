@@ -5,6 +5,7 @@ import type { AppStrings, Locale } from "./types";
 export { displayContext } from "./display";
 export { getCategoryDeleteMessage } from "./dialogs";
 export {
+  getAccountDuplicateToast,
   getAccountKeepOneToast,
   getAccountNeedNameToast,
   getAccountRemovedToast,

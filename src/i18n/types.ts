@@ -622,6 +622,7 @@ export type AppStrings = {
   };
   toasts: {
     account: {
+      duplicate: string;
       keepOne: string;
       needName: string;
       removed: string;

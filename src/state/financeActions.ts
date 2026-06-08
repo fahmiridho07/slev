@@ -25,6 +25,7 @@ import {
   saveRecurringBill
 } from "../services/recurringBillsRepository";
 import {
+  getAccountDuplicateToast,
   getAccountKeepOneToast,
 
   getAccountRemovedToast,
@@ -406,8 +407,11 @@ export function createFinanceActions(
       return { ok: false, validation: validationError };
     }
 
-    const { data: updated, persisted } = await saveMoneyAccount(input);
+    const { data: updated, persisted, reason } = await saveMoneyAccount(input);
     if (!persisted) {
+      if (reason === "duplicate") {
+        return { ok: false, validation: { field: "label", message: getAccountDuplicateToast() } };
+      }
       notifyWriteFailure(STORAGE_KEYS.accounts);
       return { ok: false };
     }
