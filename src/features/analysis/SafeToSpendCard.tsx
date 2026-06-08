@@ -166,43 +166,42 @@ function SafeToSpendCardComponent() {
           </View>
           <Text style={styles.pulseHeroLabel}>{copy.heroLabel}</Text>
         </View>
+
         <Text style={styles.pulseHeroValue}>{formatRupiah(safe.safeDaily)}</Text>
+        <Text style={styles.pulseHeroHint}>
+          {formatString(copy.daysLeft, { count: safe.daysLeft })}
+        </Text>
 
         {safe.spendableBalance < 0 ? (
-          <Text style={styles.settingCopy}>
+          <Text style={styles.heroWarningText}>
             {formatString(copy.billsExceedBalance, {
               amount: formatRupiah(Math.abs(safe.spendableBalance))
             })}
           </Text>
         ) : null}
 
-        {safe.billsReserve > 0 ? (
-          <Text style={styles.settingCopy}>
-            {formatString(copy.billsReserve, { amount: formatRupiah(safe.billsReserve) })}
-          </Text>
-        ) : null}
-
-        {safe.spendBuffer > 0 ? (
-          <Text style={styles.settingCopy}>
-            {formatString(copy.spendBuffer, { amount: formatRupiah(safe.spendBuffer) })}
-          </Text>
-        ) : null}
-
-        <View style={styles.repeatBlock}>
+        <View style={styles.heroBreakdown}>
           <Text style={styles.settingCopy}>
             {formatString(copy.balanceAnchor, { amount: formatRupiah(safe.effectiveBalance) })}
           </Text>
+          {safe.billsReserve > 0 ? (
+            <Text style={styles.settingCopy}>
+              {formatString(copy.billsReserve, { amount: formatRupiah(safe.billsReserve) })}
+            </Text>
+          ) : null}
+          {safe.spendBuffer > 0 ? (
+            <Text style={styles.settingCopy}>
+              {formatString(copy.spendBuffer, { amount: formatRupiah(safe.spendBuffer) })}
+            </Text>
+          ) : null}
+          <Text style={[styles.settingCopy, { color: getTypicalDailyToneColor() }]}>
+            {formatString(copy.typicalDaily, { amount: formatRupiah(safe.typicalDaily) })}
+          </Text>
+          {!safe.confident ? (
+            <Text style={styles.pulseHeroHint}>{copy.typicalDailyUncertain}</Text>
+          ) : null}
         </View>
 
-        <Text style={[styles.settingCopy, { color: getTypicalDailyToneColor() }]}>
-          {formatString(copy.typicalDaily, { amount: formatRupiah(safe.typicalDaily) })}
-        </Text>
-        {!safe.confident ? (
-          <Text style={styles.pulseHeroHint}>{copy.typicalDailyUncertain}</Text>
-        ) : null}
-        <Text style={styles.settingCopy}>
-          {formatString(copy.daysLeft, { count: safe.daysLeft })}
-        </Text>
         <Pressable
           accessibilityLabel={copy.checkPurchaseA11y}
           accessibilityRole="button"

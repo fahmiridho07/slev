@@ -636,6 +636,19 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     gap: 6,
     padding: 18
   },
+  heroBreakdown: {
+    borderTopColor: colors.borderMint,
+    borderTopWidth: 1,
+    gap: 6,
+    marginTop: 6,
+    paddingTop: 12
+  },
+  heroWarningText: {
+    color: colors.coral,
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 18
+  },
   heroPanelInfo: {
     backgroundColor: colors.surfaceInfo,
     borderColor: colors.borderInfo,
