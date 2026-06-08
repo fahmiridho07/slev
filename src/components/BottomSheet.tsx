@@ -3,7 +3,7 @@ import {
   Animated,
   Dimensions,
   Easing,
-  KeyboardAvoidingView,
+  Keyboard,
   type LayoutChangeEvent,
   Modal,
   Platform,
@@ -30,6 +30,7 @@ function BottomSheetComponent({ children, onClose, title, visible }: BottomSheet
 
   // Keep the Modal mounted while the exit animation plays.
   const [mounted, setMounted] = useState(visible);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
   const cardHeightRef = useRef(0);
@@ -39,6 +40,24 @@ function BottomSheetComponent({ children, onClose, title, visible }: BottomSheet
       setMounted(true);
     }
   }, [visible]);
+
+  // Drive keyboard avoidance from the Keyboard API directly. A transparent
+  // Modal on Android does NOT respond to adjustResize, so we lift the card
+  // ourselves instead of relying on KeyboardAvoidingView.
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardHeight(event.endCoordinates?.height ?? 0);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (!mounted) {
@@ -103,6 +122,11 @@ function BottomSheetComponent({ children, onClose, title, visible }: BottomSheet
     return null;
   }
 
+  // Lift the card so it always sits above the keyboard. Subtract the bottom
+  // safe-area inset because endCoordinates.height already spans to the screen edge.
+  const keyboardLift =
+    keyboardHeight > 0 ? Math.max(0, keyboardHeight - insets.bottom) : 0;
+
   return (
     <Modal
       accessibilityViewIsModal
@@ -120,11 +144,9 @@ function BottomSheetComponent({ children, onClose, title, visible }: BottomSheet
             style={componentStyles.sheetBackdropPressable}
           />
         </Animated.View>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          keyboardVerticalOffset={Platform.OS === "ios" ? bottomInset : 0}
+        <View
           pointerEvents="box-none"
-          style={componentStyles.sheetKeyboard}
+          style={[componentStyles.sheetKeyboard, { marginBottom: keyboardLift }]}
         >
           <Animated.View
             onLayout={handleCardLayout}
@@ -139,7 +161,7 @@ function BottomSheetComponent({ children, onClose, title, visible }: BottomSheet
             </Text>
             {children}
           </Animated.View>
-        </KeyboardAvoidingView>
+        </View>
       </View>
     </Modal>
   );
