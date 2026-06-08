@@ -1,5 +1,5 @@
-import { RecurringBill, SpendingMoment } from "../features/spendingMemory.types";
-import { BalanceAnchor } from "../services/balanceAnchorRepository";
+import { MoneyAccount, MoneyTransfer, RecurringBill, SpendingMoment } from "../features/spendingMemory.types";
+import { getTrackedTotalBalance } from "./accountLedger";
 import { safeTime } from "./dateRanges";
 import { getDaysRemainingInMonth } from "./financeEngine";
 import { getMonthlyBillsTotal } from "./recurringBills";
@@ -10,10 +10,10 @@ export type SafeToSpendResult = {
   billsReserve: number;
   confident: boolean;
   daysLeft: number;
-  effectiveBalance: number | null;
+  effectiveBalance: number;
   pace: SafeToSpendPace;
-  safeDaily: number | null;
-  spendableBalance: number | null;
+  safeDaily: number;
+  spendableBalance: number;
   typicalDaily: number;
 };
 
@@ -28,41 +28,37 @@ export type SimulatePurchaseResult = {
 export const RESERVED_BILL_CONTEXT = "Bills";
 
 /**
- * Returns anchor amount plus net income and expenses logged strictly after the anchor
- * and on or before the reference moment. Expenses with context {@link RESERVED_BILL_CONTEXT}
- * are skipped — they are treated as already reserved via {@link buildSafeToSpend}'s
- * billsReserve, not deducted again here.
+ * Returns the tracked-account total as of the reference moment. Bills-context expenses
+ * are excluded so they are not double-counted against {@link buildSafeToSpend}'s
+ * billsReserve; other expenses still reduce balance normally.
  */
 export function getEffectiveBalance({
-  balanceAnchor,
+  accounts,
   moments,
+  transfers,
   referenceDate = new Date()
 }: {
-  balanceAnchor: BalanceAnchor | null;
+  accounts: MoneyAccount[];
   moments: SpendingMoment[];
+  transfers: MoneyTransfer[];
   referenceDate?: Date;
-}): number | null {
-  if (balanceAnchor === null) {
-    return null;
-  }
-
-  const anchorTime = safeTime(balanceAnchor.setAt);
+}): number {
   const referenceTime = referenceDate.getTime();
-  let netSince = 0;
-
-  for (const moment of moments) {
+  const spendableMoments = moments.filter((moment) => {
     const momentTime = safeTime(moment.occurredAt);
-    if (momentTime <= anchorTime || momentTime > referenceTime) {
-      continue;
+    if (momentTime > referenceTime) {
+      return false;
     }
-    if (moment.type === "income") {
-      netSince += moment.amount;
-    } else if (moment.type === "expense" && moment.context !== RESERVED_BILL_CONTEXT) {
-      netSince -= moment.amount;
+    if (moment.type === "expense" && moment.context === RESERVED_BILL_CONTEXT) {
+      return false;
     }
-  }
+    return true;
+  });
+  const spendableTransfers = transfers.filter(
+    (transfer) => safeTime(transfer.occurredAt) <= referenceTime
+  );
 
-  return balanceAnchor.amount + netSince;
+  return getTrackedTotalBalance(accounts, spendableMoments, spendableTransfers);
 }
 
 export function getTypicalDailySpend(
@@ -117,35 +113,28 @@ export function getTypicalDailySpend(
  * what remains across days left in the month. {@link getEffectiveBalance} skips
  * {@link RESERVED_BILL_CONTEXT} expenses so logging a bill payment does not double-count
  * against the reserve. Other expense contexts still reduce effective balance normally.
- * Re-anchoring after a bill has left the account can over-reserve until the next update.
  */
 export function buildSafeToSpend({
-  balanceAnchor,
+  accounts,
   bills = [],
   moments,
+  transfers,
   referenceDate = new Date(),
   windowDays = 30
 }: {
-  balanceAnchor: BalanceAnchor | null;
+  accounts: MoneyAccount[];
   bills?: RecurringBill[];
   moments: SpendingMoment[];
+  transfers: MoneyTransfer[];
   referenceDate?: Date;
   windowDays?: number;
 }): SafeToSpendResult {
-  const effectiveBalance = getEffectiveBalance({
-    balanceAnchor,
-    moments,
-    referenceDate
-  });
+  const effectiveBalance = getEffectiveBalance({ accounts, moments, transfers, referenceDate });
   const billsReserve = getMonthlyBillsTotal(bills);
-  const spendableBalance =
-    effectiveBalance === null ? null : effectiveBalance - billsReserve;
+  const spendableBalance = effectiveBalance - billsReserve;
   const daysLeft = getDaysRemainingInMonth(referenceDate);
   const { amount: typicalDaily, confident } = getTypicalDailySpend(moments, referenceDate, windowDays);
-  const safeDaily =
-    effectiveBalance === null
-      ? null
-      : Math.max(0, Math.round((spendableBalance ?? 0) / daysLeft));
+  const safeDaily = Math.max(0, Math.round(spendableBalance / daysLeft));
 
   return {
     billsReserve,
@@ -166,8 +155,7 @@ export function simulatePurchase({
   amount: number;
   safe: SafeToSpendResult;
 }): SimulatePurchaseResult {
-  const baseBalance = safe.spendableBalance ?? 0;
-  const remainingBalance = baseBalance - amount;
+  const remainingBalance = safe.spendableBalance - amount;
   const newSafeDaily = Math.max(0, Math.round(remainingBalance / safe.daysLeft));
   const typicalNeed = safe.typicalDaily * safe.daysLeft;
   const coversTypicalDays = remainingBalance >= typicalNeed;

@@ -1,5 +1,4 @@
 import { getDefaultToastMessage } from "../i18n/toasts";
-import { BalanceAnchor } from "../services/balanceAnchorRepository";
 import {
   ExpenseCategory,
   ManualTemplate,
@@ -11,7 +10,6 @@ import {
 } from "../features/spendingMemory.types";
 
 export type FinanceState = {
-  balanceAnchor: BalanceAnchor | null;
   bootError: string | null;
   clearConfirmVisible: boolean;
   expenseCategories: ExpenseCategory[];
@@ -27,7 +25,6 @@ export type FinanceState = {
 };
 
 export const initialFinanceState: FinanceState = {
-  balanceAnchor: null,
   bootError: null,
   clearConfirmVisible: false,
   expenseCategories: [],
@@ -59,7 +56,6 @@ export type FinanceAction =
   | { type: "set_feedback"; feedback: PatternFeedback[] }
   | { type: "set_manual_templates"; manualTemplates: ManualTemplate[] }
   | { type: "set_recurring_bills"; recurringBills: RecurringBill[] }
-  | { type: "set_balance_anchor"; balanceAnchor: FinanceState["balanceAnchor"] }
   | { type: "set_accounts"; accounts: MoneyAccount[] }
   | { type: "set_transfers"; transfers: MoneyTransfer[] }
   | { type: "set_expense_categories"; expenseCategories: ExpenseCategory[] }
@@ -104,8 +100,6 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       return { ...state, manualTemplates: action.manualTemplates };
     case "set_recurring_bills":
       return { ...state, recurringBills: action.recurringBills };
-    case "set_balance_anchor":
-      return { ...state, balanceAnchor: action.balanceAnchor };
     case "set_accounts":
       return { ...state, accounts: action.accounts };
     case "set_transfers":
@@ -115,7 +109,6 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
     case "clear_all":
       return {
         ...state,
-        balanceAnchor: null,
         clearConfirmVisible: false,
         feedback: [],
         manualTemplates: [],

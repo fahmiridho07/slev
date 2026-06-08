@@ -193,17 +193,11 @@ export type AppStrings = {
       checkPurchaseA11y: string;
       daysLeft: string;
       heroLabel: string;
-      lastSetRelative: string;
       notAffordable: string;
       purchasePlaceholder: string;
-      saveBalanceA11y: string;
-      setBalancePlaceholder: string;
-      setBalancePrompt: string;
       sheetTitle: string;
       typicalDaily: string;
       typicalDailyUncertain: string;
-      updateBalance: string;
-      updateBalanceA11y: string;
     };
   };
   listHints: Record<ListActionsHintKey, ListHintCopy>;

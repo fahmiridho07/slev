@@ -7,6 +7,8 @@ import {
 } from "../src/lib/safeToSpend";
 import {
   EntryType,
+  MoneyAccount,
+  MoneyTransfer,
   SpendingContext,
   SpendingMoment
 } from "../src/features/spendingMemory.types";
@@ -22,6 +24,7 @@ type TestCase = {
 
 const tests: TestCase[] = [];
 const juneMidpoint = new Date("2026-06-15T08:00:00.000Z");
+const defaultOpeningSetAt = "2026-01-01T00:00:00.000Z";
 
 test("breakdown groups current-month expenses and calculates shares", () => {
   const rows = buildMonthlyBreakdown(
@@ -40,40 +43,80 @@ test("breakdown groups current-month expenses and calculates shares", () => {
   assertEqual(rows[0]?.share, 0.6, "Meal share should be 60%");
 });
 
-test("getEffectiveBalance returns null without balance anchor", () => {
+test("getEffectiveBalance returns tracked opening balance only", () => {
   const balance = getEffectiveBalance({
-    balanceAnchor: null,
+    accounts: [hubAccount(1_500_000)],
     moments: [],
+    transfers: [],
     referenceDate: juneMidpoint
   });
 
-  assertEqual(balance, null, "missing anchor should surface a set-balance state");
+  assertEqual(balance, 1_500_000, "opening balance only");
 });
 
-test("getEffectiveBalance totals anchor plus net moments since setAt", () => {
+test("getEffectiveBalance adds income moments on tracked accounts", () => {
   const balance = getEffectiveBalance({
-    balanceAnchor: balanceAnchor(1_000_000, "2026-06-10T12:00:00.000Z"),
+    accounts: [hubAccount(1_000_000)],
     moments: [
-      moment({ amount: 50_000, occurredAt: "2026-06-09T12:00:00.000Z" }),
-      moment({ amount: 100_000, accountLabel: "GoPay", occurredAt: "2026-06-12T12:00:00.000Z" }),
-      moment({ amount: 200_000, occurredAt: "2026-06-13T12:00:00.000Z", source: "Bonus", type: "income" })
+      moment({
+        amount: 200_000,
+        accountLabel: "BRI",
+        occurredAt: "2026-06-12T12:00:00.000Z",
+        source: "Bonus",
+        type: "income"
+      })
     ],
+    transfers: [],
     referenceDate: juneMidpoint
   });
 
-  assertEqual(balance, 1_100_000, "effective balance should add income and subtract expenses after setAt");
+  assertEqual(balance, 1_200_000, "income should increase tracked total");
+});
+
+test("getEffectiveBalance subtracts non-Bills expenses from tracked total", () => {
+  const balance = getEffectiveBalance({
+    accounts: [hubAccount(1_000_000)],
+    moments: [
+      moment({
+        amount: 150_000,
+        accountLabel: "BRI",
+        context: "Meal",
+        occurredAt: "2026-06-12T12:00:00.000Z"
+      })
+    ],
+    transfers: [],
+    referenceDate: juneMidpoint
+  });
+
+  assertEqual(balance, 850_000, "normal expense should reduce effective balance");
 });
 
 test("getEffectiveBalance ignores Bills-context expenses covered by the reserve", () => {
-  const anchor = balanceAnchor(1_000_000, "2026-06-10T12:00:00.000Z");
+  const accounts = [hubAccount(1_000_000)];
   const withBillsExpense = getEffectiveBalance({
-    balanceAnchor: anchor,
-    moments: [moment({ amount: 200_000, context: "Bills", occurredAt: "2026-06-12T12:00:00.000Z" })],
+    accounts,
+    moments: [
+      moment({
+        amount: 200_000,
+        accountLabel: "BRI",
+        context: "Bills",
+        occurredAt: "2026-06-12T12:00:00.000Z"
+      })
+    ],
+    transfers: [],
     referenceDate: juneMidpoint
   });
   const withMealExpense = getEffectiveBalance({
-    balanceAnchor: anchor,
-    moments: [moment({ amount: 200_000, context: "Meal", occurredAt: "2026-06-12T12:00:00.000Z" })],
+    accounts,
+    moments: [
+      moment({
+        amount: 200_000,
+        accountLabel: "BRI",
+        context: "Meal",
+        occurredAt: "2026-06-12T12:00:00.000Z"
+      })
+    ],
+    transfers: [],
     referenceDate: juneMidpoint
   });
 
@@ -81,27 +124,74 @@ test("getEffectiveBalance ignores Bills-context expenses covered by the reserve"
   assertEqual(withMealExpense, 800_000, "normal expense should reduce effective balance");
 });
 
+test("getEffectiveBalance ignores future-dated moments", () => {
+  const balance = getEffectiveBalance({
+    accounts: [hubAccount(1_000_000)],
+    moments: [
+      moment({
+        amount: 500_000,
+        accountLabel: "BRI",
+        occurredAt: "2026-06-20T12:00:00.000Z",
+        source: "Bonus",
+        type: "income"
+      })
+    ],
+    transfers: [],
+    referenceDate: juneMidpoint
+  });
+
+  assertEqual(balance, 1_000_000, "future moment should be ignored");
+});
+
+test("getEffectiveBalance excludes ephemeral destination from tracked total after transfer", () => {
+  const balance = getEffectiveBalance({
+    accounts: [hubAccount(1_000_000), ephemeralAccount("GoPay")],
+    moments: [],
+    transfers: [
+      moneyTransfer({
+        amount: 300_000,
+        fromAccount: "BRI",
+        toAccount: "GoPay",
+        occurredAt: "2026-06-10T12:00:00.000Z"
+      })
+    ],
+    referenceDate: juneMidpoint
+  });
+
+  assertEqual(balance, 700_000, "transfer to ephemeral account should lower tracked total");
+});
+
 test("buildSafeToSpend keeps safeDaily when a reserved Bills expense is logged", () => {
   const bills = [{ id: "b1", label: "Internet", amount: 200_000, active: true, createdAt: "x", updatedAt: "x" }];
-  const anchor = balanceAnchor(1_000_000, "2026-06-15T01:00:00.000Z");
+  const accounts = [hubAccount(1_000_000, "2026-06-15T01:00:00.000Z")];
   const daysLeft = getDaysRemainingInMonth(juneMidpoint);
 
   const withoutLoggedBill = buildSafeToSpend({
-    balanceAnchor: anchor,
+    accounts,
     bills,
     moments: [],
+    transfers: [],
     referenceDate: juneMidpoint
   });
   const withLoggedBill = buildSafeToSpend({
-    balanceAnchor: anchor,
+    accounts,
     bills,
-    moments: [moment({ amount: 200_000, context: "Bills", occurredAt: "2026-06-15T02:00:00.000Z" })],
+    moments: [
+      moment({
+        amount: 200_000,
+        accountLabel: "BRI",
+        context: "Bills",
+        occurredAt: "2026-06-15T02:00:00.000Z"
+      })
+    ],
+    transfers: [],
     referenceDate: juneMidpoint
   });
 
   assertEqual(withoutLoggedBill.billsReserve, 200_000, "reserve sums active recurring bills");
   assertEqual(withLoggedBill.billsReserve, 200_000, "reserve should stay the same when a bill is logged");
   assertEqual(withLoggedBill.effectiveBalance, 1_000_000, "logged Bills expense should not touch effective balance");
+  assertEqual(withLoggedBill.spendableBalance, withoutLoggedBill.spendableBalance, "Bills expense should not reduce spendable balance");
   assertEqual(withLoggedBill.safeDaily, withoutLoggedBill.safeDaily, "safeDaily should stay unchanged");
   assertEqual(withoutLoggedBill.safeDaily, Math.round(800_000 / daysLeft), "baseline safeDaily reserves bills once");
 });
@@ -109,12 +199,13 @@ test("buildSafeToSpend keeps safeDaily when a reserved Bills expense is logged",
 test("buildSafeToSpend computes safeDaily from effective balance and days left", () => {
   const daysLeft = getDaysRemainingInMonth(juneMidpoint);
   const safe = buildSafeToSpend({
-    balanceAnchor: balanceAnchor(1_600_000, "2026-06-15T01:00:00.000Z"),
+    accounts: [hubAccount(1_600_000, "2026-06-15T01:00:00.000Z")],
     moments: [],
+    transfers: [],
     referenceDate: juneMidpoint
   });
 
-  assertEqual(safe.effectiveBalance, 1_600_000, "effective balance should use the total anchor");
+  assertEqual(safe.effectiveBalance, 1_600_000, "effective balance should use tracked total");
   assertEqual(safe.billsReserve, 0, "no bills means zero reserve");
   assertEqual(safe.spendableBalance, 1_600_000, "spendable equals effective when reserve is zero");
   assertEqual(safe.daysLeft, daysLeft, "days left should default to month remainder");
@@ -124,12 +215,13 @@ test("buildSafeToSpend computes safeDaily from effective balance and days left",
 test("buildSafeToSpend subtracts bills reserve from safeDaily", () => {
   const daysLeft = getDaysRemainingInMonth(juneMidpoint);
   const safe = buildSafeToSpend({
-    balanceAnchor: balanceAnchor(1_600_000, "2026-06-15T01:00:00.000Z"),
+    accounts: [hubAccount(1_600_000, "2026-06-15T01:00:00.000Z")],
     bills: [
       { id: "b1", label: "Rent", amount: 600_000, active: true, createdAt: "x", updatedAt: "x" },
       { id: "b2", label: "Paused", amount: 200_000, active: false, createdAt: "x", updatedAt: "x" }
     ],
     moments: [],
+    transfers: [],
     referenceDate: juneMidpoint
   });
 
@@ -140,9 +232,10 @@ test("buildSafeToSpend subtracts bills reserve from safeDaily", () => {
 
 test("simulatePurchase respects bills reserve when judging affordability", () => {
   const safe = buildSafeToSpend({
-    balanceAnchor: balanceAnchor(1_000_000, "2026-06-15T01:00:00.000Z"),
+    accounts: [hubAccount(1_000_000, "2026-06-15T01:00:00.000Z")],
     bills: [{ id: "b1", label: "Bills", amount: 400_000, active: true, createdAt: "x", updatedAt: "x" }],
     moments: trailingExpenseMoments(50_000, 10, juneMidpoint),
+    transfers: [],
     referenceDate: juneMidpoint,
     windowDays: 10
   });
@@ -162,7 +255,8 @@ test("simulatePurchase respects bills reserve when judging affordability", () =>
 test("buildSafeToSpend classifies spending pace against safeDaily", () => {
   const daysLeft = getDaysRemainingInMonth(juneMidpoint);
   const baseArgs = {
-    balanceAnchor: balanceAnchor(1_000_000, "2026-06-15T08:00:00.000Z"),
+    accounts: [hubAccount(1_000_000, "2026-06-15T08:00:00.000Z")],
+    transfers: [] as MoneyTransfer[],
     referenceDate: juneMidpoint,
     windowDays: 10
   };
@@ -180,17 +274,10 @@ test("buildSafeToSpend classifies spending pace against safeDaily", () => {
     ...baseArgs,
     moments: trailingExpenseMoments(safeDaily, 10, juneMidpoint)
   });
-  const unknownSpend = buildSafeToSpend({
-    balanceAnchor: null,
-    moments: [],
-    referenceDate: juneMidpoint
-  });
 
   assertEqual(underSpend.pace, "under", "lower typical spend should pace under safeDaily");
   assertEqual(overSpend.pace, "over", "higher typical spend should pace over safeDaily");
   assertEqual(evenSpend.pace, "even", "matching typical spend should pace even");
-  assertEqual(unknownSpend.pace, "unknown", "missing balance should hide pace");
-  assertEqual(unknownSpend.safeDaily, null, "safeDaily should be null without balance evidence");
 });
 
 test("getTypicalDailySpend uses median so one spike does not inflate typical daily", () => {
@@ -244,8 +331,9 @@ test("getTypicalDailySpend confidence requires elapsed days and distinct expense
 
 test("simulatePurchase rejects purchases that break daily coverage even when balance remains", () => {
   const safe = buildSafeToSpend({
-    balanceAnchor: balanceAnchor(1_000_000, "2026-06-15T01:00:00.000Z"),
+    accounts: [hubAccount(1_000_000, "2026-06-15T01:00:00.000Z")],
     moments: trailingExpenseMoments(50_000, 10, juneMidpoint),
+    transfers: [],
     referenceDate: juneMidpoint,
     windowDays: 10
   });
@@ -335,8 +423,49 @@ function printable(value: unknown): string {
   return typeof value === "string" ? `"${value}"` : JSON.stringify(value);
 }
 
-function balanceAnchor(amount: number, setAt: string) {
-  return { amount, setAt };
+function hubAccount(openingBalance: number, openingSetAt = defaultOpeningSetAt): MoneyAccount {
+  return {
+    createdAt: defaultOpeningSetAt,
+    id: "hub-bri",
+    isIncomeHub: true,
+    kind: "bank",
+    label: "BRI",
+    openingBalance,
+    openingSetAt,
+    tier: "tracked",
+    updatedAt: defaultOpeningSetAt
+  };
+}
+
+function ephemeralAccount(label: string): MoneyAccount {
+  return {
+    createdAt: defaultOpeningSetAt,
+    id: `account-${label}`,
+    isIncomeHub: false,
+    kind: "wallet",
+    label,
+    openingBalance: 0,
+    openingSetAt: defaultOpeningSetAt,
+    tier: "ephemeral",
+    updatedAt: defaultOpeningSetAt
+  };
+}
+
+function moneyTransfer(input: {
+  amount: number;
+  fromAccount: string;
+  occurredAt: string;
+  toAccount: string;
+}): MoneyTransfer {
+  return {
+    amount: input.amount,
+    createdAt: input.occurredAt,
+    fromAccount: input.fromAccount,
+    id: `transfer-${input.occurredAt}-${input.amount}`,
+    occurredAt: input.occurredAt,
+    toAccount: input.toAccount,
+    updatedAt: input.occurredAt
+  };
 }
 
 function expenseOnDay(referenceDate: Date, daysBeforeEnd: number, amount: number): SpendingMoment {

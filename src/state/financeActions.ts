@@ -3,10 +3,7 @@ import { hapticSelection, hapticSuccess } from "../lib/haptics";
 import { getCaptureValidationError, getShortcutValidationError } from "../features/capture/captureValidation";
 import { CaptureFormValues } from "../features/capture/types";
 import { getMemoryEditValidationError } from "../features/memory/memoryValidation";
-import {
-  getAccountValidationError,
-  getBalanceAnchorValidationError
-} from "../features/budget/budgetValidation";
+import { getAccountValidationError } from "../features/budget/budgetValidation";
 import { getImportJsonValidationError } from "../features/settings/dataValidation";
 import { getBillValidationError, getCategoryValidationError } from "../features/settings/settingsValidation";
 import { FormActionResult } from "../lib/formValidation";
@@ -35,7 +32,6 @@ import {
 
   getBackupReadyToast,
 
-  getBalanceSavedToast,
   getBootFailedToast,
   getBillRemovedToast,
   getBillSavedToast,
@@ -80,11 +76,7 @@ import {
   listExpenseCategories,
   saveExpenseCategory
 } from "../services/categoryRepository";
-import {
-  clearBalanceAnchor,
-  getBalanceAnchor,
-  saveBalanceAnchor
-} from "../services/balanceAnchorRepository";
+import { clearBalanceAnchor } from "../services/balanceAnchorRepository";
 import {
   clearManualFinance,
   deleteManualTemplate,
@@ -126,7 +118,6 @@ export function createFinanceActions(
       storedFeedback,
       storedManualTemplates,
       storedRecurringBills,
-      storedBalanceAnchor,
       storedAccounts,
       storedTransfers,
       storedExpenseCategories
@@ -135,7 +126,6 @@ export function createFinanceActions(
       listPatternFeedback(),
       listManualTemplates(),
       listRecurringBills(),
-      getBalanceAnchor(),
       listMoneyAccounts(),
       listMoneyTransfers(),
       listExpenseCategories()
@@ -148,7 +138,6 @@ export function createFinanceActions(
         feedback: storedFeedback,
         manualTemplates: storedManualTemplates,
         recurringBills: storedRecurringBills,
-        balanceAnchor: storedBalanceAnchor,
         accounts: storedAccounts,
         transfers: storedTransfers,
         expenseCategories: storedExpenseCategories
@@ -506,29 +495,6 @@ export function createFinanceActions(
     setMessage(getBillRemovedToast());
   }
 
-  async function setBalanceAnchor(input: {
-    amount: string;
-  }): Promise<FormActionResult<"accountLabel" | "amount">> {
-    const validationError = getBalanceAnchorValidationError(input.amount);
-    if (validationError) {
-      return { ok: false, validation: validationError };
-    }
-
-    const amount = parseAmountInput(input.amount);
-    if (!amount) {
-      return { ok: false };
-    }
-
-    const { data: updated, persisted } = await saveBalanceAnchor(amount);
-    if (!persisted) {
-      notifyWriteFailure(STORAGE_KEYS.balanceAnchor);
-      return { ok: false };
-    }
-    dispatch({ type: "set_balance_anchor", balanceAnchor: updated });
-    notifySuccess(getBalanceSavedToast());
-    return { ok: true };
-  }
-
   async function answerPattern(patternId: string, response: PatternFeedbackResponse) {
     const { data: updated, persisted } = await savePatternFeedback(patternId, response);
     if (!persisted) {
@@ -642,7 +608,6 @@ export function createFinanceActions(
     removeTransfer,
     saveAccount,
     saveAsTemplate,
-    setBalanceAnchor,
     saveCategory,
     saveRecurringBill: saveRecurringBillAction,
     saveMoment,
