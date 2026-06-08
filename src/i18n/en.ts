@@ -181,7 +181,14 @@ export const en: AppStrings = {
     },
     importTitle: "Import backup?",
     importBody: "Importing replaces your current local finance data with the pasted backup.",
-    importConfirm: "Import"
+    importConfirm: "Import",
+    payday: {
+      label: "Payday",
+      helper:
+        "Set the day you get paid (1–31) so 'safe to spend' counts down to payday instead of month-end. Leave empty to use month-end.",
+      placeholder: "Day (1–31), e.g. 25",
+      a11y: "Payday day of month"
+    }
   },
   listHints: {
     memory: {
@@ -220,7 +227,8 @@ export const en: AppStrings = {
       purchasePlaceholder: "Purchase amount",
       purchaseHint: "Enter an amount to see how it affects your daily allowance.",
       sheetContext: "Safe daily {amount} · {days} days left",
-      affordable: "Yes. After this, your safe daily spend is {amount} until payday.",
+      affordableUntilPayday: "Yes. After this, your safe daily spend is {amount} until payday.",
+      affordableUntilMonthEnd: "Yes. After this, your safe daily spend is {amount} until month-end.",
       notAffordable: "Not quite safe — this would eat into your daily allowance. Short by {amount}."
     }
   },

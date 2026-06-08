@@ -138,7 +138,11 @@ export async function getPaydayDayPreference(): Promise<number | null> {
   return Number.isFinite(parsed) && parsed >= 1 && parsed <= 31 ? parsed : null;
 }
 
-export async function setPaydayDayPreference(day: number): Promise<void> {
+export async function setPaydayDayPreference(day: number | null): Promise<void> {
+  if (day === null) {
+    await writeRaw(PAYDAY_DAY_KEY, "");
+    return;
+  }
   const clamped = Math.min(Math.max(Math.round(day), 1), 31);
   await writeRaw(PAYDAY_DAY_KEY, String(clamped));
 }

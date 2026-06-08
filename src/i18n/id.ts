@@ -181,7 +181,14 @@ export const id: AppStrings = {
     },
     importTitle: "Impor cadangan?",
     importBody: "Impor akan mengganti data keuangan lokal saat ini dengan cadangan yang ditempel.",
-    importConfirm: "Impor"
+    importConfirm: "Impor",
+    payday: {
+      label: "Tanggal gajian",
+      helper:
+        "Atur tanggal kamu gajian (1–31) biar 'aman dibelanjain' dihitung sampai gajian, bukan akhir bulan. Kosongkan untuk pakai akhir bulan.",
+      placeholder: "Tanggal (1–31), mis. 25",
+      a11y: "Tanggal gajian"
+    }
   },
   listHints: {
     memory: {
@@ -220,7 +227,8 @@ export const id: AppStrings = {
       purchasePlaceholder: "Harga barang",
       purchaseHint: "Masukkan harga buat lihat dampaknya ke jatah harianmu.",
       sheetContext: "Aman harian {amount} · sisa {days} hari",
-      affordable: "Bisa. Setelah ini, aman harianmu jadi {amount} sampai gajian.",
+      affordableUntilPayday: "Bisa. Setelah ini, aman harianmu jadi {amount} sampai gajian.",
+      affordableUntilMonthEnd: "Bisa. Setelah ini, aman harianmu jadi {amount} sampai akhir bulan.",
       notAffordable: "Belum aman — bakal makan jatah harianmu. Kurang {amount}."
     }
   },

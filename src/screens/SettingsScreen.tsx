@@ -46,8 +46,10 @@ function SettingsScreenComponent({
     componentStyles,
     locale,
     reduceMotionPreference,
+    paydayDayOfMonth,
     setColorScheme,
     setLocale,
+    setPaydayDay,
     setReduceMotionPreference,
     strings,
     styles
@@ -143,11 +145,35 @@ function SettingsScreenComponent({
 
     if (activeTab === "bills") {
       return (
-        <RecurringBillsPanel
-          recurringBills={recurringBills}
-          onDeleteBill={(id) => void actions.removeRecurringBill(id)}
-          onSaveBill={(input) => actions.saveRecurringBill(input)}
-        />
+        <View style={styles.cardStack}>
+          <View style={styles.capturePanel}>
+            <Text style={componentStyles.microLabel}>{strings.settings.payday.label}</Text>
+            <Text style={styles.settingCopy}>{strings.settings.payday.helper}</Text>
+            <TextInput
+              accessibilityLabel={strings.settings.payday.a11y}
+              keyboardType="number-pad"
+              maxLength={2}
+              onChangeText={(text) => {
+                const digits = text.replace(/[^0-9]/g, "");
+                if (digits.length === 0) {
+                  setPaydayDay(null);
+                  return;
+                }
+                const next = Math.min(31, Math.max(1, parseInt(digits, 10)));
+                setPaydayDay(next);
+              }}
+              placeholder={strings.settings.payday.placeholder}
+              placeholderTextColor={colors.muted}
+              style={styles.input}
+              value={paydayDayOfMonth != null ? String(paydayDayOfMonth) : ""}
+            />
+          </View>
+          <RecurringBillsPanel
+            recurringBills={recurringBills}
+            onDeleteBill={(id) => void actions.removeRecurringBill(id)}
+            onSaveBill={(input) => actions.saveRecurringBill(input)}
+          />
+        </View>
       );
     }
 
@@ -392,10 +418,12 @@ function SettingsScreenComponent({
     importFieldError,
     pickImportFile,
     locale,
+    paydayDayOfMonth,
     recurringBills,
     reduceMotionPreference,
     setColorScheme,
     setLocale,
+    setPaydayDay,
     setReduceMotionPreference,
     showCategoriesHint,
     strings,

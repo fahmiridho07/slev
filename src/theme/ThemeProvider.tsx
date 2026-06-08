@@ -7,10 +7,12 @@ import {
   detectDeviceLocale,
   getColorSchemePreference,
   getLocalePreference,
+  getPaydayDayPreference,
   getReduceMotionPreference,
   type ReduceMotionPreference,
   setColorSchemePreference,
   setLocalePreference,
+  setPaydayDayPreference as persistPaydayDayPreference,
   setReduceMotionPreference as persistReduceMotionPreference
 } from "../services/uiPreferences";
 import { createScreenStyles } from "./styles/app";
@@ -26,8 +28,10 @@ export type AppTheme = {
   reduceMotion: boolean;
   reduceMotionPreference: ReduceMotionPreference;
   resolvedScheme: "dark" | "light";
+  paydayDayOfMonth: number | null;
   setColorScheme: (scheme: ColorScheme) => void;
   setLocale: (locale: Locale) => void;
+  setPaydayDay: (day: number | null) => void;
   setReduceMotionPreference: (preference: ReduceMotionPreference) => void;
   shadows: ShadowTokens;
   strings: AppStrings;
@@ -89,24 +93,28 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [reduceMotionPreference, setReduceMotionPreferenceState] =
     useState<ReduceMotionPreference>("system");
   const [systemReduceMotion, setSystemReduceMotion] = useState(false);
+  const [paydayDayOfMonth, setPaydayDayState] = useState<number | null>(null);
   const [prefsReady, setPrefsReady] = useState(false);
   const [systemScheme, setSystemScheme] = useState<"dark" | "light">(resolveScheme("system"));
 
   useEffect(() => {
     let active = true;
     void (async () => {
-      const [storedScheme, storedLocale, storedReduceMotion, reduceMotionEnabled] = await Promise.all([
-        getColorSchemePreference(),
-        getLocalePreference(),
-        getReduceMotionPreference(),
-        AccessibilityInfo.isReduceMotionEnabled()
-      ]);
+      const [storedScheme, storedLocale, storedReduceMotion, storedPayday, reduceMotionEnabled] =
+        await Promise.all([
+          getColorSchemePreference(),
+          getLocalePreference(),
+          getReduceMotionPreference(),
+          getPaydayDayPreference(),
+          AccessibilityInfo.isReduceMotionEnabled()
+        ]);
       if (!active) {
         return;
       }
       setColorSchemeState(storedScheme);
       setLocaleState(storedLocale);
       setReduceMotionPreferenceState(storedReduceMotion);
+      setPaydayDayState(storedPayday);
       setSystemReduceMotion(reduceMotionEnabled);
       setRuntimeLocale(storedLocale);
       setSystemScheme(resolveScheme(storedScheme));
@@ -152,6 +160,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     void persistReduceMotionPreference(preference);
   }, []);
 
+  const setPaydayDay = useCallback((day: number | null) => {
+    setPaydayDayState(day);
+    void persistPaydayDayPreference(day);
+  }, []);
+
   useEffect(() => {
     setRuntimeLocale(locale);
   }, [locale]);
@@ -168,11 +181,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       componentStyles,
       isDark,
       locale,
+      paydayDayOfMonth,
       reduceMotion,
       reduceMotionPreference,
       resolvedScheme,
       setColorScheme,
       setLocale,
+      setPaydayDay,
       setReduceMotionPreference,
       shadows,
       strings,
@@ -182,11 +197,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     colorScheme,
     isDark,
     locale,
+    paydayDayOfMonth,
     reduceMotion,
     reduceMotionPreference,
     resolvedScheme,
     setColorScheme,
     setLocale,
+    setPaydayDay,
     setReduceMotionPreference
   ]);
 

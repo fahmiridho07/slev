@@ -19,7 +19,7 @@ import { shallowEqual, useFinanceSelector } from "../../state/useFinance";
 import { useTheme } from "../../hooks/useTheme";
 
 function SafeToSpendCardComponent() {
-  const { colors, componentStyles, reduceMotion, strings, styles } = useTheme();
+  const { colors, componentStyles, paydayDayOfMonth, reduceMotion, strings, styles } = useTheme();
   const copy = strings.home.safeToSpend;
   const { accounts, moments, recurringBills, transfers } = useFinanceSelector(
     (state) => ({
@@ -40,9 +40,10 @@ function SafeToSpendCardComponent() {
         bills: recurringBills,
         moments,
         transfers,
-        referenceDate: new Date()
+        referenceDate: new Date(),
+        paydayDayOfMonth: paydayDayOfMonth ?? undefined
       }),
-    [accounts, moments, recurringBills, transfers]
+    [accounts, moments, paydayDayOfMonth, recurringBills, transfers]
   );
 
   const purchaseAmount = parseAmountInput(purchaseDraft);
@@ -80,7 +81,10 @@ function SafeToSpendCardComponent() {
     purchaseSimulation == null
       ? copy.purchaseHint
       : purchaseSimulation.affordable
-        ? formatString(copy.affordable, { amount: formatRupiah(purchaseSimulation.newSafeDaily) })
+        ? formatString(
+            paydayDayOfMonth != null ? copy.affordableUntilPayday : copy.affordableUntilMonthEnd,
+            { amount: formatRupiah(purchaseSimulation.newSafeDaily) }
+          )
         : formatString(copy.notAffordable, { amount: formatRupiah(purchaseShortfall ?? 0) });
 
   const showMeter = purchaseSimulation != null && safe.safeDaily > 0;

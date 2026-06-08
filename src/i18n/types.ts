@@ -185,7 +185,8 @@ export type AppStrings = {
   };
   home: {
     safeToSpend: {
-      affordable: string;
+      affordableUntilMonthEnd: string;
+      affordableUntilPayday: string;
       balanceAnchor: string;
       billsExceedBalance: string;
       billsReserve: string;
@@ -401,6 +402,12 @@ export type AppStrings = {
     importBody: string;
     importConfirm: string;
     importTitle: string;
+    payday: {
+      a11y: string;
+      helper: string;
+      label: string;
+      placeholder: string;
+    };
   };
   storage: {
     collections: Record<string, string>;
