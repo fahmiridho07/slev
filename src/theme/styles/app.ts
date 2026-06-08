@@ -563,6 +563,30 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     paddingHorizontal: 10,
     paddingVertical: 5
   },
+  monthSummaryGrid: {
+    flexDirection: "row",
+    gap: 10
+  },
+  monthSummaryCell: {
+    flex: 1,
+    gap: 4,
+    minWidth: 0
+  },
+  monthSummaryLabel: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 16
+  },
+  monthSummaryValue: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
+  monthSummaryValueNegative: {
+    color: colors.coral
+  },
   monthDeltaText: {
     fontSize: 12,
     fontWeight: "700"

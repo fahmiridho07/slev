@@ -180,6 +180,7 @@ export const idExtras: AppStringsExtras = {
     cashflow: {
       empty: "Arus kas muncul setelah ada entri pemasukan atau pengeluaran.",
       net: "Bersih {amount}",
+      netLabel: "Bersih",
       income: "Pemasukan",
       expense: "Pengeluaran"
     },

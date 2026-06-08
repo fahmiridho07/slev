@@ -8,11 +8,11 @@ import {
   ListActionsOnboardingTip,
   MomentRow,
   MonthPeriodPicker,
-  SectionHeader,
-  SegmentedControl
+  SectionHeader
 } from "../components";
-import { BreakdownPanel } from "../features/analysis/BreakdownPanel";
-import { CashflowPanel } from "../features/analysis/CashflowPanel";
+import { ExpenseCategorySummary } from "../features/analysis/ExpenseCategorySummary";
+import { IncomeSourcesAccordion } from "../features/analysis/IncomeSourcesAccordion";
+import { MonthSummaryCard } from "../features/analysis/MonthSummaryCard";
 import { useListActionsHint } from "../hooks/useListActionsHint";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { MomentEditForm } from "../features/memory/MomentEditForm";
@@ -28,8 +28,6 @@ import { AppNavigation } from "../navigation/appNavigation";
 import { formatString } from "../i18n";
 import { useActions, useFinanceSelector } from "../state/useFinance";
 import { useTheme } from "../hooks/useTheme";
-
-type TrackerView = "cashflow" | "expense" | "income";
 
 type MoneyMomentItemProps = {
   moment: SpendingMoment;
@@ -78,7 +76,6 @@ function MoneyScreenComponent({
   const { refreshControl } = usePullToRefresh();
   const actions = useActions();
   const [breakdownMonthOffset, setBreakdownMonthOffset] = useState(0);
-  const [trackerView, setTrackerView] = useState<TrackerView>("cashflow");
   const [editingMoment, setEditingMoment] = useState<SpendingMoment | null>(null);
   const [query, setQuery] = useState("");
   const [pendingDeleteMoment, setPendingDeleteMoment] = useState<SpendingMoment | null>(null);
@@ -142,9 +139,9 @@ function MoneyScreenComponent({
     [styles.groupTitle, styles.memoryGroup, styles.memorySectionLead]
   );
 
-  const trackerSection = useMemo(
+  const summarySection = useMemo(
     () => (
-      <View style={styles.analyticsBlock}>
+      <View style={styles.cardStack}>
         <MonthPeriodPicker
           canGoBack={breakdownMonthOffset > earliestMonthOffset}
           canGoForward={!isCurrentMonthOffset(breakdownMonthOffset)}
@@ -152,56 +149,18 @@ function MoneyScreenComponent({
           onNext={() => setBreakdownMonthOffset(breakdownMonthOffset + 1)}
           onPrevious={() => setBreakdownMonthOffset(breakdownMonthOffset - 1)}
         />
-        <SegmentedControl
-          stretch
-          options={[
-            { label: strings.patterns.tracker.cashflow, value: "cashflow" },
-            { label: strings.common.expense, value: "expense" },
-            { label: strings.common.income, value: "income" }
-          ]}
-          selected={trackerView}
-          onSelect={setTrackerView}
-        />
-        {trackerView === "cashflow" && (
-          <View style={styles.analyticsBlock}>
-            <SectionHeader title={strings.patterns.trends.weeklyCashflow} />
-            <CashflowPanel moments={moments} referenceDate={breakdownReferenceDate} />
-          </View>
-        )}
-        {trackerView === "expense" && (
-          <BreakdownPanel
-            breakdownType="expense"
-            moments={moments}
-            monthOffset={breakdownMonthOffset}
-          />
-        )}
-        {trackerView === "income" && (
-          <BreakdownPanel
-            breakdownType="income"
-            moments={moments}
-            monthOffset={breakdownMonthOffset}
-          />
-        )}
+        <MonthSummaryCard moments={moments} monthOffset={breakdownMonthOffset} />
+        <ExpenseCategorySummary moments={moments} monthOffset={breakdownMonthOffset} />
+        <IncomeSourcesAccordion moments={moments} monthOffset={breakdownMonthOffset} />
       </View>
     ),
-    [
-      breakdownMonthOffset,
-      breakdownReferenceDate,
-      earliestMonthOffset,
-      moments,
-      strings.common.expense,
-      strings.common.income,
-      strings.patterns.tracker.cashflow,
-      strings.patterns.trends.weeklyCashflow,
-      styles.analyticsBlock,
-      trackerView
-    ]
+    [breakdownMonthOffset, breakdownReferenceDate, earliestMonthOffset, moments, styles.cardStack]
   );
 
   const listHeader = useMemo(
     () => (
       <View style={styles.cardStack}>
-        {trackerSection}
+        {summarySection}
         <SectionHeader title={strings.activity.sectionTitle} />
         {showListHint && (
           <ListActionsOnboardingTip
@@ -232,7 +191,7 @@ function MoneyScreenComponent({
       strings.listHints.memory,
       styles.cardStack,
       styles.input,
-      trackerSection
+      summarySection
     ]
   );
 

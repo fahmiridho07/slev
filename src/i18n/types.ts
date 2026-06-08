@@ -251,6 +251,7 @@ export type AppStrings = {
       expense: string;
       income: string;
       net: string;
+      netLabel: string;
     };
     chart: {
       a11ySummary: string;
