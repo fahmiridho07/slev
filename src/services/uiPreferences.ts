@@ -8,6 +8,7 @@ const LOCALE_KEY = "slev_ui_locale";
 const NAV_STATE_KEY = "slev_ui_nav_state";
 const MEMORY_LIST_HINT_KEY = "slev_ui_memory_list_hint_seen";
 const REDUCE_MOTION_KEY = "slev_ui_reduce_motion";
+const PAYDAY_DAY_KEY = "slev_finance_payday_day";
 
 export type ReduceMotionPreference = "off" | "on" | "system";
 
@@ -128,4 +129,16 @@ export async function getNavStatePreference(): Promise<StoredNavState | null> {
 
 export async function setNavStatePreference(state: StoredNavState): Promise<void> {
   await writeRaw(NAV_STATE_KEY, JSON.stringify(state));
+}
+
+export async function getPaydayDayPreference(): Promise<number | null> {
+  const stored = await readRaw(PAYDAY_DAY_KEY);
+  if (stored === null) return null;
+  const parsed = Number.parseInt(stored, 10);
+  return Number.isFinite(parsed) && parsed >= 1 && parsed <= 31 ? parsed : null;
+}
+
+export async function setPaydayDayPreference(day: number): Promise<void> {
+  const clamped = Math.min(Math.max(Math.round(day), 1), 31);
+  await writeRaw(PAYDAY_DAY_KEY, String(clamped));
 }

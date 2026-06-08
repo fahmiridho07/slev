@@ -1,7 +1,7 @@
 import { MoneyAccount, MoneyTransfer, RecurringBill, SpendingMoment } from "../features/spendingMemory.types";
 import { getTrackedTotalBalance } from "./accountLedger";
 import { safeTime } from "./dateRanges";
-import { getDaysRemainingInMonth } from "./financeEngine";
+import { getDaysRemainingInMonth, getDaysUntilNextPayday } from "./financeEngine";
 import { getMonthlyBillsTotal } from "./recurringBills";
 
 export type SafeToSpendPace = "under" | "over" | "even" | "unknown";
@@ -120,7 +120,8 @@ export function buildSafeToSpend({
   moments,
   transfers,
   referenceDate = new Date(),
-  windowDays = 30
+  windowDays = 30,
+  paydayDayOfMonth
 }: {
   accounts: MoneyAccount[];
   bills?: RecurringBill[];
@@ -128,11 +129,15 @@ export function buildSafeToSpend({
   transfers: MoneyTransfer[];
   referenceDate?: Date;
   windowDays?: number;
+  paydayDayOfMonth?: number;
 }): SafeToSpendResult {
   const effectiveBalance = getEffectiveBalance({ accounts, moments, transfers, referenceDate });
   const billsReserve = getMonthlyBillsTotal(bills);
   const spendableBalance = effectiveBalance - billsReserve;
-  const daysLeft = getDaysRemainingInMonth(referenceDate);
+  const daysLeft =
+    paydayDayOfMonth != null
+      ? getDaysUntilNextPayday(referenceDate, paydayDayOfMonth)
+      : getDaysRemainingInMonth(referenceDate);
   const { amount: typicalDaily, confident } = getTypicalDailySpend(moments, referenceDate, windowDays);
   const safeDaily = Math.max(0, Math.round(spendableBalance / daysLeft));
 

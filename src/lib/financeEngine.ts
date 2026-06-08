@@ -44,3 +44,19 @@ export function getDaysRemainingInMonth(date: Date): number {
   const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   return Math.max(1, daysInMonth - currentDay + 1);
 }
+
+export function getDaysUntilNextPayday(date: Date, paydayDayOfMonth: number): number {
+  const day = Math.min(Math.max(Math.round(paydayDayOfMonth), 1), 31);
+  const startOfToday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const paydayInMonth = (year: number, monthIndex: number): Date => {
+    const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+    return new Date(year, monthIndex, Math.min(day, lastDay));
+  };
+  let next = paydayInMonth(startOfToday.getFullYear(), startOfToday.getMonth());
+  if (next.getTime() <= startOfToday.getTime()) {
+    next = paydayInMonth(startOfToday.getFullYear(), startOfToday.getMonth() + 1);
+  }
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const days = Math.round((next.getTime() - startOfToday.getTime()) / msPerDay);
+  return Math.max(1, days);
+}
