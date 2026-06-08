@@ -3,6 +3,7 @@ import React, { memo, useMemo, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { BottomSheet } from "../../components";
 import { formatString } from "../../i18n";
+import { formatRelativeTimeFromNow } from "../../i18n/localeDate";
 import { formatAmountInput, parseAmountInput } from "../../lib/formatMoney";
 import { buildSafeToSpend, simulatePurchase } from "../../lib/safeToSpend";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
@@ -16,35 +17,27 @@ function SafeToSpendCardComponent() {
   const { colors, componentStyles, strings, styles } = useTheme();
   const copy = strings.home.safeToSpend;
   const actions = useActions();
-  const { accounts, balanceSnapshots, moments, transfers } = useFinanceSelector(
+  const { balanceAnchor, moments } = useFinanceSelector(
     (state) => ({
-      accounts: state.accounts,
-      balanceSnapshots: state.balanceSnapshots,
-      moments: state.moments,
-      transfers: state.transfers
+      balanceAnchor: state.balanceAnchor,
+      moments: state.moments
     }),
     shallowEqual
   );
   const [balanceDraft, setBalanceDraft] = useState("");
   const [balanceFieldError, setBalanceFieldError] = useState<FormValidationError<BalanceFieldError> | null>(null);
+  const [balanceEditOpen, setBalanceEditOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [purchaseDraft, setPurchaseDraft] = useState("");
-
-  const defaultAccountLabel = useMemo(() => {
-    const incomeHub = accounts.find((account) => account.isIncomeHub);
-    return incomeHub?.label ?? accounts[0]?.label ?? "";
-  }, [accounts]);
 
   const safe = useMemo(
     () =>
       buildSafeToSpend({
-        accounts,
-        balanceSnapshots,
+        balanceAnchor,
         moments,
-        referenceDate: new Date(),
-        transfers
+        referenceDate: new Date()
       }),
-    [accounts, balanceSnapshots, moments, transfers]
+    [balanceAnchor, moments]
   );
 
   const purchaseAmount = parseAmountInput(purchaseDraft);
@@ -70,11 +63,20 @@ function SafeToSpendCardComponent() {
     return colors.muted;
   }
 
+  function openBalanceEdit() {
+    setBalanceDraft(formatAmountInput(String(safe.effectiveBalance ?? 0)));
+    setBalanceFieldError(null);
+    setBalanceEditOpen(true);
+  }
+
+  function closeBalanceEdit() {
+    setBalanceEditOpen(false);
+    setBalanceDraft("");
+    setBalanceFieldError(null);
+  }
+
   async function handleSaveBalance() {
-    const result = await actions.saveBalance({
-      accountLabel: defaultAccountLabel,
-      amount: balanceDraft
-    });
+    const result = await actions.setBalanceAnchor({ amount: balanceDraft });
     if (!result.ok) {
       hapticWarning();
       if (result.validation) {
@@ -84,6 +86,7 @@ function SafeToSpendCardComponent() {
     }
     setBalanceFieldError(null);
     setBalanceDraft("");
+    setBalanceEditOpen(false);
   }
 
   function closePurchaseSheet() {
@@ -91,10 +94,9 @@ function SafeToSpendCardComponent() {
     setPurchaseDraft("");
   }
 
-  if (safe.effectiveBalance === null) {
+  function renderBalanceInput(actionsRow: React.ReactNode) {
     return (
-      <View style={styles.heroPanelInfo}>
-        <Text style={styles.heroTitle}>{copy.setBalancePrompt}</Text>
+      <>
         <TextInput
           accessibilityLabel={
             balanceFieldError?.field === "amount"
@@ -116,16 +118,27 @@ function SafeToSpendCardComponent() {
             {balanceFieldError.message}
           </Text>
         )}
-        <Pressable
-          accessibilityLabel={copy.saveBalanceA11y}
-          accessibilityRole="button"
-          onPress={() => {
-            void handleSaveBalance();
-          }}
-          style={styles.smallPrimaryButton}
-        >
-          <Text style={styles.primaryButtonText}>{strings.common.save}</Text>
-        </Pressable>
+        {actionsRow}
+      </>
+    );
+  }
+
+  if (safe.effectiveBalance === null) {
+    return (
+      <View style={styles.heroPanelInfo}>
+        <Text style={styles.heroTitle}>{copy.setBalancePrompt}</Text>
+        {renderBalanceInput(
+          <Pressable
+            accessibilityLabel={copy.saveBalanceA11y}
+            accessibilityRole="button"
+            onPress={() => {
+              void handleSaveBalance();
+            }}
+            style={styles.smallPrimaryButton}
+          >
+            <Text style={styles.primaryButtonText}>{strings.common.save}</Text>
+          </Pressable>
+        )}
       </View>
     );
   }
@@ -140,9 +153,53 @@ function SafeToSpendCardComponent() {
           <Text style={styles.pulseHeroLabel}>{copy.heroLabel}</Text>
         </View>
         <Text style={styles.pulseHeroValue}>{formatRupiah(safe.safeDaily ?? 0)}</Text>
-        <Text style={styles.settingCopy}>
-          {formatString(copy.balanceAnchor, { amount: formatRupiah(safe.effectiveBalance) })}
-        </Text>
+
+        {balanceEditOpen ? (
+          renderBalanceInput(
+            <View style={componentStyles.editActions}>
+              <Pressable
+                accessibilityLabel={strings.common.cancel}
+                accessibilityRole="button"
+                onPress={closeBalanceEdit}
+                style={styles.secondaryButton}
+              >
+                <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
+              </Pressable>
+              <Pressable
+                accessibilityLabel={copy.saveBalanceA11y}
+                accessibilityRole="button"
+                onPress={() => {
+                  void handleSaveBalance();
+                }}
+                style={styles.smallPrimaryButton}
+              >
+                <Text style={styles.primaryButtonText}>{strings.common.save}</Text>
+              </Pressable>
+            </View>
+          )
+        ) : (
+          <View style={styles.repeatBlock}>
+            <Pressable
+              accessibilityLabel={copy.updateBalanceA11y}
+              accessibilityRole="button"
+              onPress={openBalanceEdit}
+              style={styles.analyticsRowHeader}
+            >
+              <Text style={[styles.settingCopy, { flex: 1 }]}>
+                {formatString(copy.balanceAnchor, { amount: formatRupiah(safe.effectiveBalance) })}
+              </Text>
+              <Ionicons name="pencil-outline" size={16} color={colors.greenDark} />
+            </Pressable>
+            {balanceAnchor ? (
+              <Text style={styles.pulseHeroHint}>
+                {formatString(copy.lastSetRelative, {
+                  time: formatRelativeTimeFromNow(balanceAnchor.setAt)
+                })}
+              </Text>
+            ) : null}
+          </View>
+        )}
+
         <Text style={[styles.settingCopy, { color: getTypicalDailyToneColor() }]}>
           {formatString(copy.typicalDaily, { amount: formatRupiah(safe.typicalDaily) })}
         </Text>

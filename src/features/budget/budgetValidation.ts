@@ -33,6 +33,15 @@ export function getBalanceSnapshotValidationError(input: {
   return null;
 }
 
+export function getBalanceAnchorValidationError(
+  amount: string
+): FormValidationError<BalanceFieldError> | null {
+  if (!parseAmountInput(amount)) {
+    return { field: "amount", message: getBalanceNeedFieldsToast() };
+  }
+  return null;
+}
+
 export type GoalFieldError = "label" | "targetAmount";
 
 export function getGoalValidationError(input: {

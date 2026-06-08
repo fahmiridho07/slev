@@ -43,6 +43,10 @@ const CORRUPT_STORAGE_CHECKS: Array<{ check: () => boolean; key: string }> = [
     check: () => isKeyCorrupt(STORAGE_KEYS.balanceSnapshots),
     key: STORAGE_KEYS.balanceSnapshots
   },
+  {
+    check: () => isKeyCorrupt(STORAGE_KEYS.balanceAnchor),
+    key: STORAGE_KEYS.balanceAnchor
+  },
   { check: isExpenseCategoriesStorageCorrupt, key: STORAGE_KEYS.expenseCategories }
 ];
 

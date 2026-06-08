@@ -1,15 +1,7 @@
-import {
-  BalanceSnapshot,
-  MoneyAccount,
-  MoneyTransfer,
-  SpendingMoment
-} from "../features/spendingMemory.types";
+import { SpendingMoment } from "../features/spendingMemory.types";
+import { BalanceAnchor } from "../services/balanceAnchorRepository";
 import { safeTime } from "./dateRanges";
-import {
-  getDaysRemainingInMonth,
-  getLatestBalanceTotal,
-  getProjectedBalanceSnapshots
-} from "./financeEngine";
+import { getDaysRemainingInMonth } from "./financeEngine";
 
 export type SafeToSpendPace = "under" | "over" | "even" | "unknown";
 
@@ -30,31 +22,35 @@ export type SimulatePurchaseResult = {
 };
 
 export function getEffectiveBalance({
-  accounts,
-  balanceSnapshots,
+  balanceAnchor,
   moments,
-  referenceDate = new Date(),
-  transfers
+  referenceDate = new Date()
 }: {
-  accounts: MoneyAccount[];
-  balanceSnapshots: BalanceSnapshot[];
+  balanceAnchor: BalanceAnchor | null;
   moments: SpendingMoment[];
   referenceDate?: Date;
-  transfers: MoneyTransfer[];
 }): number | null {
-  if (balanceSnapshots.length === 0) {
+  if (balanceAnchor === null) {
     return null;
   }
 
-  return getLatestBalanceTotal(
-    getProjectedBalanceSnapshots({
-      accounts,
-      balanceSnapshots,
-      moments,
-      referenceDate,
-      transfers
-    })
-  );
+  const anchorTime = safeTime(balanceAnchor.setAt);
+  const referenceTime = referenceDate.getTime();
+  let netSince = 0;
+
+  for (const moment of moments) {
+    const momentTime = safeTime(moment.occurredAt);
+    if (momentTime <= anchorTime || momentTime > referenceTime) {
+      continue;
+    }
+    if (moment.type === "income") {
+      netSince += moment.amount;
+    } else if (moment.type === "expense") {
+      netSince -= moment.amount;
+    }
+  }
+
+  return balanceAnchor.amount + netSince;
 }
 
 export function getDaysUntilNextIncome(referenceDate: Date, paydayDayOfMonth?: number): number {
@@ -116,28 +112,22 @@ export function getTypicalDailySpend(
 }
 
 export function buildSafeToSpend({
-  accounts,
-  balanceSnapshots,
+  balanceAnchor,
   moments,
   paydayDayOfMonth,
   referenceDate = new Date(),
-  transfers,
   windowDays = 30
 }: {
-  accounts: MoneyAccount[];
-  balanceSnapshots: BalanceSnapshot[];
+  balanceAnchor: BalanceAnchor | null;
   moments: SpendingMoment[];
   paydayDayOfMonth?: number;
   referenceDate?: Date;
-  transfers: MoneyTransfer[];
   windowDays?: number;
 }): SafeToSpendResult {
   const effectiveBalance = getEffectiveBalance({
-    accounts,
-    balanceSnapshots,
+    balanceAnchor,
     moments,
-    referenceDate,
-    transfers
+    referenceDate
   });
   const daysLeft = getDaysUntilNextIncome(referenceDate, paydayDayOfMonth);
   const { amount: typicalDaily, confident } = getTypicalDailySpend(moments, referenceDate, windowDays);

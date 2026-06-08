@@ -6,6 +6,7 @@ import { CaptureFormValues } from "../features/capture/types";
 import { getMemoryEditValidationError } from "../features/memory/memoryValidation";
 import {
   getAccountValidationError,
+  getBalanceAnchorValidationError,
   getBalanceSnapshotValidationError,
   getGoalValidationError,
   getLimitValidationError,
@@ -100,6 +101,11 @@ import {
   saveExpenseCategory
 } from "../services/categoryRepository";
 import {
+  clearBalanceAnchor,
+  getBalanceAnchor,
+  saveBalanceAnchor
+} from "../services/balanceAnchorRepository";
+import {
   clearManualFinance,
   deleteCategoryMode,
   deleteManualTemplate,
@@ -156,6 +162,7 @@ export function createFinanceActions(
       storedSavingsGoals,
       storedRecurringBills,
       storedBalanceSnapshots,
+      storedBalanceAnchor,
       storedAccounts,
       storedTransfers,
       storedExpenseCategories
@@ -169,6 +176,7 @@ export function createFinanceActions(
       listSavingsGoals(),
       listRecurringBills(),
       listBalanceSnapshots(),
+      getBalanceAnchor(),
       listMoneyAccounts(),
       listMoneyTransfers(),
       listExpenseCategories()
@@ -186,6 +194,7 @@ export function createFinanceActions(
         savingsGoals: storedSavingsGoals,
         recurringBills: storedRecurringBills,
         balanceSnapshots: storedBalanceSnapshots,
+        balanceAnchor: storedBalanceAnchor,
         accounts: storedAccounts,
         transfers: storedTransfers,
         expenseCategories: storedExpenseCategories
@@ -766,6 +775,29 @@ export function createFinanceActions(
     return { ok: true };
   }
 
+  async function setBalanceAnchor(input: {
+    amount: string;
+  }): Promise<FormActionResult<"accountLabel" | "amount">> {
+    const validationError = getBalanceAnchorValidationError(input.amount);
+    if (validationError) {
+      return { ok: false, validation: validationError };
+    }
+
+    const amount = parseAmountInput(input.amount);
+    if (!amount) {
+      return { ok: false };
+    }
+
+    const { data: updated, persisted } = await saveBalanceAnchor(amount);
+    if (!persisted) {
+      notifyWriteFailure(STORAGE_KEYS.balanceAnchor);
+      return { ok: false };
+    }
+    dispatch({ type: "set_balance_anchor", balanceAnchor: updated });
+    notifySuccess(getBalanceSavedToast());
+    return { ok: true };
+  }
+
   async function answerPattern(patternId: string, response: PatternFeedbackResponse) {
     const { data: updated, persisted } = await savePatternFeedback(patternId, response);
     if (!persisted) {
@@ -837,6 +869,7 @@ export function createFinanceActions(
       clearSpendingMemory(),
       clearBudgetLimits(),
       clearManualFinance(),
+      clearBalanceAnchor(),
       clearRecurringBills(),
       clearAccountsAndTransfers(),
       clearExpenseCategories()
@@ -884,6 +917,7 @@ export function createFinanceActions(
     saveAccount,
     saveAsTemplate,
     saveBalance,
+    setBalanceAnchor,
     saveCategory,
     saveCategoryBudget,
     saveGoal,

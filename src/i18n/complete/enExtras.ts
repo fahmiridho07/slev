@@ -218,6 +218,7 @@ export const enExtras: AppStringsExtras = {
       slev_savings_goals: "Savings goals",
       slev_recurring_bills: "Recurring bills",
       slev_balance_snapshots: "Balance snapshots",
+      slev_balance_anchor: "Safe-to-spend balance",
       slev_expense_categories: "Expense categories"
     },
     exportSkippedOne: "Note: {label} looked damaged and was not included.",

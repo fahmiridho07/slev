@@ -24,6 +24,7 @@
     "src/lib/safeToSpend.ts",
     "src/lib/formatMoney.ts",
     "src/lib/spendingMemoryPatterns.ts",
+    "src/services/balanceAnchorRepository.ts",
     "src/services/**/*.ts",
     "src/features/app.types.ts",
     "src/navigation/appNavigation.ts",

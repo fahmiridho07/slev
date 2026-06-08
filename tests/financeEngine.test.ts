@@ -458,29 +458,39 @@ test("category modes preserve fixed defaults and custom overrides", () => {
   assertEqual(modes.get("Meal"), "fixed", "custom mode should override defaults");
 });
 
-test("getEffectiveBalance returns null without balance snapshots", () => {
+test("getEffectiveBalance returns null without balance anchor", () => {
   const balance = getEffectiveBalance({
-    accounts: [account("BRI", "bank", true)],
-    balanceSnapshots: [],
+    balanceAnchor: null,
     moments: [],
-    referenceDate: juneMidpoint,
-    transfers: []
+    referenceDate: juneMidpoint
   });
 
-  assertEqual(balance, null, "missing snapshots should surface a set-balance state");
+  assertEqual(balance, null, "missing anchor should surface a set-balance state");
+});
+
+test("getEffectiveBalance totals anchor plus net moments since setAt", () => {
+  const balance = getEffectiveBalance({
+    balanceAnchor: balanceAnchor(1_000_000, "2026-06-10T12:00:00.000Z"),
+    moments: [
+      moment({ amount: 50_000, occurredAt: "2026-06-09T12:00:00.000Z" }),
+      moment({ amount: 100_000, accountLabel: "GoPay", occurredAt: "2026-06-12T12:00:00.000Z" }),
+      moment({ amount: 200_000, occurredAt: "2026-06-13T12:00:00.000Z", source: "Bonus", type: "income" })
+    ],
+    referenceDate: juneMidpoint
+  });
+
+  assertEqual(balance, 1_100_000, "effective balance should add income and subtract expenses after setAt");
 });
 
 test("buildSafeToSpend computes safeDaily from effective balance and days left", () => {
   const daysLeft = getDaysRemainingInMonth(juneMidpoint);
   const safe = buildSafeToSpend({
-    accounts: [account("BRI", "bank", true)],
-    balanceSnapshots: [snapshot("BRI", 1_600_000, "2026-06-15T01:00:00.000Z")],
+    balanceAnchor: balanceAnchor(1_600_000, "2026-06-15T01:00:00.000Z"),
     moments: [],
-    referenceDate: juneMidpoint,
-    transfers: []
+    referenceDate: juneMidpoint
   });
 
-  assertEqual(safe.effectiveBalance, 1_600_000, "effective balance should use projected snapshots");
+  assertEqual(safe.effectiveBalance, 1_600_000, "effective balance should use the total anchor");
   assertEqual(safe.daysLeft, daysLeft, "days left should default to month remainder");
   assertEqual(safe.safeDaily, Math.round(1_600_000 / daysLeft), "safeDaily should divide balance by days left");
 });
@@ -488,10 +498,8 @@ test("buildSafeToSpend computes safeDaily from effective balance and days left",
 test("buildSafeToSpend classifies spending pace against safeDaily", () => {
   const daysLeft = getDaysRemainingInMonth(juneMidpoint);
   const baseArgs = {
-    accounts: [account("BRI", "bank", true)],
-    balanceSnapshots: [snapshot("BRI", 1_000_000, "2026-06-15T01:00:00.000Z")],
+    balanceAnchor: balanceAnchor(1_000_000, "2026-06-15T08:00:00.000Z"),
     referenceDate: juneMidpoint,
-    transfers: [] as MoneyTransfer[],
     windowDays: 10
   };
   const safeDaily = Math.round(1_000_000 / daysLeft);
@@ -509,11 +517,9 @@ test("buildSafeToSpend classifies spending pace against safeDaily", () => {
     moments: trailingExpenseMoments(safeDaily, 10, juneMidpoint)
   });
   const unknownSpend = buildSafeToSpend({
-    accounts: [account("BRI", "bank", true)],
-    balanceSnapshots: [],
+    balanceAnchor: null,
     moments: [],
-    referenceDate: juneMidpoint,
-    transfers: []
+    referenceDate: juneMidpoint
   });
 
   assertEqual(underSpend.pace, "under", "lower typical spend should pace under safeDaily");
@@ -525,11 +531,9 @@ test("buildSafeToSpend classifies spending pace against safeDaily", () => {
 
 test("simulatePurchase rejects purchases that break daily coverage even when balance remains", () => {
   const safe = buildSafeToSpend({
-    accounts: [account("BRI", "bank", true)],
-    balanceSnapshots: [snapshot("BRI", 1_000_000, "2026-06-15T01:00:00.000Z")],
+    balanceAnchor: balanceAnchor(1_000_000, "2026-06-15T01:00:00.000Z"),
     moments: trailingExpenseMoments(50_000, 10, juneMidpoint),
     referenceDate: juneMidpoint,
-    transfers: [],
     windowDays: 10
   });
   const typicalNeed = safe.typicalDaily * safe.daysLeft;
@@ -685,6 +689,10 @@ function plan(input: {
 
 function printable(value: unknown): string {
   return typeof value === "string" ? `"${value}"` : JSON.stringify(value);
+}
+
+function balanceAnchor(amount: number, setAt: string) {
+  return { amount, setAt };
 }
 
 function trailingExpenseMoments(dailyAmount: number, dayCount: number, referenceDate: Date): SpendingMoment[] {

@@ -36,3 +36,37 @@ export function formatLocaleTime(value: Date | string): string {
     minute: "2-digit"
   });
 }
+
+export function formatRelativeTimeFromNow(value: Date | string, referenceDate = new Date()): string {
+  const date = typeof value === "string" ? new Date(value) : value;
+  const diffSeconds = Math.round((date.getTime() - referenceDate.getTime()) / 1000);
+  const formatter = new Intl.RelativeTimeFormat(dateLocale(), { numeric: "auto" });
+  const absSeconds = Math.abs(diffSeconds);
+
+  if (absSeconds < 60) {
+    return formatter.format(diffSeconds, "second");
+  }
+
+  const diffMinutes = Math.round(diffSeconds / 60);
+  if (Math.abs(diffMinutes) < 60) {
+    return formatter.format(diffMinutes, "minute");
+  }
+
+  const diffHours = Math.round(diffMinutes / 60);
+  if (Math.abs(diffHours) < 24) {
+    return formatter.format(diffHours, "hour");
+  }
+
+  const diffDays = Math.round(diffHours / 24);
+  if (Math.abs(diffDays) < 30) {
+    return formatter.format(diffDays, "day");
+  }
+
+  const diffMonths = Math.round(diffDays / 30);
+  if (Math.abs(diffMonths) < 12) {
+    return formatter.format(diffMonths, "month");
+  }
+
+  const diffYears = Math.round(diffDays / 365);
+  return formatter.format(diffYears, "year");
+}

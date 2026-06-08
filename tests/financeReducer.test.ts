@@ -84,6 +84,7 @@ test("hydrate merges stored collections without touching ui flags", () => {
         manualTemplates: [],
         recurringBills: [],
         savingsGoals: [],
+        balanceAnchor: null,
         balanceSnapshots: [],
         accounts: [],
         transfers: [],
@@ -116,6 +117,7 @@ test("set_budget_limits replaces limits array", () => {
 test("clear_all resets finance memory but keeps default accounts and categories", () => {
   const state: FinanceState = {
     ...initialFinanceState,
+    balanceAnchor: { amount: 500_000, setAt: "2026-06-10T00:00:00.000Z" },
     clearConfirmVisible: true,
     feedback: [{ patternId: "p1", response: "keep", createdAt: "2026-06-01T00:00:00.000Z" }],
     moments: [buildMoment({ amount: 10000, occurredAt: "2026-06-01T01:00:00.000Z" })],
@@ -138,6 +140,7 @@ test("clear_all resets finance memory but keeps default accounts and categories"
     payload: { accounts: resetAccounts, expenseCategories: resetCategories }
   });
 
+  assertEqual(next.balanceAnchor, null, "balance anchor cleared");
   assertEqual(next.moments.length, 0, "moments cleared");
   assertEqual(next.feedback.length, 0, "feedback cleared");
   assertEqual(next.monthlyPlan, null, "monthly plan cleared");

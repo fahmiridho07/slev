@@ -218,6 +218,7 @@ export const idExtras: AppStringsExtras = {
       slev_savings_goals: "Target tabungan",
       slev_recurring_bills: "Tagihan rutin",
       slev_balance_snapshots: "Snapshot saldo",
+      slev_balance_anchor: "Saldo aman dibelanjakan",
       slev_expense_categories: "Kategori pengeluaran"
     },
     exportSkippedOne: "Catatan: {label} terlihat rusak dan tidak disertakan.",
