@@ -7,7 +7,6 @@ import {
   MoneyTransfer,
   PatternFeedback,
   RecurringBill,
-  SavingsGoal,
   SpendingMoment
 } from "../features/spendingMemory.types";
 
@@ -23,7 +22,6 @@ export type FinanceState = {
   moments: SpendingMoment[];
   undoToast: SpendingMoment | null;
   recurringBills: RecurringBill[];
-  savingsGoals: SavingsGoal[];
   accounts: MoneyAccount[];
   transfers: MoneyTransfer[];
 };
@@ -40,7 +38,6 @@ export const initialFinanceState: FinanceState = {
   moments: [],
   undoToast: null,
   recurringBills: [],
-  savingsGoals: [],
   accounts: [],
   transfers: []
 };
@@ -62,7 +59,6 @@ export type FinanceAction =
   | { type: "set_feedback"; feedback: PatternFeedback[] }
   | { type: "set_manual_templates"; manualTemplates: ManualTemplate[] }
   | { type: "set_recurring_bills"; recurringBills: RecurringBill[] }
-  | { type: "set_savings_goals"; savingsGoals: SavingsGoal[] }
   | { type: "set_balance_anchor"; balanceAnchor: FinanceState["balanceAnchor"] }
   | { type: "set_accounts"; accounts: MoneyAccount[] }
   | { type: "set_transfers"; transfers: MoneyTransfer[] }
@@ -108,8 +104,6 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       return { ...state, manualTemplates: action.manualTemplates };
     case "set_recurring_bills":
       return { ...state, recurringBills: action.recurringBills };
-    case "set_savings_goals":
-      return { ...state, savingsGoals: action.savingsGoals };
     case "set_balance_anchor":
       return { ...state, balanceAnchor: action.balanceAnchor };
     case "set_accounts":
@@ -127,7 +121,6 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
         manualTemplates: [],
         moments: [],
         recurringBills: [],
-        savingsGoals: [],
         accounts: action.payload.accounts,
         transfers: [],
         expenseCategories: action.payload.expenseCategories,

@@ -7,7 +7,6 @@ import {
   getAccountValidationError,
   getBalanceAnchorValidationError
 } from "../features/budget/budgetValidation";
-import { getGoalNeedFieldsToast } from "../i18n";
 import { getImportJsonValidationError } from "../features/settings/dataValidation";
 import { getBillValidationError, getCategoryValidationError } from "../features/settings/settingsValidation";
 import { FormActionResult } from "../lib/formValidation";
@@ -49,8 +48,6 @@ import {
   getClearAllToast,
   getExpenseSavedToast,
 
-  getGoalRemovedToast,
-  getGoalSavedToast,
   getIncomeSavedToast,
   getMemoryNotFoundToast,
   getMemoryRemovedToast,
@@ -92,11 +89,8 @@ import {
 import {
   clearManualFinance,
   deleteManualTemplate,
-  deleteSavingsGoal,
   listManualTemplates,
-  listSavingsGoals,
-  saveManualTemplate,
-  saveSavingsGoal
+  saveManualTemplate
 } from "../services/manualFinanceRepository";
 import { exportAllDataWithReport, importAllData } from "../services/storageBackup";
 import {
@@ -132,7 +126,6 @@ export function createFinanceActions(
       storedMoments,
       storedFeedback,
       storedManualTemplates,
-      storedSavingsGoals,
       storedRecurringBills,
       storedBalanceAnchor,
       storedAccounts,
@@ -142,7 +135,6 @@ export function createFinanceActions(
       listSpendingMoments(),
       listPatternFeedback(),
       listManualTemplates(),
-      listSavingsGoals(),
       listRecurringBills(),
       getBalanceAnchor(),
       listMoneyAccounts(),
@@ -156,7 +148,6 @@ export function createFinanceActions(
         moments: storedMoments,
         feedback: storedFeedback,
         manualTemplates: storedManualTemplates,
-        savingsGoals: storedSavingsGoals,
         recurringBills: storedRecurringBills,
         balanceAnchor: storedBalanceAnchor,
         accounts: storedAccounts,
@@ -471,53 +462,6 @@ export function createFinanceActions(
     setMessage(getCategoryRemovedToast(category.label));
   }
 
-  async function saveGoal(input: {
-    id?: string;
-    label: string;
-    savedAmount: string;
-    targetAmount: string;
-  }): Promise<FormActionResult<"label" | "targetAmount">> {
-    const parsedTarget = parseAmountInput(input.targetAmount);
-    if (!input.label.trim() || !parsedTarget) {
-      return {
-        ok: false,
-        validation: {
-          field: !input.label.trim() ? "label" : "targetAmount",
-          message: getGoalNeedFieldsToast()
-        }
-      };
-    }
-
-    const targetAmount = parseAmountInput(input.targetAmount);
-    if (!targetAmount) {
-      return { ok: false };
-    }
-
-    const { data: updated, persisted } = await saveSavingsGoal({
-      id: input.id,
-      label: input.label,
-      savedAmount: parseAmountInput(input.savedAmount) ?? 0,
-      targetAmount
-    });
-    if (!persisted) {
-      notifyWriteFailure(STORAGE_KEYS.savingsGoals);
-      return { ok: false };
-    }
-    dispatch({ type: "set_savings_goals", savingsGoals: updated });
-    notifySuccess(getGoalSavedToast());
-    return { ok: true };
-  }
-
-  async function removeSavingsGoal(id: string) {
-    const { data: updated, persisted } = await deleteSavingsGoal(id);
-    if (!persisted) {
-      notifyWriteFailure(STORAGE_KEYS.savingsGoals);
-      return;
-    }
-    dispatch({ type: "set_savings_goals", savingsGoals: updated });
-    setMessage(getGoalRemovedToast());
-  }
-
   async function saveRecurringBillAction(input: {
     id?: string;
     label: string;
@@ -756,13 +700,11 @@ export function createFinanceActions(
     undoRemoveMoment,
     logRecurringBillPayment,
     removeRecurringBill,
-    removeSavingsGoal,
     removeTransfer,
     saveAccount,
     saveAsTemplate,
     setBalanceAnchor,
     saveCategory,
-    saveGoal,
     saveRecurringBill: saveRecurringBillAction,
     saveMoment,
     setClearConfirmVisible,

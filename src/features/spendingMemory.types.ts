@@ -74,15 +74,6 @@ export type MonthlyPlan = {
 
 export type ManualTemplate = SpendingMoment;
 
-export type SavingsGoal = {
-  id: string;
-  label: string;
-  targetAmount: number;
-  savedAmount: number;
-  createdAt: string;
-  updatedAt: string;
-};
-
 // Monthly cadence only for v1; other cadences are a future extension.
 export type RecurringBill = {
   id: string;

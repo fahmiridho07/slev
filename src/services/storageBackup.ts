@@ -1,6 +1,6 @@
 import { listMoneyAccounts, listMoneyTransfers } from "./accountRepository";
 import { listExpenseCategories } from "./categoryRepository";
-import { listManualTemplates, listSavingsGoals } from "./manualFinanceRepository";
+import { listManualTemplates } from "./manualFinanceRepository";
 import { listRecurringBills } from "./recurringBillsRepository";
 import { listPatternFeedback, listSpendingMoments } from "./spendingMemoryRepository";
 import { clearCorruptFlag, readJson, writeJson } from "./storage";
@@ -176,7 +176,6 @@ async function normalizeImportedData(): Promise<boolean> {
     writeJson(STORAGE_KEYS.accounts, await listMoneyAccounts()),
     writeJson(STORAGE_KEYS.transfers, await listMoneyTransfers()),
     writeJson(STORAGE_KEYS.manualTemplates, await listManualTemplates()),
-    writeJson(STORAGE_KEYS.savingsGoals, await listSavingsGoals()),
     writeJson(STORAGE_KEYS.recurringBills, await listRecurringBills()),
     writeJson(STORAGE_KEYS.expenseCategories, await readExpenseCategoriesForExport())
   ]);

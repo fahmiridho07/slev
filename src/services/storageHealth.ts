@@ -22,10 +22,6 @@ const CORRUPT_STORAGE_CHECKS: Array<{ check: () => boolean; key: string }> = [
     key: STORAGE_KEYS.manualTemplates
   },
   {
-    check: () => isKeyCorrupt(STORAGE_KEYS.savingsGoals),
-    key: STORAGE_KEYS.savingsGoals
-  },
-  {
     check: () => isKeyCorrupt(STORAGE_KEYS.recurringBills),
     key: STORAGE_KEYS.recurringBills
   },

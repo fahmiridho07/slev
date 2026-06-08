@@ -14,7 +14,6 @@ export const STORAGE_KEYS = {
   accounts: "slev_accounts",
   transfers: "slev_transfers",
   manualTemplates: "slev_manual_templates",
-  savingsGoals: "slev_savings_goals",
   recurringBills: "slev_recurring_bills",
   balanceAnchor: "slev_balance_anchor",
   expenseCategories: "slev_expense_categories"
@@ -26,7 +25,6 @@ export const EXPORTABLE_STORAGE_KEYS = [
   STORAGE_KEYS.accounts,
   STORAGE_KEYS.transfers,
   STORAGE_KEYS.manualTemplates,
-  STORAGE_KEYS.savingsGoals,
   STORAGE_KEYS.recurringBills,
   STORAGE_KEYS.balanceAnchor,
   STORAGE_KEYS.expenseCategories

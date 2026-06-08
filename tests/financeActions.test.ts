@@ -43,39 +43,6 @@ function createTestHarness(seed?: Partial<FinanceState>) {
   };
 }
 
-test("saveGoal returns validation error when fields are missing", async () => {
-  const driver = createMemoryDriver();
-  setStorageDriver(driver);
-  const { actions } = createTestHarness();
-
-  const result = await actions.saveGoal({
-    label: "",
-    savedAmount: "",
-    targetAmount: "100000"
-  });
-
-  assertEqual(result.ok, false, "goal save rejected");
-  if (!result.ok) {
-    assertEqual(result.validation?.field, "label", "label field flagged");
-  }
-});
-
-test("saveGoal persists goal and updates reducer state", async () => {
-  const driver = createMemoryDriver();
-  setStorageDriver(driver);
-  const { actions, getState } = createTestHarness();
-
-  const result = await actions.saveGoal({
-    label: "Emergency",
-    savedAmount: "500000",
-    targetAmount: "10000000"
-  });
-
-  assertEqual(result.ok, true, "goal save succeeds");
-  assertEqual(getState().savingsGoals.length, 1, "one goal in state");
-  assertEqual(getState().savingsGoals[0]?.label, "Emergency", "goal label stored");
-});
-
 test("importLocalBackup rejects invalid JSON", async () => {
   const driver = createMemoryDriver();
   setStorageDriver(driver);

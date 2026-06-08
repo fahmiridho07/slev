@@ -2,7 +2,6 @@ import { normalizeSpendingContext } from "../data/spendingMemory";
 import {
   EntryType,
   ManualTemplate,
-  SavingsGoal,
   SpendingContext
 } from "../features/spendingMemory.types";
 import {
@@ -15,7 +14,6 @@ import {
 import { isKeyCorrupt, readJson, removeKeys, WriteResult, writeJson } from "./storage";
 
 const MANUAL_TEMPLATES_KEY = "slev_manual_templates";
-const SAVINGS_GOALS_KEY = "slev_savings_goals";
 
 type ManualTemplateInput = {
   accountLabel?: string;
@@ -25,13 +23,6 @@ type ManualTemplateInput = {
   note?: string;
   source?: string;
   type: EntryType;
-};
-
-type SavingsGoalInput = {
-  id?: string;
-  label: string;
-  savedAmount: number;
-  targetAmount: number;
 };
 
 export async function listManualTemplates(): Promise<ManualTemplate[]> {
@@ -64,39 +55,6 @@ export async function deleteManualTemplate(id: string): Promise<WriteResult<Manu
   return { data: updated, persisted };
 }
 
-export async function listSavingsGoals(): Promise<SavingsGoal[]> {
-  const result = await readJson<unknown>(SAVINGS_GOALS_KEY);
-  if (result.status !== "ok" || !Array.isArray(result.value)) return [];
-  return result.value.map(normalizeSavingsGoal).filter(isSavingsGoal);
-}
-
-export async function saveSavingsGoal(input: SavingsGoalInput): Promise<WriteResult<SavingsGoal[]>> {
-  const current = await listSavingsGoals();
-  const now = new Date().toISOString();
-  const existing = input.id ? current.find((goal) => goal.id === input.id) : undefined;
-  const goal = normalizeSavingsGoal({
-    ...input,
-    id: input.id ?? createId(),
-    createdAt: existing?.createdAt ?? now,
-    updatedAt: now
-  });
-  if (!goal) return { data: current, persisted: true };
-
-  const updated = [
-    goal,
-    ...current.filter((item) => item.id !== goal.id)
-  ].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
-  const persisted = await writeJson(SAVINGS_GOALS_KEY, updated);
-  return { data: updated, persisted };
-}
-
-export async function deleteSavingsGoal(id: string): Promise<WriteResult<SavingsGoal[]>> {
-  const current = await listSavingsGoals();
-  const updated = current.filter((goal) => goal.id !== id);
-  const persisted = await writeJson(SAVINGS_GOALS_KEY, updated);
-  return { data: updated, persisted };
-}
-
 export async function rewriteAccountLabelInManualTemplates(
   oldLabel: string,
   newLabel: string
@@ -120,11 +78,11 @@ export async function rewriteAccountLabelInManualTemplates(
 }
 
 export async function clearManualFinance(): Promise<boolean> {
-  return removeKeys([MANUAL_TEMPLATES_KEY, SAVINGS_GOALS_KEY]);
+  return removeKeys([MANUAL_TEMPLATES_KEY]);
 }
 
 export function isManualFinanceStorageCorrupt(): boolean {
-  return isKeyCorrupt(MANUAL_TEMPLATES_KEY) || isKeyCorrupt(SAVINGS_GOALS_KEY);
+  return isKeyCorrupt(MANUAL_TEMPLATES_KEY);
 }
 
 function normalizeManualTemplate(value: unknown): ManualTemplate | null {
@@ -152,29 +110,7 @@ function normalizeManualTemplate(value: unknown): ManualTemplate | null {
   };
 }
 
-function normalizeSavingsGoal(value: unknown): SavingsGoal | null {
-  const record = toRecord(value);
-  if (!record) return null;
-  const label = cleanOptionalText(readString(record, "label") ?? readString(record, "title"));
-  const targetAmount = normalizeAmount(readNumber(record, "targetAmount") ?? 0);
-  if (!label || targetAmount <= 0) return null;
-  const now = new Date().toISOString();
-
-  return {
-    id: readString(record, "id") ?? createId(),
-    label,
-    targetAmount,
-    savedAmount: Math.min(normalizeAmount(readNumber(record, "savedAmount") ?? 0), targetAmount),
-    createdAt: readString(record, "createdAt") ?? now,
-    updatedAt: readString(record, "updatedAt") ?? now
-  };
-}
-
 function isManualTemplate(value: ManualTemplate | null): value is ManualTemplate {
-  return value !== null;
-}
-
-function isSavingsGoal(value: SavingsGoal | null): value is SavingsGoal {
   return value !== null;
 }
 
