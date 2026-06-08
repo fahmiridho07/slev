@@ -24,6 +24,15 @@ export type SimulatePurchaseResult = {
   remainingBalance: number;
 };
 
+/** Default expense context for payments already covered by the monthly bills reserve. */
+export const RESERVED_BILL_CONTEXT = "Bills";
+
+/**
+ * Returns anchor amount plus net income and expenses logged strictly after the anchor
+ * and on or before the reference moment. Expenses with context {@link RESERVED_BILL_CONTEXT}
+ * are skipped — they are treated as already reserved via {@link buildSafeToSpend}'s
+ * billsReserve, not deducted again here.
+ */
 export function getEffectiveBalance({
   balanceAnchor,
   moments,
@@ -48,7 +57,7 @@ export function getEffectiveBalance({
     }
     if (moment.type === "income") {
       netSince += moment.amount;
-    } else if (moment.type === "expense") {
+    } else if (moment.type === "expense" && moment.context !== RESERVED_BILL_CONTEXT) {
       netSince -= moment.amount;
     }
   }
@@ -104,10 +113,11 @@ export function getTypicalDailySpend(
 }
 
 /**
- * Safe-to-spend reserve assumes recurring bills auto-debit and are NOT logged as expense
- * moments. Logged bill expenses are subtracted twice (reserve + moment), which understates
- * safeDaily. Re-anchoring balance after a bill has left the account will also over-reserve
- * until the next anchor update.
+ * Safe-to-spend subtracts active recurring bills as a flat monthly reserve, then spreads
+ * what remains across days left in the month. {@link getEffectiveBalance} skips
+ * {@link RESERVED_BILL_CONTEXT} expenses so logging a bill payment does not double-count
+ * against the reserve. Other expense contexts still reduce effective balance normally.
+ * Re-anchoring after a bill has left the account can over-reserve until the next update.
  */
 export function buildSafeToSpend({
   balanceAnchor,

@@ -64,6 +64,48 @@ test("getEffectiveBalance totals anchor plus net moments since setAt", () => {
   assertEqual(balance, 1_100_000, "effective balance should add income and subtract expenses after setAt");
 });
 
+test("getEffectiveBalance ignores Bills-context expenses covered by the reserve", () => {
+  const anchor = balanceAnchor(1_000_000, "2026-06-10T12:00:00.000Z");
+  const withBillsExpense = getEffectiveBalance({
+    balanceAnchor: anchor,
+    moments: [moment({ amount: 200_000, context: "Bills", occurredAt: "2026-06-12T12:00:00.000Z" })],
+    referenceDate: juneMidpoint
+  });
+  const withMealExpense = getEffectiveBalance({
+    balanceAnchor: anchor,
+    moments: [moment({ amount: 200_000, context: "Meal", occurredAt: "2026-06-12T12:00:00.000Z" })],
+    referenceDate: juneMidpoint
+  });
+
+  assertEqual(withBillsExpense, 1_000_000, "Bills expense should not reduce effective balance");
+  assertEqual(withMealExpense, 800_000, "normal expense should reduce effective balance");
+});
+
+test("buildSafeToSpend keeps safeDaily when a reserved Bills expense is logged", () => {
+  const bills = [{ id: "b1", label: "Internet", amount: 200_000, active: true, createdAt: "x", updatedAt: "x" }];
+  const anchor = balanceAnchor(1_000_000, "2026-06-15T01:00:00.000Z");
+  const daysLeft = getDaysRemainingInMonth(juneMidpoint);
+
+  const withoutLoggedBill = buildSafeToSpend({
+    balanceAnchor: anchor,
+    bills,
+    moments: [],
+    referenceDate: juneMidpoint
+  });
+  const withLoggedBill = buildSafeToSpend({
+    balanceAnchor: anchor,
+    bills,
+    moments: [moment({ amount: 200_000, context: "Bills", occurredAt: "2026-06-15T02:00:00.000Z" })],
+    referenceDate: juneMidpoint
+  });
+
+  assertEqual(withoutLoggedBill.billsReserve, 200_000, "reserve sums active recurring bills");
+  assertEqual(withLoggedBill.billsReserve, 200_000, "reserve should stay the same when a bill is logged");
+  assertEqual(withLoggedBill.effectiveBalance, 1_000_000, "logged Bills expense should not touch effective balance");
+  assertEqual(withLoggedBill.safeDaily, withoutLoggedBill.safeDaily, "safeDaily should stay unchanged");
+  assertEqual(withoutLoggedBill.safeDaily, Math.round(800_000 / daysLeft), "baseline safeDaily reserves bills once");
+});
+
 test("buildSafeToSpend computes safeDaily from effective balance and days left", () => {
   const daysLeft = getDaysRemainingInMonth(juneMidpoint);
   const safe = buildSafeToSpend({
