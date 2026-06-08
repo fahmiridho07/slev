@@ -18,7 +18,8 @@
           "image": "./assets/brand/slev-splash.png",
           "resizeMode": "contain"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "android": {
       "package": "com.slev.app",
@@ -33,7 +34,9 @@
       "infoPlist": {
         "CFBundleURLTypes": [
           {
-            "CFBundleURLSchemes": ["slev"]
+            "CFBundleURLSchemes": [
+              "slev"
+            ]
           }
         ]
       }
@@ -42,6 +45,9 @@
       "privacy": {
         "storesRawNotifications": false,
         "requiresBankCredentials": false
+      },
+      "eas": {
+        "projectId": "f3076a38-b46f-47af-b5a5-26d56749a9f4"
       }
     }
   }

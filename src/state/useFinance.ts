@@ -21,7 +21,7 @@ export function useActions(): FinanceActions {
 
 export function useFinanceDerived<T>(
   selector: (derived: FinanceDerived) => T,
-  isEqual: (a: T, b: T) => boolean = Object.is
+  isEqual: (a: T, b: T) => boolean = shallowEqual
 ): T {
   const store = useContext(DerivedStoreContext);
   if (!store) {
@@ -49,7 +49,7 @@ export function useFinanceDerived<T>(
 
 export function useFinanceSelector<T>(
   selector: (state: FinanceState) => T,
-  isEqual: (a: T, b: T) => boolean = Object.is
+  isEqual: (a: T, b: T) => boolean = shallowEqual
 ): T {
   const store = useContext(FinanceStoreContext);
   if (!store) {

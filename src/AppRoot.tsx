@@ -25,7 +25,7 @@ import { AppNavigation, AppTabKey } from "./navigation/appNavigation";
 import { getNavStatePreference, parseSettingsTab, setNavStatePreference } from "./services/uiPreferences";
 import { HomeScreen, MoneyScreen, SettingsScreen } from "./screens";
 import { initialFinanceState } from "./state/financeReducer";
-import { useActions, useFinanceSelector } from "./state/useFinance";
+import { useActions, useFinanceSelector, shallowEqual } from "./state/useFinance";
 
 const SLEV_MARK = require("../assets/brand/slev-mark-transparent.png");
 
@@ -49,13 +49,16 @@ function FinanceInitializer() {
 export function AppRoot() {
   const actions = useActions();
   const { colors, componentStyles, isDark, strings, styles } = useTheme();
-  const { bootError, clearConfirmVisible, isReady, message, undoToast } = useFinanceSelector((state) => ({
-    bootError: state.bootError,
-    clearConfirmVisible: state.clearConfirmVisible,
-    isReady: state.isReady,
-    message: state.message,
-    undoToast: state.undoToast
-  }));
+  const { bootError, clearConfirmVisible, isReady, message, undoToast } = useFinanceSelector(
+    (state) => ({
+      bootError: state.bootError,
+      clearConfirmVisible: state.clearConfirmVisible,
+      isReady: state.isReady,
+      message: state.message,
+      undoToast: state.undoToast
+    }),
+    shallowEqual
+  );
   const { scrollContentStyle, tabBarStyle } = useLayoutInsets();
   const [activeTab, setActiveTab] = useState<AppTabKey>("home");
   const [returnTab, setReturnTab] = useState<AppTabKey>("home");
