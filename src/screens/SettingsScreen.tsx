@@ -18,6 +18,7 @@ import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { SettingsTabKey } from "../features/app.types";
 import { ExpenseCategory } from "../features/spendingMemory.types";
 import { CategoryEditForm } from "../features/settings/CategoryEditForm";
+import { BalancePanel } from "../features/budget/BalancePanel";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
 import { formatString, getCategoryDeleteMessage } from "../i18n";
 import { hapticSelection, hapticWarning } from "../lib/haptics";
@@ -25,22 +26,18 @@ import { FormValidationError } from "../lib/formValidation";
 import { ImportFieldError } from "../features/settings/dataValidation";
 import { CategoryFieldError } from "../features/settings/settingsValidation";
 import { listCorruptStorageIssues, StorageHealthIssue } from "../services/storageHealth";
-import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../state/useFinance";
+import { shallowEqual, useActions, useFinanceSelector } from "../state/useFinance";
 import { useTheme } from "../hooks/useTheme";
 
 type SettingsScreenProps = {
   activeSettingsTab: SettingsTabKey;
   onSettingsTabChange: (tab: SettingsTabKey) => void;
-  onTogglePlanning: (next: boolean) => void;
-  planningEnabled: boolean;
   scrollContentStyle: StyleProp<ViewStyle>;
 };
 
 function SettingsScreenComponent({
   activeSettingsTab,
   onSettingsTabChange,
-  onTogglePlanning,
-  planningEnabled,
   scrollContentStyle
 }: SettingsScreenProps) {
   const {
@@ -57,7 +54,6 @@ function SettingsScreenComponent({
   } = useTheme();
   const { refreshControl } = usePullToRefresh();
   const actions = useActions();
-  const categoryLabels = useFinanceDerived((derived) => derived.categoryLabels);
   const { accounts, expenseCategories, isReady, moments, recurringBills } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
@@ -73,12 +69,19 @@ function SettingsScreenComponent({
   const activeTab = activeSettingsTab;
   const settingsTabOptions = useMemo(
     () => [
-      { icon: "receipt-outline" as const, label: strings.settings.billsTab, value: "bills" as const },
+      { icon: "wallet-outline" as const, label: strings.settings.accountsTab, value: "accounts" as const },
       { icon: "pricetags-outline" as const, label: strings.settings.categoriesTab, value: "categories" as const },
+      { icon: "receipt-outline" as const, label: strings.settings.billsTab, value: "bills" as const },
       { icon: "color-palette-outline" as const, label: strings.settings.appearanceTab, value: "appearance" as const },
       { icon: "cloud-outline" as const, label: strings.settings.dataTab, value: "data" as const }
     ],
-    [strings.settings.appearanceTab, strings.settings.billsTab, strings.settings.categoriesTab, strings.settings.dataTab]
+    [
+      strings.settings.accountsTab,
+      strings.settings.appearanceTab,
+      strings.settings.billsTab,
+      strings.settings.categoriesTab,
+      strings.settings.dataTab
+    ]
   );
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
   const [categoryDraft, setCategoryDraft] = useState("");
@@ -125,6 +128,16 @@ function SettingsScreenComponent({
   const corruptIssues = isReady ? listCorruptStorageIssues() : [];
 
   const tabContent = useMemo(() => {
+    if (activeTab === "accounts") {
+      return (
+        <BalancePanel
+          accounts={accounts}
+          onDeleteAccount={(id) => void actions.removeAccount(id)}
+          onSaveAccount={(input) => actions.saveAccount(input)}
+        />
+      );
+    }
+
     if (activeTab === "bills") {
       return (
         <RecurringBillsPanel
@@ -169,17 +182,6 @@ function SettingsScreenComponent({
             selected={reduceMotionPreference}
             stretch
             onSelect={setReduceMotionPreference}
-          />
-          <Text style={componentStyles.microLabel}>{strings.appearance.planningLabel}</Text>
-          <Text style={styles.settingCopy}>{strings.appearance.planningHelper}</Text>
-          <SegmentedControl
-            options={[
-              { label: strings.appearance.planningOff, value: "off" },
-              { label: strings.appearance.planningOn, value: "on" }
-            ]}
-            selected={planningEnabled ? "on" : "off"}
-            stretch
-            onSelect={(value) => onTogglePlanning(value === "on")}
           />
         </View>
       );
@@ -369,7 +371,6 @@ function SettingsScreenComponent({
     activeTab,
     categoryDraft,
     categoryFieldError,
-    categoryLabels,
     colorScheme,
     colors.coral,
     colors.greenDark,
@@ -381,10 +382,8 @@ function SettingsScreenComponent({
     expenseCategories,
     importDraft,
     importFieldError,
-    onTogglePlanning,
     pickImportFile,
     locale,
-    planningEnabled,
     recurringBills,
     reduceMotionPreference,
     setColorScheme,

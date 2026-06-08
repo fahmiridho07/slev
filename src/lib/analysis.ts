@@ -308,11 +308,11 @@ export function buildSpendingTrend(moments: SpendingMoment[]): SpendingTrend {
   }));
   const currentMonth = monthsWithShare[monthsWithShare.length - 1];
   const lastMonth = months[months.length - 2];
-  const dayOfMonth = today.getDate();
+  const currentDay = today.getDate();
   const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const expectedPace = lastMonth.amount * (dayOfMonth / daysInMonth);
+  const expectedPace = lastMonth.amount * (currentDay / daysInMonth);
   const midpointMessage =
-    dayOfMonth >= 15 && lastMonth.amount > 0 && currentMonth && currentMonth.amount > expectedPace
+    currentDay >= 15 && lastMonth.amount > 0 && currentMonth && currentMonth.amount > expectedPace
       ? formatString(getRuntimeStrings().analysis.trends.midpointPace, { month: currentMonth.label })
       : undefined;
 

@@ -1,5 +1,5 @@
 import type { Locale } from "../i18n";
-import { BudgetTabKey, PatternTabKey, SettingsTabKey } from "../features/app.types";
+import { SettingsTabKey } from "../features/app.types";
 import type { ColorScheme } from "../theme/types";
 import { readRaw, writeRaw } from "./storage";
 
@@ -8,14 +8,11 @@ const LOCALE_KEY = "slev_ui_locale";
 const NAV_STATE_KEY = "slev_ui_nav_state";
 const MEMORY_LIST_HINT_KEY = "slev_ui_memory_list_hint_seen";
 const REDUCE_MOTION_KEY = "slev_ui_reduce_motion";
-const PLANNING_ENABLED_KEY = "slev_ui_planning_enabled";
 
 export type ReduceMotionPreference = "off" | "on" | "system";
 
 export type StoredNavState = {
   activeTab: string;
-  budgetTab: BudgetTabKey;
-  patternTab: PatternTabKey;
   settingsTab: SettingsTabKey;
 };
 
@@ -34,27 +31,15 @@ const LIST_ACTIONS_HINT_KEYS: Record<ListActionsHintKey, string> = {
   settings_categories: "slev_ui_settings_categories_hint_seen"
 };
 
-const BUDGET_TABS = new Set<BudgetTabKey>(["plan", "balance", "goals"]);
-const PATTERN_TABS = new Set<PatternTabKey>(["breakdown", "accounts"]);
-const SETTINGS_TABS = new Set<SettingsTabKey>(["bills", "categories", "appearance", "data"]);
-
-export function parseBudgetTab(value: unknown): BudgetTabKey {
-  return typeof value === "string" && BUDGET_TABS.has(value as BudgetTabKey) ? (value as BudgetTabKey) : "plan";
-}
-
-export function parsePatternTab(value: unknown): PatternTabKey {
-  if (value === "overview" || value === "recap") {
-    return "breakdown";
-  }
-  return typeof value === "string" && PATTERN_TABS.has(value as PatternTabKey)
-    ? (value as PatternTabKey)
-    : "breakdown";
-}
+const SETTINGS_TABS = new Set<SettingsTabKey>(["accounts", "bills", "categories", "appearance", "data"]);
 
 export function parseSettingsTab(value: unknown): SettingsTabKey {
+  if (value === "balance") {
+    return "accounts";
+  }
   return typeof value === "string" && SETTINGS_TABS.has(value as SettingsTabKey)
     ? (value as SettingsTabKey)
-    : "bills";
+    : "accounts";
 }
 
 export async function hasSeenListActionsHint(key: ListActionsHintKey): Promise<boolean> {
@@ -134,8 +119,6 @@ export async function getNavStatePreference(): Promise<StoredNavState | null> {
 
     return {
       activeTab: parsed.activeTab,
-      budgetTab: parseBudgetTab(parsed.budgetTab),
-      patternTab: parsePatternTab(parsed.patternTab),
       settingsTab: parseSettingsTab(parsed.settingsTab)
     };
   } catch {
@@ -145,19 +128,4 @@ export async function getNavStatePreference(): Promise<StoredNavState | null> {
 
 export async function setNavStatePreference(state: StoredNavState): Promise<void> {
   await writeRaw(NAV_STATE_KEY, JSON.stringify(state));
-}
-
-export async function getPlanningEnabledPreference(): Promise<boolean | null> {
-  const stored = await readRaw(PLANNING_ENABLED_KEY);
-  if (stored === "1") {
-    return true;
-  }
-  if (stored === "0") {
-    return false;
-  }
-  return null;
-}
-
-export async function setPlanningEnabledPreference(enabled: boolean): Promise<void> {
-  await writeRaw(PLANNING_ENABLED_KEY, enabled ? "1" : "0");
 }

@@ -568,6 +568,7 @@ export type AppStrings = {
       save: string;
       title: string;
     };
+    accountsTab: string;
     appearanceTab: string;
     billsTab: string;
     categories: {

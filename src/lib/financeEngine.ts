@@ -40,7 +40,7 @@ export function buildMonthlyBreakdown(
 }
 
 export function getDaysRemainingInMonth(date: Date): number {
-  const dayOfMonth = date.getDate();
+  const currentDay = date.getDate();
   const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  return Math.max(1, daysInMonth - dayOfMonth + 1);
+  return Math.max(1, daysInMonth - currentDay + 1);
 }

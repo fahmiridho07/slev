@@ -146,6 +146,7 @@ export const id: AppStrings = {
       deleteBody: "{label} akan dihapus dari tagihan rutin. Pembayaran tercatat tetap ada di riwayat."
     },
     appearanceTab: "Tampilan",
+    accountsTab: "Akun",
     billsTab: "Tagihan",
     categoriesTab: "Kategori",
     dataTab: "Data",

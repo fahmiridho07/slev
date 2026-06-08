@@ -29,22 +29,25 @@ test("parseDeepLink opens home capture focus", () => {
 });
 
 test("parseDeepLink routes settings sub-tabs", () => {
+  assertEqual(parseDeepLink("slev://settings/accounts"), { tab: "settings", settingsTab: "accounts" }, "accounts");
+  assertEqual(parseDeepLink("slev://settings/balance"), { tab: "settings", settingsTab: "accounts" }, "legacy balance");
   assertEqual(parseDeepLink("slev://settings/appearance"), { tab: "settings", settingsTab: "appearance" }, "appearance");
   assertEqual(parseDeepLink("slev://settings/data"), { tab: "settings", settingsTab: "data" }, "data");
   assertEqual(parseDeepLink("slev://settings/categories"), { tab: "settings", settingsTab: "categories" }, "categories");
+  assertEqual(parseDeepLink("slev://settings/bills"), { tab: "settings", settingsTab: "bills" }, "bills");
   assertEqual(parseDeepLink("slev://settings"), { tab: "settings" }, "settings root");
 });
 
 test("parseDeepLink routes budget and money aliases", () => {
-  assertEqual(parseDeepLink("slev://budget/balance"), { tab: "budget", budgetTab: "balance" }, "budget balance");
-  assertEqual(parseDeepLink("slev://budget/goals"), { tab: "budget", budgetTab: "goals" }, "budget goals");
-  assertEqual(parseDeepLink("slev://budget"), { tab: "budget", budgetTab: "plan" }, "budget default");
-  assertEqual(parseDeepLink("slev://money/accounts"), { tab: "money", patternTab: "accounts" }, "money accounts");
+  assertEqual(parseDeepLink("slev://budget/balance"), { tab: "money" }, "budget balance");
+  assertEqual(parseDeepLink("slev://budget/goals"), { tab: "money" }, "budget goals");
+  assertEqual(parseDeepLink("slev://budget"), { tab: "money" }, "budget default");
+  assertEqual(parseDeepLink("slev://money/accounts"), { tab: "money" }, "money accounts");
   assertEqual(parseDeepLink("slev://money"), { tab: "money" }, "money root");
-  assertEqual(parseDeepLink("slev://analysis/breakdown"), { tab: "money", patternTab: "breakdown" }, "analysis breakdown");
+  assertEqual(parseDeepLink("slev://analysis/breakdown"), { tab: "money" }, "analysis breakdown");
   assertEqual(parseDeepLink("slev://patterns"), { tab: "money" }, "patterns root");
-  assertEqual(parseDeepLink("slev://patterns/overview"), { tab: "money", patternTab: "breakdown" }, "legacy recap tab");
-  assertEqual(parseDeepLink("slev://analysis/recap"), { tab: "money", patternTab: "breakdown" }, "legacy recap alias");
+  assertEqual(parseDeepLink("slev://patterns/overview"), { tab: "money" }, "legacy recap tab");
+  assertEqual(parseDeepLink("slev://analysis/recap"), { tab: "money" }, "legacy recap alias");
   assertEqual(parseDeepLink("slev://overview"), { tab: "money" }, "overview root");
   assertEqual(parseDeepLink("slev://memory"), { tab: "money" }, "memory alias");
 });

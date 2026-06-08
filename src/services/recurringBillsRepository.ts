@@ -53,12 +53,7 @@ function normalizeRecurringBill(source: unknown): RecurringBill | null {
     return null;
   }
 
-  const record = source as Partial<RecurringBill> & {
-    dayOfMonth?: unknown;
-    lastPaidMonth?: unknown;
-    context?: unknown;
-    accountLabel?: unknown;
-  };
+  const record = source as Partial<RecurringBill>;
   const label = typeof record.label === "string" ? record.label.trim() : "";
   const amount = typeof record.amount === "number" ? record.amount : Number(record.amount);
   if (!label || !Number.isFinite(amount) || amount <= 0) {

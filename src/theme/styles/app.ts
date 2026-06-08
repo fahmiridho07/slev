@@ -250,29 +250,6 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     fontSize: 14,
     lineHeight: 20
   },
-  allocationGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10
-  },
-  allocationMetric: {
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: 8,
-    borderWidth: 1,
-    flexBasis: "48%",
-    flexGrow: 1,
-    gap: 5,
-    minHeight: 104,
-    minWidth: 138,
-    padding: 14
-  },
-  allocationValue: {
-    color: colors.ink,
-    fontSize: 18,
-    fontWeight: "900",
-    letterSpacing: 0
-  },
   kicker: {
     color: colors.greenDark,
     fontSize: 12,

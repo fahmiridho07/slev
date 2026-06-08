@@ -49,29 +49,6 @@ export type ExpenseCategory = {
 
 export type BudgetPeriod = "weekly" | "monthly";
 
-export type BudgetLimit = {
-  category: string;
-  limitAmount: number;
-  period: BudgetPeriod;
-};
-
-export type CategoryMode = {
-  category: string;
-  mode: "fixed" | "flexible";
-};
-
-export type MonthlyPlan = {
-  id: string;
-  month: string;
-  expectedIncome: number;
-  fixedCosts: number;
-  flexibleBudget: number;
-  savingsTarget: number;
-  note?: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
 export type ManualTemplate = SpendingMoment;
 
 export type RecurringBill = {
@@ -81,14 +58,6 @@ export type RecurringBill = {
   active: boolean;
   createdAt: string;
   updatedAt: string;
-};
-
-export type BalanceSnapshot = {
-  id: string;
-  accountLabel: string;
-  amount: number;
-  snapshotDate: string;
-  createdAt: string;
 };
 
 export type PatternFeedbackResponse = "keep" | "less_often" | "not_sure";

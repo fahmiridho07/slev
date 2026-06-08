@@ -146,6 +146,7 @@ export const en: AppStrings = {
       deleteBody: "{label} will be removed from recurring bills. Logged payments stay in your spending history."
     },
     appearanceTab: "Appearance",
+    accountsTab: "Accounts",
     billsTab: "Bills",
     categoriesTab: "Categories",
     dataTab: "Data",

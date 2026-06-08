@@ -1,8 +1,6 @@
-import { CategoryModeValue } from "../features/app.types";
 import { formatRupiah } from "../lib/spendingMemoryPatterns";
 import { isKeyCorrupt } from "../services/storage";
 import type { ImportErrorCode } from "../services/storageBackup";
-import { displayContext } from "./display";
 import { formatString } from "./format";
 import { getRuntimeStrings } from "./runtime";
 
@@ -168,55 +166,8 @@ export function getCategoryRemovedToast(label: string): string {
   return formatString(getRuntimeStrings().toasts.category.removed, { label });
 }
 
-export function getLimitNeedAmountToast(): string {
-  return getRuntimeStrings().toasts.limit.needAmount;
-}
-
-export function getLimitSavedToast(category: string, period: "weekly" | "monthly"): string {
-  const strings = getRuntimeStrings().toasts.limit;
-  const template = period === "weekly" ? strings.savedWeek : strings.savedMonth;
-  return formatString(template, { category: displayContext(category) });
-}
-
-export function getLimitRemovedToast(category: string): string {
-  return formatString(getRuntimeStrings().toasts.limit.removed, { category: displayContext(category) });
-}
-
-export function getLimitMarkedAsToast(category: string, mode: CategoryModeValue): string {
-  const limits = getRuntimeStrings().budget.limits;
-  const modeLabel = mode === "fixed" ? limits.fixed : limits.flexible;
-  return formatString(getRuntimeStrings().toasts.limit.markedAs, {
-    category: displayContext(category),
-    mode: modeLabel
-  });
-}
-
-export function getPlanNeedFieldsToast(): string {
-  return getRuntimeStrings().toasts.plan.needFields;
-}
-
-export function getPlanSavedToast(): string {
-  return getRuntimeStrings().toasts.plan.saved;
-}
-
-export function getGoalNeedFieldsToast(): string {
-  return getRuntimeStrings().toasts.goal.needFields;
-}
-
-export function getGoalSavedToast(): string {
-  return getRuntimeStrings().toasts.goal.saved;
-}
-
-export function getGoalRemovedToast(): string {
-  return getRuntimeStrings().toasts.goal.removed;
-}
-
 export function getBillNeedFieldsToast(): string {
   return getRuntimeStrings().toasts.bill.needFields;
-}
-
-export function getBillInvalidDayToast(): string {
-  return getRuntimeStrings().toasts.bill.invalidDay;
 }
 
 export function getBillSavedToast(): string {
@@ -225,17 +176,6 @@ export function getBillSavedToast(): string {
 
 export function getBillRemovedToast(): string {
   return getRuntimeStrings().toasts.bill.removed;
-}
-
-export function getBillUnavailableToast(): string {
-  return getRuntimeStrings().toasts.bill.unavailable;
-}
-
-export function getBillLoggedToast(amount: number, label: string): string {
-  return formatString(getRuntimeStrings().toasts.bill.logged, {
-    amount: formatRupiah(amount),
-    label
-  });
 }
 
 export function getBalanceNeedFieldsToast(): string {

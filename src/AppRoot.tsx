@@ -59,7 +59,7 @@ export function AppRoot() {
   const { scrollContentStyle, tabBarStyle } = useLayoutInsets();
   const [activeTab, setActiveTab] = useState<AppTabKey>("home");
   const [returnTab, setReturnTab] = useState<AppTabKey>("home");
-  const [settingsTab, setSettingsTab] = useState<SettingsTabKey>("bills");
+  const [settingsTab, setSettingsTab] = useState<SettingsTabKey>("accounts");
   const [toastMessage, setToastMessage] = useState("");
   const [navHydrated, setNavHydrated] = useState(false);
   const [captureFocusRequest, setCaptureFocusRequest] = useState(0);
@@ -95,11 +95,6 @@ export function AppRoot() {
           setSettingsTab(parseSettingsTab(target.settingsTab));
         }
         openSettings();
-        return;
-      }
-
-      if (target.tab === "budget") {
-        setActiveTab("money");
         return;
       }
 
@@ -173,8 +168,6 @@ export function AppRoot() {
     }
     void setNavStatePreference({
       activeTab: inSettings ? returnTab : activeTab,
-      budgetTab: "plan",
-      patternTab: "breakdown",
       settingsTab
     });
   }, [activeTab, inSettings, isReady, navHydrated, returnTab, settingsTab]);
@@ -287,8 +280,6 @@ export function AppRoot() {
                   <SettingsScreen
                     activeSettingsTab={settingsTab}
                     onSettingsTabChange={setSettingsTab}
-                    onTogglePlanning={() => {}}
-                    planningEnabled={false}
                     scrollContentStyle={scrollContentStyle}
                   />
                 </View>
