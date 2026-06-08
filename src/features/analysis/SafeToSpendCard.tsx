@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useMemo, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { BottomSheet, numberPadInputAccessoryProps } from "../../components";
 import { formatString } from "../../i18n";
 import { formatAmountInput, parseAmountInput } from "../../lib/formatMoney";
@@ -141,40 +141,47 @@ function SafeToSpendCardComponent() {
       </View>
 
       <BottomSheet onClose={closePurchaseSheet} title={copy.sheetTitle} visible={sheetOpen}>
-        <View style={componentStyles.purchaseSheet}>
-          <View style={componentStyles.purchaseAmountField}>
-            <Text style={componentStyles.purchaseAmountPrefix}>
-              {strings.capture.currencyPrefix}
-            </Text>
-            <TextInput
-              accessibilityLabel={copy.purchasePlaceholder}
-              autoFocus
-              keyboardType="number-pad"
-              {...numberPadInputAccessoryProps}
-              onChangeText={(value) => setPurchaseDraft(formatAmountInput(value))}
-              placeholder="0"
-              placeholderTextColor={colors.muted}
-              style={componentStyles.purchaseAmountInput}
-              value={purchaseDraft}
-            />
-          </View>
+        <View style={componentStyles.sheetForm}>
+          <ScrollView
+            contentContainerStyle={componentStyles.purchaseSheet}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            style={componentStyles.sheetScroll}
+          >
+            <View style={componentStyles.purchaseAmountField}>
+              <Text style={componentStyles.purchaseAmountPrefix}>
+                {strings.capture.currencyPrefix}
+              </Text>
+              <TextInput
+                accessibilityLabel={copy.purchasePlaceholder}
+                autoFocus
+                keyboardType="number-pad"
+                {...numberPadInputAccessoryProps}
+                onChangeText={(value) => setPurchaseDraft(formatAmountInput(value))}
+                placeholder="0"
+                placeholderTextColor={colors.muted}
+                style={componentStyles.purchaseAmountInput}
+                value={purchaseDraft}
+              />
+            </View>
 
-          <View style={[componentStyles.purchaseVerdict, verdictStyle]}>
-            <Ionicons color={verdictColor} name={verdictIcon} size={20} />
-            <Text
-              accessibilityLiveRegion="polite"
-              style={[componentStyles.purchaseVerdictText, { color: verdictColor }]}
-            >
-              {verdictText}
-            </Text>
-          </View>
+            <View style={[componentStyles.purchaseVerdict, verdictStyle]}>
+              <Ionicons color={verdictColor} name={verdictIcon} size={20} />
+              <Text
+                accessibilityLiveRegion="polite"
+                style={[componentStyles.purchaseVerdictText, { color: verdictColor }]}
+              >
+                {verdictText}
+              </Text>
+            </View>
 
-          <Text style={componentStyles.purchaseContext}>
-            {formatString(copy.sheetContext, {
-              amount: formatRupiah(safe.safeDaily),
-              days: safe.daysLeft
-            })}
-          </Text>
+            <Text style={componentStyles.purchaseContext}>
+              {formatString(copy.sheetContext, {
+                amount: formatRupiah(safe.safeDaily),
+                days: safe.daysLeft
+              })}
+            </Text>
+          </ScrollView>
         </View>
       </BottomSheet>
     </>
