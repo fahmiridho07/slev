@@ -1,19 +1,17 @@
 import React, { useMemo } from "react";
 import { ScrollView, Text, View } from "react-native";
-import { BottomSheet, EmptyState, ProgressBar } from "../../components";
+import { BottomSheet, EmptyState } from "../../components";
 import { formatString } from "../../i18n";
 import { formatLocaleMonthYear } from "../../i18n/localeDate";
-import { filterBreakdownMoments, getMonthlyBudgetLimit } from "../../lib/breakdownDrilldown";
+import { filterBreakdownMoments } from "../../lib/breakdownDrilldown";
 import { FinanceBreakdownRow } from "../../lib/financeEngine";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
-import { BudgetLimit, EntryType, SpendingMoment } from "../spendingMemory.types";
+import { EntryType, SpendingMoment } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
-import { getProgressFillStyle } from "../../theme/styles/fillStyles";
 import { BreakdownMomentItem } from "./BreakdownMomentItem";
 
 type CategoryBreakdownSheetProps = {
   breakdownType: EntryType;
-  budgetLimits: BudgetLimit[];
   moments: SpendingMoment[];
   onClose: () => void;
   onDeleteMoment: (moment: SpendingMoment) => void;
@@ -25,7 +23,6 @@ type CategoryBreakdownSheetProps = {
 
 export function CategoryBreakdownSheet({
   breakdownType,
-  budgetLimits,
   moments,
   onClose,
   onDeleteMoment,
@@ -34,15 +31,12 @@ export function CategoryBreakdownSheet({
   row,
   visible
 }: CategoryBreakdownSheetProps) {
-  const { colors, componentStyles, strings, styles } = useTheme();
+  const { componentStyles, strings, styles } = useTheme();
   const breakdownStrings = strings.patterns.breakdown;
-  const limitsStrings = strings.budget.limits;
   const entries = useMemo(
     () => (row ? filterBreakdownMoments(moments, breakdownType, row.key, referenceDate) : []),
     [breakdownType, moments, referenceDate, row]
   );
-  const monthlyLimit = row && breakdownType === "expense" ? getMonthlyBudgetLimit(budgetLimits, row.key) : undefined;
-  const budgetProgress = monthlyLimit && monthlyLimit.limitAmount > 0 ? row!.amount / monthlyLimit.limitAmount : 0;
 
   if (!row) {
     return null;
@@ -63,26 +57,6 @@ export function CategoryBreakdownSheet({
             total: formatRupiah(row.amount)
           })}
         </Text>
-
-        {monthlyLimit && (
-          <View style={styles.breakdownBudgetBlock}>
-            <Text style={styles.budgetMeta}>
-              {formatString(limitsStrings.spentOfLimit, {
-                spent: formatRupiah(row.amount),
-                limit: formatRupiah(monthlyLimit.limitAmount),
-                period: limitsStrings.monthly
-              })}
-            </Text>
-            <ProgressBar
-              accessibilityLabel={formatString(strings.common.progressA11y, {
-                label: row.label,
-                percent: Math.round(budgetProgress * 100)
-              })}
-              fillStyle={[styles.progressFill, getProgressFillStyle(budgetProgress, colors)]}
-              value={budgetProgress}
-            />
-          </View>
-        )}
 
         <ScrollView
           contentContainerStyle={styles.repeatBlock}

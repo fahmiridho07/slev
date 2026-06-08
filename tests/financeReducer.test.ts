@@ -78,8 +78,6 @@ test("hydrate merges stored collections without touching ui flags", () => {
       payload: {
         moments: [moment],
         feedback: [],
-        budgetLimits: [],
-        categoryModes: [],
         manualTemplates: [],
         recurringBills: [],
         savingsGoals: [],
@@ -104,12 +102,6 @@ test("set_undo_toast stores and clears deleted moment snapshot", () => {
 
   const cleared = financeReducer(withUndo, { type: "set_undo_toast", moment: null });
   assertEqual(cleared.undoToast, null, "undo snapshot cleared");
-});
-
-test("set_budget_limits replaces limits array", () => {
-  const limits = [{ category: "Meal" as const, createdAt: "x", id: "l1", limitAmount: 500000, period: "monthly" as const, updatedAt: "x" }];
-  const next = financeReducer(initialFinanceState, { type: "set_budget_limits", budgetLimits: limits });
-  assertEqual(next.budgetLimits, limits, "limits replaced");
 });
 
 test("clear_all resets finance memory but keeps default accounts and categories", () => {

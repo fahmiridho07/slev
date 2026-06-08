@@ -1,8 +1,4 @@
-import {
-  buildMonthlyBreakdown,
-  getDaysRemainingInMonth,
-  getModeByCategory
-} from "../src/lib/financeEngine";
+import { buildMonthlyBreakdown, getDaysRemainingInMonth } from "../src/lib/financeEngine";
 import {
   buildSafeToSpend,
   getEffectiveBalance,
@@ -41,15 +37,6 @@ test("breakdown groups current-month expenses and calculates shares", () => {
   assertEqual(rows[0]?.label, "Meal", "largest row should be first");
   assertEqual(rows[0]?.amount, 600_000, "Meal amount should be grouped");
   assertEqual(rows[0]?.share, 0.6, "Meal share should be 60%");
-});
-
-test("category modes preserve fixed defaults and custom overrides", () => {
-  const modes = getModeByCategory([{ category: "Meal", mode: "fixed" }]);
-
-  assertEqual(modes.get("Bills"), "fixed", "Bills should default to fixed");
-  assertEqual(modes.get("Home"), "fixed", "Home should default to fixed");
-  assertEqual(modes.get("Coffee"), "flexible", "Coffee should default to flexible");
-  assertEqual(modes.get("Meal"), "fixed", "custom mode should override defaults");
 });
 
 test("getEffectiveBalance returns null without balance anchor", () => {

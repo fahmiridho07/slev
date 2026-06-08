@@ -1,4 +1,4 @@
-import { BudgetLimit, EntryType, SpendingMoment } from "../features/spendingMemory.types";
+import { EntryType, SpendingMoment } from "../features/spendingMemory.types";
 import { getRuntimeStrings } from "../i18n/runtime";
 import { getMonthRange, isWithinRange } from "./analysis";
 
@@ -42,13 +42,6 @@ export function filterBreakdownMoments(
       return source === rowKey;
     })
     .sort((left, right) => Date.parse(right.occurredAt) - Date.parse(left.occurredAt));
-}
-
-export function getMonthlyBudgetLimit(
-  budgetLimits: BudgetLimit[],
-  categoryKey: string
-): BudgetLimit | undefined {
-  return budgetLimits.find((limit) => limit.category === categoryKey && limit.period === "monthly");
 }
 
 function getBreakdownRowKey(moment: SpendingMoment, type: EntryType): string {

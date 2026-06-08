@@ -1,20 +1,17 @@
 import { Share } from "react-native";
 import { hapticSelection, hapticSuccess } from "../lib/haptics";
-import { CategoryModeValue } from "../features/app.types";
 import { getCaptureValidationError, getShortcutValidationError } from "../features/capture/captureValidation";
 import { CaptureFormValues } from "../features/capture/types";
 import { getMemoryEditValidationError } from "../features/memory/memoryValidation";
 import {
   getAccountValidationError,
-  getBalanceAnchorValidationError,
-  getGoalValidationError,
-  getLimitValidationError
+  getBalanceAnchorValidationError
 } from "../features/budget/budgetValidation";
+import { getGoalNeedFieldsToast } from "../i18n";
 import { getImportJsonValidationError } from "../features/settings/dataValidation";
 import { getBillValidationError, getCategoryValidationError } from "../features/settings/settingsValidation";
 import { FormActionResult } from "../lib/formValidation";
 import {
-  BudgetPeriod,
   EntryType,
   ExpenseCategory,
   MoneyAccount,
@@ -55,10 +52,6 @@ import {
   getGoalRemovedToast,
   getGoalSavedToast,
   getIncomeSavedToast,
-  getLimitMarkedAsToast,
-
-  getLimitRemovedToast,
-  getLimitSavedToast,
   getMemoryNotFoundToast,
   getMemoryRemovedToast,
   getMemoryRestoredToast,
@@ -86,12 +79,6 @@ import {
   saveMoneyTransfer
 } from "../services/accountRepository";
 import {
-  clearBudgetLimits,
-  deleteBudgetLimit,
-  listBudgetLimits,
-  saveBudgetLimit
-} from "../services/budgetRepository";
-import {
   clearExpenseCategories,
   deleteExpenseCategory,
   listExpenseCategories,
@@ -104,13 +91,10 @@ import {
 } from "../services/balanceAnchorRepository";
 import {
   clearManualFinance,
-  deleteCategoryMode,
   deleteManualTemplate,
   deleteSavingsGoal,
-  listCategoryModes,
   listManualTemplates,
   listSavingsGoals,
-  saveCategoryMode,
   saveManualTemplate,
   saveSavingsGoal
 } from "../services/manualFinanceRepository";
@@ -147,8 +131,6 @@ export function createFinanceActions(
     const [
       storedMoments,
       storedFeedback,
-      storedBudgetLimits,
-      storedCategoryModes,
       storedManualTemplates,
       storedSavingsGoals,
       storedRecurringBills,
@@ -159,8 +141,6 @@ export function createFinanceActions(
     ] = await Promise.all([
       listSpendingMoments(),
       listPatternFeedback(),
-      listBudgetLimits(),
-      listCategoryModes(),
       listManualTemplates(),
       listSavingsGoals(),
       listRecurringBills(),
@@ -175,8 +155,6 @@ export function createFinanceActions(
       payload: {
         moments: storedMoments,
         feedback: storedFeedback,
-        budgetLimits: storedBudgetLimits,
-        categoryModes: storedCategoryModes,
         manualTemplates: storedManualTemplates,
         savingsGoals: storedSavingsGoals,
         recurringBills: storedRecurringBills,
@@ -489,69 +467,8 @@ export function createFinanceActions(
       return;
     }
 
-    const updatedLimits = await deleteBudgetLimit(category.label);
-    if (!updatedLimits.persisted) {
-      notifyWriteFailure(STORAGE_KEYS.budgetLimits);
-      await reload();
-      return;
-    }
-
-    const updatedModes = await deleteCategoryMode(category.label);
-    if (!updatedModes.persisted) {
-      notifyWriteFailure(STORAGE_KEYS.categoryModes);
-      await reload();
-      return;
-    }
-
     dispatch({ type: "set_expense_categories", expenseCategories: updatedCategories.data });
-    dispatch({ type: "set_budget_limits", budgetLimits: updatedLimits.data });
-    dispatch({ type: "set_category_modes", categoryModes: updatedModes.data });
     setMessage(getCategoryRemovedToast(category.label));
-  }
-
-  async function saveCategoryBudget(
-    category: SpendingContext,
-    amountTextValue: string,
-    period: BudgetPeriod
-  ): Promise<FormActionResult<"amount">> {
-    const validationError = getLimitValidationError(amountTextValue);
-    if (validationError) {
-      return { ok: false, validation: validationError };
-    }
-
-    const limitAmount = parseAmountInput(amountTextValue);
-    if (!limitAmount) {
-      return { ok: false };
-    }
-
-    const { data: updated, persisted } = await saveBudgetLimit({ category, limitAmount, period });
-    if (!persisted) {
-      notifyWriteFailure(STORAGE_KEYS.budgetLimits);
-      return { ok: false };
-    }
-    dispatch({ type: "set_budget_limits", budgetLimits: updated });
-    setMessage(getLimitSavedToast(category, period));
-    return { ok: true };
-  }
-
-  async function removeCategoryBudget(category: SpendingContext) {
-    const { data: updated, persisted } = await deleteBudgetLimit(category);
-    if (!persisted) {
-      notifyWriteFailure(STORAGE_KEYS.budgetLimits);
-      return;
-    }
-    dispatch({ type: "set_budget_limits", budgetLimits: updated });
-    setMessage(getLimitRemovedToast(category));
-  }
-
-  async function changeCategoryMode(category: SpendingContext, mode: CategoryModeValue) {
-    const { data: updated, persisted } = await saveCategoryMode(category, mode);
-    if (!persisted) {
-      notifyWriteFailure(STORAGE_KEYS.categoryModes);
-      return;
-    }
-    dispatch({ type: "set_category_modes", categoryModes: updated });
-    setMessage(getLimitMarkedAsToast(category, mode));
   }
 
   async function saveGoal(input: {
@@ -560,9 +477,15 @@ export function createFinanceActions(
     savedAmount: string;
     targetAmount: string;
   }): Promise<FormActionResult<"label" | "targetAmount">> {
-    const validationError = getGoalValidationError(input);
-    if (validationError) {
-      return { ok: false, validation: validationError };
+    const parsedTarget = parseAmountInput(input.targetAmount);
+    if (!input.label.trim() || !parsedTarget) {
+      return {
+        ok: false,
+        validation: {
+          field: !input.label.trim() ? "label" : "targetAmount",
+          message: getGoalNeedFieldsToast()
+        }
+      };
     }
 
     const targetAmount = parseAmountInput(input.targetAmount);
@@ -791,7 +714,6 @@ export function createFinanceActions(
   async function confirmClearAll() {
     const cleared = await Promise.all([
       clearSpendingMemory(),
-      clearBudgetLimits(),
       clearManualFinance(),
       clearBalanceAnchor(),
       clearRecurringBills(),
@@ -819,7 +741,6 @@ export function createFinanceActions(
   return {
     answerPattern,
     boot,
-    changeCategoryMode,
     clearAll,
     clearUndoToast,
     confirmClearAll,
@@ -830,7 +751,6 @@ export function createFinanceActions(
     resetDamagedCollection,
     removeAccount,
     removeCategory,
-    removeCategoryBudget,
     removeManualTemplate,
     removeMoment,
     undoRemoveMoment,
@@ -842,7 +762,6 @@ export function createFinanceActions(
     saveAsTemplate,
     setBalanceAnchor,
     saveCategory,
-    saveCategoryBudget,
     saveGoal,
     saveRecurringBill: saveRecurringBillAction,
     saveMoment,

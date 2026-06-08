@@ -16,7 +16,6 @@ import {
   buildBreakdownMonthDeltas,
   filterBreakdownMoments,
   getBreakdownDeltaBadgeKind,
-  getMonthlyBudgetLimit,
   getTopBreakdownIncreases,
   shouldShowBreakdownDeltaBadge
 } from "../../lib/breakdownDrilldown";
@@ -27,12 +26,11 @@ import {
   isCurrentMonthOffset
 } from "../../lib/spendingPeriod";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
-import { BudgetLimit, EntryType, SpendingMoment } from "../spendingMemory.types";
+import { EntryType, SpendingMoment } from "../spendingMemory.types";
 import { MomentEditForm } from "../memory/MomentEditForm";
 import { hapticSelection } from "../../lib/haptics";
 import { useActions } from "../../state/useFinance";
 import { useTheme } from "../../hooks/useTheme";
-import { getProgressFillStyle } from "../../theme/styles/fillStyles";
 import { CategoryBreakdownSheet } from "./CategoryBreakdownSheet";
 import { MonthlySpendingChart } from "./MonthlySpendingChart";
 import { SpendingTrendsSection } from "./SpendingTrendsSection";
@@ -42,7 +40,6 @@ const FLAT_DELTA_THRESHOLD = 0.005;
 
 type BreakdownPanelProps = {
   breakdownType: EntryType;
-  budgetLimits: BudgetLimit[];
   moments: SpendingMoment[];
   monthOffset: number;
 };
@@ -71,11 +68,10 @@ function getDeltaBadgeLabel(
     : formatString(breakdownStrings.categoryDeltaDown, { percent });
 }
 
-export function BreakdownPanel({ breakdownType, budgetLimits, moments, monthOffset }: BreakdownPanelProps) {
+export function BreakdownPanel({ breakdownType, moments, monthOffset }: BreakdownPanelProps) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const actions = useActions();
   const breakdownStrings = strings.patterns.breakdown;
-  const limitsStrings = strings.budget.limits;
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [selectedRow, setSelectedRow] = useState<FinanceBreakdownRow | null>(null);
   const [editingMoment, setEditingMoment] = useState<SpendingMoment | null>(null);
@@ -223,10 +219,6 @@ export function BreakdownPanel({ breakdownType, budgetLimits, moments, monthOffs
           />
           <View style={styles.listPanel}>
             {visibleRows.map((row) => {
-              const monthlyLimit =
-                breakdownType === "expense" ? getMonthlyBudgetLimit(budgetLimits, row.key) : undefined;
-              const budgetProgress =
-                monthlyLimit && monthlyLimit.limitAmount > 0 ? row.amount / monthlyLimit.limitAmount : 0;
               const rowDelta = monthDeltas.get(row.key);
               const deltaKind = getBreakdownDeltaBadgeKind(rowDelta);
               const deltaBadgeLabel = getDeltaBadgeLabel(deltaKind, rowDelta?.deltaPercent ?? null, strings);
@@ -278,16 +270,6 @@ export function BreakdownPanel({ breakdownType, budgetLimits, moments, monthOffs
                     </View>
                   </View>
 
-                  {monthlyLimit && (
-                    <Text style={styles.budgetMeta}>
-                      {formatString(limitsStrings.spentOfLimit, {
-                        spent: formatRupiah(row.amount),
-                        limit: formatRupiah(monthlyLimit.limitAmount),
-                        period: limitsStrings.monthly
-                      })}
-                    </Text>
-                  )}
-
                   <ProgressBar
                     accessibilityLabel={formatString(strings.common.progressA11y, {
                       label: row.label,
@@ -296,17 +278,6 @@ export function BreakdownPanel({ breakdownType, budgetLimits, moments, monthOffs
                     fillStyle={[styles.breakdownFill, getPercentWidthStyle(row.share)]}
                     value={row.share}
                   />
-
-                  {monthlyLimit && (
-                    <ProgressBar
-                      accessibilityLabel={formatString(breakdownStrings.budgetProgressA11y, {
-                        label: row.label,
-                        percent: Math.round(budgetProgress * 100)
-                      })}
-                      fillStyle={[styles.progressFill, getProgressFillStyle(budgetProgress, colors)]}
-                      value={budgetProgress}
-                    />
-                  )}
                 </Pressable>
               );
             })}
@@ -331,7 +302,6 @@ export function BreakdownPanel({ breakdownType, budgetLimits, moments, monthOffs
 
       <CategoryBreakdownSheet
         breakdownType={breakdownType}
-        budgetLimits={budgetLimits}
         moments={moments}
         onClose={() => setSelectedRow(null)}
         onDeleteMoment={setPendingDeleteMoment}

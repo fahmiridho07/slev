@@ -1,15 +1,7 @@
-import {
-  CategoryMode,
-  EntryType,
-  SpendingContext,
-  SpendingMoment
-} from "../features/spendingMemory.types";
-import { DEFAULT_SPENDING_CONTEXTS } from "../data/spendingMemory";
+import { EntryType, SpendingMoment } from "../features/spendingMemory.types";
 import { displayContext } from "../i18n/display";
 import { getRuntimeStrings } from "../i18n/runtime";
 import { getMonthRange, isWithinRange, sumMoments } from "./dateRanges";
-
-export type FinanceCategoryModeValue = CategoryMode["mode"];
 
 export type FinanceBreakdownRow = {
   amount: number;
@@ -45,16 +37,6 @@ export function buildMonthlyBreakdown(
       share: total > 0 ? amount / total : 0
     }))
     .sort((a, b) => b.amount - a.amount);
-}
-
-export function getModeByCategory(categoryModes: CategoryMode[]): Map<SpendingContext, FinanceCategoryModeValue> {
-  const modes = new Map<SpendingContext, FinanceCategoryModeValue>(
-    DEFAULT_SPENDING_CONTEXTS.map((category) => [category, category === "Bills" || category === "Home" ? "fixed" : "flexible"])
-  );
-  categoryModes.forEach((item) => {
-    modes.set(item.category, item.mode);
-  });
-  return modes;
 }
 
 export function getDaysRemainingInMonth(date: Date): number {

@@ -6,7 +6,8 @@ import { FormValidationError } from "../../lib/formValidation";
 import { useActions } from "../../state/useFinance";
 import { useTheme } from "../../hooks/useTheme";
 import { SavingsGoal } from "../spendingMemory.types";
-import { GoalFieldError } from "./budgetValidation";
+
+type GoalFieldError = "label" | "targetAmount";
 
 type GoalEditFormProps = {
   goal: SavingsGoal;

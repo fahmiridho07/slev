@@ -10,8 +10,9 @@ import { SavingsGoal } from "../spendingMemory.types";
 import { hapticSelection, hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
 import { useTheme } from "../../hooks/useTheme";
-import { GoalFieldError } from "./budgetValidation";
 import { GoalEditForm } from "./GoalEditForm";
+
+type GoalFieldError = "label" | "targetAmount";
 
 export function SavingsGoalsPanel({
   savingsGoals,

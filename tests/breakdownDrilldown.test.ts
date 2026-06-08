@@ -1,11 +1,10 @@
 process.env.TZ = "Asia/Jakarta";
 
-import { BudgetLimit, EntryType, SpendingContext, SpendingMoment } from "../src/features/spendingMemory.types";
+import { EntryType, SpendingContext, SpendingMoment } from "../src/features/spendingMemory.types";
 import {
   buildBreakdownMonthDeltas,
   filterBreakdownMoments,
   getBreakdownDeltaBadgeKind,
-  getMonthlyBudgetLimit,
   getTopBreakdownIncreases,
   shouldShowBreakdownDeltaBadge
 } from "../src/lib/breakdownDrilldown";
@@ -90,16 +89,6 @@ test("getTopBreakdownIncreases ranks positive movers", () => {
   assertEqual(top[0]?.key, "Food", "top key");
   assertEqual(shouldShowBreakdownDeltaBadge(deltas.get("Food")), true, "food visible");
   assertEqual(shouldShowBreakdownDeltaBadge(deltas.get("Transport")), true, "transport visible");
-});
-
-test("getMonthlyBudgetLimit returns only monthly limits", () => {
-  const limits: BudgetLimit[] = [
-    { category: "Food", limitAmount: 500_000, period: "weekly" },
-    { category: "Transport", limitAmount: 300_000, period: "monthly" }
-  ];
-
-  assertEqual(getMonthlyBudgetLimit(limits, "Food"), undefined, "weekly limit ignored");
-  assertEqual(getMonthlyBudgetLimit(limits, "Transport")?.limitAmount, 300_000, "monthly limit");
 });
 
 let passed = 0;

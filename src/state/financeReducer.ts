@@ -1,8 +1,6 @@
 import { getDefaultToastMessage } from "../i18n/toasts";
 import { BalanceAnchor } from "../services/balanceAnchorRepository";
 import {
-  BudgetLimit,
-  CategoryMode,
   ExpenseCategory,
   ManualTemplate,
   MoneyAccount,
@@ -16,8 +14,6 @@ import {
 export type FinanceState = {
   balanceAnchor: BalanceAnchor | null;
   bootError: string | null;
-  budgetLimits: BudgetLimit[];
-  categoryModes: CategoryMode[];
   clearConfirmVisible: boolean;
   expenseCategories: ExpenseCategory[];
   feedback: PatternFeedback[];
@@ -35,8 +31,6 @@ export type FinanceState = {
 export const initialFinanceState: FinanceState = {
   balanceAnchor: null,
   bootError: null,
-  budgetLimits: [],
-  categoryModes: [],
   clearConfirmVisible: false,
   expenseCategories: [],
   feedback: [],
@@ -66,8 +60,6 @@ export type FinanceAction =
   | { type: "remove_moment"; id: string }
   | { type: "set_undo_toast"; moment: SpendingMoment | null }
   | { type: "set_feedback"; feedback: PatternFeedback[] }
-  | { type: "set_budget_limits"; budgetLimits: BudgetLimit[] }
-  | { type: "set_category_modes"; categoryModes: CategoryMode[] }
   | { type: "set_manual_templates"; manualTemplates: ManualTemplate[] }
   | { type: "set_recurring_bills"; recurringBills: RecurringBill[] }
   | { type: "set_savings_goals"; savingsGoals: SavingsGoal[] }
@@ -112,10 +104,6 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       return { ...state, undoToast: action.moment };
     case "set_feedback":
       return { ...state, feedback: action.feedback };
-    case "set_budget_limits":
-      return { ...state, budgetLimits: action.budgetLimits };
-    case "set_category_modes":
-      return { ...state, categoryModes: action.categoryModes };
     case "set_manual_templates":
       return { ...state, manualTemplates: action.manualTemplates };
     case "set_recurring_bills":
@@ -134,8 +122,6 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       return {
         ...state,
         balanceAnchor: null,
-        budgetLimits: [],
-        categoryModes: [],
         clearConfirmVisible: false,
         feedback: [],
         manualTemplates: [],

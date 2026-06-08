@@ -271,7 +271,7 @@ test("logRecurringBillPayment reverts bill mark when moment write fails", async 
   assertEqual(getState().recurringBills[0]?.lastPaidMonth, undefined, "bill payment reverted");
 });
 
-test("removeCategory clears related budget data", async () => {
+test("removeCategory deletes the expense category", async () => {
   const driver = createMemoryDriver();
   setStorageDriver(driver);
   const { actions, getState } = createTestHarness({ isReady: true });
@@ -283,24 +283,12 @@ test("removeCategory clears related budget data", async () => {
     throw new Error("expected saved category");
   }
 
-  await actions.saveCategoryBudget("Streaming", "150000", "monthly");
-  await actions.changeCategoryMode("Streaming", "flexible");
   await actions.removeCategory(category);
 
   assertEqual(
     getState().expenseCategories.some((item) => item.label.toLowerCase() === "streaming"),
     false,
     "category removed"
-  );
-  assertEqual(
-    getState().budgetLimits.some((limit) => limit.category === "Streaming"),
-    false,
-    "limit removed"
-  );
-  assertEqual(
-    getState().categoryModes.some((mode) => mode.category === "Streaming"),
-    false,
-    "mode removed"
   );
 });
 

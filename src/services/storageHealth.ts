@@ -2,7 +2,6 @@ import { formatString } from "../i18n/format";
 import { getRuntimeStrings } from "../i18n/runtime";
 import { getWriteFailureToast } from "../i18n/toasts";
 import { isAccountsStorageCorrupt, isTransfersStorageCorrupt } from "./accountRepository";
-import { isBudgetLimitsStorageCorrupt } from "./budgetRepository";
 import { isExpenseCategoriesStorageCorrupt } from "./categoryRepository";
 import { isKeyCorrupt, removeKeys } from "./storage";
 import { EXPORTABLE_STORAGE_KEYS, STORAGE_KEYS } from "./storageSchema";
@@ -18,14 +17,9 @@ const CORRUPT_STORAGE_CHECKS: Array<{ check: () => boolean; key: string }> = [
   { check: isPatternFeedbackStorageCorrupt, key: STORAGE_KEYS.patternFeedback },
   { check: isAccountsStorageCorrupt, key: STORAGE_KEYS.accounts },
   { check: isTransfersStorageCorrupt, key: STORAGE_KEYS.transfers },
-  { check: isBudgetLimitsStorageCorrupt, key: STORAGE_KEYS.budgetLimits },
   {
     check: () => isKeyCorrupt(STORAGE_KEYS.manualTemplates),
     key: STORAGE_KEYS.manualTemplates
-  },
-  {
-    check: () => isKeyCorrupt(STORAGE_KEYS.categoryModes),
-    key: STORAGE_KEYS.categoryModes
   },
   {
     check: () => isKeyCorrupt(STORAGE_KEYS.savingsGoals),

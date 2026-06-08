@@ -1,6 +1,5 @@
-import { DEFAULT_SPENDING_CONTEXTS, normalizeSpendingContext } from "../data/spendingMemory";
+import { normalizeSpendingContext } from "../data/spendingMemory";
 import {
-  CategoryMode,
   EntryType,
   ManualTemplate,
   SavingsGoal,
@@ -16,10 +15,7 @@ import {
 import { isKeyCorrupt, readJson, removeKeys, WriteResult, writeJson } from "./storage";
 
 const MANUAL_TEMPLATES_KEY = "slev_manual_templates";
-const CATEGORY_MODES_KEY = "slev_category_modes";
 const SAVINGS_GOALS_KEY = "slev_savings_goals";
-
-type CategoryModeValue = CategoryMode["mode"];
 
 type ManualTemplateInput = {
   accountLabel?: string;
@@ -65,33 +61,6 @@ export async function deleteManualTemplate(id: string): Promise<WriteResult<Manu
   const current = await listManualTemplates();
   const updated = current.filter((template) => template.id !== id);
   const persisted = await writeJson(MANUAL_TEMPLATES_KEY, updated);
-  return { data: updated, persisted };
-}
-
-export async function listCategoryModes(): Promise<CategoryMode[]> {
-  const result = await readJson<unknown>(CATEGORY_MODES_KEY);
-  if (result.status !== "ok") return getDefaultCategoryModes();
-  if (!Array.isArray(result.value)) return getDefaultCategoryModes();
-  return mergeCategoryModes(result.value.map(normalizeCategoryMode).filter(isCategoryMode));
-}
-
-export async function saveCategoryMode(
-  category: SpendingContext,
-  mode: CategoryModeValue
-): Promise<WriteResult<CategoryMode[]>> {
-  const current = await listCategoryModes();
-  const updated = mergeCategoryModes([
-    { category, mode },
-    ...current.filter((item) => item.category !== category)
-  ]);
-  const persisted = await writeJson(CATEGORY_MODES_KEY, updated);
-  return { data: updated, persisted };
-}
-
-export async function deleteCategoryMode(category: SpendingContext): Promise<WriteResult<CategoryMode[]>> {
-  const current = await listCategoryModes();
-  const updated = mergeCategoryModes(current.filter((item) => item.category !== category));
-  const persisted = await writeJson(CATEGORY_MODES_KEY, updated);
   return { data: updated, persisted };
 }
 
@@ -151,19 +120,11 @@ export async function rewriteAccountLabelInManualTemplates(
 }
 
 export async function clearManualFinance(): Promise<boolean> {
-  return removeKeys([
-    MANUAL_TEMPLATES_KEY,
-    CATEGORY_MODES_KEY,
-    SAVINGS_GOALS_KEY
-  ]);
+  return removeKeys([MANUAL_TEMPLATES_KEY, SAVINGS_GOALS_KEY]);
 }
 
 export function isManualFinanceStorageCorrupt(): boolean {
-  return (
-    isKeyCorrupt(MANUAL_TEMPLATES_KEY) ||
-    isKeyCorrupt(CATEGORY_MODES_KEY) ||
-    isKeyCorrupt(SAVINGS_GOALS_KEY)
-  );
+  return isKeyCorrupt(MANUAL_TEMPLATES_KEY) || isKeyCorrupt(SAVINGS_GOALS_KEY);
 }
 
 function normalizeManualTemplate(value: unknown): ManualTemplate | null {
@@ -191,18 +152,6 @@ function normalizeManualTemplate(value: unknown): ManualTemplate | null {
   };
 }
 
-function normalizeCategoryMode(value: unknown): CategoryMode | null {
-  const record = toRecord(value);
-  if (!record) return null;
-  const category = normalizeSpendingContext(readString(record, "category"));
-  if (!category) return null;
-
-  return {
-    category,
-    mode: readString(record, "mode") === "fixed" ? "fixed" : "flexible"
-  };
-}
-
 function normalizeSavingsGoal(value: unknown): SavingsGoal | null {
   const record = toRecord(value);
   if (!record) return null;
@@ -221,30 +170,7 @@ function normalizeSavingsGoal(value: unknown): SavingsGoal | null {
   };
 }
 
-function getDefaultCategoryModes(): CategoryMode[] {
-  return DEFAULT_SPENDING_CONTEXTS.map((category) => ({
-    category,
-    mode: category === "Bills" || category === "Home" ? "fixed" : "flexible"
-  }));
-}
-
-function mergeCategoryModes(settings: CategoryMode[]): CategoryMode[] {
-  const byCategory = new Map(settings.map((setting) => [setting.category, setting.mode]));
-  const defaultModes = DEFAULT_SPENDING_CONTEXTS.map((category) => ({
-    category,
-    mode: byCategory.get(category) ?? (category === "Bills" || category === "Home" ? "fixed" : "flexible")
-  }));
-  const customModes = settings
-    .filter((setting) => !DEFAULT_SPENDING_CONTEXTS.includes(setting.category))
-    .sort((a, b) => a.category.localeCompare(b.category));
-  return [...defaultModes, ...customModes];
-}
-
 function isManualTemplate(value: ManualTemplate | null): value is ManualTemplate {
-  return value !== null;
-}
-
-function isCategoryMode(value: CategoryMode | null): value is CategoryMode {
   return value !== null;
 }
 
@@ -255,6 +181,3 @@ function isSavingsGoal(value: SavingsGoal | null): value is SavingsGoal {
 function normalizeAmount(value: number): number {
   return Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
 }
-
-
-

@@ -323,11 +323,11 @@ test("listCorruptStorageIssues surfaces damaged collections", async () => {
   const driver = createMemoryDriver();
   setStorageDriver(driver);
 
-  await driver.setItem(STORAGE_KEYS.budgetLimits, "{bad-json");
-  await readJson(STORAGE_KEYS.budgetLimits);
+  await driver.setItem(STORAGE_KEYS.manualTemplates, "{bad-json");
+  await readJson(STORAGE_KEYS.manualTemplates);
 
   const issues = listCorruptStorageIssues();
-  assertEqual(issues.some((issue) => issue.key === STORAGE_KEYS.budgetLimits), true, "budget issue listed");
+  assertEqual(issues.some((issue) => issue.key === STORAGE_KEYS.manualTemplates), true, "templates issue listed");
 });
 
 test("exportAllDataWithReport skips corrupt collections but keeps healthy exports", async () => {
@@ -378,13 +378,13 @@ test("corrupt backup pruning keeps at most three snapshots per source key", asyn
   const driver = createMemoryDriver();
   setStorageDriver(driver);
 
-  const prefix = corruptBackupKeyPrefix(STORAGE_KEYS.budgetLimits);
+  const prefix = corruptBackupKeyPrefix(STORAGE_KEYS.manualTemplates);
   for (let index = 0; index < 5; index += 1) {
     await driver.setItem(`${prefix}${1_000 + index}`, "{bad-json");
   }
 
-  await driver.setItem(STORAGE_KEYS.budgetLimits, "{bad-json");
-  await readJson(STORAGE_KEYS.budgetLimits);
+  await driver.setItem(STORAGE_KEYS.manualTemplates, "{bad-json");
+  await readJson(STORAGE_KEYS.manualTemplates);
 
   const backupKeys = [...driver.store.keys()].filter((key) => key.startsWith(prefix));
   assertEqual(backupKeys.length <= 3, true, "at most three backups retained");

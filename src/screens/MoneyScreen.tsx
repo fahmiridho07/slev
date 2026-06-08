@@ -84,7 +84,6 @@ function MoneyScreenComponent({
   const [pendingDeleteMoment, setPendingDeleteMoment] = useState<SpendingMoment | null>(null);
 
   const moments = useFinanceSelector((state) => state.moments);
-  const budgetLimits = useFinanceSelector((state) => state.budgetLimits);
   const { dismiss: dismissListHint, visible: showListHint } = useListActionsHint("memory", moments.length > 0);
   const breakdownReferenceDate = useMemo(
     () => getMonthReferenceDate(breakdownMonthOffset),
@@ -172,7 +171,6 @@ function MoneyScreenComponent({
         {trackerView === "expense" && (
           <BreakdownPanel
             breakdownType="expense"
-            budgetLimits={budgetLimits}
             moments={moments}
             monthOffset={breakdownMonthOffset}
           />
@@ -180,7 +178,6 @@ function MoneyScreenComponent({
         {trackerView === "income" && (
           <BreakdownPanel
             breakdownType="income"
-            budgetLimits={budgetLimits}
             moments={moments}
             monthOffset={breakdownMonthOffset}
           />
@@ -190,7 +187,6 @@ function MoneyScreenComponent({
     [
       breakdownMonthOffset,
       breakdownReferenceDate,
-      budgetLimits,
       earliestMonthOffset,
       moments,
       strings.common.expense,

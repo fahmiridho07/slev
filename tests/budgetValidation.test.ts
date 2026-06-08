@@ -1,9 +1,6 @@
 import {
   getAccountValidationError,
-  getBalanceSnapshotValidationError,
-  getGoalValidationError,
-  getLimitValidationError,
-  getPlanValidationError
+  getBalanceAnchorValidationError
 } from "../src/features/budget/budgetValidation";
 
 declare const process: {
@@ -38,24 +35,9 @@ test("getAccountValidationError requires a label", () => {
   assertField(getAccountValidationError("   "), "label", "whitespace label");
 });
 
-test("getBalanceSnapshotValidationError checks account and amount", () => {
-  assertField(getBalanceSnapshotValidationError({ accountLabel: "", amount: "1000" }), "accountLabel", "missing account");
-  assertField(getBalanceSnapshotValidationError({ accountLabel: "BRI", amount: "" }), "amount", "missing amount");
-});
-
-test("getGoalValidationError checks label and target amount", () => {
-  assertField(getGoalValidationError({ label: "", targetAmount: "1000" }), "label", "missing label");
-  assertField(getGoalValidationError({ label: "Emergency", targetAmount: "" }), "targetAmount", "missing target");
-});
-
-test("getLimitValidationError requires a positive amount", () => {
-  assertField(getLimitValidationError(""), "amount", "empty limit");
-  assertField(getLimitValidationError("0"), "amount", "zero limit");
-});
-
-test("getPlanValidationError requires expected income", () => {
-  assertField(getPlanValidationError({ expectedIncome: "" }), "expectedIncome", "empty income");
-  assertField(getPlanValidationError({ expectedIncome: "0" }), "expectedIncome", "zero income");
+test("getBalanceAnchorValidationError requires a positive amount", () => {
+  assertField(getBalanceAnchorValidationError(""), "amount", "missing amount");
+  assertField(getBalanceAnchorValidationError("0"), "amount", "zero amount");
 });
 
 let passed = 0;
