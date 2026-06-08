@@ -17,6 +17,7 @@
   "include": [
     "src/data/spendingMemory.ts",
     "src/features/spendingMemory.types.ts",
+    "src/lib/accountLedger.ts",
     "src/lib/analysis.ts",
     "src/lib/dateRanges.ts",
     "src/lib/financeEngine.ts",

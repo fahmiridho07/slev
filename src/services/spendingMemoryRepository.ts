@@ -251,6 +251,13 @@ async function persistSpendingMoments(moments: SpendingMoment[]): Promise<boolea
   return writeJson(MOMENTS_KEY, sortMoments(moments).map(normalizeMoment));
 }
 
+export async function persistSpendingMomentsForMigration(moments: SpendingMoment[]): Promise<void> {
+  const persisted = await persistSpendingMoments(moments);
+  if (!persisted) {
+    throw new Error("Failed to persist spending moments during account ledger V3 migration");
+  }
+}
+
 async function persistPatternFeedback(feedback: PatternFeedback[]): Promise<boolean> {
   return writeJson(FEEDBACK_KEY, feedback.map(normalizePatternFeedback).filter(Boolean));
 }

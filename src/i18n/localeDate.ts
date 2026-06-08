@@ -40,33 +40,50 @@ export function formatLocaleTime(value: Date | string): string {
 export function formatRelativeTimeFromNow(value: Date | string, referenceDate = new Date()): string {
   const date = typeof value === "string" ? new Date(value) : value;
   const diffSeconds = Math.round((date.getTime() - referenceDate.getTime()) / 1000);
-  const formatter = new Intl.RelativeTimeFormat(dateLocale(), { numeric: "auto" });
   const absSeconds = Math.abs(diffSeconds);
+  const isId = getRuntimeLocale() === "id";
 
-  if (absSeconds < 60) {
-    return formatter.format(diffSeconds, "second");
+  if (absSeconds < 45) {
+    return isId ? "baru saja" : "just now";
   }
 
   const diffMinutes = Math.round(diffSeconds / 60);
   if (Math.abs(diffMinutes) < 60) {
-    return formatter.format(diffMinutes, "minute");
+    if (isId) {
+      return diffMinutes < 0
+        ? `${Math.abs(diffMinutes)} menit yang lalu`
+        : `dalam ${diffMinutes} menit`;
+    }
+    return diffMinutes < 0
+      ? `${Math.abs(diffMinutes)} minutes ago`
+      : `in ${diffMinutes} minutes`;
   }
 
   const diffHours = Math.round(diffMinutes / 60);
   if (Math.abs(diffHours) < 24) {
-    return formatter.format(diffHours, "hour");
+    if (isId) {
+      return diffHours < 0
+        ? `${Math.abs(diffHours)} jam yang lalu`
+        : `dalam ${diffHours} jam`;
+    }
+    return diffHours < 0
+      ? `${Math.abs(diffHours)} hours ago`
+      : `in ${diffHours} hours`;
   }
 
   const diffDays = Math.round(diffHours / 24);
-  if (Math.abs(diffDays) < 30) {
-    return formatter.format(diffDays, "day");
+  if (Math.abs(diffDays) <= 7) {
+    if (diffDays === -1) return isId ? "kemarin" : "yesterday";
+    if (diffDays === 1) return isId ? "besok" : "tomorrow";
+    if (isId) {
+      return diffDays < 0
+        ? `${Math.abs(diffDays)} hari yang lalu`
+        : `dalam ${diffDays} hari`;
+    }
+    return diffDays < 0
+      ? `${Math.abs(diffDays)} days ago`
+      : `in ${diffDays} days`;
   }
 
-  const diffMonths = Math.round(diffDays / 30);
-  if (Math.abs(diffMonths) < 12) {
-    return formatter.format(diffMonths, "month");
-  }
-
-  const diffYears = Math.round(diffDays / 365);
-  return formatter.format(diffYears, "year");
+  return formatLocaleDate(value, { day: "numeric", month: "short", year: "numeric" });
 }

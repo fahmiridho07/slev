@@ -127,6 +127,8 @@ test("saveMoment persists expense and prepends to state", async () => {
         kind: "bank",
         isIncomeHub: true,
         tier: "tracked",
+        openingBalance: 0,
+        openingSetAt: "2026-01-01T00:00:00.000Z",
         createdAt: "2026-01-01T00:00:00.000Z",
         updatedAt: "2026-01-01T00:00:00.000Z"
       }
@@ -165,6 +167,8 @@ test("saveMoment persists transfer and updates transfers state", async () => {
         kind: "bank",
         isIncomeHub: true,
         tier: "tracked",
+        openingBalance: 0,
+        openingSetAt: "2026-01-01T00:00:00.000Z",
         createdAt: "2026-01-01T00:00:00.000Z",
         updatedAt: "2026-01-01T00:00:00.000Z"
       },
@@ -174,6 +178,8 @@ test("saveMoment persists transfer and updates transfers state", async () => {
         kind: "bank",
         isIncomeHub: false,
         tier: "tracked",
+        openingBalance: 0,
+        openingSetAt: "2026-01-01T00:00:00.000Z",
         createdAt: "2026-01-01T00:00:00.000Z",
         updatedAt: "2026-01-01T00:00:00.000Z"
       }

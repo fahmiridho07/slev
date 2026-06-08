@@ -420,13 +420,16 @@ function assertArrayEqual(actual: unknown[], expected: unknown[], message: strin
 
 function moneyAccount(input: { index?: number; label: string }): MoneyAccount {
   const index = input.index ?? 0;
+  const createdAt = "2026-01-01T00:00:00.000Z";
   return {
-    createdAt: "2026-01-01T00:00:00.000Z",
+    createdAt,
     id: `account-${index}`,
     isIncomeHub: index === 0,
     kind: "bank",
     label: input.label,
-    updatedAt: "2026-01-01T00:00:00.000Z"
+    openingBalance: 0,
+    openingSetAt: createdAt,
+    updatedAt: createdAt
   };
 }
 

@@ -92,13 +92,13 @@ test("corrupt blobs are backed up and left untouched on later writes", async () 
   assertEqual(driver.store.get("slev_budget_limits"), "{not-json", "original corrupt blob preserved");
 });
 
-test("runMigrations fresh install is a no-op and sets schema version 2", async () => {
+test("runMigrations fresh install is a no-op and sets schema version 3", async () => {
   const driver = createMemoryDriver();
   setStorageDriver(driver);
 
   await runMigrations();
 
-  assertEqual(await getSchemaVersion(), 2, "schema version set");
+  assertEqual(await getSchemaVersion(), 3, "schema version set");
   assertEqual(await readRaw(STORAGE_KEYS.migratedV2), "true", "v2 migration flag set");
   assertEqual(driver.store.get(STORAGE_KEYS.moments), "[]", "empty moments collection initialized");
   assertEqual((await listSpendingMoments()).length, 0, "no moments created");
@@ -298,8 +298,8 @@ test("runMigrations is idempotent for legacy spending memory imports", async () 
   assertEqual(second.length, 1, "second migration keeps one moment");
   assertEqual(first[0]?.amount, 45000, "migrated amount preserved");
   assertEqual(second[0]?.id, first[0]?.id, "migration does not duplicate rows");
-  assertEqual(firstVersion, 2, "schema version set");
-  assertEqual(secondVersion, 2, "schema version stays stable");
+  assertEqual(firstVersion, 3, "schema version set");
+  assertEqual(secondVersion, 3, "schema version stays stable");
 });
 
 test("saveSpendingMoment reports write failure on corrupt storage", async () => {

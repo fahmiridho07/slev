@@ -1,7 +1,8 @@
+import { runAccountLedgerV3Migration } from "./accountLedgerMigration";
 import { runSpendingMemoryV2Migration } from "./spendingMemoryRepository";
 import { readRaw, writeRaw } from "./storage";
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const STORAGE_KEYS = {
   schemaVersion: "slev_schema_version",
@@ -39,6 +40,10 @@ const DEFAULT_MIGRATIONS: MigrationStep[] = [
   {
     toVersion: 2,
     run: runSpendingMemoryV2Migration
+  },
+  {
+    toVersion: 3,
+    run: runAccountLedgerV3Migration
   }
 ];
 

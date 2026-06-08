@@ -20,6 +20,7 @@ type AccountInput = {
   kind: MoneyAccount["kind"];
   label: string;
   tier?: AccountTier;
+  openingBalance?: number;
 };
 
 type TransferInput = {
@@ -50,9 +51,17 @@ export async function saveMoneyAccount(input: AccountInput): Promise<WriteResult
   const current = await listMoneyAccounts();
   const existing = input.id ? current.find((account) => account.id === input.id) : undefined;
   const now = new Date().toISOString();
+  const openingBalance = Math.max(0, Math.round(input.openingBalance ?? existing?.openingBalance ?? 0));
+  const openingBalanceChanged =
+    input.openingBalance !== undefined &&
+    existing !== undefined &&
+    openingBalance !== existing.openingBalance;
+  const openingSetAt = openingBalanceChanged ? now : existing?.openingSetAt ?? now;
   const account = normalizeMoneyAccount({
     ...input,
     id: input.id ?? createId(),
+    openingBalance,
+    openingSetAt,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now
   });
@@ -146,6 +155,8 @@ function normalizeMoneyAccount(value: unknown): MoneyAccount | null {
     kind: normalizeAccountKind(readString(record, "kind")),
     isIncomeHub: readBoolean(record, "isIncomeHub") ?? false,
     tier: normalizeAccountTier(readString(record, "tier")),
+    openingBalance: Math.max(0, Math.round(readNumber(record, "openingBalance") ?? 0)),
+    openingSetAt: readString(record, "openingSetAt") ?? (readString(record, "createdAt") ?? now),
     createdAt: readString(record, "createdAt") ?? now,
     updatedAt: readString(record, "updatedAt") ?? now
   };
@@ -186,6 +197,8 @@ function createDefaultAccount(
     kind,
     isIncomeHub,
     tier,
+    openingBalance: 0,
+    openingSetAt: createdAt,
     createdAt,
     updatedAt: createdAt
   };

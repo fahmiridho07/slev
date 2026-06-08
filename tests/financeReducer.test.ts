@@ -112,7 +112,16 @@ test("clear_all resets finance memory but keeps default accounts and categories"
     moments: [buildMoment({ amount: 10000, occurredAt: "2026-06-01T01:00:00.000Z" })],
     message: "Busy"
   };
-  const resetAccounts = [{ createdAt: "x", id: "a1", isIncomeHub: true, kind: "bank" as const, label: "BRI", updatedAt: "x" }];
+  const resetAccounts = [{
+    createdAt: "x",
+    id: "a1",
+    isIncomeHub: true,
+    kind: "bank" as const,
+    label: "BRI",
+    openingBalance: 0,
+    openingSetAt: "x",
+    updatedAt: "x"
+  }];
   const resetCategories = [{ createdAt: "x", id: "c1", isDefault: true, label: "Meal", updatedAt: "x" }];
   const next = financeReducer(state, {
     type: "clear_all",

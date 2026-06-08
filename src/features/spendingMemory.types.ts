@@ -24,6 +24,8 @@ export type MoneyAccount = {
   kind: "bank" | "wallet" | "cash" | "other";
   isIncomeHub: boolean;
   tier?: AccountTier;
+  openingBalance: number;
+  openingSetAt: string;
   createdAt: string;
   updatedAt: string;
 };
