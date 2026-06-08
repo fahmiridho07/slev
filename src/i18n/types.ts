@@ -350,6 +350,7 @@ export type AppStrings = {
       amount: string;
       amountA11y: string;
       dayPlaceholder: string;
+      dueDayMeta: string;
       deleteBody: string;
       deleteTitle: string;
       edit: string;
@@ -359,7 +360,6 @@ export type AppStrings = {
       nameA11y: string;
       namePlaceholder: string;
       paused: string;
-      rowMeta: string;
       save: string;
       title: string;
     };

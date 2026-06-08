@@ -134,11 +134,12 @@ export const id: AppStrings = {
       amountA11y: "Jumlah tagihan",
       amount: "Jumlah",
       dayPlaceholder: "Tanggal bulan (1-31)",
+      dueDayMeta: "Jatuh tempo tgl {day}",
       active: "Aktif",
       paused: "Dijeda",
       save: "Simpan tagihan",
       empty: "Belum ada tagihan rutin. Tambahkan saat ada pembayaran tetap bulanan.",
-      rowMeta: "{context} · tgl {day}{account} · {status}",
+
       editA11y: "Edit tagihan {label}",
       deleteTitle: "Hapus tagihan rutin?",
       deleteBody: "{label} akan dihapus dari tagihan rutin. Pembayaran tercatat tetap ada di riwayat."
@@ -214,7 +215,7 @@ export const id: AppStrings = {
   },
   home: {
     safeToSpend: {
-      billsReserve: "Disisihkan buat tagihan: {amount}",
+      billsReserve: "Disisihkan buat tagihan terdekat: {amount}",
       billsExceedBalance: "Tagihanmu lebih besar dari saldo saat ini (kurang {amount}).",
       heroLabel: "Aman dibelanjain hari ini",
       balanceAnchor: "Saldo saat ini {amount}",

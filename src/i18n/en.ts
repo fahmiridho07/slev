@@ -134,11 +134,12 @@ export const en: AppStrings = {
       amountA11y: "Bill amount",
       amount: "Amount",
       dayPlaceholder: "Day of month (1-31)",
+      dueDayMeta: "Due on day {day}",
       active: "Active",
       paused: "Paused",
       save: "Save bill",
       empty: "No recurring bills yet. Add one when you know a fixed monthly payment.",
-      rowMeta: "{context} · day {day}{account} · {status}",
+
       editA11y: "Edit bill {label}",
       deleteTitle: "Delete recurring bill?",
       deleteBody: "{label} will be removed from recurring bills. Logged payments stay in your spending history."
@@ -214,7 +215,7 @@ export const en: AppStrings = {
   },
   home: {
     safeToSpend: {
-      billsReserve: "Set aside for bills: {amount}",
+      billsReserve: "Set aside for upcoming bills: {amount}",
       billsExceedBalance: "Your bills are larger than your balance right now (short by {amount}).",
       heroLabel: "Safe to spend today",
       balanceAnchor: "Balance now: {amount}",

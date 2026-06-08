@@ -190,7 +190,10 @@ export function RecurringBillsPanel({
                     <Text style={styles.analyticsAmount}>{formatRupiah(bill.amount)}</Text>
                   </View>
                   <Text style={styles.settingCopy}>
-                    {bill.active ? strings.settings.bills.active : strings.settings.bills.paused}
+                    {(bill.active ? strings.settings.bills.active : strings.settings.bills.paused) +
+                      (bill.dueDay != null
+                        ? ` · ${formatString(strings.settings.bills.dueDayMeta, { day: bill.dueDay })}`
+                        : "")}
                   </Text>
                 </View>
               </ListActionRow>
