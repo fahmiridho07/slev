@@ -613,20 +613,67 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     marginTop: 4,
     paddingTop: 12
   },
-  purchaseSummary: {
-    backgroundColor: colors.faint,
-    borderRadius: 8,
-    gap: 4,
-    padding: 12
+  purchaseSheet: {
+    gap: 14,
+    paddingBottom: 8
   },
-  purchaseSummaryRow: {
+  purchaseAmountField: {
     alignItems: "center",
+    backgroundColor: colors.faint,
+    borderColor: colors.borderMint,
+    borderRadius: 12,
+    borderWidth: 1.5,
     flexDirection: "row",
-    justifyContent: "space-between"
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 14
   },
-  purchaseResult: {
-    justifyContent: "center",
-    minHeight: 44
+  purchaseAmountPrefix: {
+    color: colors.muted,
+    fontSize: 22,
+    fontWeight: "800"
+  },
+  purchaseAmountInput: {
+    color: colors.ink,
+    flex: 1,
+    fontSize: 30,
+    fontWeight: "900",
+    letterSpacing: 0,
+    padding: 0
+  },
+  purchaseVerdict: {
+    alignItems: "center",
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 10,
+    minHeight: 60,
+    paddingHorizontal: 14,
+    paddingVertical: 12
+  },
+  purchaseVerdictNeutral: {
+    backgroundColor: colors.faint,
+    borderColor: colors.line
+  },
+  purchaseVerdictSafe: {
+    backgroundColor: colors.mint,
+    borderColor: colors.borderMint
+  },
+  purchaseVerdictWarn: {
+    backgroundColor: colors.surfaceWarning,
+    borderColor: colors.borderWarning
+  },
+  purchaseVerdictText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 19
+  },
+  purchaseContext: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 16,
+    textAlign: "center"
   },
   sheetHandle: {
     alignSelf: "center",

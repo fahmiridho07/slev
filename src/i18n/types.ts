@@ -196,7 +196,7 @@ export type AppStrings = {
       notAffordable: string;
       purchaseHint: string;
       purchasePlaceholder: string;
-      sheetSubtitle: string;
+      sheetContext: string;
       sheetTitle: string;
       typicalDaily: string;
       typicalDailyUncertain: string;

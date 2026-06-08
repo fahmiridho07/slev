@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 import { BottomSheet, numberPadInputAccessoryProps } from "../../components";
 import { formatString } from "../../i18n";
 import { formatAmountInput, parseAmountInput } from "../../lib/formatMoney";
@@ -48,6 +48,31 @@ function SafeToSpendCardComponent() {
     purchaseSimulation && !purchaseSimulation.affordable
       ? Math.max(0, safe.typicalDaily * safe.daysLeft - purchaseSimulation.remainingBalance)
       : null;
+
+  const verdictStyle =
+    purchaseSimulation == null
+      ? componentStyles.purchaseVerdictNeutral
+      : purchaseSimulation.affordable
+        ? componentStyles.purchaseVerdictSafe
+        : componentStyles.purchaseVerdictWarn;
+  const verdictColor =
+    purchaseSimulation == null
+      ? colors.muted
+      : purchaseSimulation.affordable
+        ? colors.greenDark
+        : colors.amber;
+  const verdictIcon: keyof typeof Ionicons.glyphMap =
+    purchaseSimulation == null
+      ? "information-circle-outline"
+      : purchaseSimulation.affordable
+        ? "checkmark-circle"
+        : "alert-circle";
+  const verdictText =
+    purchaseSimulation == null
+      ? copy.purchaseHint
+      : purchaseSimulation.affordable
+        ? formatString(copy.affordable, { amount: formatRupiah(purchaseSimulation.newSafeDaily) })
+        : formatString(copy.notAffordable, { amount: formatRupiah(purchaseShortfall ?? 0) });
 
   function getTypicalDailyToneColor(): string {
     if (safe.pace === "under") {
@@ -116,72 +141,40 @@ function SafeToSpendCardComponent() {
       </View>
 
       <BottomSheet onClose={closePurchaseSheet} title={copy.sheetTitle} visible={sheetOpen}>
-        <View style={componentStyles.sheetForm}>
-          <ScrollView
-            contentContainerStyle={styles.repeatBlock}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            style={componentStyles.sheetScroll}
-          >
-            <Text style={styles.settingCopy}>{copy.sheetSubtitle}</Text>
-
-            <View style={componentStyles.purchaseSummary}>
-              <View style={componentStyles.purchaseSummaryRow}>
-                <Text style={componentStyles.microLabel}>{copy.heroLabel}</Text>
-                <Text style={styles.analyticsAmount}>{formatRupiah(safe.safeDaily)}</Text>
-              </View>
-              <Text style={styles.settingCopy}>
-                {formatString(copy.daysLeft, { count: safe.daysLeft })}
-              </Text>
-            </View>
-
+        <View style={componentStyles.purchaseSheet}>
+          <View style={componentStyles.purchaseAmountField}>
+            <Text style={componentStyles.purchaseAmountPrefix}>
+              {strings.capture.currencyPrefix}
+            </Text>
             <TextInput
               accessibilityLabel={copy.purchasePlaceholder}
+              autoFocus
               keyboardType="number-pad"
               {...numberPadInputAccessoryProps}
               onChangeText={(value) => setPurchaseDraft(formatAmountInput(value))}
-              placeholder={copy.purchasePlaceholder}
+              placeholder="0"
               placeholderTextColor={colors.muted}
-              style={styles.input}
+              style={componentStyles.purchaseAmountInput}
               value={purchaseDraft}
             />
-
-            <View style={componentStyles.purchaseResult}>
-              {purchaseSimulation ? (
-                <Text
-                  accessibilityLiveRegion="polite"
-                  style={[
-                    styles.settingCopy,
-                    purchaseSimulation.affordable
-                      ? { color: colors.greenDark }
-                      : { color: colors.amber }
-                  ]}
-                >
-                  {purchaseSimulation.affordable
-                    ? formatString(copy.affordable, {
-                        amount: formatRupiah(purchaseSimulation.newSafeDaily)
-                      })
-                    : formatString(copy.notAffordable, {
-                        amount: formatRupiah(purchaseShortfall ?? 0)
-                      })}
-                </Text>
-              ) : (
-                <Text style={styles.settingCopy}>{copy.purchaseHint}</Text>
-              )}
-            </View>
-          </ScrollView>
-          <View style={componentStyles.sheetFooter}>
-            <View style={componentStyles.editActions}>
-              <Pressable
-                accessibilityLabel={strings.common.done}
-                accessibilityRole="button"
-                onPress={closePurchaseSheet}
-                style={styles.smallPrimaryButton}
-              >
-                <Text style={styles.primaryButtonText}>{strings.common.done}</Text>
-              </Pressable>
-            </View>
           </View>
+
+          <View style={[componentStyles.purchaseVerdict, verdictStyle]}>
+            <Ionicons color={verdictColor} name={verdictIcon} size={20} />
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[componentStyles.purchaseVerdictText, { color: verdictColor }]}
+            >
+              {verdictText}
+            </Text>
+          </View>
+
+          <Text style={componentStyles.purchaseContext}>
+            {formatString(copy.sheetContext, {
+              amount: formatRupiah(safe.safeDaily),
+              days: safe.daysLeft
+            })}
+          </Text>
         </View>
       </BottomSheet>
     </>

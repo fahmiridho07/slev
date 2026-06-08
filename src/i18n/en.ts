@@ -219,7 +219,7 @@ export const en: AppStrings = {
       sheetTitle: "Can I afford this?",
       purchasePlaceholder: "Purchase amount",
       purchaseHint: "Enter an amount to see how it affects your daily allowance.",
-      sheetSubtitle: "Check before you buy — so your daily allowance stays safe until payday.",
+      sheetContext: "Safe daily {amount} · {days} days left",
       affordable: "Yes. After this, your safe daily spend is {amount} until payday.",
       notAffordable: "Not quite safe — this would eat into your daily allowance. Short by {amount}."
     }
