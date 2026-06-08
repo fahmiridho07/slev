@@ -71,9 +71,12 @@ export type AppStrings = {
       ephemeralPocketMeta: string;
       incomeHub: string;
       incomeHubMeta: string;
+      openingBalance: string;
+      openingBalanceHint: string;
       pocket: string;
       saveAccount: string;
       tracked: string;
+      trackedTotal: string;
       yourAccounts: string;
     };
   };

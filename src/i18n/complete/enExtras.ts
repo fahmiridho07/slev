@@ -121,8 +121,12 @@ export const enExtras: AppStringsExtras = {
       accountKindCash: "Cash",
       accountKindOther: "Other",
       incomeHub: "Income hub",
+      openingBalance: "Opening balance",
+      openingBalanceHint:
+        "This account's balance right now. Entries after this add to or subtract from it.",
       pocket: "Pocket",
       tracked: "Tracked",
+      trackedTotal: "Tracked total",
       ephemeral: "Ephemeral",
       ephemeralHint:
         "Ephemeral = a payment source you don't reconcile closely (small e-wallets).",

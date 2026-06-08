@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
 import {
   AccountTitle,
@@ -11,12 +11,19 @@ import {
 } from "../../components";
 import { useListActionsHint } from "../../hooks/useListActionsHint";
 import { formatString, type AppStrings } from "../../i18n";
-import { AccountTier, MoneyAccount } from "../spendingMemory.types";
+import { getAccountBalances, getTrackedTotalBalance } from "../../lib/accountLedger";
+import { formatAmountInput } from "../../lib/formatMoney";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
+import { AccountTier, MoneyAccount, MoneyTransfer, SpendingMoment } from "../spendingMemory.types";
 import { hapticSelection, hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
 import { useTheme } from "../../hooks/useTheme";
 import { AccountFieldError } from "./budgetValidation";
 import { AccountEditForm } from "./AccountEditForm";
+
+function formatBalance(amount: number): string {
+  return amount < 0 ? `-${formatRupiah(Math.abs(amount))}` : formatRupiah(amount);
+}
 
 function getAccountKindLabel(kind: MoneyAccount["kind"], strings: AppStrings) {
   switch (kind) {
@@ -33,16 +40,21 @@ function getAccountKindLabel(kind: MoneyAccount["kind"], strings: AppStrings) {
 
 export function BalancePanel({
   accounts,
+  moments,
+  transfers,
   onDeleteAccount,
   onSaveAccount
 }: {
   accounts: MoneyAccount[];
+  moments: SpendingMoment[];
+  transfers: MoneyTransfer[];
   onDeleteAccount: (id: string) => void;
   onSaveAccount: (input: {
     id?: string;
     isIncomeHub: boolean;
     kind: MoneyAccount["kind"];
     label: string;
+    openingBalance?: number;
     tier?: MoneyAccount["tier"];
   }) => Promise<{ ok: boolean; validation?: FormValidationError<AccountFieldError> }>;
 }) {
@@ -50,11 +62,25 @@ export function BalancePanel({
   const balanceStrings = strings.budget.balance;
   const [editingAccount, setEditingAccount] = useState<MoneyAccount | null>(null);
   const [accountDraftLabel, setAccountDraftLabel] = useState("");
+  const [accountDraftOpening, setAccountDraftOpening] = useState("");
   const [accountDraftKind, setAccountDraftKind] = useState<MoneyAccount["kind"]>("bank");
   const [accountDraftHub, setAccountDraftHub] = useState<"hub" | "pocket">("pocket");
   const [accountDraftTier, setAccountDraftTier] = useState<AccountTier>("tracked");
   const [pendingDeleteAccount, setPendingDeleteAccount] = useState<MoneyAccount | null>(null);
   const [accountFieldError, setAccountFieldError] = useState<FormValidationError<AccountFieldError> | null>(null);
+
+  const balancesById = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const { account, balance } of getAccountBalances(accounts, moments, transfers)) {
+      map.set(account.id, balance);
+    }
+    return map;
+  }, [accounts, moments, transfers]);
+
+  const trackedTotal = useMemo(
+    () => getTrackedTotalBalance(accounts, moments, transfers),
+    [accounts, moments, transfers]
+  );
 
   function editAccount(account: MoneyAccount) {
     hapticSelection();
@@ -63,6 +89,7 @@ export function BalancePanel({
 
   function resetAddAccountDraft() {
     setAccountDraftLabel("");
+    setAccountDraftOpening("");
     setAccountDraftKind("bank");
     setAccountDraftHub("pocket");
     setAccountDraftTier("tracked");
@@ -89,12 +116,13 @@ export function BalancePanel({
                 <AccountTitle kind={account.kind} label={account.label} />
                 <Text style={styles.settingCopy}>{accountMeta}</Text>
               </View>
+              <Text style={styles.analyticsAmount}>{formatBalance(balancesById.get(account.id) ?? 0)}</Text>
             </View>
           </View>
         </ListActionRow>
       );
     },
-    [balanceStrings, strings, styles]
+    [balanceStrings, balancesById, strings, styles]
   );
 
   const accountKeyExtractor = useCallback((account: MoneyAccount) => account.id, []);
@@ -124,6 +152,17 @@ export function BalancePanel({
             {accountFieldError.message}
           </Text>
         )}
+        <Text style={componentStyles.microLabel}>{balanceStrings.openingBalance}</Text>
+        <TextInput
+          accessibilityLabel={balanceStrings.openingBalance}
+          keyboardType="numeric"
+          onChangeText={(value) => setAccountDraftOpening(formatAmountInput(value))}
+          placeholder="0"
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={accountDraftOpening}
+        />
+        <Text style={styles.settingCopy}>{balanceStrings.openingBalanceHint}</Text>
         <SegmentedControl
           compact
           options={[
@@ -160,10 +199,12 @@ export function BalancePanel({
           <Pressable
             onPress={() => {
               void (async () => {
+                const openingDigits = accountDraftOpening.replace(/[^\d]/g, "");
                 const result = await onSaveAccount({
                   isIncomeHub: accountDraftHub === "hub",
                   kind: accountDraftKind,
                   label: accountDraftLabel,
+                  openingBalance: openingDigits ? Number.parseInt(openingDigits, 10) : 0,
                   tier: accountDraftTier
                 });
                 if (!result.ok) {
@@ -190,6 +231,10 @@ export function BalancePanel({
           title={strings.listHints.balance_accounts.title}
         />
       )}
+      <View style={styles.capturePanel}>
+        <Text style={componentStyles.microLabel}>{balanceStrings.trackedTotal}</Text>
+        <Text style={styles.analyticsAmount}>{formatBalance(trackedTotal)}</Text>
+      </View>
       <SectionHeader title={balanceStrings.yourAccounts} />
       <View style={styles.listPanel}>
         <FlatList

@@ -54,13 +54,14 @@ function SettingsScreenComponent({
   } = useTheme();
   const { refreshControl } = usePullToRefresh();
   const actions = useActions();
-  const { accounts, expenseCategories, isReady, moments, recurringBills } = useFinanceSelector(
+  const { accounts, expenseCategories, isReady, moments, recurringBills, transfers } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
       expenseCategories: state.expenseCategories,
       isReady: state.isReady,
       moments: state.moments,
-      recurringBills: state.recurringBills
+      recurringBills: state.recurringBills,
+      transfers: state.transfers
     }),
     shallowEqual
   );
@@ -132,6 +133,8 @@ function SettingsScreenComponent({
       return (
         <BalancePanel
           accounts={accounts}
+          moments={moments}
+          transfers={transfers}
           onDeleteAccount={(id) => void actions.removeAccount(id)}
           onSaveAccount={(input) => actions.saveAccount(input)}
         />
@@ -369,6 +372,8 @@ function SettingsScreenComponent({
     accounts,
     actions,
     activeTab,
+    moments,
+    transfers,
     categoryDraft,
     categoryFieldError,
     colorScheme,

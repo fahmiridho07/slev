@@ -121,8 +121,12 @@ export const idExtras: AppStringsExtras = {
       accountKindCash: "Tunai",
       accountKindOther: "Lainnya",
       incomeHub: "Hub pemasukan",
+      openingBalance: "Saldo awal",
+      openingBalanceHint:
+        "Saldo akun ini sekarang. Transaksi setelah ini akan menambah atau mengurangi dari sini.",
       pocket: "Saku",
       tracked: "Tercatat",
+      trackedTotal: "Total saldo tercatat",
       ephemeral: "Sementara",
       ephemeralHint:
         "Sementara = sumber pembayaran yang tidak direkonsiliasi ketat (e-wallet kecil).",

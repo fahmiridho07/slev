@@ -400,6 +400,7 @@ export function createFinanceActions(
     isIncomeHub: boolean;
     kind: MoneyAccount["kind"];
     label: string;
+    openingBalance?: number;
     tier?: MoneyAccount["tier"];
   }): Promise<FormActionResult<"label">> {
     const validationError = getAccountValidationError(input.label);

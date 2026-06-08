@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { SegmentedControl } from "../../components";
+import { formatAmountInput } from "../../lib/formatMoney";
 import { hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
 import { useActions } from "../../state/useFinance";
@@ -19,17 +20,22 @@ function AccountEditFormComponent({ account, onCancel, onSaved }: AccountEditFor
   const balanceStrings = strings.budget.balance;
   const actions = useActions();
   const [accountDraftLabel, setAccountDraftLabel] = useState(account.label);
+  const [accountDraftOpening, setAccountDraftOpening] = useState(
+    account.openingBalance > 0 ? formatAmountInput(String(account.openingBalance)) : ""
+  );
   const [accountDraftKind, setAccountDraftKind] = useState<MoneyAccount["kind"]>(account.kind);
   const [accountDraftHub, setAccountDraftHub] = useState<"hub" | "pocket">(account.isIncomeHub ? "hub" : "pocket");
   const [accountDraftTier, setAccountDraftTier] = useState<AccountTier>(account.tier ?? "tracked");
   const [fieldError, setFieldError] = useState<FormValidationError<AccountFieldError> | null>(null);
 
   const save = useCallback(async () => {
+    const openingDigits = accountDraftOpening.replace(/[^\d]/g, "");
     const result = await actions.saveAccount({
       id: account.id,
       isIncomeHub: accountDraftHub === "hub",
       kind: accountDraftKind,
       label: accountDraftLabel,
+      openingBalance: openingDigits ? Number.parseInt(openingDigits, 10) : 0,
       tier: accountDraftTier
     });
     if (!result.ok) {
@@ -41,7 +47,7 @@ function AccountEditFormComponent({ account, onCancel, onSaved }: AccountEditFor
     }
     setFieldError(null);
     onSaved();
-  }, [account.id, accountDraftHub, accountDraftKind, accountDraftLabel, accountDraftTier, actions, onSaved]);
+  }, [account.id, accountDraftHub, accountDraftKind, accountDraftLabel, accountDraftOpening, accountDraftTier, actions, onSaved]);
 
   return (
     <View style={componentStyles.sheetForm}>
@@ -71,6 +77,17 @@ function AccountEditFormComponent({ account, onCancel, onSaved }: AccountEditFor
             {fieldError.message}
           </Text>
         )}
+        <Text style={componentStyles.microLabel}>{balanceStrings.openingBalance}</Text>
+        <TextInput
+          accessibilityLabel={balanceStrings.openingBalance}
+          keyboardType="numeric"
+          onChangeText={(value) => setAccountDraftOpening(formatAmountInput(value))}
+          placeholder="0"
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={accountDraftOpening}
+        />
+        <Text style={styles.settingCopy}>{balanceStrings.openingBalanceHint}</Text>
         <SegmentedControl
           compact
           options={[
