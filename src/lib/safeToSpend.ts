@@ -14,6 +14,7 @@ export type SafeToSpendResult = {
   pace: SafeToSpendPace;
   safeDaily: number;
   spendableBalance: number;
+  spendBuffer: number;
   typicalDaily: number;
 };
 
@@ -127,7 +128,8 @@ export function buildSafeToSpend({
   transfers,
   referenceDate = new Date(),
   windowDays = 30,
-  paydayDayOfMonth
+  paydayDayOfMonth,
+  spendBuffer = 0
 }: {
   accounts: MoneyAccount[];
   bills?: RecurringBill[];
@@ -136,10 +138,13 @@ export function buildSafeToSpend({
   referenceDate?: Date;
   windowDays?: number;
   paydayDayOfMonth?: number;
+  spendBuffer?: number;
 }): SafeToSpendResult {
   const effectiveBalance = getEffectiveBalance({ accounts, moments, transfers, referenceDate });
   const billsReserve = getBillsReserve(bills, referenceDate, paydayDayOfMonth);
-  const spendableBalance = effectiveBalance - billsReserve;
+  const availableAfterBills = effectiveBalance - billsReserve;
+  const appliedBuffer = availableAfterBills > 0 ? Math.min(Math.max(0, spendBuffer), availableAfterBills) : 0;
+  const spendableBalance = availableAfterBills - appliedBuffer;
   const daysLeft =
     paydayDayOfMonth != null
       ? getDaysUntilNextPayday(referenceDate, paydayDayOfMonth)
@@ -155,6 +160,7 @@ export function buildSafeToSpend({
     pace: classifyPace(typicalDaily, safeDaily),
     safeDaily,
     spendableBalance,
+    spendBuffer: appliedBuffer,
     typicalDaily
   };
 }

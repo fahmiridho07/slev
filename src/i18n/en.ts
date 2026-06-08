@@ -189,6 +189,13 @@ export const en: AppStrings = {
         "Set the day you get paid (1–31) so 'safe to spend' counts down to payday instead of month-end. Leave empty to use month-end.",
       placeholder: "Day (1–31), e.g. 25",
       a11y: "Payday day of month"
+    },
+    buffer: {
+      label: "Set aside each month",
+      helper:
+        "Amount you want to keep safe each month — taken out before your daily allowance is calculated.",
+      placeholder: "0",
+      a11y: "Amount set aside each month"
     }
   },
   listHints: {
@@ -216,6 +223,7 @@ export const en: AppStrings = {
   home: {
     safeToSpend: {
       billsReserve: "Set aside for upcoming bills: {amount}",
+      spendBuffer: "You set aside: {amount}",
       billsExceedBalance: "Your bills are larger than your balance right now (short by {amount}).",
       heroLabel: "Safe to spend today",
       balanceAnchor: "Balance now: {amount}",

@@ -21,6 +21,7 @@ import { CategoryEditForm } from "../features/settings/CategoryEditForm";
 import { BalancePanel } from "../features/budget/BalancePanel";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
 import { formatString, getCategoryDeleteMessage } from "../i18n";
+import { formatAmountInput, parseAmountInput } from "../lib/formatMoney";
 import { hapticSelection, hapticWarning } from "../lib/haptics";
 import { FormValidationError } from "../lib/formValidation";
 import { ImportFieldError } from "../features/settings/dataValidation";
@@ -47,9 +48,11 @@ function SettingsScreenComponent({
     locale,
     reduceMotionPreference,
     paydayDayOfMonth,
+    spendBuffer,
     setColorScheme,
     setLocale,
     setPaydayDay,
+    setSpendBuffer,
     setReduceMotionPreference,
     strings,
     styles
@@ -166,6 +169,22 @@ function SettingsScreenComponent({
               placeholderTextColor={colors.muted}
               style={styles.input}
               value={paydayDayOfMonth != null ? String(paydayDayOfMonth) : ""}
+            />
+          </View>
+          <View style={styles.capturePanel}>
+            <Text style={componentStyles.microLabel}>{strings.settings.buffer.label}</Text>
+            <Text style={styles.settingCopy}>{strings.settings.buffer.helper}</Text>
+            <TextInput
+              accessibilityLabel={strings.settings.buffer.a11y}
+              keyboardType="number-pad"
+              onChangeText={(text) => {
+                const parsed = parseAmountInput(formatAmountInput(text));
+                setSpendBuffer(parsed ?? 0);
+              }}
+              placeholder={strings.settings.buffer.placeholder}
+              placeholderTextColor={colors.muted}
+              style={styles.input}
+              value={spendBuffer > 0 ? formatAmountInput(String(spendBuffer)) : ""}
             />
           </View>
           <RecurringBillsPanel
@@ -424,6 +443,8 @@ function SettingsScreenComponent({
     setColorScheme,
     setLocale,
     setPaydayDay,
+    setSpendBuffer,
+    spendBuffer,
     setReduceMotionPreference,
     showCategoriesHint,
     strings,

@@ -190,6 +190,7 @@ export type AppStrings = {
       balanceAnchor: string;
       billsExceedBalance: string;
       billsReserve: string;
+      spendBuffer: string;
       checkPurchase: string;
       checkPurchaseA11y: string;
       daysLeft: string;
@@ -404,6 +405,12 @@ export type AppStrings = {
     importConfirm: string;
     importTitle: string;
     payday: {
+      a11y: string;
+      helper: string;
+      label: string;
+      placeholder: string;
+    };
+    buffer: {
       a11y: string;
       helper: string;
       label: string;

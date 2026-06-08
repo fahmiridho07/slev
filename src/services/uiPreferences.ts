@@ -9,6 +9,7 @@ const NAV_STATE_KEY = "slev_ui_nav_state";
 const MEMORY_LIST_HINT_KEY = "slev_ui_memory_list_hint_seen";
 const REDUCE_MOTION_KEY = "slev_ui_reduce_motion";
 const PAYDAY_DAY_KEY = "slev_finance_payday_day";
+const SPEND_BUFFER_KEY = "slev_finance_spend_buffer";
 
 export type ReduceMotionPreference = "off" | "on" | "system";
 
@@ -145,4 +146,16 @@ export async function setPaydayDayPreference(day: number | null): Promise<void> 
   }
   const clamped = Math.min(Math.max(Math.round(day), 1), 31);
   await writeRaw(PAYDAY_DAY_KEY, String(clamped));
+}
+
+export async function getSpendBufferPreference(): Promise<number> {
+  const stored = await readRaw(SPEND_BUFFER_KEY);
+  if (stored === null) return 0;
+  const parsed = Number.parseInt(stored, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+export async function setSpendBufferPreference(amount: number): Promise<void> {
+  const normalized = Number.isFinite(amount) ? Math.max(0, Math.round(amount)) : 0;
+  await writeRaw(SPEND_BUFFER_KEY, normalized > 0 ? String(normalized) : "");
 }

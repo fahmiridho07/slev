@@ -189,6 +189,13 @@ export const id: AppStrings = {
         "Atur tanggal kamu gajian (1–31) biar 'aman dibelanjain' dihitung sampai gajian, bukan akhir bulan. Kosongkan untuk pakai akhir bulan.",
       placeholder: "Tanggal (1–31), mis. 25",
       a11y: "Tanggal gajian"
+    },
+    buffer: {
+      label: "Sisihkan tiap bulan",
+      helper:
+        "Jumlah yang mau kamu amankan tiap bulan — dipotong duluan sebelum jatah harian dihitung.",
+      placeholder: "0",
+      a11y: "Jumlah yang disisihkan tiap bulan"
     }
   },
   listHints: {
@@ -216,6 +223,7 @@ export const id: AppStrings = {
   home: {
     safeToSpend: {
       billsReserve: "Disisihkan buat tagihan terdekat: {amount}",
+      spendBuffer: "Kamu sisihkan: {amount}",
       billsExceedBalance: "Tagihanmu lebih besar dari saldo saat ini (kurang {amount}).",
       heroLabel: "Aman dibelanjain hari ini",
       balanceAnchor: "Saldo saat ini {amount}",

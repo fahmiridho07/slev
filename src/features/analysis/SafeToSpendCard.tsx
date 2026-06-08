@@ -19,7 +19,7 @@ import { shallowEqual, useFinanceSelector } from "../../state/useFinance";
 import { useTheme } from "../../hooks/useTheme";
 
 function SafeToSpendCardComponent() {
-  const { colors, componentStyles, paydayDayOfMonth, reduceMotion, strings, styles } = useTheme();
+  const { colors, componentStyles, paydayDayOfMonth, reduceMotion, spendBuffer, strings, styles } = useTheme();
   const copy = strings.home.safeToSpend;
   const { accounts, moments, recurringBills, transfers } = useFinanceSelector(
     (state) => ({
@@ -41,9 +41,10 @@ function SafeToSpendCardComponent() {
         moments,
         transfers,
         referenceDate: new Date(),
-        paydayDayOfMonth: paydayDayOfMonth ?? undefined
+        paydayDayOfMonth: paydayDayOfMonth ?? undefined,
+        spendBuffer
       }),
-    [accounts, moments, paydayDayOfMonth, recurringBills, transfers]
+    [accounts, moments, paydayDayOfMonth, recurringBills, spendBuffer, transfers]
   );
 
   const purchaseAmount = parseAmountInput(purchaseDraft);
@@ -178,6 +179,12 @@ function SafeToSpendCardComponent() {
         {safe.billsReserve > 0 ? (
           <Text style={styles.settingCopy}>
             {formatString(copy.billsReserve, { amount: formatRupiah(safe.billsReserve) })}
+          </Text>
+        ) : null}
+
+        {safe.spendBuffer > 0 ? (
+          <Text style={styles.settingCopy}>
+            {formatString(copy.spendBuffer, { amount: formatRupiah(safe.spendBuffer) })}
           </Text>
         ) : null}
 
