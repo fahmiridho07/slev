@@ -21,6 +21,7 @@ function BillEditFormComponent({ bill, onCancel, onSaved }: BillEditFormProps) {
   const [label, setLabel] = useState(bill.label);
   const [amount, setAmount] = useState(formatAmountInput(String(bill.amount)));
   const [active, setActive] = useState(bill.active);
+  const [dueDay, setDueDay] = useState<number | null>(bill.dueDay ?? null);
   const [fieldError, setFieldError] = useState<FormValidationError<BillFieldError> | null>(null);
 
   const clearFieldError = useCallback((field?: BillFieldError) => {
@@ -40,7 +41,8 @@ function BillEditFormComponent({ bill, onCancel, onSaved }: BillEditFormProps) {
       id: bill.id,
       label,
       amount,
-      active
+      active,
+      dueDay
     });
     if (!result.ok) {
       hapticWarning();
@@ -51,7 +53,7 @@ function BillEditFormComponent({ bill, onCancel, onSaved }: BillEditFormProps) {
     }
     setFieldError(null);
     onSaved();
-  }, [actions, active, amount, bill.id, label, onSaved]);
+  }, [actions, active, amount, bill.id, dueDay, label, onSaved]);
 
   return (
     <View style={componentStyles.sheetForm}>
@@ -102,6 +104,23 @@ function BillEditFormComponent({ bill, onCancel, onSaved }: BillEditFormProps) {
             {fieldError.message}
           </Text>
         )}
+        <TextInput
+          accessibilityLabel={strings.settings.bills.dayPlaceholder}
+          keyboardType="number-pad"
+          maxLength={2}
+          onChangeText={(value) => {
+            const digits = value.replace(/[^0-9]/g, "");
+            if (digits.length === 0) {
+              setDueDay(null);
+              return;
+            }
+            setDueDay(Math.min(31, Math.max(1, parseInt(digits, 10))));
+          }}
+          placeholder={strings.settings.bills.dayPlaceholder}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={dueDay != null ? String(dueDay) : ""}
+        />
         <Pressable
           accessibilityLabel={active ? strings.settings.bills.active : strings.settings.bills.paused}
           accessibilityRole="button"

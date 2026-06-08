@@ -25,6 +25,7 @@ export function RecurringBillsPanel({
     label: string;
     amount: string;
     active: boolean;
+    dueDay?: number | null;
   }) => Promise<{ ok: boolean; validation?: FormValidationError<BillFieldError> }>;
 }) {
   const { colors, componentStyles, strings, styles } = useTheme();
@@ -32,6 +33,7 @@ export function RecurringBillsPanel({
   const [label, setLabel] = useState("");
   const [amount, setAmount] = useState("");
   const [active, setActive] = useState(true);
+  const [dueDay, setDueDay] = useState<number | null>(null);
   const [pendingDeleteBill, setPendingDeleteBill] = useState<RecurringBill | null>(null);
   const [fieldError, setFieldError] = useState<FormValidationError<BillFieldError> | null>(null);
   const { dismiss: dismissBillsHint, visible: showBillsHint } = useListActionsHint("recurring_bills", recurringBills.length > 0);
@@ -45,6 +47,7 @@ export function RecurringBillsPanel({
     setLabel("");
     setAmount("");
     setActive(true);
+    setDueDay(null);
     setFieldError(null);
   }
 
@@ -108,6 +111,23 @@ export function RecurringBillsPanel({
             {fieldError.message}
           </Text>
         )}
+        <TextInput
+          accessibilityLabel={strings.settings.bills.dayPlaceholder}
+          keyboardType="number-pad"
+          maxLength={2}
+          onChangeText={(value) => {
+            const digits = value.replace(/[^0-9]/g, "");
+            if (digits.length === 0) {
+              setDueDay(null);
+              return;
+            }
+            setDueDay(Math.min(31, Math.max(1, parseInt(digits, 10))));
+          }}
+          placeholder={strings.settings.bills.dayPlaceholder}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={dueDay != null ? String(dueDay) : ""}
+        />
         <Pressable
           accessibilityLabel={active ? strings.settings.bills.active : strings.settings.bills.paused}
           accessibilityRole="button"
@@ -121,7 +141,7 @@ export function RecurringBillsPanel({
           <Pressable
             onPress={() => {
               void (async () => {
-                const result = await onSaveBill({ label, amount, active });
+                const result = await onSaveBill({ label, amount, active, dueDay });
                 if (!result.ok) {
                   hapticWarning();
                   if (result.validation) {

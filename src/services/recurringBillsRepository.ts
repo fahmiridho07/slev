@@ -9,6 +9,7 @@ export type RecurringBillInput = {
   label: string;
   amount: number;
   active: boolean;
+  dueDay?: number | null;
 };
 
 export async function listRecurringBills(): Promise<RecurringBill[]> {
@@ -60,11 +61,19 @@ function normalizeRecurringBill(source: unknown): RecurringBill | null {
     return null;
   }
 
+  const dueDayRaw =
+    typeof record.dueDay === "number" ? record.dueDay : Number(record.dueDay);
+  const dueDay =
+    Number.isFinite(dueDayRaw) && dueDayRaw >= 1 && dueDayRaw <= 31
+      ? Math.round(dueDayRaw)
+      : undefined;
+
   return {
     id: record.id ?? createId(),
     label,
     amount,
     active: record.active !== false,
+    ...(dueDay !== undefined ? { dueDay } : {}),
     createdAt: record.createdAt ?? new Date().toISOString(),
     updatedAt: record.updatedAt ?? new Date().toISOString()
   };

@@ -58,6 +58,7 @@ export type RecurringBill = {
   label: string;
   amount: number;
   active: boolean;
+  dueDay?: number; // day of month (1–31) the bill is typically due; undefined = unspecified
   createdAt: string;
   updatedAt: string;
 };

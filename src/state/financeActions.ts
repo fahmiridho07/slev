@@ -459,6 +459,7 @@ export function createFinanceActions(
     label: string;
     amount: string;
     active: boolean;
+    dueDay?: number | null;
   }): Promise<FormActionResult<"label" | "amount">> {
     const validationError = getBillValidationError(input);
     if (validationError) {
@@ -474,7 +475,8 @@ export function createFinanceActions(
       id: input.id,
       label: input.label,
       amount,
-      active: input.active
+      active: input.active,
+      dueDay: input.dueDay ?? null
     });
     if (!persisted) {
       notifyWriteFailure(STORAGE_KEYS.recurringBills);
