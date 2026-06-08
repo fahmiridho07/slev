@@ -1,6 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { memo, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Easing, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Animated,
+  Easing,
+  type LayoutChangeEvent,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View
+} from "react-native";
 import { BottomSheet, numberPadInputAccessoryProps } from "../../components";
 import { formatString } from "../../i18n";
 import { formatAmountInput, parseAmountInput } from "../../lib/formatMoney";
@@ -79,20 +88,43 @@ function SafeToSpendCardComponent() {
     purchaseSimulation != null && safe.safeDaily > 0
       ? Math.max(0, Math.min(1, purchaseSimulation.newSafeDaily / safe.safeDaily))
       : 0;
-  const meterWidth = useRef(new Animated.Value(0)).current;
+  const meterTrackWidthRef = useRef(0);
+  const meterFillWidth = useRef(new Animated.Value(0)).current;
+
+  const animateMeterFill = useCallback(
+    (trackWidth: number, fillRatio: number) => {
+      const targetWidth = trackWidth * fillRatio;
+      if (reduceMotion) {
+        meterFillWidth.setValue(targetWidth);
+        return;
+      }
+      Animated.timing(meterFillWidth, {
+        toValue: targetWidth,
+        duration: 220,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false
+      }).start();
+    },
+    [meterFillWidth, reduceMotion]
+  );
 
   useEffect(() => {
-    if (reduceMotion) {
-      meterWidth.setValue(meterFill);
-      return;
+    if (meterTrackWidthRef.current > 0) {
+      animateMeterFill(meterTrackWidthRef.current, meterFill);
     }
-    Animated.timing(meterWidth, {
-      toValue: meterFill,
-      duration: 220,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false
-    }).start();
-  }, [meterFill, reduceMotion, meterWidth]);
+  }, [animateMeterFill, meterFill]);
+
+  const handleMeterTrackLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      const trackWidth = event.nativeEvent.layout.width;
+      if (trackWidth <= 0 || trackWidth === meterTrackWidthRef.current) {
+        return;
+      }
+      meterTrackWidthRef.current = trackWidth;
+      animateMeterFill(trackWidth, meterFill);
+    },
+    [animateMeterFill, meterFill]
+  );
 
   function getTypicalDailyToneColor(): string {
     if (safe.pace === "under") {
@@ -204,6 +236,7 @@ function SafeToSpendCardComponent() {
                 <View
                   accessibilityElementsHidden
                   importantForAccessibility="no-hide-descendants"
+                  onLayout={handleMeterTrackLayout}
                   style={componentStyles.purchaseMeterTrack}
                 >
                   <Animated.View
@@ -211,10 +244,7 @@ function SafeToSpendCardComponent() {
                       componentStyles.purchaseMeterFill,
                       {
                         backgroundColor: verdictColor,
-                        width: meterWidth.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ["0%", "100%"]
-                        })
+                        width: meterFillWidth
                       }
                     ]}
                   />

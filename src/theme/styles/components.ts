@@ -283,6 +283,9 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     gap: 8,
     width: "100%"
   },
+  screenTabBarWrap: {
+    flexWrap: "wrap"
+  },
   screenTabItem: {
     alignItems: "center",
     backgroundColor: colors.surface,
@@ -292,9 +295,20 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     flex: 1,
     gap: 6,
     justifyContent: "center",
-    minHeight: 72,
+    minHeight: 64,
+    minWidth: 0,
     paddingHorizontal: 8,
     paddingVertical: 10
+  },
+  screenTabItemWrap: {
+    flex: 0,
+    flexBasis: "31%",
+    flexGrow: 1,
+    maxWidth: "33%"
+  },
+  screenTabItemWrapWide: {
+    flexBasis: "48%",
+    maxWidth: "50%"
   },
   screenTabItemActive: {
     backgroundColor: colors.mint,
@@ -334,7 +348,11 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     borderRadius: 8,
     flex: 1,
     minWidth: 0,
-    paddingHorizontal: 10
+    paddingHorizontal: 8
+  },
+  choiceChipTextStretch: {
+    fontSize: 12,
+    lineHeight: 16
   },
   choiceChipActive: {
     backgroundColor: colors.mint,
@@ -677,15 +695,16 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     lineHeight: 19
   },
   purchaseMeterTrack: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.line,
     borderRadius: 999,
-    height: 6,
+    height: 8,
     overflow: "hidden",
     width: "100%"
   },
   purchaseMeterFill: {
+    alignSelf: "flex-start",
     borderRadius: 999,
-    height: "100%"
+    height: 8
   },
   purchaseContext: {
     color: colors.muted,

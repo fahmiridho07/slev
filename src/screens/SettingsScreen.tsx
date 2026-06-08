@@ -153,39 +153,42 @@ function SettingsScreenComponent({
 
     if (activeTab === "appearance") {
       return (
-        <View style={styles.capturePanel}>
-          <Text style={componentStyles.microLabel}>{strings.appearance.label}</Text>
-          <SegmentedControl
-            options={[
-              { label: strings.appearance.light, value: "light" },
-              { label: strings.appearance.dark, value: "dark" },
-              { label: strings.appearance.system, value: "system" }
-            ]}
-            selected={colorScheme}
-            stretch
-            onSelect={setColorScheme}
-          />
-          <Text style={componentStyles.microLabel}>{strings.locale.label}</Text>
-          <SegmentedControl
-            options={[
-              { label: strings.locale.english, value: "en" },
-              { label: strings.locale.indonesian, value: "id" }
-            ]}
-            selected={locale}
-            stretch
-            onSelect={setLocale}
-          />
-          <Text style={componentStyles.microLabel}>{strings.appearance.reduceMotionLabel}</Text>
-          <SegmentedControl
-            options={[
-              { label: strings.appearance.reduceMotionSystem, value: "system" },
-              { label: strings.appearance.reduceMotionOn, value: "on" },
-              { label: strings.appearance.reduceMotionOff, value: "off" }
-            ]}
-            selected={reduceMotionPreference}
-            stretch
-            onSelect={setReduceMotionPreference}
-          />
+        <View style={styles.cardStack}>
+          <View style={styles.capturePanel}>
+            <Text style={componentStyles.microLabel}>{strings.appearance.label}</Text>
+            <SegmentedControl
+              options={[
+                { label: strings.appearance.light, value: "light" },
+                { label: strings.appearance.dark, value: "dark" },
+                { label: strings.appearance.system, value: "system" }
+              ]}
+              selected={colorScheme}
+              onSelect={setColorScheme}
+            />
+          </View>
+          <View style={styles.capturePanel}>
+            <Text style={componentStyles.microLabel}>{strings.locale.label}</Text>
+            <SegmentedControl
+              options={[
+                { label: strings.locale.english, value: "en" },
+                { label: strings.locale.indonesian, value: "id" }
+              ]}
+              selected={locale}
+              onSelect={setLocale}
+            />
+          </View>
+          <View style={styles.capturePanel}>
+            <Text style={componentStyles.microLabel}>{strings.appearance.reduceMotionLabel}</Text>
+            <SegmentedControl
+              options={[
+                { label: strings.appearance.reduceMotionSystem, value: "system" },
+                { label: strings.appearance.reduceMotionOn, value: "on" },
+                { label: strings.appearance.reduceMotionOff, value: "off" }
+              ]}
+              selected={reduceMotionPreference}
+              onSelect={setReduceMotionPreference}
+            />
+          </View>
         </View>
       );
     }
@@ -417,6 +420,7 @@ function SettingsScreenComponent({
         scrollContentStyle={scrollContentStyle}
         tabBar={
           <ScreenTabBar
+            layout="wrap"
             options={settingsTabOptions}
             selected={activeTab}
             onSelect={onSettingsTabChange}

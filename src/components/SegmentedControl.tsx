@@ -45,8 +45,12 @@ function SegmentedControlComponent<T extends string>({
                 ]}
               >
                 <Text
-                  numberOfLines={2}
-                  style={[componentStyles.choiceChipText, active && componentStyles.choiceChipTextActive]}
+                  numberOfLines={1}
+                  style={[
+                    componentStyles.choiceChipText,
+                    componentStyles.choiceChipTextStretch,
+                    active && componentStyles.choiceChipTextActive
+                  ]}
                 >
                   {option.label}
                 </Text>
