@@ -346,6 +346,12 @@ export function getPercentWidthStyle(value: number): { width: `${number}%` } {
   return { width: `${width}%` };
 }
 
+export function getPercentHeightStyle(value: number): { height: `${number}%` } {
+  const clamped = clampPercent(value);
+  const height = clamped > 0 && clamped < 0.02 ? 2 : Math.round(clamped * 100);
+  return { height: `${height}%` };
+}
+
 export function getWeekRange(date: Date): { start: Date; end: Date } {
   const start = getStartOfWeek(date);
   const end = new Date(start);

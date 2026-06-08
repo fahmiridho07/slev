@@ -935,6 +935,47 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     height: "100%",
     minWidth: 2
   },
+  chartColumnChart: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 8,
+    minHeight: 132,
+    paddingTop: 4
+  },
+  chartColumnPressable: {
+    flex: 1,
+    minWidth: 0
+  },
+  chartColumn: {
+    alignItems: "center",
+    flex: 1,
+    gap: 8,
+    justifyContent: "flex-end",
+    minWidth: 0
+  },
+  chartColumnTrack: {
+    alignSelf: "stretch",
+    backgroundColor: colors.faint,
+    borderRadius: 8,
+    height: 96,
+    justifyContent: "flex-end",
+    maxWidth: 48,
+    overflow: "hidden",
+    width: "100%"
+  },
+  chartColumnFill: {
+    borderRadius: 8,
+    minHeight: 4,
+    width: "100%"
+  },
+  chartColumnLabel: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "700",
+    lineHeight: 14,
+    textAlign: "center",
+    width: "100%"
+  },
   chartLegend: {
     gap: 10
   },

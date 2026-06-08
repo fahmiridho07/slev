@@ -10,6 +10,7 @@ import { hapticSelection } from "../../lib/haptics";
 import { useTheme } from "../../hooks/useTheme";
 import { BreakdownDrilldownOverlays } from "./BreakdownDrilldownOverlays";
 import { CategoryBreakdownRows } from "./CategoryBreakdownRows";
+import { CategoryVerticalBarChart } from "./CategoryVerticalBarChart";
 
 type ExpenseCategorySummaryProps = {
   moments: SpendingMoment[];
@@ -73,6 +74,11 @@ export function ExpenseCategorySummary({ moments, monthOffset }: ExpenseCategory
       ) : null}
 
       <SectionHeader title={breakdownStrings.spendingByCategory} />
+      <CategoryVerticalBarChart
+        limit={showAllCategories ? rows.length : 5}
+        onPressRow={openRow}
+        rows={rows}
+      />
       <CategoryBreakdownRows
         breakdownType="expense"
         moments={moments}

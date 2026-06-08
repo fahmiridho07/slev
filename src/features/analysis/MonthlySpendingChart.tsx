@@ -2,11 +2,11 @@ import React, { useMemo } from "react";
 import { Text, View, type ViewStyle } from "react-native";
 import { formatString } from "../../i18n";
 import { formatLocaleMonthYear } from "../../i18n/localeDate";
-import { getPercentWidthStyle } from "../../lib/analysis";
 import { FinanceBreakdownRow } from "../../lib/financeEngine";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { isCurrentMonthDate } from "../../lib/spendingPeriod";
 import { useTheme } from "../../hooks/useTheme";
+import { CategoryVerticalBarChart } from "./CategoryVerticalBarChart";
 
 type MonthlySpendingChartVariant = "bar" | "donut";
 
@@ -215,20 +215,7 @@ export function MonthlySpendingChart({
           wrapStyle={[styles.chartDonutWrap, ...(hero ? [styles.chartDonutWrapHero] : [])]}
         />
       ) : (
-        <View style={hero ? styles.chartStackTrackHero : styles.chartStackTrack}>
-          <View style={styles.chartStackRow}>
-            {rows.map((row, index) => (
-              <View
-                key={row.key}
-                style={[
-                  styles.chartStackSegment,
-                  getPercentWidthStyle(row.share),
-                  { backgroundColor: chartColors[index % chartColors.length] }
-                ]}
-              />
-            ))}
-          </View>
-        </View>
+        <CategoryVerticalBarChart limit={compactLegend ? 5 : rows.length} rows={rows} />
       )}
 
       {!compactLegend && (

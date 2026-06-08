@@ -1,9 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { ProgressBar } from "../../components";
 import { formatString } from "../../i18n";
-import { getPercentWidthStyle } from "../../lib/analysis";
 import { filterBreakdownMoments } from "../../lib/breakdownDrilldown";
 import { FinanceBreakdownRow } from "../../lib/financeEngine";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
@@ -65,15 +63,6 @@ export function CategoryBreakdownRows({
                   <Ionicons color={colors.muted} name="chevron-forward" size={16} />
                 </View>
               </View>
-
-              <ProgressBar
-                accessibilityLabel={formatString(strings.common.progressA11y, {
-                  label: row.label,
-                  percent: Math.round(row.share * 100)
-                })}
-                fillStyle={[styles.breakdownFill, getPercentWidthStyle(row.share)]}
-                value={row.share}
-              />
             </Pressable>
           );
         })}

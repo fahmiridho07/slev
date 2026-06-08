@@ -11,6 +11,7 @@ import { hapticSelection } from "../../lib/haptics";
 import { useTheme } from "../../hooks/useTheme";
 import { BreakdownDrilldownOverlays } from "./BreakdownDrilldownOverlays";
 import { CategoryBreakdownRows } from "./CategoryBreakdownRows";
+import { CategoryVerticalBarChart } from "./CategoryVerticalBarChart";
 
 type IncomeSourcesAccordionProps = {
   moments: SpendingMoment[];
@@ -84,6 +85,11 @@ export function IncomeSourcesAccordion({ moments, monthOffset }: IncomeSourcesAc
               {emptyReason ? (
                 <EmptyState text={getTrackerEmptyCopy(emptyReason, "income", strings.patterns.tracker)} />
               ) : null}
+              <CategoryVerticalBarChart
+                limit={showAllCategories ? rows.length : 5}
+                onPressRow={openRow}
+                rows={rows}
+              />
               <CategoryBreakdownRows
                 breakdownType="income"
                 moments={moments}
