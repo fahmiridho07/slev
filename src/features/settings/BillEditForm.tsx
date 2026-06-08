@@ -1,13 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useCallback, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { AccountPicker, ContextPicker } from "../../components";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
-import { useActions, useFinanceDerived, useFinanceSelector } from "../../state/useFinance";
+import { useActions } from "../../state/useFinance";
 import { useTheme } from "../../hooks/useTheme";
-import { RecurringBill, SpendingContext } from "../spendingMemory.types";
+import { RecurringBill } from "../spendingMemory.types";
 import { BillFieldError } from "./settingsValidation";
 
 type BillEditFormProps = {
@@ -19,13 +18,8 @@ type BillEditFormProps = {
 function BillEditFormComponent({ bill, onCancel, onSaved }: BillEditFormProps) {
   const { colors, componentStyles, strings, styles } = useTheme();
   const actions = useActions();
-  const categoryLabels = useFinanceDerived((derived) => derived.categoryLabels);
-  const accounts = useFinanceSelector((state) => state.accounts);
   const [label, setLabel] = useState(bill.label);
   const [amount, setAmount] = useState(formatAmountInput(String(bill.amount)));
-  const [context, setContext] = useState<SpendingContext>(bill.context);
-  const [accountLabel, setAccountLabel] = useState(bill.accountLabel ?? accounts[0]?.label ?? "");
-  const [dayOfMonth, setDayOfMonth] = useState(String(bill.dayOfMonth));
   const [active, setActive] = useState(bill.active);
   const [fieldError, setFieldError] = useState<FormValidationError<BillFieldError> | null>(null);
 
@@ -46,9 +40,6 @@ function BillEditFormComponent({ bill, onCancel, onSaved }: BillEditFormProps) {
       id: bill.id,
       label,
       amount,
-      context,
-      accountLabel: accountLabel || undefined,
-      dayOfMonth,
       active
     });
     if (!result.ok) {
@@ -60,7 +51,7 @@ function BillEditFormComponent({ bill, onCancel, onSaved }: BillEditFormProps) {
     }
     setFieldError(null);
     onSaved();
-  }, [accountLabel, actions, active, amount, bill.id, context, dayOfMonth, label, onSaved]);
+  }, [actions, active, amount, bill.id, label, onSaved]);
 
   return (
     <View style={componentStyles.sheetForm}>
@@ -107,33 +98,6 @@ function BillEditFormComponent({ bill, onCancel, onSaved }: BillEditFormProps) {
           value={amount}
         />
         {fieldError?.field === "amount" && (
-          <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
-            {fieldError.message}
-          </Text>
-        )}
-        {categoryLabels.length > 0 && (
-          <ContextPicker categories={categoryLabels} onSelect={setContext} selected={context} />
-        )}
-        {accounts.length > 0 && (
-          <AccountPicker accounts={accounts} label={strings.common.account} onSelect={setAccountLabel} selected={accountLabel} />
-        )}
-        <TextInput
-          accessibilityLabel={
-            fieldError?.field === "dayOfMonth"
-              ? `${strings.settings.bills.dayPlaceholder}. ${fieldError.message}`
-              : strings.settings.bills.dayPlaceholder
-          }
-          keyboardType="number-pad"
-          onChangeText={(value) => {
-            clearFieldError("dayOfMonth");
-            setDayOfMonth(value);
-          }}
-          placeholder={strings.settings.bills.dayPlaceholder}
-          placeholderTextColor={colors.muted}
-          style={styles.input}
-          value={dayOfMonth}
-        />
-        {fieldError?.field === "dayOfMonth" && (
           <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
             {fieldError.message}
           </Text>

@@ -1,16 +1,19 @@
-import { SpendingMoment } from "../features/spendingMemory.types";
+import { RecurringBill, SpendingMoment } from "../features/spendingMemory.types";
 import { BalanceAnchor } from "../services/balanceAnchorRepository";
 import { safeTime } from "./dateRanges";
 import { getDaysRemainingInMonth } from "./financeEngine";
+import { getMonthlyBillsTotal } from "./recurringBills";
 
 export type SafeToSpendPace = "under" | "over" | "even" | "unknown";
 
 export type SafeToSpendResult = {
+  billsReserve: number;
   confident: boolean;
   daysLeft: number;
   effectiveBalance: number | null;
   pace: SafeToSpendPace;
   safeDaily: number | null;
+  spendableBalance: number | null;
   typicalDaily: number;
 };
 
@@ -113,12 +116,14 @@ export function getTypicalDailySpend(
 
 export function buildSafeToSpend({
   balanceAnchor,
+  bills = [],
   moments,
   paydayDayOfMonth,
   referenceDate = new Date(),
   windowDays = 30
 }: {
   balanceAnchor: BalanceAnchor | null;
+  bills?: RecurringBill[];
   moments: SpendingMoment[];
   paydayDayOfMonth?: number;
   referenceDate?: Date;
@@ -129,19 +134,24 @@ export function buildSafeToSpend({
     moments,
     referenceDate
   });
+  const billsReserve = getMonthlyBillsTotal(bills);
+  const spendableBalance =
+    effectiveBalance === null ? null : effectiveBalance - billsReserve;
   const daysLeft = getDaysUntilNextIncome(referenceDate, paydayDayOfMonth);
   const { amount: typicalDaily, confident } = getTypicalDailySpend(moments, referenceDate, windowDays);
   const safeDaily =
     effectiveBalance === null
       ? null
-      : Math.max(0, Math.round(effectiveBalance / daysLeft));
+      : Math.max(0, Math.round((spendableBalance ?? 0) / daysLeft));
 
   return {
+    billsReserve,
     confident,
     daysLeft,
     effectiveBalance,
     pace: classifyPace(typicalDaily, safeDaily),
     safeDaily,
+    spendableBalance,
     typicalDaily
   };
 }
@@ -153,7 +163,7 @@ export function simulatePurchase({
   amount: number;
   safe: SafeToSpendResult;
 }): SimulatePurchaseResult {
-  const baseBalance = safe.effectiveBalance ?? 0;
+  const baseBalance = safe.spendableBalance ?? 0;
   const remainingBalance = baseBalance - amount;
   const newSafeDaily = Math.max(0, Math.round(remainingBalance / safe.daysLeft));
   const typicalNeed = safe.typicalDaily * safe.daysLeft;

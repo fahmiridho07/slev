@@ -213,31 +213,6 @@ test("boot sets boot error and still marks ready when migration fails", async ()
   assertEqual(getState().bootError !== null, true, "boot error recorded");
 });
 
-test("logRecurringBillPayment reverts bill mark when moment write fails", async () => {
-  const driver = createMemoryDriver({ failWrites: new Set(["slev_entries"]) });
-  setStorageDriver(driver);
-  const bill = {
-    id: "bill-1",
-    label: "Internet",
-    amount: 300000,
-    context: "Bills" as const,
-    accountLabel: "BRI",
-    dayOfMonth: 5,
-    active: true,
-    createdAt: "2026-06-01T00:00:00.000Z",
-    updatedAt: "2026-06-01T00:00:00.000Z"
-  };
-  const { actions, getState } = createTestHarness({
-    isReady: true,
-    recurringBills: [bill]
-  });
-
-  await actions.logRecurringBillPayment("bill-1");
-
-  assertEqual(getState().moments.length, 0, "moment not saved");
-  assertEqual(getState().recurringBills[0]?.lastPaidMonth, undefined, "bill payment reverted");
-});
-
 test("removeCategory deletes the expense category", async () => {
   const driver = createMemoryDriver();
   setStorageDriver(driver);

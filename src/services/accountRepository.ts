@@ -1,6 +1,6 @@
 import { AccountTier, MoneyAccount, MoneyTransfer } from "../features/spendingMemory.types";
 import { rewriteAccountLabelInManualTemplates } from "./manualFinanceRepository";
-import { rewriteAccountLabelInRecurringBills } from "./recurringBillsRepository";
+
 import { rewriteAccountLabelInMoments } from "./spendingMemoryRepository";
 import {
   cleanOptionalText,
@@ -278,10 +278,6 @@ async function cascadeAccountLabelRename(oldLabel: string, newLabel: string): Pr
     {
       apply: () => rewriteAccountLabelInTransfers(oldLabel, newLabel),
       rollback: () => rewriteAccountLabelInTransfers(newLabel, oldLabel)
-    },
-    {
-      apply: () => rewriteAccountLabelInRecurringBills(oldLabel, newLabel),
-      rollback: () => rewriteAccountLabelInRecurringBills(newLabel, oldLabel)
     },
     {
       apply: () => rewriteAccountLabelInManualTemplates(oldLabel, newLabel),

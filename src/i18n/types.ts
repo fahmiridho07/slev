@@ -367,6 +367,7 @@ export type AppStrings = {
     safeToSpend: {
       affordable: string;
       balanceAnchor: string;
+      billsReserve: string;
       checkPurchase: string;
       checkPurchaseA11y: string;
       daysLeft: string;

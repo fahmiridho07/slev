@@ -17,10 +17,11 @@ function SafeToSpendCardComponent() {
   const { colors, componentStyles, strings, styles } = useTheme();
   const copy = strings.home.safeToSpend;
   const actions = useActions();
-  const { balanceAnchor, moments } = useFinanceSelector(
+  const { balanceAnchor, moments, recurringBills } = useFinanceSelector(
     (state) => ({
       balanceAnchor: state.balanceAnchor,
-      moments: state.moments
+      moments: state.moments,
+      recurringBills: state.recurringBills
     }),
     shallowEqual
   );
@@ -34,10 +35,11 @@ function SafeToSpendCardComponent() {
     () =>
       buildSafeToSpend({
         balanceAnchor,
+        bills: recurringBills,
         moments,
         referenceDate: new Date()
       }),
-    [balanceAnchor, moments]
+    [balanceAnchor, moments, recurringBills]
   );
 
   const purchaseAmount = parseAmountInput(purchaseDraft);
@@ -153,6 +155,12 @@ function SafeToSpendCardComponent() {
           <Text style={styles.pulseHeroLabel}>{copy.heroLabel}</Text>
         </View>
         <Text style={styles.pulseHeroValue}>{formatRupiah(safe.safeDaily ?? 0)}</Text>
+
+        {safe.billsReserve > 0 ? (
+          <Text style={styles.settingCopy}>
+            {formatString(copy.billsReserve, { amount: formatRupiah(safe.billsReserve) })}
+          </Text>
+        ) : null}
 
         {balanceEditOpen ? (
           renderBalanceInput(

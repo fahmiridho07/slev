@@ -70,17 +70,15 @@ function SettingsScreenComponent({
   );
   const momentCount = moments.length;
 
-  const activeTab = planningEnabled || activeSettingsTab !== "bills" ? activeSettingsTab : "categories";
+  const activeTab = activeSettingsTab;
   const settingsTabOptions = useMemo(
     () => [
-      ...(planningEnabled
-        ? [{ icon: "receipt-outline" as const, label: strings.settings.billsTab, value: "bills" as const }]
-        : []),
+      { icon: "receipt-outline" as const, label: strings.settings.billsTab, value: "bills" as const },
       { icon: "pricetags-outline" as const, label: strings.settings.categoriesTab, value: "categories" as const },
       { icon: "color-palette-outline" as const, label: strings.settings.appearanceTab, value: "appearance" as const },
       { icon: "cloud-outline" as const, label: strings.settings.dataTab, value: "data" as const }
     ],
-    [planningEnabled, strings.settings.appearanceTab, strings.settings.billsTab, strings.settings.categoriesTab, strings.settings.dataTab]
+    [strings.settings.appearanceTab, strings.settings.billsTab, strings.settings.categoriesTab, strings.settings.dataTab]
   );
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
   const [categoryDraft, setCategoryDraft] = useState("");
@@ -130,8 +128,6 @@ function SettingsScreenComponent({
     if (activeTab === "bills") {
       return (
         <RecurringBillsPanel
-          accounts={accounts}
-          categoryLabels={categoryLabels}
           recurringBills={recurringBills}
           onDeleteBill={(id) => void actions.removeRecurringBill(id)}
           onSaveBill={(input) => actions.saveRecurringBill(input)}

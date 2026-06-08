@@ -17,7 +17,7 @@ import {
   PatternFeedbackResponse,
   SpendingContext
 } from "../features/spendingMemory.types";
-import { getMonthKey } from "../lib/analysis";
+
 import {
   clearRecurringBills,
   deleteRecurringBill,
@@ -36,10 +36,8 @@ import {
 
   getBalanceSavedToast,
   getBootFailedToast,
-  getBillLoggedToast,
   getBillRemovedToast,
   getBillSavedToast,
-  getBillUnavailableToast,
 
   getCategoryDuplicateToast,
   getCategoryNeedNameToast,
@@ -466,20 +464,15 @@ export function createFinanceActions(
     id?: string;
     label: string;
     amount: string;
-    context: SpendingContext;
-    accountLabel?: string;
-    dayOfMonth: string;
     active: boolean;
-    lastPaidMonth?: string;
-  }): Promise<FormActionResult<"label" | "amount" | "dayOfMonth">> {
+  }): Promise<FormActionResult<"label" | "amount">> {
     const validationError = getBillValidationError(input);
     if (validationError) {
       return { ok: false, validation: validationError };
     }
 
     const amount = parseAmountInput(input.amount);
-    const dayOfMonth = Number.parseInt(input.dayOfMonth, 10);
-    if (!amount || !Number.isFinite(dayOfMonth)) {
+    if (!amount) {
       return { ok: false };
     }
 
@@ -487,11 +480,7 @@ export function createFinanceActions(
       id: input.id,
       label: input.label,
       amount,
-      context: input.context,
-      accountLabel: input.accountLabel,
-      dayOfMonth,
-      active: input.active,
-      lastPaidMonth: input.lastPaidMonth
+      active: input.active
     });
     if (!persisted) {
       notifyWriteFailure(STORAGE_KEYS.recurringBills);
@@ -510,60 +499,6 @@ export function createFinanceActions(
     }
     dispatch({ type: "set_recurring_bills", recurringBills: updated });
     setMessage(getBillRemovedToast());
-  }
-
-  async function logRecurringBillPayment(billId: string) {
-    const bill = getState().recurringBills.find((item) => item.id === billId);
-    if (!bill) {
-      setMessage(getBillUnavailableToast());
-      return;
-    }
-
-    const currentMonthKey = getMonthKey(new Date());
-    const { data: updatedBills, persisted: billPersisted } = await saveRecurringBill({
-      id: bill.id,
-      label: bill.label,
-      amount: bill.amount,
-      context: bill.context,
-      accountLabel: bill.accountLabel,
-      dayOfMonth: bill.dayOfMonth,
-      active: bill.active,
-      lastPaidMonth: currentMonthKey
-    });
-    if (!billPersisted) {
-      notifyWriteFailure(STORAGE_KEYS.recurringBills);
-      return;
-    }
-    dispatch({ type: "set_recurring_bills", recurringBills: updatedBills });
-
-    const { data: saved, persisted } = await saveSpendingMoment({
-      amount: bill.amount,
-      label: bill.label,
-      context: bill.context,
-      accountLabel: bill.accountLabel,
-      type: "expense"
-    });
-    if (!persisted) {
-      const { data: revertedBills, persisted: revertPersisted } = await saveRecurringBill({
-        id: bill.id,
-        label: bill.label,
-        amount: bill.amount,
-        context: bill.context,
-        accountLabel: bill.accountLabel,
-        dayOfMonth: bill.dayOfMonth,
-        active: bill.active,
-        lastPaidMonth: bill.lastPaidMonth
-      });
-      if (revertPersisted) {
-        dispatch({ type: "set_recurring_bills", recurringBills: revertedBills });
-      } else {
-        await reload();
-      }
-      notifyWriteFailure(STORAGE_KEYS.moments);
-      return;
-    }
-    dispatch({ type: "prepend_moment", moment: saved });
-    setMessage(getBillLoggedToast(saved.amount, bill.label));
   }
 
   async function setBalanceAnchor(input: {
@@ -698,7 +633,6 @@ export function createFinanceActions(
     removeManualTemplate,
     removeMoment,
     undoRemoveMoment,
-    logRecurringBillPayment,
     removeRecurringBill,
     removeTransfer,
     saveAccount,

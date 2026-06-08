@@ -221,6 +221,7 @@ export const id: AppStrings = {
       monthlySavingsTarget: "Target tabungan bulanan: {amount}"
     },
     safeToSpend: {
+      billsReserve: "Disisihkan buat tagihan: {amount}",
       setBalancePrompt: "Berapa saldomu sekarang?",
       setBalancePlaceholder: "Saldo sekarang",
       saveBalanceA11y: "Simpan saldo sekarang",

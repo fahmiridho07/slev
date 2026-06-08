@@ -74,16 +74,11 @@ export type MonthlyPlan = {
 
 export type ManualTemplate = SpendingMoment;
 
-// Monthly cadence only for v1; other cadences are a future extension.
 export type RecurringBill = {
   id: string;
   label: string;
   amount: number;
-  context: SpendingContext;
-  accountLabel?: string;
-  dayOfMonth: number;
   active: boolean;
-  lastPaidMonth?: string;
   createdAt: string;
   updatedAt: string;
 };

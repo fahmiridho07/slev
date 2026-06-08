@@ -221,6 +221,7 @@ export const en: AppStrings = {
       monthlySavingsTarget: "Monthly savings target: {amount}"
     },
     safeToSpend: {
+      billsReserve: "Set aside for bills: {amount}",
       setBalancePrompt: "What's your balance right now?",
       setBalancePlaceholder: "Current balance",
       saveBalanceA11y: "Save current balance",

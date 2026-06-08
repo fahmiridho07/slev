@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { AccountPicker, BottomSheet, ContextPicker, DeleteConfirmDialog, EmptyState, ListActionRow, ListActionsOnboardingTip } from "../../components";
+import { BottomSheet, DeleteConfirmDialog, EmptyState, ListActionRow, ListActionsOnboardingTip } from "../../components";
 import { useListActionsHint } from "../../hooks/useListActionsHint";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
-import { MoneyAccount, RecurringBill, SpendingContext } from "../spendingMemory.types";
+import { RecurringBill } from "../spendingMemory.types";
 import { formatString } from "../../i18n";
 import { hapticSelection, hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
@@ -14,23 +14,16 @@ import { BillFieldError } from "./settingsValidation";
 import { BillEditForm } from "./BillEditForm";
 
 export function RecurringBillsPanel({
-  accounts,
-  categoryLabels,
   recurringBills,
   onDeleteBill,
   onSaveBill
 }: {
-  accounts: MoneyAccount[];
-  categoryLabels: string[];
   recurringBills: RecurringBill[];
   onDeleteBill: (id: string) => void;
   onSaveBill: (input: {
     id?: string;
     label: string;
     amount: string;
-    context: SpendingContext;
-    accountLabel?: string;
-    dayOfMonth: string;
     active: boolean;
   }) => Promise<{ ok: boolean; validation?: FormValidationError<BillFieldError> }>;
 }) {
@@ -38,9 +31,6 @@ export function RecurringBillsPanel({
   const [editingBill, setEditingBill] = useState<RecurringBill | null>(null);
   const [label, setLabel] = useState("");
   const [amount, setAmount] = useState("");
-  const [context, setContext] = useState<SpendingContext>(categoryLabels[0] ?? "Other");
-  const [accountLabel, setAccountLabel] = useState(accounts[0]?.label ?? "");
-  const [dayOfMonth, setDayOfMonth] = useState("1");
   const [active, setActive] = useState(true);
   const [pendingDeleteBill, setPendingDeleteBill] = useState<RecurringBill | null>(null);
   const [fieldError, setFieldError] = useState<FormValidationError<BillFieldError> | null>(null);
@@ -54,9 +44,6 @@ export function RecurringBillsPanel({
   function resetAddDraft() {
     setLabel("");
     setAmount("");
-    setContext(categoryLabels[0] ?? "Other");
-    setAccountLabel(accounts[0]?.label ?? "");
-    setDayOfMonth("1");
     setActive(true);
     setFieldError(null);
   }
@@ -121,33 +108,6 @@ export function RecurringBillsPanel({
             {fieldError.message}
           </Text>
         )}
-        {categoryLabels.length > 0 && (
-          <ContextPicker categories={categoryLabels} onSelect={setContext} selected={context} />
-        )}
-        {accounts.length > 0 && (
-          <AccountPicker accounts={accounts} label={strings.common.account} onSelect={setAccountLabel} selected={accountLabel} />
-        )}
-        <TextInput
-          accessibilityLabel={
-            fieldError?.field === "dayOfMonth"
-              ? `${strings.settings.bills.dayPlaceholder}. ${fieldError.message}`
-              : strings.settings.bills.dayPlaceholder
-          }
-          keyboardType="number-pad"
-          onChangeText={(value) => {
-            clearFieldError("dayOfMonth");
-            setDayOfMonth(value);
-          }}
-          placeholder={strings.settings.bills.dayPlaceholder}
-          placeholderTextColor={colors.muted}
-          style={styles.input}
-          value={dayOfMonth}
-        />
-        {fieldError?.field === "dayOfMonth" && (
-          <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
-            {fieldError.message}
-          </Text>
-        )}
         <Pressable
           accessibilityLabel={active ? strings.settings.bills.active : strings.settings.bills.paused}
           accessibilityRole="button"
@@ -161,14 +121,7 @@ export function RecurringBillsPanel({
           <Pressable
             onPress={() => {
               void (async () => {
-                const result = await onSaveBill({
-                  label,
-                  amount,
-                  context,
-                  accountLabel: accountLabel || undefined,
-                  dayOfMonth,
-                  active
-                });
+                const result = await onSaveBill({ label, amount, active });
                 if (!result.ok) {
                   hapticWarning();
                   if (result.validation) {
@@ -217,12 +170,7 @@ export function RecurringBillsPanel({
                     <Text style={styles.analyticsAmount}>{formatRupiah(bill.amount)}</Text>
                   </View>
                   <Text style={styles.settingCopy}>
-                    {formatString(strings.settings.bills.rowMeta, {
-                      account: bill.accountLabel ? ` · ${bill.accountLabel}` : "",
-                      context: bill.context,
-                      day: bill.dayOfMonth,
-                      status: bill.active ? strings.settings.bills.active : strings.settings.bills.paused
-                    })}
+                    {bill.active ? strings.settings.bills.active : strings.settings.bills.paused}
                   </Text>
                 </View>
               </ListActionRow>

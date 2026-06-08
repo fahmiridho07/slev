@@ -1,7 +1,5 @@
 import React, { createContext, useEffect, useMemo, useReducer, useRef } from "react";
 
-import { getUpcomingBills, UpcomingBill } from "../lib/recurringBills";
-
 import { getCategoryLabels } from "../services/categoryRepository";
 import { createFinanceActions, FinanceActions } from "./financeActions";
 import { financeReducer, initialFinanceState } from "./financeReducer";
@@ -10,7 +8,6 @@ import { createFinanceStore, FinanceStore } from "./financeStore";
 
 export type FinanceDerived = {
   categoryLabels: ReturnType<typeof getCategoryLabels>;
-  upcomingBills: UpcomingBill[];
 };
 
 export const ActionsContext = createContext<FinanceActions | null>(null);
@@ -40,16 +37,11 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     () => getCategoryLabels(state.expenseCategories),
     [state.expenseCategories]
   );
-  const upcomingBills = useMemo(
-    () => getUpcomingBills({ bills: state.recurringBills }),
-    [state.recurringBills]
-  );
   const derived = useMemo<FinanceDerived>(
     () => ({
-      categoryLabels,
-      upcomingBills
+      categoryLabels
     }),
-    [categoryLabels, upcomingBills]
+    [categoryLabels]
   );
 
   const derivedRef = useRef(derived);

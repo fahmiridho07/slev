@@ -34,9 +34,8 @@ test("getCategoryValidationError requires a label", () => {
 });
 
 test("getBillValidationError checks bill fields", () => {
-  assertField(getBillValidationError({ label: "", amount: "1000", dayOfMonth: "1" }), "label", "missing bill label");
-  assertField(getBillValidationError({ label: "Rent", amount: "", dayOfMonth: "1" }), "amount", "missing bill amount");
-  assertField(getBillValidationError({ label: "Rent", amount: "1000", dayOfMonth: "32" }), "dayOfMonth", "invalid bill day");
+  assertField(getBillValidationError({ label: "", amount: "1000" }), "label", "missing bill label");
+  assertField(getBillValidationError({ label: "Rent", amount: "" }), "amount", "missing bill amount");
 });
 
 test("getImportJsonValidationError rejects invalid JSON", () => {

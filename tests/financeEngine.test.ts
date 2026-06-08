@@ -72,8 +72,41 @@ test("buildSafeToSpend computes safeDaily from effective balance and days left",
   });
 
   assertEqual(safe.effectiveBalance, 1_600_000, "effective balance should use the total anchor");
+  assertEqual(safe.billsReserve, 0, "no bills means zero reserve");
+  assertEqual(safe.spendableBalance, 1_600_000, "spendable equals effective when reserve is zero");
   assertEqual(safe.daysLeft, daysLeft, "days left should default to month remainder");
   assertEqual(safe.safeDaily, Math.round(1_600_000 / daysLeft), "safeDaily should divide balance by days left");
+});
+
+test("buildSafeToSpend subtracts bills reserve from safeDaily", () => {
+  const daysLeft = getDaysRemainingInMonth(juneMidpoint);
+  const safe = buildSafeToSpend({
+    balanceAnchor: balanceAnchor(1_600_000, "2026-06-15T01:00:00.000Z"),
+    bills: [
+      { id: "b1", label: "Rent", amount: 600_000, active: true, createdAt: "x", updatedAt: "x" },
+      { id: "b2", label: "Paused", amount: 200_000, active: false, createdAt: "x", updatedAt: "x" }
+    ],
+    moments: [],
+    referenceDate: juneMidpoint
+  });
+
+  assertEqual(safe.billsReserve, 600_000, "reserve sums active bills only");
+  assertEqual(safe.spendableBalance, 1_000_000, "spendable balance excludes reserve");
+  assertEqual(safe.safeDaily, Math.round(1_000_000 / daysLeft), "safeDaily uses spendable balance");
+});
+
+test("simulatePurchase respects bills reserve when judging affordability", () => {
+  const safe = buildSafeToSpend({
+    balanceAnchor: balanceAnchor(1_000_000, "2026-06-15T01:00:00.000Z"),
+    bills: [{ id: "b1", label: "Bills", amount: 400_000, active: true, createdAt: "x", updatedAt: "x" }],
+    moments: trailingExpenseMoments(50_000, 10, juneMidpoint),
+    referenceDate: juneMidpoint,
+    windowDays: 10
+  });
+
+  const purchase = simulatePurchase({ amount: 500_000, safe });
+  assertEqual(purchase.remainingBalance, 100_000, "purchase should reduce spendable balance");
+  assertEqual(purchase.affordable, false, "large purchase should fail against spendable balance");
 });
 
 test("buildSafeToSpend classifies spending pace against safeDaily", () => {
