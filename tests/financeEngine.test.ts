@@ -104,10 +104,17 @@ test("simulatePurchase respects bills reserve when judging affordability", () =>
     referenceDate: juneMidpoint,
     windowDays: 10
   });
+  const typicalNeed = safe.typicalDaily * safe.daysLeft;
+
+  assertEqual(safe.typicalDaily, 50_000, "uniform 10-day history should median to 50k typical daily");
+  assertEqual(typicalNeed, 50_000 * getDaysRemainingInMonth(juneMidpoint), "typical need scales median daily by days left");
+  assertEqual(safe.spendableBalance, 600_000, "spendable balance should exclude the bills reserve");
 
   const purchase = simulatePurchase({ amount: 500_000, safe });
   assertEqual(purchase.remainingBalance, 100_000, "purchase should reduce spendable balance");
-  assertEqual(purchase.affordable, false, "large purchase should fail against spendable balance");
+  assertEqual(purchase.remainingBalance < typicalNeed, true, "remaining cash should fall short of median-based typical need");
+  assertEqual(purchase.coversTypicalDays, false, "affordability should use median-based typicalDaily");
+  assertEqual(purchase.affordable, false, "large purchase should fail daily coverage even with non-negative balance");
 });
 
 test("buildSafeToSpend classifies spending pace against safeDaily", () => {
@@ -202,14 +209,19 @@ test("simulatePurchase rejects purchases that break daily coverage even when bal
   });
   const typicalNeed = safe.typicalDaily * safe.daysLeft;
 
+  assertEqual(safe.typicalDaily, 50_000, "uniform 10-day history should median to 50k typical daily");
+  assertEqual(typicalNeed, 800_000, "median-based typical need should be 50k times days left in month");
+
   const tightPurchase = simulatePurchase({ amount: 300_000, safe });
   const comfortablePurchase = simulatePurchase({ amount: 100_000, safe });
 
   assertEqual(tightPurchase.remainingBalance, 700_000, "purchase should reduce remaining balance");
   assertEqual(tightPurchase.remainingBalance >= 0, true, "purchase should still leave non-negative balance");
-  assertEqual(tightPurchase.remainingBalance < typicalNeed, true, "remaining cash should fall short of typical daily needs");
-  assertEqual(tightPurchase.coversTypicalDays, false, "remaining cash should not cover typical daily needs");
-  assertEqual(tightPurchase.affordable, false, "affordable requires balance and daily coverage");
+  assertEqual(tightPurchase.remainingBalance < typicalNeed, true, "remaining cash should fall short of median-based typical need");
+  assertEqual(tightPurchase.coversTypicalDays, false, "remaining cash should not cover median-based typical need");
+  assertEqual(tightPurchase.affordable, false, "affordable requires balance and median-based daily coverage");
+  assertEqual(comfortablePurchase.remainingBalance, 900_000, "smaller purchase should leave more headroom");
+  assertEqual(comfortablePurchase.coversTypicalDays, true, "remaining cash should cover median-based typical need");
   assertEqual(comfortablePurchase.affordable, true, "smaller purchase should stay affordable");
   assertEqual(
     comfortablePurchase.newSafeDaily,
