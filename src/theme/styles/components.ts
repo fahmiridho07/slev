@@ -642,14 +642,18 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     padding: 0
   },
   purchaseVerdict: {
-    alignItems: "center",
+    alignItems: "stretch",
     borderRadius: 12,
     borderWidth: 1,
-    flexDirection: "row",
     gap: 10,
     minHeight: 60,
     paddingHorizontal: 14,
     paddingVertical: 12
+  },
+  purchaseVerdictRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10
   },
   purchaseVerdictNeutral: {
     backgroundColor: colors.faint,
@@ -668,6 +672,17 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     fontSize: 14,
     fontWeight: "700",
     lineHeight: 19
+  },
+  purchaseMeterTrack: {
+    backgroundColor: colors.surface,
+    borderRadius: 999,
+    height: 6,
+    overflow: "hidden",
+    width: "100%"
+  },
+  purchaseMeterFill: {
+    borderRadius: 999,
+    height: "100%"
   },
   purchaseContext: {
     color: colors.muted,

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { memo, useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import React, { memo, useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Easing, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { BottomSheet, numberPadInputAccessoryProps } from "../../components";
 import { formatString } from "../../i18n";
 import { formatAmountInput, parseAmountInput } from "../../lib/formatMoney";
@@ -10,7 +10,7 @@ import { shallowEqual, useFinanceSelector } from "../../state/useFinance";
 import { useTheme } from "../../hooks/useTheme";
 
 function SafeToSpendCardComponent() {
-  const { colors, componentStyles, strings, styles } = useTheme();
+  const { colors, componentStyles, reduceMotion, strings, styles } = useTheme();
   const copy = strings.home.safeToSpend;
   const { accounts, moments, recurringBills, transfers } = useFinanceSelector(
     (state) => ({
@@ -73,6 +73,26 @@ function SafeToSpendCardComponent() {
       : purchaseSimulation.affordable
         ? formatString(copy.affordable, { amount: formatRupiah(purchaseSimulation.newSafeDaily) })
         : formatString(copy.notAffordable, { amount: formatRupiah(purchaseShortfall ?? 0) });
+
+  const showMeter = purchaseSimulation != null && safe.safeDaily > 0;
+  const meterFill =
+    purchaseSimulation != null && safe.safeDaily > 0
+      ? Math.max(0, Math.min(1, purchaseSimulation.newSafeDaily / safe.safeDaily))
+      : 0;
+  const meterWidth = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (reduceMotion) {
+      meterWidth.setValue(meterFill);
+      return;
+    }
+    Animated.timing(meterWidth, {
+      toValue: meterFill,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false
+    }).start();
+  }, [meterFill, reduceMotion, meterWidth]);
 
   function getTypicalDailyToneColor(): string {
     if (safe.pace === "under") {
@@ -166,13 +186,35 @@ function SafeToSpendCardComponent() {
             </View>
 
             <View style={[componentStyles.purchaseVerdict, verdictStyle]}>
-              <Ionicons color={verdictColor} name={verdictIcon} size={20} />
-              <Text
-                accessibilityLiveRegion="polite"
-                style={[componentStyles.purchaseVerdictText, { color: verdictColor }]}
-              >
-                {verdictText}
-              </Text>
+              <View style={componentStyles.purchaseVerdictRow}>
+                <Ionicons color={verdictColor} name={verdictIcon} size={20} />
+                <Text
+                  accessibilityLiveRegion="polite"
+                  style={[componentStyles.purchaseVerdictText, { color: verdictColor }]}
+                >
+                  {verdictText}
+                </Text>
+              </View>
+              {showMeter ? (
+                <View
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                  style={componentStyles.purchaseMeterTrack}
+                >
+                  <Animated.View
+                    style={[
+                      componentStyles.purchaseMeterFill,
+                      {
+                        backgroundColor: verdictColor,
+                        width: meterWidth.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ["0%", "100%"]
+                        })
+                      }
+                    ]}
+                  />
+                </View>
+              ) : null}
             </View>
 
             <Text style={componentStyles.purchaseContext}>
