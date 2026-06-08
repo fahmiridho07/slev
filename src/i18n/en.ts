@@ -230,7 +230,8 @@ export const en: AppStrings = {
       sheetContext: "Safe daily {amount} · {days} days left",
       affordableUntilPayday: "Yes. After this, your safe daily spend is {amount} until payday.",
       affordableUntilMonthEnd: "Yes. After this, your safe daily spend is {amount} until month-end.",
-      notAffordable: "Not quite safe — this would eat into your daily allowance. Short by {amount}."
+      overPace: "Doable, but it'll be tight — your daily drops to {amount}, below your average.",
+      cannotAfford: "This is more than your spendable balance — short by {amount}."
     }
   },
   activity: {

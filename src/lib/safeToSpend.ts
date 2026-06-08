@@ -17,11 +17,15 @@ export type SafeToSpendResult = {
   typicalDaily: number;
 };
 
+export type PurchaseVerdict = "affordable" | "over_pace" | "unaffordable";
+
 export type SimulatePurchaseResult = {
   affordable: boolean;
   coversTypicalDays: boolean;
   newSafeDaily: number;
   remainingBalance: number;
+  shortfall: number;
+  verdict: PurchaseVerdict;
 };
 
 /** Default expense context for payments already covered by the monthly bills reserve. */
@@ -166,12 +170,22 @@ export function simulatePurchase({
   const newSafeDaily = Math.max(0, Math.round(remainingBalance / safe.daysLeft));
   const typicalNeed = safe.typicalDaily * safe.daysLeft;
   const coversTypicalDays = remainingBalance >= typicalNeed;
+  const verdict: PurchaseVerdict =
+    remainingBalance < 0 ? "unaffordable" : coversTypicalDays ? "affordable" : "over_pace";
+  const shortfall =
+    verdict === "unaffordable"
+      ? -remainingBalance
+      : verdict === "over_pace"
+        ? Math.max(0, typicalNeed - remainingBalance)
+        : 0;
 
   return {
-    affordable: remainingBalance >= 0 && coversTypicalDays,
+    affordable: verdict === "affordable",
     coversTypicalDays,
     newSafeDaily,
-    remainingBalance
+    remainingBalance,
+    shortfall,
+    verdict
   };
 }
 

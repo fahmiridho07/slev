@@ -54,38 +54,37 @@ function SafeToSpendCardComponent() {
           safe
         })
       : null;
-  const purchaseShortfall =
-    purchaseSimulation && !purchaseSimulation.affordable
-      ? Math.max(0, safe.typicalDaily * safe.daysLeft - purchaseSimulation.remainingBalance)
-      : null;
-
   const verdictStyle =
     purchaseSimulation == null
       ? componentStyles.purchaseVerdictNeutral
-      : purchaseSimulation.affordable
+      : purchaseSimulation.verdict === "affordable"
         ? componentStyles.purchaseVerdictSafe
         : componentStyles.purchaseVerdictWarn;
   const verdictColor =
     purchaseSimulation == null
       ? colors.muted
-      : purchaseSimulation.affordable
+      : purchaseSimulation.verdict === "affordable"
         ? colors.greenDark
         : colors.amber;
   const verdictIcon: keyof typeof Ionicons.glyphMap =
     purchaseSimulation == null
       ? "information-circle-outline"
-      : purchaseSimulation.affordable
+      : purchaseSimulation.verdict === "affordable"
         ? "checkmark-circle"
-        : "alert-circle";
+        : purchaseSimulation.verdict === "over_pace"
+          ? "alert-circle"
+          : "close-circle";
   const verdictText =
     purchaseSimulation == null
       ? copy.purchaseHint
-      : purchaseSimulation.affordable
+      : purchaseSimulation.verdict === "affordable"
         ? formatString(
             paydayDayOfMonth != null ? copy.affordableUntilPayday : copy.affordableUntilMonthEnd,
             { amount: formatRupiah(purchaseSimulation.newSafeDaily) }
           )
-        : formatString(copy.notAffordable, { amount: formatRupiah(purchaseShortfall ?? 0) });
+        : purchaseSimulation.verdict === "over_pace"
+          ? formatString(copy.overPace, { amount: formatRupiah(purchaseSimulation.newSafeDaily) })
+          : formatString(copy.cannotAfford, { amount: formatRupiah(purchaseSimulation.shortfall) });
 
   const showMeter = purchaseSimulation != null && safe.safeDaily > 0;
   const meterFill =

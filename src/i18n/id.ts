@@ -230,7 +230,8 @@ export const id: AppStrings = {
       sheetContext: "Aman harian {amount} · sisa {days} hari",
       affordableUntilPayday: "Bisa. Setelah ini, aman harianmu jadi {amount} sampai gajian.",
       affordableUntilMonthEnd: "Bisa. Setelah ini, aman harianmu jadi {amount} sampai akhir bulan.",
-      notAffordable: "Belum aman — bakal makan jatah harianmu. Kurang {amount}."
+      overPace: "Masih bisa, tapi bakal mepet — jatah harianmu turun ke {amount}, di bawah rata-ratamu.",
+      cannotAfford: "Saldomu belum cukup buat ini — kurang {amount}."
     }
   },
   activity: {

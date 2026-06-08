@@ -194,7 +194,8 @@ export type AppStrings = {
       checkPurchaseA11y: string;
       daysLeft: string;
       heroLabel: string;
-      notAffordable: string;
+      cannotAfford: string;
+      overPace: string;
       purchaseHint: string;
       purchasePlaceholder: string;
       sheetContext: string;
