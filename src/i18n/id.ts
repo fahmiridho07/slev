@@ -218,6 +218,8 @@ export const id: AppStrings = {
       checkPurchaseA11y: "Cek apakah pembelian ini masih aman",
       sheetTitle: "Bisa beli ini?",
       purchasePlaceholder: "Harga barang",
+      purchaseHint: "Masukkan harga buat lihat dampaknya ke jatah harianmu.",
+      sheetSubtitle: "Cek dulu sebelum beli — biar jatah harian sampai gajian tetap aman.",
       affordable: "Bisa. Setelah ini, aman harianmu jadi {amount} sampai gajian.",
       notAffordable: "Belum aman — bakal makan jatah harianmu. Kurang {amount}."
     }

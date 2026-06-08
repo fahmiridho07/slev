@@ -613,6 +613,21 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     marginTop: 4,
     paddingTop: 12
   },
+  purchaseSummary: {
+    backgroundColor: colors.faint,
+    borderRadius: 8,
+    gap: 4,
+    padding: 12
+  },
+  purchaseSummaryRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between"
+  },
+  purchaseResult: {
+    justifyContent: "center",
+    minHeight: 44
+  },
   sheetHandle: {
     alignSelf: "center",
     backgroundColor: colors.line,

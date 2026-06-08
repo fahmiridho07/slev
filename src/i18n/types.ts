@@ -194,7 +194,9 @@ export type AppStrings = {
       daysLeft: string;
       heroLabel: string;
       notAffordable: string;
+      purchaseHint: string;
       purchasePlaceholder: string;
+      sheetSubtitle: string;
       sheetTitle: string;
       typicalDaily: string;
       typicalDailyUncertain: string;
