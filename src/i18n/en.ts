@@ -53,6 +53,7 @@ export const en: AppStrings = {
     noCategories: "No expense categories are active. Add one before saving expenses.",
     openSettings: "Open Settings",
     context: "Context",
+    billsReservedHint: "Recurring bills are already reserved — you don't need to log them here.",
     reorderHint: "Hold to rearrange",
     contextHints: {
       Meal: "Food, snacks, lunch",
@@ -206,6 +207,7 @@ export const en: AppStrings = {
   home: {
     safeToSpend: {
       billsReserve: "Set aside for bills: {amount}",
+      billsExceedBalance: "Your bills are larger than your balance right now (short by {amount}).",
       setBalancePrompt: "What's your balance right now?",
       setBalancePlaceholder: "Current balance",
       saveBalanceA11y: "Save current balance",

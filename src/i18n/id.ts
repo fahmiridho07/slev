@@ -53,6 +53,7 @@ export const id: AppStrings = {
     noCategories: "Belum ada kategori pengeluaran aktif. Tambahkan dulu sebelum menyimpan.",
     openSettings: "Buka Pengaturan",
     context: "Konteks",
+    billsReservedHint: "Tagihan rutin sudah dicadangkan — nggak perlu dicatat di sini.",
     reorderHint: "Tahan untuk atur ulang",
     contextHints: {
       Meal: "Makanan, camilan, makan siang",
@@ -206,6 +207,7 @@ export const id: AppStrings = {
   home: {
     safeToSpend: {
       billsReserve: "Disisihkan buat tagihan: {amount}",
+      billsExceedBalance: "Tagihanmu lebih besar dari saldo saat ini (kurang {amount}).",
       setBalancePrompt: "Berapa saldomu sekarang?",
       setBalancePlaceholder: "Saldo sekarang",
       saveBalanceA11y: "Simpan saldo sekarang",

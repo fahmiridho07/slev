@@ -79,6 +79,7 @@ export type AppStrings = {
   };
   capture: {
     addNote: string;
+    billsReservedHint: string;
     amountA11y: string;
     amountPlaceholder: string;
     currencyPrefix: string;
@@ -182,6 +183,7 @@ export type AppStrings = {
     safeToSpend: {
       affordable: string;
       balanceAnchor: string;
+      billsExceedBalance: string;
       billsReserve: string;
       checkPurchase: string;
       checkPurchaseA11y: string;

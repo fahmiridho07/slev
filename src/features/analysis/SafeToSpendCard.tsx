@@ -156,6 +156,14 @@ function SafeToSpendCardComponent() {
         </View>
         <Text style={styles.pulseHeroValue}>{formatRupiah(safe.safeDaily ?? 0)}</Text>
 
+        {safe.spendableBalance !== null && safe.spendableBalance < 0 ? (
+          <Text style={styles.settingCopy}>
+            {formatString(copy.billsExceedBalance, {
+              amount: formatRupiah(Math.abs(safe.spendableBalance))
+            })}
+          </Text>
+        ) : null}
+
         {safe.billsReserve > 0 ? (
           <Text style={styles.settingCopy}>
             {formatString(copy.billsReserve, { amount: formatRupiah(safe.billsReserve) })}

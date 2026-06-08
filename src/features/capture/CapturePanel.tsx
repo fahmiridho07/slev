@@ -264,6 +264,9 @@ function CapturePanelComponent({
               selected={form.context}
               onSelect={(value) => patch({ context: value })}
             />
+            {form.context === "Bills" ? (
+              <Text style={styles.settingCopy}>{strings.capture.billsReservedHint}</Text>
+            ) : null}
           </>
         )
       )}

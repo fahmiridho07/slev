@@ -2,6 +2,7 @@ import { buildMonthlyBreakdown, getDaysRemainingInMonth } from "../src/lib/finan
 import {
   buildSafeToSpend,
   getEffectiveBalance,
+  getTypicalDailySpend,
   simulatePurchase
 } from "../src/lib/safeToSpend";
 import {
@@ -143,6 +144,55 @@ test("buildSafeToSpend classifies spending pace against safeDaily", () => {
   assertEqual(unknownSpend.safeDaily, null, "safeDaily should be null without balance evidence");
 });
 
+test("getTypicalDailySpend uses median so one spike does not inflate typical daily", () => {
+  const referenceDate = new Date("2026-06-15T08:00:00.000Z");
+  const moments = [
+    ...expensesOnOffsets(referenceDate, 2, 10, 50_000),
+    expenseOnDay(referenceDate, 1, 2_000_000)
+  ];
+
+  const typical = getTypicalDailySpend(moments, referenceDate);
+
+  assertEqual(typical.amount, 50_000, "median path should ignore the one-day spike");
+  assertEqual(typical.amount !== 245_000, true, "typical daily should not follow the inflated mean");
+});
+
+test("getTypicalDailySpend divides short history by elapsed days not the full window", () => {
+  const referenceDate = new Date("2026-06-15T08:00:00.000Z");
+  const typical = getTypicalDailySpend(expensesOnOffsets(referenceDate, 1, 5, 100_000), referenceDate);
+
+  assertEqual(typical.amount, 100_000, "five-day history should use five elapsed days");
+  assertEqual(typical.amount !== Math.round(500_000 / 30), true, "typical daily should not divide by 30");
+});
+
+test("getTypicalDailySpend falls back to elapsed-day mean when most days are zero", () => {
+  const referenceDate = new Date("2026-06-15T08:00:00.000Z");
+  const moments = [
+    expenseOnDay(referenceDate, 10, 100_000),
+    expenseOnDay(referenceDate, 9, 100_000),
+    expenseOnDay(referenceDate, 8, 100_000)
+  ];
+
+  const typical = getTypicalDailySpend(moments, referenceDate);
+
+  assertEqual(typical.amount, 30_000, "sparse history should use elapsed-day mean");
+});
+
+test("getTypicalDailySpend confidence requires elapsed days and distinct expense days", () => {
+  const referenceDate = new Date("2026-06-15T08:00:00.000Z");
+
+  const confident = getTypicalDailySpend(expensesOnOffsets(referenceDate, 1, 14, 40_000), referenceDate);
+  const shortElapsed = getTypicalDailySpend(expensesOnOffsets(referenceDate, 1, 13, 40_000), referenceDate);
+  const sparseDistinct = getTypicalDailySpend(
+    [4, 6, 8, 10, 12, 14].map((offset) => expenseOnDay(referenceDate, offset, 40_000)),
+    referenceDate
+  );
+
+  assertEqual(confident.confident, true, "14 elapsed days and 14 distinct days should be confident");
+  assertEqual(shortElapsed.confident, false, "fewer than 14 elapsed days should stay uncertain");
+  assertEqual(sparseDistinct.confident, false, "fewer than 7 distinct expense days should stay uncertain");
+});
+
 test("simulatePurchase rejects purchases that break daily coverage even when balance remains", () => {
   const safe = buildSafeToSpend({
     balanceAnchor: balanceAnchor(1_000_000, "2026-06-15T01:00:00.000Z"),
@@ -233,6 +283,30 @@ function printable(value: unknown): string {
 
 function balanceAnchor(amount: number, setAt: string) {
   return { amount, setAt };
+}
+
+function expenseOnDay(referenceDate: Date, daysBeforeEnd: number, amount: number): SpendingMoment {
+  const windowEnd = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
+  const day = new Date(windowEnd);
+  day.setDate(day.getDate() - daysBeforeEnd);
+  return moment({
+    amount,
+    context: "Meal",
+    occurredAt: day.toISOString()
+  });
+}
+
+function expensesOnOffsets(
+  referenceDate: Date,
+  startOffset: number,
+  endOffset: number,
+  amount: number
+): SpendingMoment[] {
+  const moments: SpendingMoment[] = [];
+  for (let offset = startOffset; offset <= endOffset; offset += 1) {
+    moments.push(expenseOnDay(referenceDate, offset, amount));
+  }
+  return moments;
 }
 
 function trailingExpenseMoments(dailyAmount: number, dayCount: number, referenceDate: Date): SpendingMoment[] {
