@@ -11,6 +11,7 @@ export { ListActionsOnboardingTip } from "./ListActionsOnboardingTip";
 export { ProgressBar } from "./ProgressBar";
 export { FeedbackButton } from "./FeedbackButton";
 export { MomentRow } from "./MomentRow";
+export { NumberPadInputAccessory, numberPadInputAccessoryProps } from "./NumberPadInputAccessory";
 export { MonthPeriodPicker } from "./MonthPeriodPicker";
 export { ObservationPanel } from "./ObservationPanel";
 export { getPatternToneStyle, patternColor, patternIcon } from "./presentation";

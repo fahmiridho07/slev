@@ -33,7 +33,7 @@ export function parseDeepLink(url: string): DeepLinkTarget | null {
     return { tab: "money" };
   }
   if (root === "budget") {
-    return { tab: "money" };
+    return { tab: "settings", settingsTab: "accounts" };
   }
   if (root === "settings") {
     const settingsTab = parseSettingsTab(parts[1]?.toLowerCase());

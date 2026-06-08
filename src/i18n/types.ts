@@ -152,6 +152,7 @@ export type AppStrings = {
     clear: string;
     closeSheet: string;
     delete: string;
+    done: string;
     edit: string;
     expense: string;
     gotIt: string;

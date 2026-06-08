@@ -7,25 +7,26 @@
     "userInterfaceStyle": "automatic",
     "icon": "./assets/brand/slev-icon.png",
     "scheme": "slev",
-    "splash": {
-      "image": "./assets/brand/slev-splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#f7f8f4"
-    },
     "assetBundlePatterns": [
       "**/*"
+    ],
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#f7f8f4",
+          "image": "./assets/brand/slev-splash.png",
+          "resizeMode": "contain"
+        }
+      ]
     ],
     "android": {
       "package": "com.slev.app",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/brand/slev-adaptive-foreground.png",
+        "foregroundImage": "./assets/brand/slev-icon.png",
         "backgroundColor": "#f7f8f4"
       },
-      "blockedPermissions": [
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.SYSTEM_ALERT_WINDOW"
-      ]
+      "permissions": []
     },
     "ios": {
       "bundleIdentifier": "com.slev.app",

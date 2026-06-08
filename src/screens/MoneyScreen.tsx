@@ -256,6 +256,7 @@ function MoneyScreenComponent({
     <>
       <SectionList
         contentContainerStyle={scrollContentStyle}
+        keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         keyExtractor={keyExtractor}
         refreshControl={refreshControl}

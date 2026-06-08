@@ -622,6 +622,25 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     color: colors.ink,
     fontSize: 17,
     fontWeight: "700"
+  },
+  numberPadAccessoryBar: {
+    backgroundColor: colors.surface,
+    borderTopColor: colors.line,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
+  numberPadAccessoryDoneButton: {
+    justifyContent: "center",
+    minHeight: 44,
+    paddingHorizontal: 8
+  },
+  numberPadAccessoryDoneText: {
+    color: colors.greenDark,
+    fontSize: 17,
+    fontWeight: "600"
   }
   });
 }

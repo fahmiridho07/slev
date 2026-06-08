@@ -39,9 +39,17 @@ test("parseDeepLink routes settings sub-tabs", () => {
 });
 
 test("parseDeepLink routes budget and money aliases", () => {
-  assertEqual(parseDeepLink("slev://budget/balance"), { tab: "money" }, "budget balance");
-  assertEqual(parseDeepLink("slev://budget/goals"), { tab: "money" }, "budget goals");
-  assertEqual(parseDeepLink("slev://budget"), { tab: "money" }, "budget default");
+  assertEqual(
+    parseDeepLink("slev://budget/balance"),
+    { tab: "settings", settingsTab: "accounts" },
+    "budget balance"
+  );
+  assertEqual(
+    parseDeepLink("slev://budget/goals"),
+    { tab: "settings", settingsTab: "accounts" },
+    "budget goals"
+  );
+  assertEqual(parseDeepLink("slev://budget"), { tab: "settings", settingsTab: "accounts" }, "budget default");
   assertEqual(parseDeepLink("slev://money/accounts"), { tab: "money" }, "money accounts");
   assertEqual(parseDeepLink("slev://money"), { tab: "money" }, "money root");
   assertEqual(parseDeepLink("slev://analysis/breakdown"), { tab: "money" }, "analysis breakdown");

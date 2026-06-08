@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { AccountPicker, ContextPicker, EmptyState } from "../../components";
+import { AccountPicker, ContextPicker, EmptyState, numberPadInputAccessoryProps } from "../../components";
 import { CaptureTypePicker } from "./CaptureTypePicker";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { getTemplateLabel } from "../../lib/analysis";
@@ -158,6 +158,7 @@ function CapturePanelComponent({
               : strings.capture.amountA11y
           }
           keyboardType="number-pad"
+          {...numberPadInputAccessoryProps}
           onChangeText={changeAmountText}
           placeholder={strings.capture.amountPlaceholder}
           placeholderTextColor={colors.muted}

@@ -38,6 +38,7 @@ function HomeScreenComponent({
     <ScrollView
       ref={scrollRef}
       contentContainerStyle={scrollContentStyle}
+      keyboardDismissMode="on-drag"
       keyboardShouldPersistTaps="handled"
       refreshControl={refreshControl}
     >

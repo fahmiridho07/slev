@@ -20,6 +20,7 @@ export const en: AppStrings = {
     back: "Back",
     cancel: "Cancel",
     delete: "Delete",
+    done: "Done",
     gotIt: "Got it",
     progressA11y: "{label}: {percent} percent",
     pullToRefresh: "Pull to refresh",

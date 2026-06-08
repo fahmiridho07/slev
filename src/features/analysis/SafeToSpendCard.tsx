@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useMemo, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
-import { BottomSheet } from "../../components";
+import { BottomSheet, numberPadInputAccessoryProps } from "../../components";
 import { formatString } from "../../i18n";
 import { formatRelativeTimeFromNow } from "../../i18n/localeDate";
 import { formatAmountInput, parseAmountInput } from "../../lib/formatMoney";
@@ -106,6 +106,7 @@ function SafeToSpendCardComponent() {
               : copy.setBalancePlaceholder
           }
           keyboardType="number-pad"
+          {...numberPadInputAccessoryProps}
           onChangeText={(value) => {
             setBalanceFieldError((current) => (current?.field === "amount" ? null : current));
             setBalanceDraft(formatAmountInput(value));
@@ -240,6 +241,7 @@ function SafeToSpendCardComponent() {
         <TextInput
           accessibilityLabel={copy.purchasePlaceholder}
           keyboardType="number-pad"
+          {...numberPadInputAccessoryProps}
           onChangeText={(value) => setPurchaseDraft(formatAmountInput(value))}
           placeholder={copy.purchasePlaceholder}
           placeholderTextColor={colors.muted}

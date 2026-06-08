@@ -14,7 +14,7 @@ import {
   ViewStyle
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppToast, DeleteConfirmDialog } from "./components";
+import { AppToast, DeleteConfirmDialog, NumberPadInputAccessory } from "./components";
 import { BRAND } from "./data/brand";
 import { useLayoutInsets } from "./hooks/useLayoutInsets";
 import { useTheme } from "./hooks/useTheme";
@@ -319,6 +319,7 @@ export function AppRoot() {
           />
         </KeyboardAvoidingView>
       </SafeAreaView>
+      <NumberPadInputAccessory />
     </>
   );
 }

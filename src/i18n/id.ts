@@ -20,6 +20,7 @@ export const id: AppStrings = {
     back: "Kembali",
     cancel: "Batal",
     delete: "Hapus",
+    done: "Selesai",
     gotIt: "Mengerti",
     progressA11y: "{label}: {percent} persen",
     pullToRefresh: "Tarik untuk memuat ulang",

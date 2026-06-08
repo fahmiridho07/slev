@@ -26,6 +26,7 @@ function StickyTabScreenComponent({
       <ScrollView
         ref={scrollRef}
         contentContainerStyle={scrollContentStyle}
+        keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         refreshControl={refreshControl}
         stickyHeaderIndices={[1]}
