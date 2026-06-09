@@ -321,7 +321,15 @@ export const en: AppStrings = {
         categoryContextSingle: "About one usual {category} ({amount}).",
         logExpense: "Log as expense",
         logExpenseA11y: "Log this purchase as an expense",
-        loggingExpense: "Saving..."
+        loggingExpense: "Saving...",
+        statusComfortable: "Room to spare",
+        statusOk: "On track",
+        statusTight: "Tight",
+        statusRisky: "Risky",
+        statusNo: "Can't afford",
+        statusHint: "Enter amount",
+        meterBefore: "Now",
+        meterAfter: "After"
       }
     }
   },

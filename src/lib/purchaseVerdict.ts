@@ -11,8 +11,16 @@ export type PurchaseVerdictCopy = {
   headline: string;
 };
 
+export type PurchaseVerdictTone = "caution" | "comfortable" | "danger" | "neutral" | "safe" | "warn";
+
+export type PurchaseVerdictUi = {
+  icon: "alert-circle" | "checkmark-circle" | "close-circle" | "information-circle-outline" | "warning";
+  statusLabel: string;
+  tone: PurchaseVerdictTone;
+};
+
 export type PurchasePresentation = {
-  tone: "caution" | "danger" | "neutral" | "safe" | "warn";
+  tone: PurchaseVerdictTone;
 };
 
 export function getPurchaseVerdictCopy({
@@ -126,17 +134,59 @@ export function getPurchaseVerdictCopy({
   return result;
 }
 
-export function getPurchasePresentation(insight: PurchaseInsight): PurchasePresentation {
-  if (insight === "comfortable" || insight === "affordable") {
-    return { tone: "safe" };
+export function resolvePurchaseVerdictTone(insight: PurchaseInsight | null): PurchaseVerdictTone {
+  if (insight == null) {
+    return "neutral";
+  }
+  if (insight === "comfortable") {
+    return "comfortable";
+  }
+  if (insight === "affordable") {
+    return "safe";
   }
   if (insight === "tight_multi_day" || insight === "tight_one_day") {
-    return { tone: "warn" };
+    return "warn";
   }
   if (insight === "dips_reserve") {
-    return { tone: "caution" };
+    return "caution";
   }
-  return { tone: "danger" };
+  return "danger";
+}
+
+export function resolvePurchaseVerdictUi({
+  insight,
+  strings
+}: {
+  insight: PurchaseInsight | null;
+  strings: AppStrings;
+}): PurchaseVerdictUi {
+  const copy = strings.home.safeToSpend.purchaseVerdict;
+  const tone = resolvePurchaseVerdictTone(insight);
+
+  if (tone === "neutral") {
+    return {
+      tone,
+      statusLabel: copy.statusHint,
+      icon: "information-circle-outline"
+    };
+  }
+  if (tone === "comfortable") {
+    return { tone, statusLabel: copy.statusComfortable, icon: "checkmark-circle" };
+  }
+  if (tone === "safe") {
+    return { tone, statusLabel: copy.statusOk, icon: "checkmark-circle" };
+  }
+  if (tone === "warn") {
+    return { tone, statusLabel: copy.statusTight, icon: "alert-circle" };
+  }
+  if (tone === "caution") {
+    return { tone, statusLabel: copy.statusRisky, icon: "warning" };
+  }
+  return { tone, statusLabel: copy.statusNo, icon: "close-circle" };
+}
+
+export function getPurchasePresentation(insight: PurchaseInsight): PurchasePresentation {
+  return { tone: resolvePurchaseVerdictTone(insight) };
 }
 
 function formatPurchaseMultiple(multiple: number): string {

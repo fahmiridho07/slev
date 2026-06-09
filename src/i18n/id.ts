@@ -321,7 +321,15 @@ export const id: AppStrings = {
         categoryContextSingle: "Sekitar satu {category} biasa ({amount}).",
         logExpense: "Catat pengeluaran",
         logExpenseA11y: "Catat pembelian ini sebagai pengeluaran",
-        loggingExpense: "Menyimpan..."
+        loggingExpense: "Menyimpan...",
+        statusComfortable: "Longgar",
+        statusOk: "Aman",
+        statusTight: "Mepet",
+        statusRisky: "Riskan",
+        statusNo: "Nggak bisa",
+        statusHint: "Masukkan nominal",
+        meterBefore: "Sekarang",
+        meterAfter: "Setelah"
       }
     }
   },

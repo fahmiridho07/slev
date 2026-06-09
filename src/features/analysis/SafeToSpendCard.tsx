@@ -17,7 +17,8 @@ import { HomeHintsSheet } from "./HomeHintsSheet";
 import { formatAmountInput, parseAmountInput } from "../../lib/formatMoney";
 import { getDailyPocketLabel, getIncomeHubLabel } from "../../lib/analysis";
 import { getPurchaseCategoryMatch } from "../../lib/purchaseContext";
-import { getPurchasePresentation, getPurchaseVerdictCopy } from "../../lib/purchaseVerdict";
+import { PurchaseVerdictPanel } from "./PurchaseVerdictPanel";
+import { getPurchaseVerdictCopy, resolvePurchaseVerdictUi } from "../../lib/purchaseVerdict";
 import { buildSafeToSpend, simulatePurchase, type SafeToSpendPace } from "../../lib/safeToSpend";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import type { AppStrings } from "../../i18n/types";
@@ -98,20 +99,25 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
     });
   }, [moments, purchaseAmount, strings]);
 
+  const purchaseVerdictUi = useMemo(
+    () =>
+      resolvePurchaseVerdictUi({
+        insight: purchaseSimulation?.insight ?? null,
+        strings
+      }),
+    [purchaseSimulation?.insight, strings]
+  );
+
   const purchaseVerdict = useMemo(() => {
     if (purchaseSimulation == null) {
       return {
         contextNote: null as string | null,
         detail: null as string | null,
         footnote: null as string | null,
-        headline: copy.purchaseHint,
-        icon: "information-circle-outline" as const,
-        style: componentStyles.purchaseVerdictNeutral,
-        textColor: colors.muted
+        headline: copy.purchaseHint
       };
     }
 
-    const presentation = getPurchasePresentation(purchaseSimulation.insight);
     const messages = getPurchaseVerdictCopy({
       categoryMatch: purchaseCategoryMatch,
       horizon: paydayDayOfMonth != null ? "payday" : "month_end",
@@ -119,55 +125,14 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
       simulation: purchaseSimulation,
       strings
     });
-    const style =
-      presentation.tone === "safe"
-        ? componentStyles.purchaseVerdictSafe
-        : presentation.tone === "warn"
-          ? componentStyles.purchaseVerdictWarn
-          : presentation.tone === "caution"
-            ? componentStyles.purchaseVerdictCaution
-            : componentStyles.purchaseVerdictDanger;
-    const textColor =
-      presentation.tone === "safe"
-        ? colors.greenDark
-        : presentation.tone === "warn"
-          ? colors.amber
-          : colors.coral;
-    const icon =
-      presentation.tone === "safe"
-        ? ("checkmark-circle" as const)
-        : presentation.tone === "warn"
-          ? ("alert-circle" as const)
-          : presentation.tone === "caution"
-            ? ("warning" as const)
-            : ("close-circle" as const);
 
     return {
       contextNote: messages.contextNote ?? null,
       detail: messages.detail,
       footnote: messages.footnote ?? null,
-      headline: messages.headline,
-      icon,
-      style,
-      textColor
+      headline: messages.headline
     };
-  }, [
-    colors.amber,
-    colors.coral,
-    colors.greenDark,
-    colors.muted,
-    componentStyles.purchaseVerdictCaution,
-    componentStyles.purchaseVerdictDanger,
-    componentStyles.purchaseVerdictNeutral,
-    componentStyles.purchaseVerdictSafe,
-    componentStyles.purchaseVerdictWarn,
-    copy.purchaseHint,
-    paydayDayOfMonth,
-    purchaseCategoryMatch,
-    purchaseSimulation,
-    safe,
-    strings
-  ]);
+  }, [copy.purchaseHint, paydayDayOfMonth, purchaseCategoryMatch, purchaseSimulation, safe, strings]);
 
   const canLogPurchase =
     purchaseAmount != null &&
@@ -412,59 +377,29 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
               />
             </View>
 
-            <View style={[componentStyles.purchaseVerdict, purchaseVerdict.style]}>
-              <View style={componentStyles.purchaseVerdictRow}>
-                <Ionicons color={purchaseVerdict.textColor} name={purchaseVerdict.icon} size={20} />
-                <View
-                  accessibilityLiveRegion="polite"
-                  style={componentStyles.purchaseVerdictCopy}
-                >
-                  <Text style={[componentStyles.purchaseVerdictText, { color: purchaseVerdict.textColor }]}>
-                    {purchaseVerdict.headline}
-                  </Text>
-                  {purchaseVerdict.detail ? (
-                    <Text style={[componentStyles.purchaseVerdictDetail, { color: purchaseVerdict.textColor }]}>
-                      {purchaseVerdict.detail}
-                    </Text>
-                  ) : null}
-                  {purchaseVerdict.contextNote ? (
-                    <Text style={[componentStyles.purchaseVerdictContext, { color: purchaseVerdict.textColor }]}>
-                      {purchaseVerdict.contextNote}
-                    </Text>
-                  ) : null}
-                  {purchaseVerdict.footnote ? (
-                    <Text style={[componentStyles.purchaseVerdictFootnote, { color: purchaseVerdict.textColor }]}>
-                      {purchaseVerdict.footnote}
-                    </Text>
-                  ) : null}
-                </View>
-              </View>
-              {showMeter ? (
-                <View
-                  accessibilityElementsHidden
-                  importantForAccessibility="no-hide-descendants"
-                  onLayout={handleMeterTrackLayout}
-                  style={componentStyles.purchaseMeterTrack}
-                >
-                  <Animated.View
-                    style={[
-                      componentStyles.purchaseMeterFill,
-                      {
-                        backgroundColor: meterColor,
-                        width: meterFillWidth
-                      }
-                    ]}
-                  />
-                </View>
-              ) : null}
+            <View style={componentStyles.purchaseSheetContext}>
+              <Ionicons color={colors.muted} name="time-outline" size={14} />
+              <Text style={componentStyles.purchaseSheetContextText}>
+                {formatString(copy.sheetContext, {
+                  amount: formatRupiah(safe.safeDaily),
+                  days: safe.daysLeft
+                })}
+              </Text>
             </View>
 
-            <Text style={componentStyles.purchaseContext}>
-              {formatString(copy.sheetContext, {
-                amount: formatRupiah(safe.safeDaily),
-                days: safe.daysLeft
-              })}
-            </Text>
+            <PurchaseVerdictPanel
+              contextNote={purchaseVerdict.contextNote}
+              detail={purchaseVerdict.detail}
+              footnote={purchaseVerdict.footnote}
+              headline={purchaseVerdict.headline}
+              meterColor={meterColor}
+              meterFillWidth={meterFillWidth}
+              newSafeDaily={purchaseSimulation?.newSafeDaily ?? 0}
+              onMeterTrackLayout={handleMeterTrackLayout}
+              safeDaily={safe.safeDaily}
+              showMeter={showMeter}
+              ui={purchaseVerdictUi}
+            />
 
             {canLogPurchase ? (
               <Pressable

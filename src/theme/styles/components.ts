@@ -662,22 +662,51 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     padding: 0
   },
   purchaseVerdict: {
-    alignItems: "stretch",
     borderRadius: 12,
     borderWidth: 1,
-    gap: 10,
-    minHeight: 60,
-    paddingHorizontal: 14,
-    paddingVertical: 12
+    gap: 12,
+    padding: 14
   },
-  purchaseVerdictRow: {
+  purchaseVerdictHeader: {
     alignItems: "center",
     flexDirection: "row",
     gap: 10
   },
+  purchaseVerdictIconBadge: {
+    alignItems: "center",
+    borderRadius: 10,
+    height: 36,
+    justifyContent: "center",
+    width: 36
+  },
+  purchaseVerdictStatus: {
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 4
+  },
+  purchaseVerdictStatusText: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.3,
+    textTransform: "uppercase"
+  },
+  purchaseVerdictBody: {
+    gap: 4
+  },
+  purchaseVerdictHeadline: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "800",
+    lineHeight: 20
+  },
   purchaseVerdictNeutral: {
     backgroundColor: colors.faint,
     borderColor: colors.line
+  },
+  purchaseVerdictComfortable: {
+    backgroundColor: colors.surfacePositive,
+    borderColor: colors.borderMint
   },
   purchaseVerdictSafe: {
     backgroundColor: colors.mint,
@@ -692,42 +721,171 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     borderColor: colors.borderDanger
   },
   purchaseVerdictCaution: {
-    backgroundColor: colors.surfaceExpense,
+    backgroundColor: colors.surfaceInfo,
+    borderColor: colors.borderInfo
+  },
+  purchaseVerdictIconNeutral: {
+    backgroundColor: colors.faint
+  },
+  purchaseVerdictIconComfortable: {
+    backgroundColor: colors.surfacePositive
+  },
+  purchaseVerdictIconSafe: {
+    backgroundColor: colors.surfacePositive
+  },
+  purchaseVerdictIconWarn: {
+    backgroundColor: colors.iconWarning
+  },
+  purchaseVerdictIconCaution: {
+    backgroundColor: colors.iconInfo
+  },
+  purchaseVerdictIconDanger: {
+    backgroundColor: colors.iconDanger
+  },
+  purchaseVerdictStatusNeutral: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line
+  },
+  purchaseVerdictStatusComfortable: {
+    backgroundColor: colors.surface,
+    borderColor: colors.borderMint
+  },
+  purchaseVerdictStatusSafe: {
+    backgroundColor: colors.surface,
+    borderColor: colors.borderMint
+  },
+  purchaseVerdictStatusWarn: {
+    backgroundColor: colors.surface,
+    borderColor: colors.borderWarning
+  },
+  purchaseVerdictStatusCaution: {
+    backgroundColor: colors.surface,
+    borderColor: colors.borderInfo
+  },
+  purchaseVerdictStatusDanger: {
+    backgroundColor: colors.surface,
     borderColor: colors.borderDanger
   },
-  purchaseVerdictCopy: {
-    flex: 1,
-    gap: 3
-  },
-  purchaseVerdictText: {
-    fontSize: 14,
-    fontWeight: "700",
-    lineHeight: 19
-  },
   purchaseVerdictDetail: {
+    color: colors.muted,
     fontSize: 13,
     fontWeight: "600",
     lineHeight: 18
   },
-  purchaseVerdictContext: {
+  purchaseVerdictContextBox: {
+    alignItems: "flex-start",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8
+  },
+  purchaseVerdictContextNeutral: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line
+  },
+  purchaseVerdictContextComfortable: {
+    backgroundColor: colors.surface,
+    borderColor: colors.borderMint
+  },
+  purchaseVerdictContextSafe: {
+    backgroundColor: colors.surface,
+    borderColor: colors.borderMint
+  },
+  purchaseVerdictContextWarn: {
+    backgroundColor: colors.surface,
+    borderColor: colors.borderWarning
+  },
+  purchaseVerdictContextCaution: {
+    backgroundColor: colors.surface,
+    borderColor: colors.borderInfo
+  },
+  purchaseVerdictContextDanger: {
+    backgroundColor: colors.surface,
+    borderColor: colors.borderDanger
+  },
+  purchaseVerdictContextText: {
+    color: colors.ink,
+    flex: 1,
     fontSize: 13,
-    fontStyle: "italic",
     fontWeight: "600",
     lineHeight: 18
   },
-  purchaseVerdictFootnote: {
+  purchaseVerdictFootnoteRow: {
+    alignItems: "flex-start",
+    borderRadius: 8,
+    flexDirection: "row",
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 6
+  },
+  purchaseVerdictFootnoteNeutral: {
+    backgroundColor: colors.faint
+  },
+  purchaseVerdictFootnoteInfo: {
+    backgroundColor: colors.surfaceInfo
+  },
+  purchaseVerdictFootnoteDanger: {
+    backgroundColor: colors.surfaceDanger
+  },
+  purchaseVerdictFootnoteText: {
+    color: colors.muted,
+    flex: 1,
     fontSize: 12,
     fontWeight: "600",
-    lineHeight: 16,
-    opacity: 0.85
+    lineHeight: 16
+  },
+  purchaseMeterBlock: {
+    gap: 8
+  },
+  purchaseMeterLabels: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between"
+  },
+  purchaseMeterLabelCol: {
+    gap: 2
+  },
+  purchaseMeterLabel: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+    textTransform: "uppercase"
+  },
+  purchaseMeterValue: {
+    color: colors.ink,
+    fontSize: 14,
+    fontWeight: "800"
   },
   purchaseLogButton: {
     alignItems: "center",
+    backgroundColor: colors.surface,
+    borderColor: colors.borderMint,
+    borderRadius: 10,
+    borderWidth: 1,
     flexDirection: "row",
     gap: 8,
     justifyContent: "center",
     minHeight: 44,
-    paddingHorizontal: 12
+    paddingHorizontal: 14
+  },
+  purchaseSheetContext: {
+    alignItems: "center",
+    backgroundColor: colors.faint,
+    borderRadius: 8,
+    flexDirection: "row",
+    gap: 6,
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8
+  },
+  purchaseSheetContextText: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 16
   },
   purchaseMeterTrack: {
     backgroundColor: colors.line,

@@ -260,6 +260,14 @@ export type AppStrings = {
         logExpense: string;
         logExpenseA11y: string;
         loggingExpense: string;
+        meterAfter: string;
+        meterBefore: string;
+        statusComfortable: string;
+        statusHint: string;
+        statusNo: string;
+        statusOk: string;
+        statusRisky: string;
+        statusTight: string;
         paceLabelSafe: string;
         paceLabelTypical: string;
         tightMultiDetail: string;
