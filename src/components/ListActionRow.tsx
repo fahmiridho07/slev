@@ -9,6 +9,7 @@ type ListActionRowProps = {
   children: React.ReactNode;
   onDelete?: () => void;
   onPress?: () => void;
+  rowKey?: string;
   style?: ViewStyle;
 };
 
@@ -18,6 +19,7 @@ function ListActionRowComponent({
   children,
   onDelete,
   onPress,
+  rowKey,
   style
 }: ListActionRowProps) {
   const { componentStyles, strings } = useTheme();
@@ -44,6 +46,7 @@ function ListActionRowComponent({
 
   return (
     <SwipeActionRow
+      key={rowKey}
       accessibilityHint={resolvedHint}
       accessibilityLabel={accessibilityLabel}
       canDelete
@@ -51,6 +54,7 @@ function ListActionRowComponent({
       onDelete={onDelete}
       onLongPress={onPress ? undefined : onDelete}
       onPress={onPress}
+      rowKey={rowKey ?? accessibilityLabel ?? "list-action-row"}
     >
       {children}
     </SwipeActionRow>

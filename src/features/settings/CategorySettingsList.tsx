@@ -34,6 +34,7 @@ export function CategorySettingsList({ categories, onDelete, onEdit }: CategoryS
               accessibilityLabel={formatString(categoryStrings.editA11y, { label: displayLabel })}
               onDelete={() => onDelete(category)}
               onPress={() => onEdit(category)}
+              rowKey={category.id}
             >
               <View style={styles.analyticsRow}>
                 <View style={styles.analyticsRowHeader}>

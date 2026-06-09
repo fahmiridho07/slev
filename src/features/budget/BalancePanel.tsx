@@ -109,6 +109,7 @@ export function BalancePanel({
           accessibilityLabel={formatString(balanceStrings.editAccountA11y, { label: account.label })}
           onDelete={() => setPendingDeleteAccount(account)}
           onPress={() => editAccount(account)}
+          rowKey={account.id}
         >
           <View style={styles.analyticsRow}>
             <View style={styles.analyticsRowHeader}>

@@ -183,6 +183,7 @@ export function RecurringBillsPanel({
                 accessibilityLabel={formatString(strings.settings.bills.editA11y, { label: bill.label })}
                 onDelete={() => setPendingDeleteBill(bill)}
                 onPress={() => editBill(bill)}
+                rowKey={bill.id}
               >
                 <View style={styles.analyticsRow}>
                   <View style={styles.analyticsRowHeader}>

@@ -19,6 +19,7 @@ function BreakdownMomentItemComponent({ moment, onDelete, onStartEdit }: Breakdo
       accessibilityLabel={getMomentTitle(moment)}
       onDelete={() => onDelete(moment)}
       onPress={() => onStartEdit(moment)}
+      rowKey={moment.id}
     >
       <MomentRow moment={moment} />
     </ListActionRow>

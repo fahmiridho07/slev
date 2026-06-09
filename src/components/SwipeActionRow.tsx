@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { memo, useCallback, useMemo, useRef } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { Animated, PanResponder, Pressable, Text, View, ViewStyle } from "react-native";
 import { useTheme } from "../hooks/useTheme";
 import { hapticLight } from "../lib/haptics";
@@ -16,6 +16,7 @@ type SwipeActionRowProps = {
   onDelete: () => void;
   onLongPress?: () => void;
   onPress?: () => void;
+  rowKey: string;
 };
 
 function SwipeActionRowComponent({
@@ -26,7 +27,8 @@ function SwipeActionRowComponent({
   foregroundStyle,
   onDelete,
   onLongPress,
-  onPress
+  onPress,
+  rowKey
 }: SwipeActionRowProps) {
   const { colors, componentStyles, reduceMotion, strings } = useTheme();
   const translateX = useRef(new Animated.Value(0)).current;
@@ -52,6 +54,19 @@ function SwipeActionRowComponent({
       useNativeDriver: true
     }).start();
   }, [reduceMotion, translateX]);
+
+  useEffect(() => {
+    isOpenRef.current = false;
+    releaseSwipeOpen(closeRow);
+    translateX.stopAnimation();
+    translateX.setValue(0);
+  }, [closeRow, rowKey, translateX]);
+
+  useEffect(() => {
+    return () => {
+      releaseSwipeOpen(closeRow);
+    };
+  }, [closeRow]);
 
   const animateTo = useCallback(
     (isOpen: boolean) => {

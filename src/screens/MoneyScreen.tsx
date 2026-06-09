@@ -65,6 +65,7 @@ const MoneyMomentItem = memo(function MoneyMomentItem({
       accessibilityLabel={getMomentTitle(moment)}
       onDelete={() => onDelete(moment)}
       onPress={() => onStartEdit(moment)}
+      rowKey={moment.id}
     >
       <MomentRow moment={moment} repeatHint={repeatHint} />
     </ListActionRow>
@@ -90,6 +91,7 @@ const MoneyTransferItem = memo(function MoneyTransferItem({
       accessibilityLabel={getTransferActivityTitle(transfer)}
       onDelete={() => onDelete(transfer)}
       onPress={() => onStartEdit(transfer)}
+      rowKey={transfer.id}
     >
       <TransferRow transfer={transfer} />
     </ListActionRow>
@@ -180,6 +182,7 @@ function MoneyScreenComponent({
       >
         {item.kind === "moment" ? (
           <MoneyMomentItem
+            key={item.id}
             moment={item.moment}
             onDelete={setPendingDeleteMoment}
             onStartEdit={startEditingMoment}
@@ -187,6 +190,7 @@ function MoneyScreenComponent({
           />
         ) : (
           <MoneyTransferItem
+            key={item.id}
             onDelete={setPendingDeleteTransfer}
             onStartEdit={startEditingTransfer}
             transfer={item.transfer}
@@ -341,6 +345,7 @@ function MoneyScreenComponent({
       ) : (
         <SectionList
           contentContainerStyle={scrollContentStyle}
+          extraData={`${moments.length}:${transfers.length}:${query}:${filteredActivityItems.length}`}
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
           keyExtractor={keyExtractor}
@@ -401,6 +406,9 @@ function MoneyScreenComponent({
         onConfirm={() => {
           if (pendingDeleteMoment) {
             void actions.removeMoment(pendingDeleteMoment.id);
+            if (editingMoment?.id === pendingDeleteMoment.id) {
+              setEditingMoment(null);
+            }
             setPendingDeleteMoment(null);
           }
         }}
@@ -419,6 +427,9 @@ function MoneyScreenComponent({
         onConfirm={() => {
           if (pendingDeleteTransfer) {
             void actions.removeTransfer(pendingDeleteTransfer.id);
+            if (editingTransfer?.id === pendingDeleteTransfer.id) {
+              setEditingTransfer(null);
+            }
             setPendingDeleteTransfer(null);
           }
         }}
