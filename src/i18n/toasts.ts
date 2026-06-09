@@ -60,6 +60,10 @@ export function getCaptureNeedTransferAccountsToast(): string {
   return getRuntimeStrings().toasts.capture.needTransferAccounts;
 }
 
+export function getCaptureNeedDateToast(): string {
+  return getRuntimeStrings().toasts.capture.needDate;
+}
+
 export function getTransferMovedToast(amount: number, from: string, to: string): string {
   return formatString(getRuntimeStrings().toasts.capture.transferMoved, {
     amount: formatRupiah(amount),

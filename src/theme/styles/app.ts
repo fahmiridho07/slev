@@ -489,6 +489,23 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   categoryOrderButtonDisabled: {
     opacity: 0.45
   },
+  captureOptionalRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 16
+  },
+  captureDateBlock: {
+    gap: 8
+  },
+  captureDatePickButton: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    gap: 6,
+    minHeight: 44,
+    paddingHorizontal: 2
+  },
   addNoteButton: {
     alignItems: "center",
     alignSelf: "flex-start",

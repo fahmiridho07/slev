@@ -12,12 +12,13 @@
     "check": "npm run typecheck && npm run lint && npm run test:finance",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test:finance": "tsc -p tsconfig.test.json && node .tmp-tests/tests/financeEngine.test.js && node .tmp-tests/tests/analysis.test.js && node .tmp-tests/tests/activityFeed.test.js && node .tmp-tests/tests/homeSetup.test.js && node .tmp-tests/tests/formatMoney.test.js && node .tmp-tests/tests/financeReducer.test.js && node .tmp-tests/tests/shallowEqual.test.js && node .tmp-tests/tests/storage.test.js && node .tmp-tests/tests/accountLedger.test.js && node .tmp-tests/tests/accountLedgerMigration.test.js && node .tmp-tests/tests/dateBuckets.test.js && node .tmp-tests/tests/spendingPeriod.test.js && node .tmp-tests/tests/breakdownDrilldown.test.js && node .tmp-tests/tests/applyItemOrder.test.js && node .tmp-tests/tests/recurringBills.test.js && node .tmp-tests/tests/deepLink.test.js && node .tmp-tests/tests/budgetValidation.test.js && node .tmp-tests/tests/settingsValidation.test.js && node .tmp-tests/tests/captureValidation.test.js && node .tmp-tests/tests/spendingMemoryPatterns.test.js && node .tmp-tests/tests/swipeGesture.test.js && node -r ./tests/registerShims.cjs .tmp-tests/tests/financeActions.test.js",
+    "test:finance": "tsc -p tsconfig.test.json && node .tmp-tests/tests/financeEngine.test.js && node .tmp-tests/tests/analysis.test.js && node .tmp-tests/tests/activityFeed.test.js && node .tmp-tests/tests/homeSetup.test.js && node .tmp-tests/tests/formatMoney.test.js && node .tmp-tests/tests/financeReducer.test.js && node .tmp-tests/tests/shallowEqual.test.js && node .tmp-tests/tests/storage.test.js && node .tmp-tests/tests/accountLedger.test.js && node .tmp-tests/tests/accountLedgerMigration.test.js && node .tmp-tests/tests/dateBuckets.test.js && node .tmp-tests/tests/spendingPeriod.test.js && node .tmp-tests/tests/breakdownDrilldown.test.js && node .tmp-tests/tests/applyItemOrder.test.js && node .tmp-tests/tests/recurringBills.test.js && node .tmp-tests/tests/deepLink.test.js && node .tmp-tests/tests/budgetValidation.test.js && node .tmp-tests/tests/settingsValidation.test.js && node .tmp-tests/tests/captureValidation.test.js && node .tmp-tests/tests/captureDate.test.js && node .tmp-tests/tests/spendingMemoryPatterns.test.js && node .tmp-tests/tests/swipeGesture.test.js && node -r ./tests/registerShims.cjs .tmp-tests/tests/financeActions.test.js",
     "ios": "expo run:ios"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/datetimepicker": "8.4.4",
     "expo": "~54.0.25",
     "expo-document-picker": "~14.0.7",
     "expo-haptics": "~15.0.8",

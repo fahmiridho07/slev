@@ -80,6 +80,14 @@ export const en: AppStrings = {
     },
     notePlaceholder: "Tiny note, optional",
     addNote: "Add a note",
+    changeDate: "Change date",
+    dateLabel: "Date",
+    pickAnotherDate: "Pick another date",
+    dateQuick: {
+      today: "Today",
+      yesterday: "Yesterday",
+      daysAgo: "{count} days ago"
+    },
     saveExpense: "Save expense",
     saveIncome: "Save income",
     saveTransfer: "Save transfer",
@@ -89,6 +97,7 @@ export const en: AppStrings = {
     savedBannerIncome: "{amount} income saved",
     savedBannerIncomeNamed: "{amount} income saved · {name}",
     savedBannerTransfer: "{amount} moved · {from} → {to}",
+    savedBannerWithDate: "{message} · {date}",
     saveAsShortcut: "Save as shortcut",
     saveAsShortcutA11y: "Save as shortcut",
     amountA11y: "Amount",

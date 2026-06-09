@@ -91,6 +91,14 @@ export type AppStrings = {
   };
   capture: {
     addNote: string;
+    changeDate: string;
+    dateLabel: string;
+    dateQuick: {
+      daysAgo: string;
+      today: string;
+      yesterday: string;
+    };
+    pickAnotherDate: string;
     billSuggestions: string;
     billsReservedHint: string;
     amountA11y: string;
@@ -139,6 +147,7 @@ export type AppStrings = {
     savedBannerIncome: string;
     savedBannerIncomeNamed: string;
     savedBannerTransfer: string;
+    savedBannerWithDate: string;
     savedButton: string;
     saveExpense: string;
     saveIncome: string;
@@ -512,6 +521,7 @@ export type AppStrings = {
       needAmount: string;
       needAccount: string;
       needCategory: string;
+      needDate: string;
       needTransferAccounts: string;
       templateReady: string;
       transferMoved: string;

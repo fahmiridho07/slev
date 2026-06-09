@@ -25,6 +25,7 @@ export {
   getCaptureNeedAccountToast,
   getCaptureNeedAmountToast,
   getCaptureNeedCategoryToast,
+  getCaptureNeedDateToast,
   getCaptureNeedTransferAccountsToast,
   getCategoryDuplicateToast,
   getCategoryNeedNameToast,

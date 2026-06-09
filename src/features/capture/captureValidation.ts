@@ -2,18 +2,21 @@ import {
   getCaptureNeedAccountToast,
   getCaptureNeedAmountToast,
   getCaptureNeedCategoryToast,
+  getCaptureNeedDateToast,
   getCaptureNeedTransferAccountsToast,
   getShortcutNeedLabelToast,
   getShortcutTransferUseChipsToast
 } from "../../i18n";
 import { FormValidationError } from "../../lib/formValidation";
 import { parseAmountInput } from "../../lib/formatMoney";
+import { isFutureDateKey } from "./captureDate";
 import { CaptureFormValues } from "./types";
 
 export type CaptureFieldError =
   | "amount"
   | "category"
   | "momentAccount"
+  | "occurredAt"
   | "transferAccounts"
   | "shortcutLabel"
   | "shortcutTransfer";
@@ -43,6 +46,10 @@ export function getCaptureValidationError(
     if (!capture.fromAccount || !capture.toAccount || capture.fromAccount === capture.toAccount) {
       return { field: "transferAccounts", message: getCaptureNeedTransferAccountsToast() };
     }
+  }
+
+  if (capture.occurredAtKey && isFutureDateKey(capture.occurredAtKey)) {
+    return { field: "occurredAt", message: getCaptureNeedDateToast() };
   }
 
   return null;

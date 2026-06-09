@@ -80,6 +80,14 @@ export const id: AppStrings = {
     },
     notePlaceholder: "Catatan singkat, opsional",
     addNote: "Tambah catatan",
+    changeDate: "Ubah tanggal",
+    dateLabel: "Tanggal",
+    pickAnotherDate: "Pilih tanggal lain",
+    dateQuick: {
+      today: "Hari ini",
+      yesterday: "Kemarin",
+      daysAgo: "{count} hari lalu"
+    },
     saveExpense: "Simpan pengeluaran",
     saveIncome: "Simpan pemasukan",
     saveTransfer: "Simpan transfer",
@@ -89,6 +97,7 @@ export const id: AppStrings = {
     savedBannerIncome: "{amount} pemasukan tersimpan",
     savedBannerIncomeNamed: "{amount} pemasukan tersimpan · {name}",
     savedBannerTransfer: "{amount} dipindahkan · {from} → {to}",
+    savedBannerWithDate: "{message} · {date}",
     saveAsShortcut: "Simpan sebagai pintasan",
     saveAsShortcutA11y: "Simpan sebagai pintasan",
     amountA11y: "Jumlah",

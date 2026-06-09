@@ -25,6 +25,7 @@ function baseCapture(overrides: Partial<CaptureFormValues> = {}): CaptureFormVal
     fromAccount: "BRI",
     label: "",
     note: "",
+    occurredAtKey: null,
     source: "",
     toAccount: "Jago",
     ...overrides
@@ -108,6 +109,17 @@ test("getShortcutValidationError blocks transfer shortcuts", () => {
     getShortcutValidationError(baseCapture({ entryType: "transfer", amountText: "10000" })),
     "shortcutTransfer",
     "transfer shortcut"
+  );
+});
+
+test("getCaptureValidationError rejects future dates", () => {
+  assertField(
+    getCaptureValidationError(
+      baseCapture({ amountText: "10000", occurredAtKey: "2099-01-01" }),
+      1
+    ),
+    "occurredAt",
+    "future date"
   );
 });
 

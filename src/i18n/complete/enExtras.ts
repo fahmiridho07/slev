@@ -8,6 +8,7 @@ export const enExtras: AppStringsExtras = {
       needAccount: "Pick an account first.",
       needCategory: "Add at least one expense category in Settings before saving an expense.",
       needTransferAccounts: "Choose two different accounts for this transfer.",
+      needDate: "Pick today or an earlier date.",
       transferMoved: "{amount} moved from {from} to {to}.",
       incomeSaved: "{amount} income saved.",
       incomeSavedFrom: "{amount} income saved from {source}.",

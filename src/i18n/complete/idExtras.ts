@@ -8,6 +8,7 @@ export const idExtras: AppStringsExtras = {
       needAccount: "Pilih akun dulu.",
       needCategory: "Tambahkan minimal satu kategori pengeluaran di Pengaturan sebelum menyimpan.",
       needTransferAccounts: "Pilih dua akun berbeda untuk transfer ini.",
+      needDate: "Pilih hari ini atau tanggal sebelumnya.",
       transferMoved: "{amount} dipindahkan dari {from} ke {to}.",
       incomeSaved: "{amount} pemasukan tersimpan.",
       incomeSavedFrom: "{amount} pemasukan tersimpan dari {source}.",

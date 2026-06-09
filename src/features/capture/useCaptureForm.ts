@@ -28,6 +28,7 @@ function buildDefaultCapture(accounts: MoneyAccount[], context: SpendingContext)
     fromAccount: accountLabels.includes(incomeHub) ? incomeHub : accountLabels[0] ?? "BRI",
     label: "",
     note: "",
+    occurredAtKey: null,
     source: "",
     toAccount: accountLabels.includes(dailyPocket) && dailyPocket !== incomeHub
       ? dailyPocket
@@ -210,6 +211,7 @@ export function useCaptureForm() {
         fromAccount: form.fromAccount,
         label: template.type === "expense" ? template.label ?? "" : "",
         note: template.note ?? "",
+        occurredAtKey: null,
         source: template.type === "income" ? template.source ?? "" : "",
         toAccount: form.toAccount
       });
@@ -233,6 +235,7 @@ export function useCaptureForm() {
         fromAccount: form.fromAccount,
         label: "",
         note: "",
+        occurredAtKey: null,
         source: "",
         toAccount: form.toAccount
       });
@@ -252,6 +255,7 @@ export function useCaptureForm() {
       entryType: form.entryType,
       fromAccount: form.fromAccount,
       label: form.label,
+      occurredAtKey: form.occurredAtKey,
       source: form.source,
       toAccount: form.toAccount
     };
@@ -306,6 +310,9 @@ export function useCaptureForm() {
     }
     if ("source" in patchValues) {
       clearShortcutFieldError("shortcutLabel");
+    }
+    if ("occurredAtKey" in patchValues) {
+      clearFieldError("occurredAt");
     }
     setForm((current) => ({ ...current, ...patchValues }));
   }, [clearFieldError, clearShortcutFieldError]);

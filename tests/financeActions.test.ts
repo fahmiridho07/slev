@@ -143,6 +143,7 @@ test("saveMoment persists expense and prepends to state", async () => {
       context: "Food",
       accountLabel: "BRI",
       note: "",
+      occurredAtKey: null,
       fromAccount: "BRI",
       toAccount: "Jago",
       source: ""
@@ -153,6 +154,49 @@ test("saveMoment persists expense and prepends to state", async () => {
   assertEqual(result.ok, true, "capture saved");
   assertEqual(getState().moments.length, 1, "moment prepended");
   assertEqual(getState().moments[0]?.amount, 25000, "amount stored");
+});
+
+test("saveMoment persists backdated occurredAt", async () => {
+  const driver = createMemoryDriver();
+  setStorageDriver(driver);
+  const { actions, getState } = createTestHarness({
+    isReady: true,
+    accounts: [
+      {
+        id: "acct-bri",
+        label: "BRI",
+        kind: "bank",
+        isIncomeHub: true,
+        tier: "tracked",
+        openingBalance: 0,
+        openingSetAt: "2026-01-01T00:00:00.000Z",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z"
+      }
+    ]
+  });
+
+  const result = await actions.saveMoment(
+    {
+      entryType: "expense",
+      amountText: "12000",
+      label: "Snack",
+      context: "Food",
+      accountLabel: "BRI",
+      note: "",
+      occurredAtKey: "2026-06-07",
+      fromAccount: "BRI",
+      toAccount: "Jago",
+      source: ""
+    },
+    8
+  );
+
+  assertEqual(result.ok, true, "backdated capture saved");
+  const occurredAt = getState().moments[0]?.occurredAt ?? "";
+  if (!occurredAt.startsWith("2026-06-07")) {
+    throw new Error(`expected backdated occurredAt, got ${occurredAt}`);
+  }
 });
 
 test("saveMoment persists transfer and updates transfers state", async () => {
@@ -194,6 +238,7 @@ test("saveMoment persists transfer and updates transfers state", async () => {
       context: "",
       accountLabel: "BRI",
       note: "Top up",
+      occurredAtKey: null,
       fromAccount: "BRI",
       toAccount: "Jago",
       source: ""

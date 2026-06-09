@@ -2,7 +2,9 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { AccountPicker, ContextPicker, EmptyState, numberPadInputAccessoryProps } from "../../components";
+import { CaptureDatePicker } from "./CaptureDatePicker";
 import { CaptureTypePicker } from "./CaptureTypePicker";
+import { formatCaptureDateLabel } from "./captureDate";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { getTemplateLabel } from "../../lib/analysis";
@@ -63,6 +65,7 @@ function CapturePanelComponent({
   } = useCaptureForm();
 
   const [noteOpen, setNoteOpen] = useState(Boolean(form.note));
+  const [dateOpen, setDateOpen] = useState(Boolean(form.occurredAtKey));
   const [saveAck, setSaveAck] = useState<CaptureSaveAck | null>(null);
   const saveAckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -92,6 +95,12 @@ function CapturePanelComponent({
   }, [form.note]);
 
   useEffect(() => {
+    if (form.occurredAtKey) {
+      setDateOpen(true);
+    }
+  }, [form.occurredAtKey]);
+
+  useEffect(() => {
     if (focusAmountToken <= 0) {
       return;
     }
@@ -107,6 +116,7 @@ function CapturePanelComponent({
       showSaveAck(saved);
       hapticSuccess();
       setNoteOpen(false);
+      setDateOpen(false);
       onSaved?.();
     }
   }, [onSaved, save, showSaveAck]);
@@ -323,12 +333,39 @@ function CapturePanelComponent({
           style={[styles.input, styles.noteInput]}
           value={form.note}
         />
-      ) : (
-        <Pressable accessibilityRole="button" onPress={() => setNoteOpen(true)} style={styles.addNoteButton}>
-          <Ionicons name="create-outline" size={16} color={colors.muted} />
-          <Text style={styles.addNoteText}>{strings.capture.addNote}</Text>
-        </Pressable>
+      ) : null}
+
+      {dateOpen ? (
+        <CaptureDatePicker
+          occurredAtKey={form.occurredAtKey}
+          onSelect={(value) => patch({ occurredAtKey: value })}
+        />
+      ) : null}
+
+      {fieldError?.field === "occurredAt" && (
+        <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
+          {fieldError.message}
+        </Text>
       )}
+
+      {!noteOpen || !dateOpen ? (
+        <View style={styles.captureOptionalRow}>
+          {!noteOpen ? (
+            <Pressable accessibilityRole="button" onPress={() => setNoteOpen(true)} style={styles.addNoteButton}>
+              <Ionicons name="create-outline" size={16} color={colors.muted} />
+              <Text style={styles.addNoteText}>{strings.capture.addNote}</Text>
+            </Pressable>
+          ) : null}
+          {!dateOpen ? (
+            <Pressable accessibilityRole="button" onPress={() => setDateOpen(true)} style={styles.addNoteButton}>
+              <Ionicons name="calendar-outline" size={16} color={colors.muted} />
+              <Text style={styles.addNoteText}>
+                {formatCaptureDateLabel(form.occurredAtKey) ?? strings.capture.changeDate}
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
 
       <Pressable
         accessibilityLabel={saveAck ? strings.capture.savedButton : getSaveLabel(form.entryType)}

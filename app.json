@@ -18,7 +18,8 @@
           "image": "./assets/brand/slev-splash.png",
           "resizeMode": "contain"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "android": {
       "package": "com.slev.app",

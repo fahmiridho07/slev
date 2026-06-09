@@ -1,5 +1,6 @@
 import { Share } from "react-native";
 import { hapticSelection, hapticSuccess } from "../lib/haptics";
+import { buildOccurredAtIso } from "../features/capture/captureDate";
 import { getCaptureValidationError, getShortcutValidationError } from "../features/capture/captureValidation";
 import { CaptureFormValues } from "../features/capture/types";
 import { getMemoryEditValidationError } from "../features/memory/memoryValidation";
@@ -213,11 +214,14 @@ export function createFinanceActions(
       return { ok: false as const };
     }
 
+    const occurredAt = buildOccurredAtIso(capture.occurredAtKey);
+
     if (capture.entryType === "transfer") {
       const { data: updatedTransfers, persisted } = await saveMoneyTransfer({
         amount,
         fromAccount: capture.fromAccount,
         note: capture.note,
+        occurredAt,
         toAccount: capture.toAccount
       });
       if (!persisted) {
@@ -234,6 +238,7 @@ export function createFinanceActions(
       label: capture.entryType === "expense" ? capture.label : undefined,
       context: capture.entryType === "expense" ? capture.context : "Other",
       note: capture.note,
+      occurredAt,
       type: capture.entryType,
       source: capture.entryType === "income" ? capture.source : undefined,
       accountLabel: capture.accountLabel

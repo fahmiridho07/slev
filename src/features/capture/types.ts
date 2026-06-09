@@ -9,6 +9,7 @@ export type CaptureFormValues = {
   fromAccount: string;
   label: string;
   note: string;
+  occurredAtKey: string | null;
   source: string;
   toAccount: string;
 };
