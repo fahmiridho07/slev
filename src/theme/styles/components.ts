@@ -631,11 +631,21 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     paddingTop: 12
   },
   purchaseSheet: {
+    flexGrow: 1,
     gap: 14,
     paddingBottom: 8
   },
   purchaseSheetCard: {
-    minHeight: 300
+    height: "46%",
+    maxHeight: 500,
+    minHeight: 360
+  },
+  purchaseSheetForm: {
+    flex: 1,
+    minHeight: 0
+  },
+  purchaseSheetScroll: {
+    flex: 1
   },
   purchaseAmountField: {
     alignItems: "center",

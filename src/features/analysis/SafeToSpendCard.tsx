@@ -110,12 +110,7 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
 
   const purchaseVerdict = useMemo(() => {
     if (purchaseSimulation == null) {
-      return {
-        contextNote: null as string | null,
-        detail: null as string | null,
-        footnote: null as string | null,
-        headline: copy.purchaseHint
-      };
+      return null;
     }
 
     const messages = getPurchaseVerdictCopy({
@@ -132,7 +127,7 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
       footnote: messages.footnote ?? null,
       headline: messages.headline
     };
-  }, [copy.purchaseHint, paydayDayOfMonth, purchaseCategoryMatch, purchaseSimulation, safe, strings]);
+  }, [paydayDayOfMonth, purchaseCategoryMatch, purchaseSimulation, safe, strings]);
 
   const canLogPurchase =
     purchaseAmount != null &&
@@ -353,12 +348,12 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
         title={copy.sheetTitle}
         visible={sheetOpen}
       >
-        <View style={componentStyles.sheetForm}>
+        <View style={componentStyles.purchaseSheetForm}>
           <ScrollView
             contentContainerStyle={componentStyles.purchaseSheet}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
-            style={componentStyles.sheetScroll}
+            style={componentStyles.purchaseSheetScroll}
           >
             <View style={componentStyles.purchaseAmountField}>
               <Text style={componentStyles.purchaseAmountPrefix}>
@@ -387,19 +382,21 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
               </Text>
             </View>
 
-            <PurchaseVerdictPanel
-              contextNote={purchaseVerdict.contextNote}
-              detail={purchaseVerdict.detail}
-              footnote={purchaseVerdict.footnote}
-              headline={purchaseVerdict.headline}
-              meterColor={meterColor}
-              meterFillWidth={meterFillWidth}
-              newSafeDaily={purchaseSimulation?.newSafeDaily ?? 0}
-              onMeterTrackLayout={handleMeterTrackLayout}
-              safeDaily={safe.safeDaily}
-              showMeter={showMeter}
-              ui={purchaseVerdictUi}
-            />
+            {purchaseVerdict ? (
+              <PurchaseVerdictPanel
+                contextNote={purchaseVerdict.contextNote}
+                detail={purchaseVerdict.detail}
+                footnote={purchaseVerdict.footnote}
+                headline={purchaseVerdict.headline}
+                meterColor={meterColor}
+                meterFillWidth={meterFillWidth}
+                newSafeDaily={purchaseSimulation?.newSafeDaily ?? 0}
+                onMeterTrackLayout={handleMeterTrackLayout}
+                safeDaily={safe.safeDaily}
+                showMeter={showMeter}
+                ui={purchaseVerdictUi}
+              />
+            ) : null}
 
             {canLogPurchase ? (
               <Pressable
