@@ -233,6 +233,13 @@ export const en: AppStrings = {
     }
   },
   home: {
+    hints: {
+      sheetTitle: "How this works",
+      triggerA11y: "Open balance help and setup hints",
+      balanceSection: "Balance",
+      detailsSection: "Details",
+      setupSection: "Setup"
+    },
     setup: {
       openingBalanceHint: "Set your opening balance so safe-to-spend starts accurately.",
       openingBalanceAction: "Set balance",

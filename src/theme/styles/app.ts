@@ -649,6 +649,46 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     padding: 18,
     ...shadows.soft
   },
+  homeBalanceHeaderRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between"
+  },
+  homeHintsTrigger: {
+    padding: 2,
+    position: "relative"
+  },
+  homeHintsBadge: {
+    backgroundColor: colors.amber,
+    borderColor: colors.surface,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    height: 8,
+    position: "absolute",
+    right: 0,
+    top: 0,
+    width: 8
+  },
+  homeHintsSheetContent: {
+    gap: 18,
+    paddingBottom: 8
+  },
+  homeHintsSection: {
+    gap: 8
+  },
+  homeHintsItem: {
+    backgroundColor: colors.canvas,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10
+  },
+  homeHintsItemText: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18
+  },
   homeBalanceLabel: {
     color: colors.muted,
     flex: 1,

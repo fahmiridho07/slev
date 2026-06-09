@@ -233,6 +233,13 @@ export const id: AppStrings = {
     }
   },
   home: {
+    hints: {
+      sheetTitle: "Cara kerjanya",
+      triggerA11y: "Buka bantuan saldo dan petunjuk persiapan",
+      balanceSection: "Saldo",
+      detailsSection: "Detail",
+      setupSection: "Persiapan"
+    },
     setup: {
       openingBalanceHint: "Atur saldo awal supaya aman harian lebih akurat.",
       openingBalanceAction: "Atur saldo",

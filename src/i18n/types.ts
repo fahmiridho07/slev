@@ -203,6 +203,13 @@ export type AppStrings = {
     activityDeleteTitle: string;
   };
   home: {
+    hints: {
+      balanceSection: string;
+      detailsSection: string;
+      setupSection: string;
+      sheetTitle: string;
+      triggerA11y: string;
+    };
     setup: {
       billsAction: string;
       billsA11y: string;
