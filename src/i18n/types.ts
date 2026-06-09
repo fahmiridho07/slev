@@ -477,6 +477,9 @@ export type AppStrings = {
       edit: string;
       editA11y: string;
       empty: string;
+      hintA11y: string;
+      hintLabel: string;
+      hintPlaceholder: string;
       moveEarlier: string;
       moveLater: string;
       nameA11y: string;

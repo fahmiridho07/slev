@@ -33,6 +33,7 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
   const actions = useActions();
   const categoryLabels = useFinanceDerived((derived) => derived.categoryLabels);
   const accounts = useFinanceSelector((state) => state.accounts);
+  const expenseCategories = useFinanceSelector((state) => state.expenseCategories);
   const initial = buildEditForm(moment, accounts);
 
   const [amountText, setAmountText] = useState(initial.amountText);
@@ -145,7 +146,13 @@ function MomentEditFormComponent({ moment, onCancel, onSaved }: MomentEditFormPr
           onSelect={handleTypeChange}
         />
         {type === "expense" && (
-          <ContextPicker categories={categoryLabels} selected={context} onSelect={setContext} compact />
+          <ContextPicker
+            categories={categoryLabels}
+            expenseCategories={expenseCategories}
+            selected={context}
+            onSelect={setContext}
+            compact
+          />
         )}
         <AccountPicker
           accounts={accounts}

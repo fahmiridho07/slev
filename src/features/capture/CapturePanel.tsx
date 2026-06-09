@@ -37,9 +37,10 @@ function CapturePanelComponent({
     return strings.capture.saveExpense;
   }
   const categoryLabels = useFinanceDerived((derived) => derived.categoryLabels);
-  const { accounts, recurringBills } = useFinanceSelector(
+  const { accounts, expenseCategories, recurringBills } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
+      expenseCategories: state.expenseCategories,
       recurringBills: state.recurringBills
     }),
     shallowEqual
@@ -204,6 +205,7 @@ function CapturePanelComponent({
             <Text style={componentStyles.microLabel}>{strings.capture.context}</Text>
             <ContextPicker
               categories={orderedCategories}
+              expenseCategories={expenseCategories}
               selected={form.context}
               onSelect={(value) => patch({ context: value })}
             />

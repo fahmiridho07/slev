@@ -44,6 +44,7 @@ export type MoneyTransfer = {
 export type ExpenseCategory = {
   id: string;
   label: string;
+  hint?: string;
   isDefault: boolean;
   createdAt: string;
   updatedAt: string;

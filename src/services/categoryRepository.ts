@@ -7,6 +7,7 @@ import { createId, readString, toRecord } from "./storageRecordUtils";
 const EXPENSE_CATEGORIES_KEY = STORAGE_KEYS.expenseCategories;
 
 type CategoryInput = {
+  hint?: string;
   id?: string;
   label: string;
 };
@@ -27,7 +28,8 @@ export async function saveExpenseCategory(input: CategoryInput): Promise<WriteRe
   const category = normalizeStoredCategory({
     id: input.id ?? createId(),
     label: input.label,
-    isDefault: false,
+    hint: "hint" in input ? normalizeCategoryHint(input.hint) : existing?.hint,
+    isDefault: existing?.isDefault ?? false,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now
   });
@@ -141,6 +143,7 @@ function normalizeStoredCategory(value: unknown): StoredExpenseCategory | null {
   return {
     id: readString(record, "id") ?? createId(),
     label,
+    hint: normalizeCategoryHint(readString(record, "hint")),
     isDefault: readBoolean(record, "isDefault") ?? DEFAULT_SPENDING_CONTEXTS.includes(label),
     isArchived: readBoolean(record, "isArchived") ?? false,
     createdAt: readString(record, "createdAt") ?? now,
@@ -152,10 +155,16 @@ function stripArchiveFlag(category: StoredExpenseCategory): ExpenseCategory {
   return {
     id: category.id,
     label: category.label,
+    hint: category.hint,
     isDefault: category.isDefault,
     createdAt: category.createdAt,
     updatedAt: category.updatedAt
   };
+}
+
+function normalizeCategoryHint(value?: string): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
 }
 
 function sortCategories(a: ExpenseCategory, b: ExpenseCategory): number {

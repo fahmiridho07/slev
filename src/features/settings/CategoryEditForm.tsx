@@ -7,6 +7,19 @@ import { useTheme } from "../../hooks/useTheme";
 import { ExpenseCategory } from "../spendingMemory.types";
 import { CategoryFieldError } from "./settingsValidation";
 
+function getInitialCategoryHint(category: ExpenseCategory, strings: ReturnType<typeof useTheme>["strings"]): string {
+  if (category.hint?.trim()) {
+    return category.hint;
+  }
+
+  const hints = strings.capture.contextHints;
+  if (category.label in hints && category.label !== "custom") {
+    return hints[category.label as keyof typeof hints];
+  }
+
+  return "";
+}
+
 type CategoryEditFormProps = {
   canMoveEarlier: boolean;
   canMoveLater: boolean;
@@ -30,10 +43,11 @@ function CategoryEditFormComponent({
   const categoryStrings = strings.settings.categories;
   const actions = useActions();
   const [categoryDraft, setCategoryDraft] = useState(category.label);
+  const [hintDraft, setHintDraft] = useState(() => getInitialCategoryHint(category, strings));
   const [fieldError, setFieldError] = useState<FormValidationError<CategoryFieldError> | null>(null);
 
   const save = useCallback(async () => {
-    const result = await actions.saveCategory({ id: category.id, label: categoryDraft });
+    const result = await actions.saveCategory({ hint: hintDraft, id: category.id, label: categoryDraft });
     if (!result.ok) {
       hapticWarning();
       if (result.validation) {
@@ -43,7 +57,7 @@ function CategoryEditFormComponent({
     }
     setFieldError(null);
     onSaved();
-  }, [actions, category.id, categoryDraft, onSaved]);
+  }, [actions, category.id, categoryDraft, hintDraft, onSaved]);
 
   return (
     <View style={componentStyles.sheetForm}>
@@ -73,6 +87,15 @@ function CategoryEditFormComponent({
             {fieldError.message}
           </Text>
         )}
+        <Text style={componentStyles.microLabel}>{categoryStrings.hintLabel}</Text>
+        <TextInput
+          accessibilityLabel={categoryStrings.hintA11y}
+          onChangeText={setHintDraft}
+          placeholder={categoryStrings.hintPlaceholder}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={hintDraft}
+        />
         <Text style={styles.settingCopy}>
           {category.isDefault ? categoryStrings.defaultRenameHint : categoryStrings.renameHint}
         </Text>

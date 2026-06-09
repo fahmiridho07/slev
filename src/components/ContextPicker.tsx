@@ -1,12 +1,13 @@
 import React, { memo } from "react";
 import { Pressable, Text, View } from "react-native";
-import { displayContext } from "../i18n/display";
-import { SpendingContext } from "../features/spendingMemory.types";
+import { displayContext, getCategoryHint } from "../i18n/display";
+import { ExpenseCategory, SpendingContext } from "../features/spendingMemory.types";
 import { useTheme } from "../hooks/useTheme";
 
 type ContextPickerProps = {
   categories: SpendingContext[];
   compact?: boolean;
+  expenseCategories?: ExpenseCategory[];
   selected: SpendingContext;
   onSelect: (context: SpendingContext) => void;
 };
@@ -14,15 +15,11 @@ type ContextPickerProps = {
 function ContextPickerComponent({
   categories,
   compact = false,
+  expenseCategories = [],
   selected,
   onSelect
 }: ContextPickerProps) {
   const { componentStyles, strings } = useTheme();
-
-  function getContextHint(context: SpendingContext): string {
-    const hints = strings.capture.contextHints;
-    return hints[context as keyof typeof hints] ?? hints.custom;
-  }
 
   const wrapStyle = compact ? componentStyles.contextWrapCompact : componentStyles.contextWrap;
 
@@ -55,7 +52,7 @@ function ContextPickerComponent({
       {!compact && (
         <View style={componentStyles.contextHintBox}>
           <Text numberOfLines={2} style={componentStyles.contextHint}>
-            {getContextHint(selected)}
+            {getCategoryHint(selected, expenseCategories, strings)}
           </Text>
         </View>
       )}

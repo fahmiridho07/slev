@@ -286,12 +286,16 @@ test("removeCategory deletes the expense category", async () => {
   setStorageDriver(driver);
   const { actions, getState } = createTestHarness({ isReady: true });
 
-  const saved = await actions.saveCategory({ label: "Streaming" });
+  const saved = await actions.saveCategory({
+    hint: "Netflix, Spotify, apps",
+    label: "Streaming"
+  });
   assertEqual(saved.ok, true, "category saved");
   const category = getState().expenseCategories.find((item) => item.label === "Streaming");
   if (!category) {
     throw new Error("expected saved category");
   }
+  assertEqual(category.hint, "Netflix, Spotify, apps", "category hint stored");
 
   await actions.removeCategory(category);
 

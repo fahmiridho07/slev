@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { ListActionRow } from "../../components";
-import { displayContext } from "../../i18n/display";
+import { displayContext, getCategoryHint } from "../../i18n/display";
 import { formatString } from "../../i18n";
 import { ExpenseCategory } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
@@ -20,6 +20,7 @@ export function CategorySettingsList({ categories, onDelete, onEdit }: CategoryS
     <View style={styles.listPanel}>
       {categories.map((category, index) => {
         const displayLabel = displayContext(category.label);
+        const hint = getCategoryHint(category.label, categories, strings);
 
         return (
           <View
@@ -45,6 +46,9 @@ export function CategorySettingsList({ categories, onDelete, onEdit }: CategoryS
                     {category.isDefault ? categoryStrings.default : categoryStrings.custom}
                   </Text>
                 </View>
+                <Text numberOfLines={2} style={styles.settingCopy}>
+                  {hint}
+                </Text>
               </View>
             </ListActionRow>
           </View>

@@ -433,7 +433,11 @@ export function createFinanceActions(
     setMessage(updated.some((account) => account.id === id) ? getAccountKeepOneToast() : getAccountRemovedToast());
   }
 
-  async function saveCategory(input: { id?: string; label: string }): Promise<FormActionResult<"label">> {
+  async function saveCategory(input: {
+    hint?: string;
+    id?: string;
+    label: string;
+  }): Promise<FormActionResult<"label">> {
     const validationError = getCategoryValidationError(input.label);
     if (validationError) {
       return { ok: false, validation: validationError };
@@ -452,9 +456,9 @@ export function createFinanceActions(
         notifyWriteFailure(STORAGE_KEYS.expenseCategories);
         return { ok: false };
       }
-      categoryResult = await saveExpenseCategory({ label: trimmedLabel });
+      categoryResult = await saveExpenseCategory({ hint: input.hint, label: trimmedLabel });
     } else {
-      categoryResult = await saveExpenseCategory({ id: input.id, label: trimmedLabel });
+      categoryResult = await saveExpenseCategory({ hint: input.hint, id: input.id, label: trimmedLabel });
     }
 
     const { data: updated, persisted, reason } = categoryResult;

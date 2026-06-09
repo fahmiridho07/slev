@@ -16,7 +16,10 @@ type CategorySettingsPanelProps = {
   accounts: MoneyAccount[];
   categories: ExpenseCategory[];
   onRemoveCategory: (category: ExpenseCategory) => void;
-  onSaveCategory: (input: { label: string }) => Promise<{ ok: boolean; validation?: FormValidationError<CategoryFieldError> }>;
+  onSaveCategory: (input: {
+    hint?: string;
+    label: string;
+  }) => Promise<{ ok: boolean; validation?: FormValidationError<CategoryFieldError> }>;
 };
 
 export function CategorySettingsPanel({
@@ -28,6 +31,7 @@ export function CategorySettingsPanel({
   const { colors, componentStyles, strings, styles } = useTheme();
   const categoryStrings = strings.settings.categories;
   const [categoryDraft, setCategoryDraft] = useState("");
+  const [hintDraft, setHintDraft] = useState("");
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
   const [fieldError, setFieldError] = useState<FormValidationError<CategoryFieldError> | null>(null);
   const [pendingDeleteCategory, setPendingDeleteCategory] = useState<ExpenseCategory | null>(null);
@@ -40,6 +44,7 @@ export function CategorySettingsPanel({
 
   function resetDraft() {
     setCategoryDraft("");
+    setHintDraft("");
     setFieldError(null);
   }
 
@@ -72,12 +77,21 @@ export function CategorySettingsPanel({
             {fieldError.message}
           </Text>
         )}
+        <Text style={componentStyles.microLabel}>{categoryStrings.hintLabel}</Text>
+        <TextInput
+          accessibilityLabel={categoryStrings.hintA11y}
+          onChangeText={setHintDraft}
+          placeholder={categoryStrings.hintPlaceholder}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={hintDraft}
+        />
         <View style={componentStyles.editActions}>
           <Pressable
             accessibilityRole="button"
             onPress={() => {
               void (async () => {
-                const result = await onSaveCategory({ label: categoryDraft });
+                const result = await onSaveCategory({ hint: hintDraft, label: categoryDraft });
                 if (!result.ok) {
                   hapticWarning();
                   if (result.validation) {
