@@ -293,7 +293,28 @@ export const en: AppStrings = {
       affordableUntilMonthEnd: "Yes. After this, your safe daily spend is {amount} until month-end.",
       overPace: "Doable, but it'll be tight — your daily drops to {amount}, below your average.",
       dipsReserve: "Still doable, but it'll eat {amount} from your bills and set-aside.",
-      cannotAfford: "This is more than your spendable balance — short by {amount}."
+      cannotAfford: "This is more than your spendable balance — short by {amount}.",
+      purchaseVerdict: {
+        comfortableHeadline: "Yes — room to spare.",
+        comfortableDetail:
+          "Daily allowance stays {amount}, above your usual {typical}.",
+        affordableHeadline: "Yes — still on track.",
+        affordableDetail: "Daily allowance becomes {amount} until {horizon}.",
+        tightMultiHeadline: "Possible, but tight.",
+        tightMultiDetail:
+          "At your usual pace ({typical}/day), this only lasts ~{days} of the {total} days left.",
+        tightOneHeadline: "Very tight — tomorrow will hurt.",
+        tightOneDetail:
+          "Only ~1 day of usual spending left ({typical}/day). Daily allowance drops to {amount}.",
+        belowDailyHeadline: "Not really — daily life doesn't fit.",
+        belowDailyDetail: "What's left won't cover even one day at your usual {typical}/day.",
+        dipsReserveHeadline: "Risky — touches your reserves.",
+        dipsReserveDetail: "You'd dip {amount} into bills or monthly set-aside.",
+        unaffordableHeadline: "No — not enough spendable cash.",
+        unaffordableDetail: "You're short by {amount}.",
+        horizonPayday: "payday",
+        horizonMonthEnd: "month-end"
+      }
     }
   },
   activity: {

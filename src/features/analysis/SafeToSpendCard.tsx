@@ -15,6 +15,7 @@ import { SettingsTabKey } from "../app.types";
 import { formatString } from "../../i18n";
 import { HomeHintsSheet } from "./HomeHintsSheet";
 import { formatAmountInput, parseAmountInput } from "../../lib/formatMoney";
+import { getPurchasePresentation, getPurchaseVerdictCopy } from "../../lib/purchaseVerdict";
 import { buildSafeToSpend, simulatePurchase, type SafeToSpendPace } from "../../lib/safeToSpend";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import type { AppStrings } from "../../i18n/types";
@@ -76,47 +77,70 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
           safe
         })
       : null;
-  const verdictStyle =
-    purchaseSimulation == null
-      ? componentStyles.purchaseVerdictNeutral
-      : purchaseSimulation.verdict === "affordable"
+  const purchaseVerdict = useMemo(() => {
+    if (purchaseSimulation == null) {
+      return {
+        detail: null as string | null,
+        headline: copy.purchaseHint,
+        icon: "information-circle-outline" as const,
+        style: componentStyles.purchaseVerdictNeutral,
+        textColor: colors.muted
+      };
+    }
+
+    const presentation = getPurchasePresentation(purchaseSimulation.insight);
+    const messages = getPurchaseVerdictCopy({
+      horizon: paydayDayOfMonth != null ? "payday" : "month_end",
+      safe,
+      simulation: purchaseSimulation,
+      strings
+    });
+    const style =
+      presentation.tone === "safe"
         ? componentStyles.purchaseVerdictSafe
-        : purchaseSimulation.verdict === "over_pace"
+        : presentation.tone === "warn"
           ? componentStyles.purchaseVerdictWarn
-          : purchaseSimulation.verdict === "dips_reserve"
+          : presentation.tone === "caution"
             ? componentStyles.purchaseVerdictCaution
             : componentStyles.purchaseVerdictDanger;
-  const verdictColor =
-    purchaseSimulation == null
-      ? colors.muted
-      : purchaseSimulation.verdict === "affordable"
+    const textColor =
+      presentation.tone === "safe"
         ? colors.greenDark
-        : purchaseSimulation.verdict === "over_pace"
+        : presentation.tone === "warn"
           ? colors.amber
           : colors.coral;
-  const verdictIcon: keyof typeof Ionicons.glyphMap =
-    purchaseSimulation == null
-      ? "information-circle-outline"
-      : purchaseSimulation.verdict === "affordable"
-        ? "checkmark-circle"
-        : purchaseSimulation.verdict === "over_pace"
-          ? "alert-circle"
-          : purchaseSimulation.verdict === "dips_reserve"
-            ? "warning"
-            : "close-circle";
-  const verdictText =
-    purchaseSimulation == null
-      ? copy.purchaseHint
-      : purchaseSimulation.verdict === "affordable"
-        ? formatString(
-            paydayDayOfMonth != null ? copy.affordableUntilPayday : copy.affordableUntilMonthEnd,
-            { amount: formatRupiah(purchaseSimulation.newSafeDaily) }
-          )
-        : purchaseSimulation.verdict === "over_pace"
-          ? formatString(copy.overPace, { amount: formatRupiah(purchaseSimulation.newSafeDaily) })
-          : purchaseSimulation.verdict === "dips_reserve"
-            ? formatString(copy.dipsReserve, { amount: formatRupiah(purchaseSimulation.shortfall) })
-            : formatString(copy.cannotAfford, { amount: formatRupiah(purchaseSimulation.shortfall) });
+    const icon =
+      presentation.tone === "safe"
+        ? ("checkmark-circle" as const)
+        : presentation.tone === "warn"
+          ? ("alert-circle" as const)
+          : presentation.tone === "caution"
+            ? ("warning" as const)
+            : ("close-circle" as const);
+
+    return {
+      detail: messages.detail,
+      headline: messages.headline,
+      icon,
+      style,
+      textColor
+    };
+  }, [
+    colors.amber,
+    colors.coral,
+    colors.greenDark,
+    colors.muted,
+    componentStyles.purchaseVerdictCaution,
+    componentStyles.purchaseVerdictDanger,
+    componentStyles.purchaseVerdictNeutral,
+    componentStyles.purchaseVerdictSafe,
+    componentStyles.purchaseVerdictWarn,
+    copy.purchaseHint,
+    paydayDayOfMonth,
+    purchaseSimulation,
+    safe,
+    strings
+  ]);
 
   const showMeter = purchaseSimulation != null && safe.safeDaily > 0;
   const meterFill =
@@ -297,15 +321,22 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
               />
             </View>
 
-            <View style={[componentStyles.purchaseVerdict, verdictStyle]}>
+            <View style={[componentStyles.purchaseVerdict, purchaseVerdict.style]}>
               <View style={componentStyles.purchaseVerdictRow}>
-                <Ionicons color={verdictColor} name={verdictIcon} size={20} />
-                <Text
+                <Ionicons color={purchaseVerdict.textColor} name={purchaseVerdict.icon} size={20} />
+                <View
                   accessibilityLiveRegion="polite"
-                  style={[componentStyles.purchaseVerdictText, { color: verdictColor }]}
+                  style={componentStyles.purchaseVerdictCopy}
                 >
-                  {verdictText}
-                </Text>
+                  <Text style={[componentStyles.purchaseVerdictText, { color: purchaseVerdict.textColor }]}>
+                    {purchaseVerdict.headline}
+                  </Text>
+                  {purchaseVerdict.detail ? (
+                    <Text style={[componentStyles.purchaseVerdictDetail, { color: purchaseVerdict.textColor }]}>
+                      {purchaseVerdict.detail}
+                    </Text>
+                  ) : null}
+                </View>
               </View>
               {showMeter ? (
                 <View

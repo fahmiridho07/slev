@@ -485,6 +485,28 @@ test("simulatePurchase rejects purchases that break daily coverage even when bal
     Math.max(0, Math.round(900_000 / safe.daysLeft)),
     "newSafeDaily should recompute from remaining balance"
   );
+  assertEqual(comfortablePurchase.insight, "comfortable", "comfortable purchase should leave headroom above typical daily");
+});
+
+test("simulatePurchase surfaces tight and below-daily insights from typical pace", () => {
+  const safe = buildSafeToSpend({
+    accounts: [hubAccount(1_000_000, "2026-06-15T01:00:00.000Z")],
+    moments: trailingExpenseMoments(50_000, 10, juneMidpoint),
+    transfers: [],
+    referenceDate: juneMidpoint,
+    windowDays: 10
+  });
+
+  const oneDayLeft = simulatePurchase({ amount: 950_000, safe });
+  const belowDaily = simulatePurchase({ amount: 980_000, safe });
+  const multiDayTight = simulatePurchase({ amount: 300_000, safe });
+
+  assertEqual(oneDayLeft.insight, "tight_one_day", "one day of typical pace should warn about tomorrow");
+  assertEqual(oneDayLeft.daysAtTypicalPace, 1, "one day of typical pace");
+  assertEqual(belowDaily.insight, "below_daily_need", "remaining below one typical day should fail daily-life fit");
+  assertEqual(belowDaily.daysAtTypicalPace, 0, "below one typical day");
+  assertEqual(multiDayTight.insight, "tight_multi_day", "partial typical coverage should warn about horizon");
+  assertEqual(multiDayTight.daysAtTypicalPace >= 2, true, "multi-day tight should cover at least two typical days");
 });
 
 runTests();

@@ -20,9 +20,20 @@ export type SafeToSpendResult = {
 
 export type PurchaseVerdict = "affordable" | "over_pace" | "dips_reserve" | "unaffordable";
 
+export type PurchaseInsight =
+  | "affordable"
+  | "below_daily_need"
+  | "comfortable"
+  | "dips_reserve"
+  | "tight_multi_day"
+  | "tight_one_day"
+  | "unaffordable";
+
 export type SimulatePurchaseResult = {
   affordable: boolean;
   coversTypicalDays: boolean;
+  daysAtTypicalPace: number;
+  insight: PurchaseInsight;
   newSafeDaily: number;
   remainingBalance: number;
   shortfall: number;
@@ -194,15 +205,61 @@ export function simulatePurchase({
         : verdict === "over_pace"
           ? Math.max(0, typicalNeed - remainingBalance)
           : 0;
+  const daysAtTypicalPace =
+    safe.typicalDaily > 0 ? Math.floor(remainingBalance / safe.typicalDaily) : safe.daysLeft;
+  const insight = classifyPurchaseInsight({
+    daysAtTypicalPace,
+    newSafeDaily,
+    remainingBalance,
+    safe,
+    verdict
+  });
 
   return {
     affordable: verdict === "affordable",
     coversTypicalDays,
+    daysAtTypicalPace,
+    insight,
     newSafeDaily,
     remainingBalance,
     shortfall,
     verdict
   };
+}
+
+function classifyPurchaseInsight({
+  daysAtTypicalPace,
+  newSafeDaily,
+  remainingBalance,
+  safe,
+  verdict
+}: {
+  daysAtTypicalPace: number;
+  newSafeDaily: number;
+  remainingBalance: number;
+  safe: SafeToSpendResult;
+  verdict: PurchaseVerdict;
+}): PurchaseInsight {
+  if (verdict === "unaffordable") {
+    return "unaffordable";
+  }
+  if (verdict === "dips_reserve") {
+    return "dips_reserve";
+  }
+  if (verdict === "affordable") {
+    if (safe.typicalDaily > 0 && newSafeDaily >= Math.round(safe.typicalDaily * 1.1)) {
+      return "comfortable";
+    }
+    return "affordable";
+  }
+
+  if (safe.typicalDaily > 0 && remainingBalance < safe.typicalDaily) {
+    return "below_daily_need";
+  }
+  if (daysAtTypicalPace <= 1) {
+    return "tight_one_day";
+  }
+  return "tight_multi_day";
 }
 
 function startOfDay(date: Date): Date {

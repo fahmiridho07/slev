@@ -242,6 +242,24 @@ export type AppStrings = {
       daysLeftChip: string;
       heroLabel: string;
       cannotAfford: string;
+      purchaseVerdict: {
+        affordableDetail: string;
+        affordableHeadline: string;
+        belowDailyDetail: string;
+        belowDailyHeadline: string;
+        comfortableDetail: string;
+        comfortableHeadline: string;
+        dipsReserveDetail: string;
+        dipsReserveHeadline: string;
+        horizonMonthEnd: string;
+        horizonPayday: string;
+        tightMultiDetail: string;
+        tightMultiHeadline: string;
+        tightOneDetail: string;
+        tightOneHeadline: string;
+        unaffordableDetail: string;
+        unaffordableHeadline: string;
+      };
       paceEven: string;
       paceOver: string;
       paceUnder: string;

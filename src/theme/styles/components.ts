@@ -695,11 +695,19 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     backgroundColor: colors.surfaceExpense,
     borderColor: colors.borderDanger
   },
-  purchaseVerdictText: {
+  purchaseVerdictCopy: {
     flex: 1,
+    gap: 3
+  },
+  purchaseVerdictText: {
     fontSize: 14,
     fontWeight: "700",
     lineHeight: 19
+  },
+  purchaseVerdictDetail: {
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18
   },
   purchaseMeterTrack: {
     backgroundColor: colors.line,

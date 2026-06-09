@@ -293,7 +293,27 @@ export const id: AppStrings = {
       affordableUntilMonthEnd: "Bisa. Setelah ini, aman harianmu jadi {amount} sampai akhir bulan.",
       overPace: "Masih bisa, tapi bakal mepet — jatah harianmu turun ke {amount}, di bawah rata-ratamu.",
       dipsReserve: "Masih bisa, tapi bakal makan {amount} dari jatah tagihan & tabunganmu.",
-      cannotAfford: "Saldomu belum cukup buat ini — kurang {amount}."
+      cannotAfford: "Saldomu belum cukup buat ini — kurang {amount}.",
+      purchaseVerdict: {
+        comfortableHeadline: "Bisa — masih longgar.",
+        comfortableDetail: "Jatah harian tetap {amount}, di atas rata-rata {typical}.",
+        affordableHeadline: "Bisa — masih aman.",
+        affordableDetail: "Jatah harian jadi {amount} sampai {horizon}.",
+        tightMultiHeadline: "Masih bisa, tapi mepet.",
+        tightMultiDetail:
+          "Di ritme biasa ({typical}/hari), uangmu cuma cukup ~{days} dari {total} hari tersisa.",
+        tightOneHeadline: "Sangat mepet — besok bakal berat.",
+        tightOneDetail:
+          "Sisa cukup ~1 hari ritme biasa ({typical}/hari). Jatah harian turun ke {amount}.",
+        belowDailyHeadline: "Kurang masuk akal — kebutuhan harian nggak muat.",
+        belowDailyDetail: "Sisanya nggak cukup buat 1 hari pengeluaran biasa ({typical}/hari).",
+        dipsReserveHeadline: "Riskan — sentuh cadangan.",
+        dipsReserveDetail: "Bakal makan {amount} dari jatah tagihan atau sisihan bulanan.",
+        unaffordableHeadline: "Nggak bisa — uang belanja nggak cukup.",
+        unaffordableDetail: "Kurang {amount} dari yang bisa dibelanjakan.",
+        horizonPayday: "gajian",
+        horizonMonthEnd: "akhir bulan"
+      }
     }
   },
   activity: {
