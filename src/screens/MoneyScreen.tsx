@@ -210,18 +210,17 @@ function MoneyScreenComponent({
 
   const tabSwitcher = useMemo(
     () => (
-      <View style={styles.capturePanel}>
-        <SegmentedControl
-          options={[
-            { label: strings.activity.tabOverview, value: "overview" },
-            { label: strings.activity.tabActivity, value: "activity" }
-          ]}
-          selected={moneyTab}
-          onSelect={setMoneyTab}
-        />
-      </View>
+      <SegmentedControl
+        stretch
+        options={[
+          { label: strings.activity.tabOverview, value: "overview" },
+          { label: strings.activity.tabActivity, value: "activity" }
+        ]}
+        selected={moneyTab}
+        onSelect={setMoneyTab}
+      />
     ),
-    [moneyTab, strings.activity.tabActivity, strings.activity.tabOverview, styles.capturePanel]
+    [moneyTab, strings.activity.tabActivity, strings.activity.tabOverview]
   );
 
   const overviewContent = useMemo(
@@ -298,7 +297,6 @@ function MoneyScreenComponent({
       strings.activity,
       strings.listHints.memory,
       styles.cardStack,
-      styles.capturePanel,
       styles.input,
       tabSwitcher
     ]
