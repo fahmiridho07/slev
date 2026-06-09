@@ -1,17 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { hapticWarning } from "../../lib/haptics";
-import { CaptureValidationError, CaptureFieldError } from "./captureValidation";
+import { CaptureValidationError } from "./captureValidation";
 import { CaptureType } from "../app.types";
-import {
-  getDailyPocketLabel,
-  getDefaultMomentAccount,
-  getIncomeHubLabel,
-  getTemplateLabel
-} from "../../lib/analysis";
+import { getDailyPocketLabel, getIncomeHubLabel } from "../../lib/analysis";
 import { formatAmountInput, parseAmountInput } from "../../lib/formatMoney";
 import { CaptureSaveAck } from "./captureSaveAck";
-import { ManualTemplate, MoneyAccount, SpendingContext } from "../spendingMemory.types";
-import { getTemplateReadyToast } from "../../i18n/toasts";
+import { MoneyAccount, SpendingContext } from "../spendingMemory.types";
 import { useActions, useFinanceDerived, useFinanceSelector } from "../../state/useFinance";
 import { CaptureFormValues } from "./types";
 
@@ -46,7 +40,6 @@ export function useCaptureForm() {
 
   const [form, setForm] = useState<CaptureFormValues>(() => buildDefaultCapture([], "Other"));
   const [fieldError, setFieldError] = useState<CaptureValidationError | null>(null);
-  const [shortcutFieldError, setShortcutFieldError] = useState<CaptureValidationError | null>(null);
   const bootstrappedRef = useRef(false);
   const lastAccountByTypeRef = useRef<{ expense?: string; income?: string }>({});
 
@@ -145,18 +138,6 @@ export function useCaptureForm() {
     });
   }, [accounts]);
 
-  const clearShortcutFieldError = useCallback((field?: CaptureFieldError) => {
-    setShortcutFieldError((current) => {
-      if (!current) {
-        return current;
-      }
-      if (!field || current.field === field) {
-        return null;
-      }
-      return current;
-    });
-  }, []);
-
   const changeAmountText = useCallback((value: string) => {
     clearFieldError("amount");
     setForm((current) => ({ ...current, amountText: formatAmountInput(value) }));
@@ -165,7 +146,6 @@ export function useCaptureForm() {
   const changeEntryType = useCallback(
     (nextType: CaptureType) => {
       clearFieldError();
-      clearShortcutFieldError();
       setForm((current) => {
         const accountLabels = accounts.map((account) => account.label);
         const incomeHub = getIncomeHubLabel(accounts);
@@ -198,26 +178,7 @@ export function useCaptureForm() {
         };
       });
     },
-    [accounts, clearFieldError, clearShortcutFieldError]
-  );
-
-  const applyTemplate = useCallback(
-    (template: ManualTemplate) => {
-      setForm({
-        accountLabel: template.accountLabel ?? getDefaultMomentAccount(template.type, accounts),
-        amountText: template.amount > 0 ? formatAmountInput(String(template.amount)) : "",
-        context: template.context,
-        entryType: template.type,
-        fromAccount: form.fromAccount,
-        label: template.type === "expense" ? template.label ?? "" : "",
-        note: template.note ?? "",
-        occurredAtKey: null,
-        source: template.type === "income" ? template.source ?? "" : "",
-        toAccount: form.toAccount
-      });
-      actions.setMessage(getTemplateReadyToast(getTemplateLabel(template)));
-    },
-    [accounts, actions, form.fromAccount, form.toAccount]
+    [accounts, clearFieldError]
   );
 
   const resetAfterSave = useCallback(
@@ -282,19 +243,6 @@ export function useCaptureForm() {
     return ack;
   }, [actions, categoryLabels.length, form, resetAfterSave]);
 
-  const saveTemplate = useCallback(async () => {
-    const result = await actions.saveAsTemplate(form);
-    if (!result.ok) {
-      hapticWarning();
-      if (result.validation) {
-        setShortcutFieldError(result.validation);
-      }
-      return false;
-    }
-    setShortcutFieldError(null);
-    return true;
-  }, [actions, form]);
-
   const patch = useCallback((patchValues: Partial<CaptureFormValues>) => {
     if ("accountLabel" in patchValues) {
       clearFieldError("momentAccount");
@@ -305,28 +253,19 @@ export function useCaptureForm() {
     if ("context" in patchValues) {
       clearFieldError("category");
     }
-    if ("label" in patchValues) {
-      clearShortcutFieldError("shortcutLabel");
-    }
-    if ("source" in patchValues) {
-      clearShortcutFieldError("shortcutLabel");
-    }
     if ("occurredAtKey" in patchValues) {
       clearFieldError("occurredAt");
     }
     setForm((current) => ({ ...current, ...patchValues }));
-  }, [clearFieldError, clearShortcutFieldError]);
+  }, [clearFieldError]);
 
   return {
     fieldError,
-    shortcutFieldError,
     form,
     patch,
     changeAmountText,
     changeEntryType,
-    applyTemplate,
     save,
-    saveTemplate,
     resetNoteOnly
   };
 }

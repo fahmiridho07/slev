@@ -1,7 +1,7 @@
 import { Share } from "react-native";
 import { hapticSelection, hapticSuccess } from "../lib/haptics";
 import { buildOccurredAtIso } from "../features/capture/captureDate";
-import { getCaptureValidationError, getShortcutValidationError } from "../features/capture/captureValidation";
+import { getCaptureValidationError } from "../features/capture/captureValidation";
 import { CaptureFormValues } from "../features/capture/types";
 import { getMemoryEditValidationError } from "../features/memory/memoryValidation";
 import { getAccountValidationError } from "../features/budget/budgetValidation";
@@ -53,8 +53,6 @@ import {
   getRefreshFailedToast,
   getResetFailedToast,
   getResetSuccessToast,
-  getShortcutRemovedToast,
-  getShortcutSavedToast,
   getCaptureNeedAmountToast,
   getCaptureNeedTransferAccountsToast,
   getTransferMovedToast,
@@ -86,10 +84,8 @@ import { clearBalanceAnchor } from "../services/balanceAnchorRepository";
 import { normalizeSpendingContext } from "../data/spendingMemory";
 import {
   clearManualFinance,
-  deleteManualTemplate,
   listManualTemplates,
-  rewriteContextInManualTemplates,
-  saveManualTemplate
+  rewriteContextInManualTemplates
 } from "../services/manualFinanceRepository";
 import { exportAllDataWithReport, importAllData } from "../services/storageBackup";
 import {
@@ -344,47 +340,6 @@ export function createFinanceActions(
     }
     notifySuccess(getMemoryUpdatedToast());
     return { ok: true as const };
-  }
-
-  async function saveAsTemplate(capture: CaptureFormValues) {
-    const validationError = getShortcutValidationError(capture);
-    if (validationError) {
-      return { ok: false as const, validation: validationError };
-    }
-
-    if (capture.entryType === "transfer") {
-      return { ok: false as const };
-    }
-
-    const amount = parseAmountInput(capture.amountText);
-    const templateLabel = capture.entryType === "income" ? capture.source.trim() : (capture.label.trim() || capture.context);
-
-    const { data: updated, persisted } = await saveManualTemplate({
-      amount: amount ?? undefined,
-      context: capture.entryType === "expense" ? capture.context : "Other",
-      label: capture.entryType === "expense" ? templateLabel : undefined,
-      note: capture.note,
-      accountLabel: capture.accountLabel,
-      source: capture.entryType === "income" ? capture.source : undefined,
-      type: capture.entryType
-    });
-    if (!persisted) {
-      notifyWriteFailure(STORAGE_KEYS.manualTemplates);
-      return { ok: false as const };
-    }
-    dispatch({ type: "set_manual_templates", manualTemplates: updated });
-    setMessage(getShortcutSavedToast(templateLabel));
-    return { ok: true as const };
-  }
-
-  async function removeManualTemplate(id: string) {
-    const { data: updated, persisted } = await deleteManualTemplate(id);
-    if (!persisted) {
-      notifyWriteFailure(STORAGE_KEYS.manualTemplates);
-      return;
-    }
-    dispatch({ type: "set_manual_templates", manualTemplates: updated });
-    setMessage(getShortcutRemovedToast());
   }
 
   async function removeTransfer(id: string) {
@@ -704,14 +659,12 @@ export function createFinanceActions(
     resetDamagedCollection,
     removeAccount,
     removeCategory,
-    removeManualTemplate,
     removeMoment,
     undoRemoveMoment,
     removeRecurringBill,
     removeTransfer,
     updateTransfer,
     saveAccount,
-    saveAsTemplate,
     saveCategory,
     saveRecurringBill: saveRecurringBillAction,
     saveMoment,

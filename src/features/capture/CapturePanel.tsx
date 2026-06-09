@@ -7,8 +7,7 @@ import { CaptureTypePicker } from "./CaptureTypePicker";
 import { formatCaptureDateLabel } from "./captureDate";
 import { formatAmountInput } from "../../lib/formatMoney";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
-import { getTemplateLabel } from "../../lib/analysis";
-import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../../state/useFinance";
+import { shallowEqual, useFinanceDerived, useFinanceSelector } from "../../state/useFinance";
 import { formatString } from "../../i18n";
 import { useCapturePickerOrder } from "../../hooks/useCapturePickerOrder";
 import { useTheme } from "../../hooks/useTheme";
@@ -37,12 +36,10 @@ function CapturePanelComponent({
     if (entryType === "transfer") return strings.capture.saveTransfer;
     return strings.capture.saveExpense;
   }
-  const actions = useActions();
   const categoryLabels = useFinanceDerived((derived) => derived.categoryLabels);
-  const { accounts, manualTemplates, recurringBills } = useFinanceSelector(
+  const { accounts, recurringBills } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
-      manualTemplates: state.manualTemplates,
       recurringBills: state.recurringBills
     }),
     shallowEqual
@@ -52,17 +49,7 @@ function CapturePanelComponent({
     [recurringBills]
   );
   const { orderedAccounts, orderedCategories } = useCapturePickerOrder(categoryLabels, accounts);
-  const {
-    fieldError,
-    shortcutFieldError,
-    form,
-    patch,
-    changeAmountText,
-    changeEntryType,
-    applyTemplate,
-    save,
-    saveTemplate
-  } = useCaptureForm();
+  const { fieldError, form, patch, changeAmountText, changeEntryType, save } = useCaptureForm();
 
   const [noteOpen, setNoteOpen] = useState(Boolean(form.note));
   const [dateOpen, setDateOpen] = useState(Boolean(form.occurredAtKey));
@@ -124,44 +111,6 @@ function CapturePanelComponent({
   return (
     <View style={styles.capturePanel}>
       <Text style={styles.kicker}>{strings.capture.kicker}</Text>
-      {manualTemplates.length > 0 && (
-        <View style={styles.repeatBlock}>
-          <Text style={componentStyles.microLabel}>{strings.capture.quickAdd}</Text>
-          <View style={styles.templateGrid}>
-            {manualTemplates.slice(0, 6).map((template) => (
-              <View key={template.id} style={styles.templateChip}>
-                <Pressable
-                  accessibilityLabel={formatString(strings.capture.applyShortcutA11y, {
-                    label: getTemplateLabel(template)
-                  })}
-                  accessibilityRole="button"
-                  onPress={() => applyTemplate(template)}
-                  style={styles.templateMain}
-                >
-                  <Text style={styles.repeatText}>{getTemplateLabel(template)}</Text>
-                  <Text style={styles.repeatAmount}>
-                    {template.amount > 0
-                      ? formatRupiah(template.amount)
-                      : template.type === "income"
-                        ? strings.capture.income
-                        : template.context}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  accessibilityLabel={formatString(strings.capture.removeShortcutA11y, {
-                    label: getTemplateLabel(template)
-                  })}
-                  accessibilityRole="button"
-                  onPress={() => actions.removeManualTemplate(template.id)}
-                  style={styles.templateRemoveButton}
-                >
-                  <Ionicons name="close-outline" size={14} color={colors.muted} />
-                </Pressable>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
       <CaptureTypePicker compact={compactTypePicker} onSelect={changeEntryType} selected={form.entryType} />
 
       <View style={styles.amountRow}>
@@ -209,45 +158,23 @@ function CapturePanelComponent({
           )}
         </View>
       ) : form.entryType === "income" ? (
-        <>
-          <TextInput
-            accessibilityLabel={
-              shortcutFieldError?.field === "shortcutLabel"
-                ? `${strings.capture.sourcePlaceholder}. ${shortcutFieldError.message}`
-                : strings.capture.sourcePlaceholder
-            }
-            onChangeText={(value) => patch({ source: value })}
-            placeholder={strings.capture.sourcePlaceholder}
-            placeholderTextColor={colors.muted}
-            style={styles.input}
-            value={form.source}
-          />
-          {shortcutFieldError?.field === "shortcutLabel" && (
-            <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
-              {shortcutFieldError.message}
-            </Text>
-          )}
-        </>
+        <TextInput
+          accessibilityLabel={strings.capture.sourcePlaceholder}
+          onChangeText={(value) => patch({ source: value })}
+          placeholder={strings.capture.sourcePlaceholder}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={form.source}
+        />
       ) : (
-        <>
-          <TextInput
-            accessibilityLabel={
-              shortcutFieldError?.field === "shortcutLabel"
-                ? `${strings.capture.labelPlaceholder}. ${shortcutFieldError.message}`
-                : strings.capture.labelPlaceholder
-            }
-            onChangeText={(value) => patch({ label: value })}
-            placeholder={strings.capture.labelPlaceholder}
-            placeholderTextColor={colors.muted}
-            style={styles.input}
-            value={form.label}
-          />
-          {shortcutFieldError?.field === "shortcutLabel" && form.entryType === "expense" && (
-            <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
-              {shortcutFieldError.message}
-            </Text>
-          )}
-        </>
+        <TextInput
+          accessibilityLabel={strings.capture.labelPlaceholder}
+          onChangeText={(value) => patch({ label: value })}
+          placeholder={strings.capture.labelPlaceholder}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={form.label}
+        />
       )}
 
       {form.entryType !== "transfer" && (
@@ -388,21 +315,6 @@ function CapturePanelComponent({
           <Ionicons name="checkmark-circle" size={18} color={colors.greenDark} />
           <Text style={styles.captureSaveBannerText}>{buildCaptureSaveAckBanner(saveAck, strings)}</Text>
         </View>
-      )}
-
-      <Pressable
-        accessibilityLabel={strings.capture.saveAsShortcutA11y}
-        accessibilityRole="button"
-        onPress={() => void saveTemplate()}
-        style={styles.secondaryInlineButton}
-      >
-        <Ionicons name="bookmark-outline" size={16} color={colors.greenDark} />
-        <Text style={componentStyles.textButtonLabel}>{strings.capture.saveAsShortcut}</Text>
-      </Pressable>
-      {shortcutFieldError?.field === "shortcutTransfer" && (
-        <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
-          {shortcutFieldError.message}
-        </Text>
       )}
     </View>
   );

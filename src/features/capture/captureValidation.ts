@@ -3,9 +3,7 @@ import {
   getCaptureNeedAmountToast,
   getCaptureNeedCategoryToast,
   getCaptureNeedDateToast,
-  getCaptureNeedTransferAccountsToast,
-  getShortcutNeedLabelToast,
-  getShortcutTransferUseChipsToast
+  getCaptureNeedTransferAccountsToast
 } from "../../i18n";
 import { FormValidationError } from "../../lib/formValidation";
 import { parseAmountInput } from "../../lib/formatMoney";
@@ -17,9 +15,7 @@ export type CaptureFieldError =
   | "category"
   | "momentAccount"
   | "occurredAt"
-  | "transferAccounts"
-  | "shortcutLabel"
-  | "shortcutTransfer";
+  | "transferAccounts";
 
 export type CaptureValidationError = FormValidationError<CaptureFieldError>;
 
@@ -50,20 +46,6 @@ export function getCaptureValidationError(
 
   if (capture.occurredAtKey && isFutureDateKey(capture.occurredAtKey)) {
     return { field: "occurredAt", message: getCaptureNeedDateToast() };
-  }
-
-  return null;
-}
-
-export function getShortcutValidationError(capture: CaptureFormValues): CaptureValidationError | null {
-  if (capture.entryType === "transfer") {
-    return { field: "shortcutTransfer", message: getShortcutTransferUseChipsToast() };
-  }
-
-  const templateLabel =
-    capture.entryType === "income" ? capture.source.trim() : (capture.label.trim() || capture.context);
-  if (!templateLabel) {
-    return { field: "shortcutLabel", message: getShortcutNeedLabelToast() };
   }
 
   return null;

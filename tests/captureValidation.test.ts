@@ -1,4 +1,4 @@
-import { getCaptureValidationError, getShortcutValidationError } from "../src/features/capture/captureValidation";
+import { getCaptureValidationError } from "../src/features/capture/captureValidation";
 import { CaptureFormValues } from "../src/features/capture/types";
 
 declare const process: {
@@ -104,14 +104,6 @@ test("getCaptureValidationError checks transfer accounts", () => {
   );
 });
 
-test("getShortcutValidationError blocks transfer shortcuts", () => {
-  assertField(
-    getShortcutValidationError(baseCapture({ entryType: "transfer", amountText: "10000" })),
-    "shortcutTransfer",
-    "transfer shortcut"
-  );
-});
-
 test("getCaptureValidationError rejects future dates", () => {
   assertField(
     getCaptureValidationError(
@@ -120,14 +112,6 @@ test("getCaptureValidationError rejects future dates", () => {
     ),
     "occurredAt",
     "future date"
-  );
-});
-
-test("getShortcutValidationError requires a source for income shortcuts", () => {
-  assertField(
-    getShortcutValidationError(baseCapture({ entryType: "income", amountText: "10000", source: "" })),
-    "shortcutLabel",
-    "missing income source"
   );
 });
 
