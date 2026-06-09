@@ -7,7 +7,6 @@ import {
   ListActionRow,
   ListActionsOnboardingTip,
   MomentRow,
-  MonthPeriodPicker,
   SectionHeader
 } from "../components";
 import { ExpenseCategorySummary } from "../features/analysis/ExpenseCategorySummary";
@@ -142,14 +141,15 @@ function MoneyScreenComponent({
   const summarySection = useMemo(
     () => (
       <View style={styles.cardStack}>
-        <MonthPeriodPicker
+        <MonthSummaryCard
           canGoBack={breakdownMonthOffset > earliestMonthOffset}
           canGoForward={!isCurrentMonthOffset(breakdownMonthOffset)}
           labelDate={breakdownReferenceDate}
+          moments={moments}
+          monthOffset={breakdownMonthOffset}
           onNext={() => setBreakdownMonthOffset(breakdownMonthOffset + 1)}
           onPrevious={() => setBreakdownMonthOffset(breakdownMonthOffset - 1)}
         />
-        <MonthSummaryCard moments={moments} monthOffset={breakdownMonthOffset} />
         <ExpenseCategorySummary moments={moments} monthOffset={breakdownMonthOffset} />
         <IncomeSourcesAccordion moments={moments} monthOffset={breakdownMonthOffset} />
       </View>

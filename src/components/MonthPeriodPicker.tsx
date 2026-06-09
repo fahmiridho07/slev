@@ -9,6 +9,7 @@ import { hapticSelection } from "../lib/haptics";
 type MonthPeriodPickerProps = {
   canGoBack: boolean;
   canGoForward: boolean;
+  embedded?: boolean;
   labelDate: Date;
   onNext: () => void;
   onPrevious: () => void;
@@ -17,6 +18,7 @@ type MonthPeriodPickerProps = {
 function MonthPeriodPickerComponent({
   canGoBack,
   canGoForward,
+  embedded = false,
   labelDate,
   onNext,
   onPrevious
@@ -26,7 +28,7 @@ function MonthPeriodPickerComponent({
   const label = formatLocaleMonthYear(labelDate);
 
   return (
-    <View style={styles.monthPeriodPicker}>
+    <View style={embedded ? styles.monthPeriodPickerEmbedded : styles.monthPeriodPicker}>
       <Pressable
         accessibilityLabel={formatString(pickerStrings.previousMonthA11y, { month: label })}
         accessibilityRole="button"

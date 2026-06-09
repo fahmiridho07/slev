@@ -181,6 +181,7 @@ export const enExtras: AppStringsExtras = {
       empty: "Cashflow appears after income or spending entries.",
       net: "Net {amount}",
       netLabel: "Net",
+      netThisMonth: "Net this month",
       income: "Income",
       expense: "Expense"
     },

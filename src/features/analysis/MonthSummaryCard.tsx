@@ -1,5 +1,7 @@
+import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { Text, View } from "react-native";
+import { MonthPeriodPicker } from "../../components";
 import { formatString } from "../../i18n";
 import { getMonthMoments, sumExpenseMoments, sumMoments } from "../../lib/analysis";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
@@ -11,12 +13,25 @@ import { useTheme } from "../../hooks/useTheme";
 const FLAT_DELTA_THRESHOLD = 0.005;
 
 type MonthSummaryCardProps = {
+  canGoBack: boolean;
+  canGoForward: boolean;
+  labelDate: Date;
   moments: SpendingMoment[];
   monthOffset: number;
+  onNext: () => void;
+  onPrevious: () => void;
 };
 
-export function MonthSummaryCard({ moments, monthOffset }: MonthSummaryCardProps) {
-  const { strings, styles } = useTheme();
+export function MonthSummaryCard({
+  canGoBack,
+  canGoForward,
+  labelDate,
+  moments,
+  monthOffset,
+  onNext,
+  onPrevious
+}: MonthSummaryCardProps) {
+  const { colors, strings, styles } = useTheme();
   const cashflowStrings = strings.patterns.cashflow;
   const breakdownStrings = strings.patterns.breakdown;
   const referenceDate = useMemo(() => getMonthReferenceDate(monthOffset), [monthOffset]);
@@ -55,37 +70,67 @@ export function MonthSummaryCard({ moments, monthOffset }: MonthSummaryCardProps
   const deltaTone =
     expenseComparison.deltaPercent && expenseComparison.deltaPercent > 0 ? "up" : "down";
 
+  const netValueStyle =
+    net > 0
+      ? styles.monthCashflowNetPositive
+      : net < 0
+        ? styles.monthCashflowNetNegative
+        : styles.monthCashflowNetNeutral;
+
   return (
-    <View style={styles.capturePanel}>
-      <View style={styles.monthSummaryGrid}>
-        <View style={styles.monthSummaryCell}>
-          <Text style={styles.monthSummaryLabel}>{cashflowStrings.income}</Text>
-          <Text style={styles.monthSummaryValue}>{formatRupiah(income)}</Text>
+    <View style={styles.monthCashflowCard}>
+      <MonthPeriodPicker
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
+        embedded
+        labelDate={labelDate}
+        onNext={onNext}
+        onPrevious={onPrevious}
+      />
+
+      <View style={styles.monthCashflowDivider} />
+
+      <Text style={styles.monthCashflowNetLabel}>{cashflowStrings.netThisMonth}</Text>
+      <Text style={[styles.monthCashflowNetValue, netValueStyle]}>
+        {formatSignedCompactRupiah(net)}
+      </Text>
+
+      {deltaLabel ? (
+        <Text
+          style={[
+            styles.monthCashflowDelta,
+            deltaTone === "up" ? styles.monthDeltaTextUp : styles.monthDeltaTextDown
+          ]}
+        >
+          {deltaLabel}
+        </Text>
+      ) : null}
+
+      <View style={styles.monthCashflowTiles}>
+        <View style={[styles.monthCashflowTile, styles.monthCashflowTileIncome]}>
+          <View style={styles.pulseTopRow}>
+            <View style={[styles.pulseIconBadge, styles.pulseIconIncome]}>
+              <Ionicons color={colors.greenDark} name="arrow-down-circle-outline" size={15} />
+            </View>
+            <Text style={styles.monthCashflowTileLabel}>{cashflowStrings.income}</Text>
+          </View>
+          <Text numberOfLines={1} style={styles.monthCashflowTileValue}>
+            {formatRupiah(income)}
+          </Text>
         </View>
-        <View style={styles.monthSummaryCell}>
-          <Text style={styles.monthSummaryLabel}>{cashflowStrings.expense}</Text>
-          <Text style={styles.monthSummaryValue}>{formatRupiah(expense)}</Text>
-        </View>
-        <View style={styles.monthSummaryCell}>
-          <Text style={styles.monthSummaryLabel}>{cashflowStrings.netLabel}</Text>
-          <Text style={[styles.monthSummaryValue, net < 0 && styles.monthSummaryValueNegative]}>
-            {formatSignedCompactRupiah(net)}
+
+        <View style={[styles.monthCashflowTile, styles.monthCashflowTileExpense]}>
+          <View style={styles.pulseTopRow}>
+            <View style={[styles.pulseIconBadge, styles.pulseIconSpending]}>
+              <Ionicons color={colors.coral} name="arrow-up-circle-outline" size={15} />
+            </View>
+            <Text style={styles.monthCashflowTileLabel}>{cashflowStrings.expense}</Text>
+          </View>
+          <Text numberOfLines={1} style={styles.monthCashflowTileValue}>
+            {formatRupiah(expense)}
           </Text>
         </View>
       </View>
-
-      {deltaLabel ? (
-        <View style={styles.monthDeltaBadge}>
-          <Text
-            style={[
-              styles.monthDeltaText,
-              deltaTone === "up" ? styles.monthDeltaTextUp : styles.monthDeltaTextDown
-            ]}
-          >
-            {deltaLabel}
-          </Text>
-        </View>
-      ) : null}
     </View>
   );
 }

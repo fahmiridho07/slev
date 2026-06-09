@@ -181,6 +181,7 @@ export const idExtras: AppStringsExtras = {
       empty: "Arus kas muncul setelah ada entri pemasukan atau pengeluaran.",
       net: "Bersih {amount}",
       netLabel: "Bersih",
+      netThisMonth: "Bersih bulan ini",
       income: "Pemasukan",
       expense: "Pengeluaran"
     },

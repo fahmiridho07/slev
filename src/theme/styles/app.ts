@@ -537,6 +537,86 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     justifyContent: "space-between",
     paddingHorizontal: 4
   },
+  monthPeriodPickerEmbedded: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginHorizontal: -4
+  },
+  monthCashflowCard: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 14,
+    padding: 18,
+    ...shadows.soft
+  },
+  monthCashflowDivider: {
+    borderTopColor: colors.line,
+    borderTopWidth: 1,
+    marginTop: -2
+  },
+  monthCashflowNetLabel: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0,
+    textTransform: "uppercase"
+  },
+  monthCashflowNetValue: {
+    fontSize: 30,
+    fontWeight: "900",
+    letterSpacing: 0,
+    lineHeight: 36
+  },
+  monthCashflowNetPositive: {
+    color: colors.greenDark
+  },
+  monthCashflowNetNegative: {
+    color: colors.coral
+  },
+  monthCashflowNetNeutral: {
+    color: colors.ink
+  },
+  monthCashflowDelta: {
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18
+  },
+  monthCashflowTiles: {
+    flexDirection: "row",
+    gap: 10
+  },
+  monthCashflowTile: {
+    borderRadius: 8,
+    borderWidth: 1,
+    flex: 1,
+    gap: 6,
+    minWidth: 0,
+    padding: 12
+  },
+  monthCashflowTileIncome: {
+    backgroundColor: colors.surfacePositive,
+    borderColor: colors.borderMint
+  },
+  monthCashflowTileExpense: {
+    backgroundColor: colors.surfaceExpense,
+    borderColor: colors.borderDanger
+  },
+  monthCashflowTileLabel: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0,
+    textTransform: "uppercase"
+  },
+  monthCashflowTileValue: {
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: "800",
+    letterSpacing: 0
+  },
   monthPeriodButton: {
     alignItems: "center",
     borderRadius: 8,
@@ -552,39 +632,6 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     fontSize: 16,
     fontWeight: "800",
     textAlign: "center"
-  },
-  monthDeltaBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: colors.mint,
-    borderColor: colors.line,
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 5
-  },
-  monthSummaryGrid: {
-    flexDirection: "row",
-    gap: 10
-  },
-  monthSummaryCell: {
-    flex: 1,
-    gap: 4,
-    minWidth: 0
-  },
-  monthSummaryLabel: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: "600",
-    lineHeight: 16
-  },
-  monthSummaryValue: {
-    color: colors.ink,
-    fontSize: 15,
-    fontWeight: "800",
-    letterSpacing: 0
-  },
-  monthSummaryValueNegative: {
-    color: colors.coral
   },
   monthDeltaText: {
     fontSize: 12,
