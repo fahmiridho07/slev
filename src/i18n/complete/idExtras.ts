@@ -2,9 +2,9 @@ import type { AppStringsExtras } from "../types";
 
 export const idExtras: AppStringsExtras = {
   toasts: {
-    default: "Memori pengeluaran bisa sesederhana sebuah jumlah.",
+    default: "Catatan bisa sesederhana sebuah jumlah.",
     capture: {
-      needAmount: "Masukkan jumlah untuk menyimpan memori ini.",
+      needAmount: "Masukkan jumlah untuk menyimpan catatan ini.",
       needAccount: "Pilih akun dulu.",
       needCategory: "Tambahkan minimal satu kategori pengeluaran di Pengaturan sebelum menyimpan.",
       needTransferAccounts: "Pilih dua akun berbeda untuk transfer ini.",
@@ -20,11 +20,11 @@ export const idExtras: AppStringsExtras = {
       failed: "Tidak bisa memuat data lokal. Tarik untuk memuat ulang atau mulai ulang aplikasi."
     },
     memory: {
-      removed: "Memori dihapus.",
-      restored: "Memori dipulihkan.",
+      removed: "Catatan dihapus.",
+      restored: "Catatan dipulihkan.",
       needAmount: "Masukkan jumlah sebelum menyimpan perubahan.",
-      notFound: "Memori itu sudah tidak tersedia.",
-      updated: "Memori diperbarui."
+      notFound: "Catatan itu sudah tidak tersedia.",
+      updated: "Catatan diperbarui."
     },
     refresh: {
       failed: "Tidak bisa memuat ulang. Coba lagi."
@@ -75,10 +75,10 @@ export const idExtras: AppStringsExtras = {
     },
     reset: {
       failed: "Tidak bisa mengatur ulang {label}.",
-      success: "{label} diatur ulang. Anda bisa mulai segar di area itu."
+      success: "{label} diatur ulang. Kamu bisa mulai segar di area itu."
     },
     clear: {
-      cleared: "Memori keuangan lokal dihapus."
+      cleared: "Data keuangan lokal dihapus."
     },
     writeFailure: {
       corrupt:
@@ -98,7 +98,7 @@ export const idExtras: AppStringsExtras = {
   },
   storage: {
     collections: {
-      slev_entries: "Memori pengeluaran",
+      slev_entries: "Catatan",
       slev_pattern_feedback: "Umpan balik pola",
       slev_accounts: "Akun",
       slev_transfers: "Transfer",
@@ -123,24 +123,24 @@ export const idExtras: AppStringsExtras = {
       accountKindWallet: "Dompet",
       accountKindCash: "Tunai",
       accountKindOther: "Lainnya",
-      incomeHub: "Hub pemasukan",
+      incomeHub: "Akun pemasukan utama",
       openingBalance: "Saldo awal",
       openingBalanceHint:
         "Saldo akun ini sekarang. Transaksi setelah ini akan menambah atau mengurangi dari sini.",
       pocket: "Saku",
       tracked: "Tercatat",
       trackedTotal: "Total saldo tercatat",
-      ephemeral: "Sementara",
+      ephemeral: "Pelacakan ringan",
       ephemeralHint:
-        "Sementara = sumber pembayaran yang tidak direkonsiliasi ketat (e-wallet kecil).",
+        "Pelacakan ringan = sumber pembayaran yang tidak kamu rekonsiliasi ketat (e-wallet kecil).",
       saveAccount: "Simpan akun",
-      yourAccounts: "Akun Anda",
-      incomeHubMeta: "Hub pemasukan",
-      ephemeralPocketMeta: "Saku sementara",
+      yourAccounts: "Akun kamu",
+      incomeHubMeta: "Akun pemasukan utama",
+      ephemeralPocketMeta: "Saku pelacakan ringan",
       editAccountA11y: "Edit akun {label}",
       deleteAccountTitle: "Hapus akun?",
       deleteAccountBody:
-        "{label} akan dihapus dari pemilih akun. Memori yang ada tetap tersimpan."
+        "{label} akan dihapus dari pemilih akun. Catatan lama tetap tersimpan."
     }
   },
   patterns: {
@@ -152,7 +152,7 @@ export const idExtras: AppStringsExtras = {
       incomeBySource: "Pemasukan per sumber",
       incomeViewAccount: "Akun",
       incomeViewSource: "Sumber",
-      incomeLoggedHint: "Menampilkan akun penerima income. Transfer ada terpisah di Aktivitas.",
+      incomeLoggedHint: "Menampilkan akun penerima pemasukan. Transfer ada terpisah di Aktivitas.",
       spendingByAccount: "Pengeluaran per akun",
       expense: "Pengeluaran",
       income: "Pemasukan",
@@ -164,10 +164,10 @@ export const idExtras: AppStringsExtras = {
       vsLastMonthUp: "Naik {percent}% vs bulan lalu",
       vsLastMonthDown: "Turun {percent}% vs bulan lalu",
       vsLastMonthFlat: "Sama dengan bulan lalu",
-      viewEntriesA11y: "Lihat {count} entri untuk {category}",
+      viewEntriesA11y: "Lihat {count} catatan untuk {category}",
       drilldownTitle: "{category} · {month}",
-      drilldownSummary: "{count} entri · {total}",
-      drilldownEmpty: "Tidak ada entri di bulan ini",
+      drilldownSummary: "{count} catatan · {total}",
+      drilldownEmpty: "Tidak ada catatan di bulan ini",
       categoryNewThisMonth: "Baru bulan ini",
       categoryDeltaUp: "+{percent}%",
       categoryDeltaDown: "-{percent}%",
@@ -200,7 +200,7 @@ export const idExtras: AppStringsExtras = {
       legendValue: "{amount} · {percent}%",
       a11ySummary: "Grafik pengeluaran: {total} di {count} kategori. {breakdown}"
     },
-    recapEmpty: "Pola muncul setelah beberapa momen tersimpan.",
+    recapEmpty: "Pola muncul setelah beberapa catatan tersimpan.",
     groups: {
       repeatedLately: "Sering berulang belakangan",
       standsOut: "Menonjol minggu ini",
@@ -208,27 +208,27 @@ export const idExtras: AppStringsExtras = {
       weekendShape: "Bentuk akhir pekan"
     },
     generated: {
-      quietStartTitle: "Beberapa momen tersimpan",
+      quietStartTitle: "Beberapa catatan tersimpan",
       quietStartDetail: "Lebih banyak pola muncul seiring kamu mencatat.",
       contextMoreVisibleTitle: "{context} lebih terlihat minggu ini",
-      contextMoreVisibleDetailWithPrevious: "{count} momen, naik dari {previousCount} minggu lalu.",
-      contextMoreVisibleDetailNoPrevious: "{count} momen minggu ini.",
+      contextMoreVisibleDetailWithPrevious: "{count} catatan, naik dari {previousCount} minggu lalu.",
+      contextMoreVisibleDetailNoPrevious: "{count} catatan minggu ini.",
       contextMoreVisibleRecap: "Pertahankan ritme {context} ini?",
       newRepeatTitle: "Pengulangan baru mungkin terbentuk",
       newRepeatDetail: "{label} muncul {count} kali minggu ini.",
       newRepeatRecap: "Pertahankan {label} dalam ritme?",
       smallSpendsTitle: "Pengeluaran kecil menumpuk",
-      smallSpendsDetail: "{count} momen kecil total {total} minggu ini.",
+      smallSpendsDetail: "{count} catatan kecil total {total} minggu ini.",
       smallSpendsRecap: "Pertahankan ritme pengeluaran kecil ini?",
       weekendShapeTitle: "Pengeluaran akhir pekan menonjol",
       weekendShapeDetail: "Sekitar {ratio}x ritme hari kerja.",
       weekendShapeRecap: "Pertahankan ritme akhir pekan ini?",
       contextQuieterTitle: "{context} lebih tenang",
       contextQuieterDetail: "Sering minggu lalu, belum ada minggu ini.",
-      memoryBuildingTitle: "Memori sedang terbentuk",
-      memoryBuildingDetail: "{count} momen dalam dua minggu terakhir.",
+      memoryBuildingTitle: "Riwayat sedang terbentuk",
+      memoryBuildingDetail: "{count} catatan dalam dua minggu terakhir.",
       steadyRhythmTitle: "{context} bagian dari ritmemu",
-      steadyRhythmDetail: "{count} momen belakangan ini.",
+      steadyRhythmDetail: "{count} catatan belakangan ini.",
       steadyRhythmRecap: "Pertahankan ritme {context} ini?"
     }
   },

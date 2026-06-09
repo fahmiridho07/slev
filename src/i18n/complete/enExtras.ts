@@ -2,9 +2,9 @@ import type { AppStringsExtras } from "../types";
 
 export const enExtras: AppStringsExtras = {
   toasts: {
-    default: "A spending memory can be as small as an amount.",
+    default: "An entry can be as simple as an amount.",
     capture: {
-      needAmount: "Enter an amount to save this memory.",
+      needAmount: "Enter an amount to save this entry.",
       needAccount: "Pick an account first.",
       needCategory: "Add at least one expense category in Settings before saving an expense.",
       needTransferAccounts: "Choose two different accounts for this transfer.",
@@ -20,11 +20,11 @@ export const enExtras: AppStringsExtras = {
       failed: "Could not load local data. Pull to refresh or restart the app."
     },
     memory: {
-      removed: "Memory removed.",
-      restored: "Memory restored.",
+      removed: "Entry removed.",
+      restored: "Entry restored.",
       needAmount: "Enter an amount before saving changes.",
-      notFound: "That memory is no longer available.",
-      updated: "Memory updated."
+      notFound: "That entry is no longer available.",
+      updated: "Entry updated."
     },
     refresh: {
       failed: "Could not refresh. Try again."
@@ -75,10 +75,10 @@ export const enExtras: AppStringsExtras = {
     },
     reset: {
       failed: "Could not reset {label}.",
-      success: "{label} reset. You can start fresh in that area."
+      success: "{label} reset. You can start fresh there."
     },
     clear: {
-      cleared: "Local finance memory cleared."
+      cleared: "Local finance data cleared."
     },
     writeFailure: {
       corrupt:
@@ -98,7 +98,7 @@ export const enExtras: AppStringsExtras = {
   },
   storage: {
     collections: {
-      slev_entries: "Spending memories",
+      slev_entries: "Entries",
       slev_pattern_feedback: "Pattern feedback",
       slev_accounts: "Accounts",
       slev_transfers: "Transfers",
@@ -123,24 +123,24 @@ export const enExtras: AppStringsExtras = {
       accountKindWallet: "Wallet",
       accountKindCash: "Cash",
       accountKindOther: "Other",
-      incomeHub: "Income hub",
+      incomeHub: "Main income account",
       openingBalance: "Opening balance",
       openingBalanceHint:
         "This account's balance right now. Entries after this add to or subtract from it.",
       pocket: "Pocket",
       tracked: "Tracked",
       trackedTotal: "Tracked total",
-      ephemeral: "Ephemeral",
+      ephemeral: "Light tracking",
       ephemeralHint:
-        "Ephemeral = a payment source you don't reconcile closely (small e-wallets).",
+        "Light tracking = a payment source you don't reconcile closely (small e-wallets).",
       saveAccount: "Save account",
       yourAccounts: "Your accounts",
-      incomeHubMeta: "Income hub",
-      ephemeralPocketMeta: "Ephemeral pocket",
+      incomeHubMeta: "Main income account",
+      ephemeralPocketMeta: "Light-tracking pocket",
       editAccountA11y: "Edit account {label}",
       deleteAccountTitle: "Delete account?",
       deleteAccountBody:
-        "{label} will be removed from account pickers. Existing memories stay saved."
+        "{label} will be removed from account pickers. Existing entries stay saved."
     }
   },
   patterns: {
@@ -152,7 +152,7 @@ export const enExtras: AppStringsExtras = {
       incomeBySource: "Income by source",
       incomeViewAccount: "Account",
       incomeViewSource: "Source",
-      incomeLoggedHint: "Shows where income was logged. Transfers appear separately in Activity.",
+      incomeLoggedHint: "Shows which account received income. Transfers appear separately in Activity.",
       spendingByAccount: "Spending by account",
       expense: "Expense",
       income: "Income",
@@ -167,7 +167,7 @@ export const enExtras: AppStringsExtras = {
       viewEntriesA11y: "View {count} entries for {category}",
       drilldownTitle: "{category} · {month}",
       drilldownSummary: "{count} entries · {total}",
-      drilldownEmpty: "No entries in this month",
+      drilldownEmpty: "No entries this month",
       categoryNewThisMonth: "New this month",
       categoryDeltaUp: "+{percent}%",
       categoryDeltaDown: "-{percent}%",
@@ -200,7 +200,7 @@ export const enExtras: AppStringsExtras = {
       legendValue: "{amount} · {percent}%",
       a11ySummary: "Spending chart: {total} across {count} categories. {breakdown}"
     },
-    recapEmpty: "Patterns appear after a few saved moments.",
+    recapEmpty: "Patterns appear after a few saved entries.",
     groups: {
       repeatedLately: "Repeated lately",
       standsOut: "Stands out this week",
@@ -208,27 +208,27 @@ export const enExtras: AppStringsExtras = {
       weekendShape: "Weekend shape"
     },
     generated: {
-      quietStartTitle: "A few moments are saved",
+      quietStartTitle: "A few entries are saved",
       quietStartDetail: "More patterns appear as you log.",
       contextMoreVisibleTitle: "{context} is more visible this week",
-      contextMoreVisibleDetailWithPrevious: "{count} moments, up from {previousCount} last week.",
-      contextMoreVisibleDetailNoPrevious: "{count} moments this week.",
+      contextMoreVisibleDetailWithPrevious: "{count} entries, up from {previousCount} last week.",
+      contextMoreVisibleDetailNoPrevious: "{count} entries this week.",
       contextMoreVisibleRecap: "Keep this {context} rhythm?",
       newRepeatTitle: "A new repeat may be forming",
       newRepeatDetail: "{label} appeared {count} times this week.",
       newRepeatRecap: "Keep {label} in the rhythm?",
       smallSpendsTitle: "Small spends are adding up",
-      smallSpendsDetail: "{count} small moments total {total} this week.",
+      smallSpendsDetail: "{count} small entries total {total} this week.",
       smallSpendsRecap: "Keep this small-spend rhythm?",
       weekendShapeTitle: "Weekend spending stood out",
       weekendShapeDetail: "About {ratio}x weekday pace.",
       weekendShapeRecap: "Keep this weekend rhythm?",
       contextQuieterTitle: "{context} got quieter",
       contextQuieterDetail: "Common last week, none saved this week.",
-      memoryBuildingTitle: "Memory is building",
-      memoryBuildingDetail: "{count} moments in the last two weeks.",
+      memoryBuildingTitle: "History is building",
+      memoryBuildingDetail: "{count} entries in the last two weeks.",
       steadyRhythmTitle: "{context} is part of your rhythm",
-      steadyRhythmDetail: "{count} moments recently.",
+      steadyRhythmDetail: "{count} entries recently.",
       steadyRhythmRecap: "Keep this {context} rhythm?"
     }
   },

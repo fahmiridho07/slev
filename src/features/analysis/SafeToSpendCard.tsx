@@ -214,6 +214,8 @@ function SafeToSpendCardComponent() {
           </Text>
         ) : null}
 
+        <Text style={styles.homeBalanceMetaLine}>{copy.spendableHelper}</Text>
+
         <View style={styles.monthCashflowTiles}>
           <View style={[styles.monthCashflowTile, styles.monthCashflowTileIncome]}>
             <View style={styles.pulseTopRow}>

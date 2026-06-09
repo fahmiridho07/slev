@@ -12,7 +12,7 @@ export const en: AppStrings = {
     settings: "Settings"
   },
   boot: {
-    preparing: "Preparing local memory...",
+    preparing: "Preparing your data...",
     loadingFinance: "Loading your finance data...",
     failed: "Could not load local data. Pull to refresh or restart the app."
   },
@@ -53,7 +53,7 @@ export const en: AppStrings = {
     paidFrom: "Paid from",
     noCategories: "No expense categories are active. Add one before saving expenses.",
     openSettings: "Open Settings",
-    context: "Context",
+    context: "Category",
     billSuggestions: "Suggested from recurring bills",
     billsReservedHint: "Recurring bills are already reserved — you don't need to log them here.",
     reorderHint: "Hold to rearrange",
@@ -109,7 +109,7 @@ export const en: AppStrings = {
     income: "Income",
     type: {
       lead: "What are you logging?",
-      copy: "Tap the kind of money moment you want to save.",
+      copy: "Pick the type of entry you want to save.",
       expenseLabel: "Expense",
       expenseHint: "Spending you want to track",
       incomeLabel: "Income",
@@ -136,7 +136,7 @@ export const en: AppStrings = {
   settings: {
     bills: {
       title: "Recurring bills",
-      intro: "Monthly bills you expect each cycle. They show on Overview when a payment is coming up.",
+      intro: "Monthly bills you expect each cycle. Overdue ones also appear as setup hints on Home.",
       add: "Add bill",
       edit: "Edit bill",
       nameA11y: "Bill name",
@@ -152,7 +152,7 @@ export const en: AppStrings = {
 
       editA11y: "Edit bill {label}",
       deleteTitle: "Delete recurring bill?",
-      deleteBody: "{label} will be removed from recurring bills. Logged payments stay in your spending history."
+      deleteBody: "{label} will be removed from recurring bills. Logged payments stay in your entry history."
     },
     appearanceTab: "Appearance",
     accountsTab: "Accounts",
@@ -161,7 +161,7 @@ export const en: AppStrings = {
     dataTab: "Data",
     heroKicker: "Settings",
     heroHint: "{accounts} account(s) · {bills} recurring bill(s)",
-    heroValue: "{count} memor(y/ies)",
+    heroValue: "{count} entries saved",
     categories: {
       edit: "Edit category",
       editA11y: "Edit category {label}",
@@ -175,8 +175,8 @@ export const en: AppStrings = {
       moveEarlier: "Move up",
       moveLater: "Move down",
       orderHint: "Changes the chip order when logging expenses.",
-      renameHint: "Renaming updates past expenses that used this category.",
-      defaultRenameHint: "Renaming a default category hides the old one and updates past expenses.",
+      renameHint: "Renaming updates past entries that used this category.",
+      defaultRenameHint: "Renaming a default category hides the old one and updates past entries.",
       empty: "No active categories. Add a category above to start assigning expenses again."
     },
     data: {
@@ -190,7 +190,7 @@ export const en: AppStrings = {
       importPlaceholder: "Paste a Slev backup JSON here",
       importA11y: "Backup JSON",
       import: "Import backup",
-      clearAll: "Clear local finance memory",
+      clearAll: "Clear all local data",
       resetTitle: "Reset {label}?",
       resetTitleFallback: "Reset data?",
       resetBody: "This clears only {label} on this device. Export a backup first if you want to keep a copy.",
@@ -202,7 +202,7 @@ export const en: AppStrings = {
     payday: {
       label: "Payday",
       helper:
-        "Set the day you get paid (1–31) so 'safe to spend' counts down to payday instead of month-end. Leave empty to use month-end.",
+        "Set the day you get paid (1–31) so safe daily allowance counts down to payday instead of month-end. Leave empty to use month-end.",
       placeholder: "Day (1–31), e.g. 25",
       a11y: "Payday day of month"
     },
@@ -217,7 +217,7 @@ export const en: AppStrings = {
   listHints: {
     memory: {
       title: "Activity list actions",
-      body: "Tap a moment to edit it in a sheet. Swipe left to delete."
+      body: "Tap an entry to edit it. Swipe left to delete."
     },
     balance_accounts: {
       title: "Account list actions",
@@ -243,7 +243,7 @@ export const en: AppStrings = {
       overdueBillsHint: "{count} bill(s) may be due without a logged payment.",
       overdueBillsAction: "Review bills",
       overdueBillsA11y: "Open settings to review recurring bills",
-      progress: "Setup · {current} of {total}"
+      progress: "Getting started · {current} of {total}"
     },
     safeToSpend: {
       billsReserve: "Set aside for upcoming bills: {amount}",
@@ -252,19 +252,20 @@ export const en: AppStrings = {
       heroLabel: "Total balance",
       safeDailyTile: "Safe daily",
       spendableTile: "Spendable",
-      spendableHelper: "Safe daily divides spendable cash across days left, after bills and buffer.",
-      paceUnder: "Under budget",
-      paceOver: "Over budget",
-      paceEven: "On budget",
+      spendableHelper:
+        "Total balance is what you have now. Spendable is left after bills and monthly set-aside. Safe daily spreads spendable across days left.",
+      paceUnder: "Below daily pace",
+      paceOver: "Above daily pace",
+      paceEven: "On daily pace",
       paceUnknown: "Estimating",
       daysLeftChip: "{count} days left",
       compactTypicalDaily: "Avg {amount}/day",
       compactBillsReserve: "Bills reserve {amount}",
-      paydayHint: "Using month-end horizon.",
+      paydayHint: "Counted through month-end.",
       paydayHintAction: "Set payday",
       paydayHintA11y: "Open settings to set payday",
       typicalDaily: "Your daily average is {amount}",
-      typicalDailyUncertain: "Rough estimate — need more data",
+      typicalDailyUncertain: "rough estimate — need more data",
       checkPurchase: "Can I buy something?",
       checkPurchaseA11y: "Check if a purchase fits your daily allowance",
       sheetTitle: "Can I afford this?",
@@ -292,11 +293,11 @@ export const en: AppStrings = {
       save: "Save"
     },
     searchA11y: "Search activity",
-    searchPlaceholder: "Search label, context, or amount",
-    emptyText: "No saved spending yet.",
-    monthEmpty: "No entries this month.",
+    searchPlaceholder: "Search label, category, or amount",
+    emptyText: "No entries saved yet.",
+    monthEmpty: "No entries this month yet.",
     monthTitle: "Activity · {month}",
-    emptyAction: "Log first expense",
+    emptyAction: "Log first entry",
     searchNoResults: "No activity matches that search.",
     transferDeleteTitle: "Delete transfer?",
     transferDeleteBody: "{title} will be removed. Account balances will update automatically.",
@@ -334,11 +335,11 @@ export const en: AppStrings = {
       breakdownHintMonth: "{amount} income logged in {month}",
       breakdownKicker: "Spending this month",
       breakdownKickerMonth: "Spending in {month}",
-      accountsHintWithTrend: "Net-worth trend available below",
+      accountsHintWithTrend: "Balance trend available below",
       accountsHintNoTrend: "Add balance snapshots for trends",
       accountsKicker: "Estimated balance",
       recapHintWithPatterns: "Tap a pattern to leave quick feedback",
-      recapHintEmpty: "Patterns appear after a few saved moments",
+      recapHintEmpty: "Patterns appear after a few saved entries",
       recapKicker: "Spending recap",
       recapValue: "{count} pattern(s)"
     },
@@ -348,21 +349,21 @@ export const en: AppStrings = {
       feedbackLessOften: "Less often",
       feedbackLockedHint: "Log at least 6 expenses in the last 14 days to answer recap questions.",
       feedbackNotSure: "Not sure",
-      feedbackSaved: "Thanks — we'll remember that."
+      feedbackSaved: "Thanks — noted."
     },
     recapEmptyAction: "Log spending",
     ...enExtras.patterns
   },
   dialogs: {
-    clearAllTitle: "Clear local finance memory?",
-    clearAllBody: "This removes entries, plans, balances, limits, accounts, transfers, and categories from this device.",
+    clearAllTitle: "Clear all local data?",
+    clearAllBody: "This removes entries, balances, accounts, transfers, shortcuts, bills, and categories from this device.",
     clearAllConfirm: "Clear",
     categoryDeleteDefaultTitle: "Remove default category?",
     categoryDeleteTitle: "Delete category?",
-    categoryDeleteDefault: "{label} will disappear from capture and budget limits. Existing memories stay saved.",
-    categoryDeleteCustom: "{label} will be removed from capture and budget limits. Existing memories stay saved.",
+    categoryDeleteDefault: "{label} will disappear from capture. Existing entries stay saved.",
+    categoryDeleteCustom: "{label} will be removed from capture. Existing entries stay saved.",
     activityDeleteTitle: "Delete entry?",
-    activityDeleteBody: "{title} will be removed from Overview. Budget and analysis totals will update automatically."
+    activityDeleteBody: "{title} will be removed. Balances and monthly summaries update automatically."
   },
   toasts: enExtras.toasts,
   analysis: enExtras.analysis,

@@ -12,7 +12,7 @@ export const id: AppStrings = {
     settings: "Pengaturan"
   },
   boot: {
-    preparing: "Menyiapkan memori lokal...",
+    preparing: "Menyiapkan data...",
     loadingFinance: "Memuat data keuangan...",
     failed: "Tidak bisa memuat data lokal. Tarik untuk memuat ulang atau mulai ulang aplikasi."
   },
@@ -53,7 +53,7 @@ export const id: AppStrings = {
     paidFrom: "Dibayar dari",
     noCategories: "Belum ada kategori pengeluaran aktif. Tambahkan dulu sebelum menyimpan.",
     openSettings: "Buka Pengaturan",
-    context: "Konteks",
+    context: "Kategori",
     billSuggestions: "Saran dari tagihan rutin",
     billsReservedHint: "Tagihan rutin sudah dicadangkan — nggak perlu dicatat di sini.",
     reorderHint: "Tahan untuk atur ulang",
@@ -109,7 +109,7 @@ export const id: AppStrings = {
     income: "Pemasukan",
     type: {
       lead: "Apa yang ingin dicatat?",
-      copy: "Pilih jenis momen uang yang ingin disimpan.",
+      copy: "Pilih jenis catatan yang ingin disimpan.",
       expenseLabel: "Pengeluaran",
       expenseHint: "Pengeluaran yang ingin dilacak",
       incomeLabel: "Pemasukan",
@@ -136,7 +136,7 @@ export const id: AppStrings = {
   settings: {
     bills: {
       title: "Tagihan rutin",
-      intro: "Tagihan bulanan yang diharapkan tiap siklus. Muncul di Ringkasan saat pembayaran mendekat.",
+      intro: "Tagihan bulanan yang diharapkan tiap siklus. Yang lewat jatuh tempo juga muncul sebagai petunjuk setup di Beranda.",
       add: "Tambah tagihan",
       edit: "Edit tagihan",
       nameA11y: "Nama tagihan",
@@ -152,7 +152,7 @@ export const id: AppStrings = {
 
       editA11y: "Edit tagihan {label}",
       deleteTitle: "Hapus tagihan rutin?",
-      deleteBody: "{label} akan dihapus dari tagihan rutin. Pembayaran tercatat tetap ada di riwayat."
+      deleteBody: "{label} akan dihapus dari tagihan rutin. Pembayaran tercatat tetap ada di riwayat catatan."
     },
     appearanceTab: "Tampilan",
     accountsTab: "Akun",
@@ -161,7 +161,7 @@ export const id: AppStrings = {
     dataTab: "Data",
     heroKicker: "Pengaturan",
     heroHint: "{accounts} akun · {bills} tagihan rutin",
-    heroValue: "{count} memori",
+    heroValue: "{count} catatan tersimpan",
     categories: {
       edit: "Edit kategori",
       editA11y: "Edit kategori {label}",
@@ -175,8 +175,8 @@ export const id: AppStrings = {
       moveEarlier: "Ke atas",
       moveLater: "Ke bawah",
       orderHint: "Mengubah urutan chip saat mencatat pengeluaran.",
-      renameHint: "Ganti nama juga memperbarui pengeluaran lama di kategori ini.",
-      defaultRenameHint: "Ganti nama kategori bawaan menyembunyikan yang lama dan memperbarui riwayat.",
+      renameHint: "Ganti nama juga memperbarui catatan lama di kategori ini.",
+      defaultRenameHint: "Ganti nama kategori bawaan menyembunyikan yang lama dan memperbarui catatan lama.",
       empty: "Belum ada kategori aktif. Tambahkan kategori di atas untuk mulai menetapkan pengeluaran."
     },
     data: {
@@ -190,7 +190,7 @@ export const id: AppStrings = {
       importPlaceholder: "Tempel cadangan JSON Slev di sini",
       importA11y: "JSON cadangan",
       import: "Impor cadangan",
-      clearAll: "Hapus memori keuangan lokal",
+      clearAll: "Hapus semua data lokal",
       resetTitle: "Atur ulang {label}?",
       resetTitleFallback: "Atur ulang data?",
       resetBody: "Ini hanya menghapus {label} di perangkat ini. Ekspor cadangan dulu jika ingin menyimpan salinan.",
@@ -202,7 +202,7 @@ export const id: AppStrings = {
     payday: {
       label: "Tanggal gajian",
       helper:
-        "Atur tanggal kamu gajian (1–31) biar 'aman dibelanjain' dihitung sampai gajian, bukan akhir bulan. Kosongkan untuk pakai akhir bulan.",
+        "Atur tanggal gajianmu (1–31) biar jatah aman harian dihitung sampai gajian, bukan akhir bulan. Kosongkan untuk pakai akhir bulan.",
       placeholder: "Tanggal (1–31), mis. 25",
       a11y: "Tanggal gajian"
     },
@@ -217,7 +217,7 @@ export const id: AppStrings = {
   listHints: {
     memory: {
       title: "Aksi daftar aktivitas",
-      body: "Ketuk momen untuk mengedit di lembar bawah. Geser kiri untuk menghapus."
+      body: "Ketuk catatan untuk mengedit. Geser kiri untuk menghapus."
     },
     balance_accounts: {
       title: "Aksi daftar akun",
@@ -243,7 +243,7 @@ export const id: AppStrings = {
       overdueBillsHint: "{count} tagihan mungkin jatuh tempo tanpa pembayaran tercatat.",
       overdueBillsAction: "Cek tagihan",
       overdueBillsA11y: "Buka pengaturan untuk cek tagihan rutin",
-      progress: "Setup · {current} dari {total}"
+      progress: "Persiapan · {current} dari {total}"
     },
     safeToSpend: {
       billsReserve: "Disisihkan buat tagihan terdekat: {amount}",
@@ -252,19 +252,20 @@ export const id: AppStrings = {
       heroLabel: "Saldo total",
       safeDailyTile: "Aman harian",
       spendableTile: "Bisa dibelanjakan",
-      spendableHelper: "Aman harian = uang bisa dibelanjakan dibagi sisa hari, setelah tagihan & buffer.",
-      paceUnder: "Di bawah jatah",
-      paceOver: "Di atas jatah",
-      paceEven: "Pas jatah",
+      spendableHelper:
+        "Saldo total = uangmu sekarang. Bisa dibelanjakan = sisa setelah tagihan & sisihan bulanan. Aman harian = dibagi sisa hari.",
+      paceUnder: "Di bawah ritme harian",
+      paceOver: "Di atas ritme harian",
+      paceEven: "Pas ritme harian",
       paceUnknown: "Estimasi",
       daysLeftChip: "Sisa {count} hari",
       compactTypicalDaily: "Rata-rata {amount}/hari",
       compactBillsReserve: "Cadangan tagihan {amount}",
-      paydayHint: "Pakai horizon akhir bulan.",
+      paydayHint: "Dihitung sampai akhir bulan.",
       paydayHintAction: "Atur hari gajian",
       paydayHintA11y: "Buka pengaturan untuk atur hari gajian",
       typicalDaily: "Rata-rata harianmu {amount}",
-      typicalDailyUncertain: "estimasi kasar, butuh lebih banyak data",
+      typicalDailyUncertain: "estimasi kasar — butuh lebih banyak data",
       checkPurchase: "Bisa beli sesuatu?",
       checkPurchaseA11y: "Cek apakah pembelian ini masih aman",
       sheetTitle: "Bisa beli ini?",
@@ -279,7 +280,7 @@ export const id: AppStrings = {
     }
   },
   activity: {
-    tabOverview: "Ringkasan",
+    tabOverview: "Ikhtisar",
     tabActivity: "Aktivitas",
     sectionTitle: "Aktivitas",
     edit: {
@@ -292,17 +293,17 @@ export const id: AppStrings = {
       save: "Simpan"
     },
     searchA11y: "Cari aktivitas",
-    searchPlaceholder: "Cari label, konteks, atau jumlah",
-    emptyText: "Belum ada pengeluaran tersimpan.",
-    monthEmpty: "Belum ada entri bulan ini.",
+    searchPlaceholder: "Cari label, kategori, atau jumlah",
+    emptyText: "Belum ada catatan tersimpan.",
+    monthEmpty: "Belum ada catatan bulan ini.",
     monthTitle: "Aktivitas · {month}",
-    emptyAction: "Catat pengeluaran pertama",
+    emptyAction: "Catat transaksi pertama",
     searchNoResults: "Tidak ada aktivitas yang cocok dengan pencarian.",
     transferDeleteTitle: "Hapus transfer?",
     transferDeleteBody: "{title} akan dihapus. Saldo akun diperbarui otomatis.",
     transferEditSheetTitle: "Edit transfer",
     transferEditSheetTitleNamed: "Edit {title}",
-    editSheetTitle: "Edit entri",
+    editSheetTitle: "Edit catatan",
     editSheetTitleNamed: "Edit {title}"
   },
   memory: {
@@ -334,11 +335,11 @@ export const id: AppStrings = {
       breakdownHintMonth: "{amount} pemasukan tercatat di {month}",
       breakdownKicker: "Pengeluaran bulan ini",
       breakdownKickerMonth: "Pengeluaran di {month}",
-      accountsHintWithTrend: "Tren kekayaan bersih tersedia di bawah",
+      accountsHintWithTrend: "Tren saldo tersedia di bawah",
       accountsHintNoTrend: "Tambahkan snapshot saldo untuk melihat tren",
       accountsKicker: "Estimasi saldo",
       recapHintWithPatterns: "Ketuk pola untuk memberi umpan balik cepat",
-      recapHintEmpty: "Pola muncul setelah beberapa momen tersimpan",
+      recapHintEmpty: "Pola muncul setelah beberapa catatan tersimpan",
       recapKicker: "Ringkasan pengeluaran",
       recapValue: "{count} pola"
     },
@@ -348,21 +349,21 @@ export const id: AppStrings = {
       feedbackLessOften: "Lebih jarang",
       feedbackLockedHint: "Catat minimal 6 pengeluaran dalam 14 hari terakhir untuk menjawab pertanyaan ringkasan.",
       feedbackNotSure: "Tidak yakin",
-      feedbackSaved: "Terima kasih — kami akan mengingatnya."
+      feedbackSaved: "Terima kasih — tercatat."
     },
     recapEmptyAction: "Catat pengeluaran",
     ...idExtras.patterns
   },
   dialogs: {
-    clearAllTitle: "Hapus memori keuangan lokal?",
-    clearAllBody: "Ini menghapus entri, rencana, saldo, batas, akun, transfer, dan kategori dari perangkat ini.",
+    clearAllTitle: "Hapus semua data lokal?",
+    clearAllBody: "Ini menghapus catatan, saldo, akun, transfer, pintasan, tagihan, dan kategori dari perangkat ini.",
     clearAllConfirm: "Hapus semua",
     categoryDeleteDefaultTitle: "Hapus kategori bawaan?",
     categoryDeleteTitle: "Hapus kategori?",
-    categoryDeleteDefault: "{label} akan hilang dari pencatatan dan batas anggaran. Memori yang ada tetap tersimpan.",
-    categoryDeleteCustom: "{label} akan dihapus dari pencatatan dan batas anggaran. Memori yang ada tetap tersimpan.",
-    activityDeleteTitle: "Hapus entri?",
-    activityDeleteBody: "{title} akan dihapus dari Ringkasan. Total anggaran dan analisis diperbarui otomatis."
+    categoryDeleteDefault: "{label} akan hilang dari layar catat. Catatan lama tetap tersimpan.",
+    categoryDeleteCustom: "{label} akan dihapus dari layar catat. Catatan lama tetap tersimpan.",
+    activityDeleteTitle: "Hapus catatan?",
+    activityDeleteBody: "{title} akan dihapus. Saldo dan ringkasan bulan ini diperbarui otomatis."
   },
   toasts: idExtras.toasts,
   analysis: idExtras.analysis,
