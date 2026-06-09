@@ -245,6 +245,8 @@ export type AppStrings = {
       purchaseVerdict: {
         affordableDetail: string;
         affordableHeadline: string;
+        alreadyStretchedDetail: string;
+        alreadyStretchedHeadline: string;
         belowDailyDetail: string;
         belowDailyHeadline: string;
         categoryContext: string;
@@ -262,6 +264,7 @@ export type AppStrings = {
         loggingExpense: string;
         meterAfter: string;
         meterBefore: string;
+        statusAlreadyStretched: string;
         statusComfortable: string;
         statusHint: string;
         statusNo: string;

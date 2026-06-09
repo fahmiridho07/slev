@@ -70,6 +70,16 @@ export function getPurchaseVerdictCopy({
         })
       };
       break;
+    case "already_stretched":
+      result = {
+        headline: copy.alreadyStretchedHeadline,
+        detail: formatString(copy.alreadyStretchedDetail, {
+          amount: newDaily,
+          paceLabel,
+          reference
+        })
+      };
+      break;
     case "tight_multi_day":
       result = {
         headline: copy.tightMultiHeadline,
@@ -144,7 +154,7 @@ export function resolvePurchaseVerdictTone(insight: PurchaseInsight | null): Pur
   if (insight === "affordable") {
     return "safe";
   }
-  if (insight === "tight_multi_day" || insight === "tight_one_day") {
+  if (insight === "already_stretched" || insight === "tight_multi_day" || insight === "tight_one_day") {
     return "warn";
   }
   if (insight === "dips_reserve") {
@@ -177,7 +187,11 @@ export function resolvePurchaseVerdictUi({
     return { tone, statusLabel: copy.statusOk, icon: "checkmark-circle" };
   }
   if (tone === "warn") {
-    return { tone, statusLabel: copy.statusTight, icon: "alert-circle" };
+    return {
+      tone,
+      statusLabel: insight === "already_stretched" ? copy.statusAlreadyStretched : copy.statusTight,
+      icon: "alert-circle"
+    };
   }
   if (tone === "caution") {
     return { tone, statusLabel: copy.statusRisky, icon: "warning" };

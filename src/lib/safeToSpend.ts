@@ -22,12 +22,22 @@ export type PurchaseVerdict = "affordable" | "over_pace" | "dips_reserve" | "una
 
 export type PurchaseInsight =
   | "affordable"
+  | "already_stretched"
   | "below_daily_need"
   | "comfortable"
   | "dips_reserve"
   | "tight_multi_day"
   | "tight_one_day"
   | "unaffordable";
+
+type PurchaseMetrics = {
+  coversTypicalDays: boolean;
+  daysAtTypicalPace: number;
+  newSafeDaily: number;
+  referenceDaily: number;
+  remainingBalance: number;
+  verdict: PurchaseVerdict;
+};
 
 export type SimulatePurchaseResult = {
   affordable: boolean;
@@ -186,6 +196,45 @@ export function simulatePurchase({
   amount: number;
   safe: SafeToSpendResult;
 }): SimulatePurchaseResult {
+  const baseline = computePurchaseMetrics(0, safe);
+  const after = computePurchaseMetrics(amount, safe);
+  const insight = classifyPurchaseInsight({
+    amount,
+    baseline,
+    after
+  });
+
+  return {
+    affordable: after.verdict === "affordable",
+    coversTypicalDays: after.coversTypicalDays,
+    daysAtTypicalPace: after.daysAtTypicalPace,
+    insight,
+    newSafeDaily: after.newSafeDaily,
+    referenceDaily: after.referenceDaily,
+    remainingBalance: after.remainingBalance,
+    shortfall: after.shortfall,
+    usesHistoryReference: after.usesHistoryReference,
+    verdict: after.verdict
+  };
+}
+
+export function isNegligiblePurchase(
+  amount: number,
+  baseline: Pick<PurchaseMetrics, "daysAtTypicalPace" | "newSafeDaily">,
+  after: Pick<PurchaseMetrics, "daysAtTypicalPace" | "newSafeDaily">
+): boolean {
+  if (amount <= 0) {
+    return true;
+  }
+  return (
+    after.newSafeDaily === baseline.newSafeDaily && after.daysAtTypicalPace === baseline.daysAtTypicalPace
+  );
+}
+
+function computePurchaseMetrics(amount: number, safe: SafeToSpendResult): PurchaseMetrics & {
+  shortfall: number;
+  usesHistoryReference: boolean;
+} {
   const remainingBalance = safe.spendableBalance - amount;
   const remainingActual = safe.effectiveBalance - amount;
   const newSafeDaily = Math.max(0, Math.round(remainingBalance / safe.daysLeft));
@@ -211,19 +260,10 @@ export function simulatePurchase({
           : 0;
   const daysAtTypicalPace =
     referenceDaily > 0 ? Math.floor(remainingBalance / referenceDaily) : safe.daysLeft;
-  const insight = classifyPurchaseInsight({
-    daysAtTypicalPace,
-    newSafeDaily,
-    referenceDaily,
-    remainingBalance,
-    verdict
-  });
 
   return {
-    affordable: verdict === "affordable",
     coversTypicalDays,
     daysAtTypicalPace,
-    insight,
     newSafeDaily,
     referenceDaily,
     remainingBalance,
@@ -234,38 +274,85 @@ export function simulatePurchase({
 }
 
 function classifyPurchaseInsight({
-  daysAtTypicalPace,
-  newSafeDaily,
-  referenceDaily,
-  remainingBalance,
-  verdict
+  amount,
+  baseline,
+  after
 }: {
-  daysAtTypicalPace: number;
-  newSafeDaily: number;
-  referenceDaily: number;
-  remainingBalance: number;
-  verdict: PurchaseVerdict;
+  amount: number;
+  baseline: PurchaseMetrics;
+  after: PurchaseMetrics;
 }): PurchaseInsight {
-  if (verdict === "unaffordable") {
+  if (after.verdict === "unaffordable") {
     return "unaffordable";
   }
-  if (verdict === "dips_reserve") {
+  if (after.verdict === "dips_reserve") {
     return "dips_reserve";
   }
-  if (verdict === "affordable") {
-    if (referenceDaily > 0 && newSafeDaily >= Math.round(referenceDaily * 1.1)) {
+
+  const baselineInsight = classifyRawPurchaseInsight(baseline);
+
+  if (isNegligiblePurchase(amount, baseline, after)) {
+    if (!baseline.coversTypicalDays && baseline.verdict === "over_pace") {
+      return "already_stretched";
+    }
+    return baselineInsight;
+  }
+
+  if (after.verdict === "affordable") {
+    return classifyRawPurchaseInsight(after);
+  }
+
+  if (!baseline.coversTypicalDays) {
+    if (materiallyWorsenedPace(baseline, after)) {
+      return classifyRawPurchaseInsight(after);
+    }
+    return "already_stretched";
+  }
+
+  return classifyRawPurchaseInsight(after);
+}
+
+function classifyRawPurchaseInsight(metrics: PurchaseMetrics): PurchaseInsight {
+  if (metrics.verdict === "unaffordable") {
+    return "unaffordable";
+  }
+  if (metrics.verdict === "dips_reserve") {
+    return "dips_reserve";
+  }
+  if (metrics.verdict === "affordable") {
+    if (metrics.referenceDaily > 0 && metrics.newSafeDaily >= Math.round(metrics.referenceDaily * 1.1)) {
       return "comfortable";
     }
     return "affordable";
   }
 
-  if (referenceDaily > 0 && remainingBalance < referenceDaily) {
+  if (metrics.referenceDaily > 0 && metrics.remainingBalance < metrics.referenceDaily) {
     return "below_daily_need";
   }
-  if (daysAtTypicalPace <= 1) {
+  if (metrics.daysAtTypicalPace <= 1) {
     return "tight_one_day";
   }
   return "tight_multi_day";
+}
+
+function paceSeverity(metrics: PurchaseMetrics): number {
+  if (metrics.verdict === "affordable") {
+    return 0;
+  }
+  if (metrics.referenceDaily > 0 && metrics.remainingBalance < metrics.referenceDaily) {
+    return 3;
+  }
+  if (metrics.daysAtTypicalPace <= 1) {
+    return 2;
+  }
+  return 1;
+}
+
+function materiallyWorsenedPace(baseline: PurchaseMetrics, after: PurchaseMetrics): boolean {
+  if (baseline.coversTypicalDays && !after.coversTypicalDays) {
+    return true;
+  }
+  return paceSeverity(after) > paceSeverity(baseline);
 }
 
 function startOfDay(date: Date): Date {

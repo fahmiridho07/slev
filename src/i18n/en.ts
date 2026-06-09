@@ -299,6 +299,9 @@ export const en: AppStrings = {
         comfortableDetail: "Daily allowance stays {amount}, above {paceLabel} ({reference}/day).",
         affordableHeadline: "Yes — still on track.",
         affordableDetail: "Daily allowance becomes {amount} until {horizon}.",
+        alreadyStretchedHeadline: "Yes — but you were already tight.",
+        alreadyStretchedDetail:
+          "This purchase barely changes things. You're already below {paceLabel} ({reference}/day); daily allowance stays {amount}.",
         tightMultiHeadline: "Possible, but tight.",
         tightMultiDetail:
           "At {paceLabel} ({reference}/day), this only lasts ~{days} of the {total} days left.",
@@ -324,6 +327,7 @@ export const en: AppStrings = {
         loggingExpense: "Saving...",
         statusComfortable: "Room to spare",
         statusOk: "On track",
+        statusAlreadyStretched: "Already tight",
         statusTight: "Tight",
         statusRisky: "Risky",
         statusNo: "Can't afford",

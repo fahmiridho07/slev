@@ -299,6 +299,9 @@ export const id: AppStrings = {
         comfortableDetail: "Jatah harian tetap {amount}, di atas {paceLabel} ({reference}/hari).",
         affordableHeadline: "Bisa — masih aman.",
         affordableDetail: "Jatah harian jadi {amount} sampai {horizon}.",
+        alreadyStretchedHeadline: "Bisa — tapi memang sudah mepet.",
+        alreadyStretchedDetail:
+          "Pembelian ini hampir nggak mengubah apa-apa. Kamu memang sudah di bawah {paceLabel} ({reference}/hari); jatah harian tetap {amount}.",
         tightMultiHeadline: "Masih bisa, tapi mepet.",
         tightMultiDetail:
           "Di {paceLabel} ({reference}/hari), uangmu cuma cukup ~{days} dari {total} hari tersisa.",
@@ -324,6 +327,7 @@ export const id: AppStrings = {
         loggingExpense: "Menyimpan...",
         statusComfortable: "Longgar",
         statusOk: "Aman",
+        statusAlreadyStretched: "Sudah mepet",
         statusTight: "Mepet",
         statusRisky: "Riskan",
         statusNo: "Nggak bisa",

@@ -540,6 +540,38 @@ test("simulatePurchase falls back to safe daily when spending history is sparse"
   assertEqual(sparsePurchase.insight, "tight_one_day", "typical pace should warn about tomorrow");
 });
 
+test("simulatePurchase treats negligible amounts as baseline insight when already on track", () => {
+  const safe = buildSafeToSpend({
+    accounts: [hubAccount(1_000_000, "2026-06-15T01:00:00.000Z")],
+    moments: trailingExpenseMoments(50_000, 10, juneMidpoint),
+    transfers: [],
+    referenceDate: juneMidpoint,
+    windowDays: 10
+  });
+
+  const tinyPurchase = simulatePurchase({ amount: 5, safe });
+
+  assertEqual(tinyPurchase.insight, "comfortable", "negligible purchase should not escalate a comfortable baseline");
+  assertEqual(tinyPurchase.newSafeDaily, safe.safeDaily, "negligible purchase should not change safe daily");
+});
+
+test("simulatePurchase blames pre-existing tightness for negligible purchases when already over pace", () => {
+  const safe = buildSafeToSpend({
+    accounts: [hubAccount(700_000, "2026-06-15T01:00:00.000Z")],
+    moments: trailingExpenseMoments(50_000, 10, juneMidpoint),
+    transfers: [],
+    referenceDate: juneMidpoint,
+    windowDays: 10
+  });
+
+  assertEqual(safe.spendableBalance < safe.typicalDaily * safe.daysLeft, true, "baseline should already be over pace");
+
+  const tinyPurchase = simulatePurchase({ amount: 5, safe });
+
+  assertEqual(tinyPurchase.insight, "already_stretched", "negligible purchase should not blame Rp5 for existing tightness");
+  assertEqual(tinyPurchase.affordable, false, "verdict should still reflect over-pace state");
+});
+
 runTests();
 
 function test(name: string, run: () => void): void {
