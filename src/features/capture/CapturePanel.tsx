@@ -52,7 +52,7 @@ function CapturePanelComponent({
   const { orderedAccounts, orderedCategories } = useCapturePickerOrder(categoryLabels, accounts);
   const { fieldError, form, patch, changeAmountText, changeEntryType, save } = useCaptureForm();
 
-  const [dateOpen, setDateOpen] = useState(Boolean(form.occurredAtKey));
+  const [dateOpen, setDateOpen] = useState(false);
   const [saveAck, setSaveAck] = useState<CaptureSaveAck | null>(null);
   const saveAckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -75,11 +75,13 @@ function CapturePanelComponent({
     };
   }, []);
 
-  useEffect(() => {
-    if (form.occurredAtKey) {
-      setDateOpen(true);
-    }
-  }, [form.occurredAtKey]);
+  const handleDateSelect = useCallback(
+    (value: string | null) => {
+      patch({ occurredAtKey: value });
+      setDateOpen(false);
+    },
+    [patch]
+  );
 
   useEffect(() => {
     if (focusAmountToken <= 0) {
@@ -245,11 +247,28 @@ function CapturePanelComponent({
         )
       )}
 
+      <View style={styles.captureOptionalRow}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ expanded: dateOpen }}
+          onPress={() => setDateOpen((open) => !open)}
+          style={styles.addNoteButton}
+        >
+          <Ionicons
+            color={colors.muted}
+            name={dateOpen ? "chevron-up" : "calendar-outline"}
+            size={16}
+          />
+          <Text style={styles.addNoteText}>
+            {dateOpen
+              ? strings.capture.hideDate
+              : formatCaptureDateLabel(form.occurredAtKey) ?? strings.capture.changeDate}
+          </Text>
+        </Pressable>
+      </View>
+
       {dateOpen ? (
-        <CaptureDatePicker
-          occurredAtKey={form.occurredAtKey}
-          onSelect={(value) => patch({ occurredAtKey: value })}
-        />
+        <CaptureDatePicker occurredAtKey={form.occurredAtKey} onSelect={handleDateSelect} />
       ) : null}
 
       {fieldError?.field === "occurredAt" && (
@@ -257,17 +276,6 @@ function CapturePanelComponent({
           {fieldError.message}
         </Text>
       )}
-
-      {!dateOpen ? (
-        <View style={styles.captureOptionalRow}>
-          <Pressable accessibilityRole="button" onPress={() => setDateOpen(true)} style={styles.addNoteButton}>
-            <Ionicons name="calendar-outline" size={16} color={colors.muted} />
-            <Text style={styles.addNoteText}>
-              {formatCaptureDateLabel(form.occurredAtKey) ?? strings.capture.changeDate}
-            </Text>
-          </Pressable>
-        </View>
-      ) : null}
 
       <Pressable
         accessibilityLabel={saveAck ? strings.capture.savedButton : getSaveLabel(form.entryType)}

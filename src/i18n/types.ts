@@ -92,6 +92,7 @@ export type AppStrings = {
   capture: {
 
     changeDate: string;
+    hideDate: string;
     dateLabel: string;
     dateQuick: {
       daysAgo: string;

@@ -80,6 +80,7 @@ export const id: AppStrings = {
     },
 
     changeDate: "Ubah tanggal",
+    hideDate: "Tutup tanggal",
     dateLabel: "Tanggal",
     pickAnotherDate: "Pilih tanggal lain",
     dateQuick: {

@@ -80,6 +80,7 @@ export const en: AppStrings = {
     },
 
     changeDate: "Change date",
+    hideDate: "Hide date",
     dateLabel: "Date",
     pickAnotherDate: "Pick another date",
     dateQuick: {
