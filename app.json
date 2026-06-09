@@ -19,7 +19,8 @@
           "resizeMode": "contain"
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-font"
     ],
     "android": {
       "package": "com.slev.app",
