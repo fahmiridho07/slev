@@ -296,23 +296,32 @@ export const id: AppStrings = {
       cannotAfford: "Saldomu belum cukup buat ini — kurang {amount}.",
       purchaseVerdict: {
         comfortableHeadline: "Bisa — masih longgar.",
-        comfortableDetail: "Jatah harian tetap {amount}, di atas rata-rata {typical}.",
+        comfortableDetail: "Jatah harian tetap {amount}, di atas {paceLabel} ({reference}/hari).",
         affordableHeadline: "Bisa — masih aman.",
         affordableDetail: "Jatah harian jadi {amount} sampai {horizon}.",
         tightMultiHeadline: "Masih bisa, tapi mepet.",
         tightMultiDetail:
-          "Di ritme biasa ({typical}/hari), uangmu cuma cukup ~{days} dari {total} hari tersisa.",
+          "Di {paceLabel} ({reference}/hari), uangmu cuma cukup ~{days} dari {total} hari tersisa.",
         tightOneHeadline: "Sangat mepet — besok bakal berat.",
         tightOneDetail:
-          "Sisa cukup ~1 hari ritme biasa ({typical}/hari). Jatah harian turun ke {amount}.",
+          "Sisa cukup ~1 hari di {paceLabel} ({reference}/hari). Jatah harian turun ke {amount}.",
         belowDailyHeadline: "Kurang masuk akal — kebutuhan harian nggak muat.",
-        belowDailyDetail: "Sisanya nggak cukup buat 1 hari pengeluaran biasa ({typical}/hari).",
+        belowDailyDetail: "Sisanya nggak cukup buat 1 hari di {paceLabel} ({reference}/hari).",
         dipsReserveHeadline: "Riskan — sentuh cadangan.",
         dipsReserveDetail: "Bakal makan {amount} dari jatah tagihan atau sisihan bulanan.",
         unaffordableHeadline: "Nggak bisa — uang belanja nggak cukup.",
         unaffordableDetail: "Kurang {amount} dari yang bisa dibelanjakan.",
         horizonPayday: "gajian",
-        horizonMonthEnd: "akhir bulan"
+        horizonMonthEnd: "akhir bulan",
+        paceLabelTypical: "ritme biasamu",
+        paceLabelSafe: "jatah aman harianmu",
+        historyFallback: "Pakai jatah aman harian — catat lebih banyak pengeluaran buat ritme personal.",
+        historyUncertain: "Estimasi ritme masih kasar — catat lebih banyak biar lebih akurat.",
+        categoryContext: "Ini ~{multiple}× {category} biasamu ({amount}).",
+        categoryContextSingle: "Sekitar satu {category} biasa ({amount}).",
+        logExpense: "Catat pengeluaran",
+        logExpenseA11y: "Catat pembelian ini sebagai pengeluaran",
+        loggingExpense: "Menyimpan..."
       }
     }
   },

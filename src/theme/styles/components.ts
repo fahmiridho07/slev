@@ -709,6 +709,26 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     fontWeight: "600",
     lineHeight: 18
   },
+  purchaseVerdictContext: {
+    fontSize: 13,
+    fontStyle: "italic",
+    fontWeight: "600",
+    lineHeight: 18
+  },
+  purchaseVerdictFootnote: {
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 16,
+    opacity: 0.85
+  },
+  purchaseLogButton: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "center",
+    minHeight: 44,
+    paddingHorizontal: 12
+  },
   purchaseMeterTrack: {
     backgroundColor: colors.line,
     borderRadius: 999,

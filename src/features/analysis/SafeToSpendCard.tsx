@@ -15,11 +15,14 @@ import { SettingsTabKey } from "../app.types";
 import { formatString } from "../../i18n";
 import { HomeHintsSheet } from "./HomeHintsSheet";
 import { formatAmountInput, parseAmountInput } from "../../lib/formatMoney";
+import { getDailyPocketLabel, getIncomeHubLabel } from "../../lib/analysis";
+import { getPurchaseCategoryMatch } from "../../lib/purchaseContext";
 import { getPurchasePresentation, getPurchaseVerdictCopy } from "../../lib/purchaseVerdict";
 import { buildSafeToSpend, simulatePurchase, type SafeToSpendPace } from "../../lib/safeToSpend";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import type { AppStrings } from "../../i18n/types";
-import { shallowEqual, useFinanceSelector } from "../../state/useFinance";
+import { hapticSuccess, hapticWarning } from "../../lib/haptics";
+import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../../state/useFinance";
 import { useTheme } from "../../hooks/useTheme";
 
 
@@ -43,6 +46,8 @@ type SafeToSpendCardProps = {
 function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
   const { colors, componentStyles, paydayDayOfMonth, reduceMotion, spendBuffer, strings, styles } = useTheme();
   const copy = strings.home.safeToSpend;
+  const actions = useActions();
+  const categoryLabels = useFinanceDerived((derived) => derived.categoryLabels);
   const { accounts, moments, recurringBills, transfers } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
@@ -54,6 +59,10 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
   );
   const [sheetOpen, setSheetOpen] = useState(false);
   const [purchaseDraft, setPurchaseDraft] = useState("");
+  const [loggingPurchase, setLoggingPurchase] = useState(false);
+  const lastExpenseContext = useFinanceSelector(
+    (state) => state.moments.find((moment) => moment.type === "expense")?.context ?? "Other"
+  );
 
   const safe = useMemo(
     () =>
@@ -77,10 +86,24 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
           safe
         })
       : null;
+  const purchaseCategoryMatch = useMemo(() => {
+    if (purchaseAmount == null) {
+      return null;
+    }
+
+    return getPurchaseCategoryMatch({
+      amount: purchaseAmount,
+      moments,
+      strings
+    });
+  }, [moments, purchaseAmount, strings]);
+
   const purchaseVerdict = useMemo(() => {
     if (purchaseSimulation == null) {
       return {
+        contextNote: null as string | null,
         detail: null as string | null,
+        footnote: null as string | null,
         headline: copy.purchaseHint,
         icon: "information-circle-outline" as const,
         style: componentStyles.purchaseVerdictNeutral,
@@ -90,6 +113,7 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
 
     const presentation = getPurchasePresentation(purchaseSimulation.insight);
     const messages = getPurchaseVerdictCopy({
+      categoryMatch: purchaseCategoryMatch,
       horizon: paydayDayOfMonth != null ? "payday" : "month_end",
       safe,
       simulation: purchaseSimulation,
@@ -119,7 +143,9 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
             : ("close-circle" as const);
 
     return {
+      contextNote: messages.contextNote ?? null,
       detail: messages.detail,
+      footnote: messages.footnote ?? null,
       headline: messages.headline,
       icon,
       style,
@@ -137,10 +163,27 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
     componentStyles.purchaseVerdictWarn,
     copy.purchaseHint,
     paydayDayOfMonth,
+    purchaseCategoryMatch,
     purchaseSimulation,
     safe,
     strings
   ]);
+
+  const canLogPurchase =
+    purchaseAmount != null &&
+    purchaseAmount > 0 &&
+    categoryLabels.length > 0 &&
+    purchaseSimulation?.verdict !== "unaffordable";
+
+  const logPurchaseContext = useMemo(() => {
+    if (purchaseCategoryMatch && categoryLabels.includes(purchaseCategoryMatch.category)) {
+      return purchaseCategoryMatch.category;
+    }
+    if (categoryLabels.includes(lastExpenseContext)) {
+      return lastExpenseContext;
+    }
+    return categoryLabels.includes("Other") ? "Other" : categoryLabels[0] ?? "Other";
+  }, [categoryLabels, lastExpenseContext, purchaseCategoryMatch]);
 
   const showMeter = purchaseSimulation != null && safe.safeDaily > 0;
   const meterFill =
@@ -208,7 +251,55 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
   function closePurchaseSheet() {
     setSheetOpen(false);
     setPurchaseDraft("");
+    setLoggingPurchase(false);
   }
+
+  const handleLogPurchase = useCallback(async () => {
+    if (!canLogPurchase || loggingPurchase) {
+      return;
+    }
+
+    const incomeHub = getIncomeHubLabel(accounts);
+    const dailyPocket = getDailyPocketLabel(accounts);
+    const fallbackToAccount =
+      dailyPocket === incomeHub
+        ? accounts.find((account) => account.label !== incomeHub)?.label ?? dailyPocket
+        : dailyPocket;
+
+    setLoggingPurchase(true);
+    const result = await actions.saveMoment(
+      {
+        accountLabel: dailyPocket,
+        amountText: purchaseDraft,
+        context: logPurchaseContext,
+        entryType: "expense",
+        fromAccount: incomeHub,
+        label: "",
+        note: "",
+        occurredAtKey: null,
+        source: "",
+        toAccount: fallbackToAccount
+      },
+      categoryLabels.length
+    );
+    setLoggingPurchase(false);
+
+    if (!result.ok) {
+      hapticWarning();
+      return;
+    }
+
+    hapticSuccess();
+    closePurchaseSheet();
+  }, [
+    accounts,
+    actions,
+    canLogPurchase,
+    categoryLabels.length,
+    logPurchaseContext,
+    loggingPurchase,
+    purchaseDraft
+  ]);
 
   return (
     <>
@@ -336,6 +427,16 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
                       {purchaseVerdict.detail}
                     </Text>
                   ) : null}
+                  {purchaseVerdict.contextNote ? (
+                    <Text style={[componentStyles.purchaseVerdictContext, { color: purchaseVerdict.textColor }]}>
+                      {purchaseVerdict.contextNote}
+                    </Text>
+                  ) : null}
+                  {purchaseVerdict.footnote ? (
+                    <Text style={[componentStyles.purchaseVerdictFootnote, { color: purchaseVerdict.textColor }]}>
+                      {purchaseVerdict.footnote}
+                    </Text>
+                  ) : null}
                 </View>
               </View>
               {showMeter ? (
@@ -364,6 +465,22 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
                 days: safe.daysLeft
               })}
             </Text>
+
+            {canLogPurchase ? (
+              <Pressable
+                accessibilityLabel={copy.purchaseVerdict.logExpenseA11y}
+                accessibilityRole="button"
+                accessibilityState={{ busy: loggingPurchase, disabled: loggingPurchase }}
+                disabled={loggingPurchase}
+                onPress={() => void handleLogPurchase()}
+                style={componentStyles.purchaseLogButton}
+              >
+                <Ionicons color={colors.greenDark} name="add-circle-outline" size={18} />
+                <Text style={componentStyles.textButtonLabel}>
+                  {loggingPurchase ? copy.purchaseVerdict.loggingExpense : copy.purchaseVerdict.logExpense}
+                </Text>
+              </Pressable>
+            ) : null}
           </ScrollView>
         </View>
       </BottomSheet>

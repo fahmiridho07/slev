@@ -509,6 +509,37 @@ test("simulatePurchase surfaces tight and below-daily insights from typical pace
   assertEqual(multiDayTight.daysAtTypicalPace >= 2, true, "multi-day tight should cover at least two typical days");
 });
 
+test("simulatePurchase falls back to safe daily when spending history is sparse", () => {
+  const safe = buildSafeToSpend({
+    accounts: [hubAccount(1_000_000, "2026-06-15T01:00:00.000Z")],
+    moments: [],
+    transfers: [],
+    referenceDate: juneMidpoint
+  });
+
+  assertEqual(safe.confident, false, "empty history should not be confident");
+  assertEqual(safe.typicalDaily, 0, "empty history should have zero typical daily");
+
+  const purchase = simulatePurchase({ amount: 900_000, safe });
+
+  assertEqual(purchase.usesHistoryReference, false, "should use safe daily fallback");
+  assertEqual(purchase.referenceDaily, safe.safeDaily, "reference daily should match safe daily");
+
+  const sparse = buildSafeToSpend({
+    accounts: [hubAccount(1_000_000, "2026-06-15T01:00:00.000Z")],
+    moments: trailingExpenseMoments(50_000, 10, juneMidpoint),
+    transfers: [],
+    referenceDate: juneMidpoint,
+    windowDays: 10
+  });
+  const sparsePurchase = simulatePurchase({ amount: 950_000, safe: sparse });
+
+  assertEqual(sparse.confident, false, "short history should stay uncertain");
+  assertEqual(sparsePurchase.usesHistoryReference, true, "should still use typical daily when available");
+  assertEqual(sparsePurchase.referenceDaily, sparse.typicalDaily, "reference daily should use typical spend");
+  assertEqual(sparsePurchase.insight, "tight_one_day", "typical pace should warn about tomorrow");
+});
+
 runTests();
 
 function test(name: string, run: () => void): void {

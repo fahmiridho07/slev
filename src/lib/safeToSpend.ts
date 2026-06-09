@@ -35,8 +35,10 @@ export type SimulatePurchaseResult = {
   daysAtTypicalPace: number;
   insight: PurchaseInsight;
   newSafeDaily: number;
+  referenceDaily: number;
   remainingBalance: number;
   shortfall: number;
+  usesHistoryReference: boolean;
   verdict: PurchaseVerdict;
 };
 
@@ -187,8 +189,10 @@ export function simulatePurchase({
   const remainingBalance = safe.spendableBalance - amount;
   const remainingActual = safe.effectiveBalance - amount;
   const newSafeDaily = Math.max(0, Math.round(remainingBalance / safe.daysLeft));
-  const typicalNeed = safe.typicalDaily * safe.daysLeft;
-  const coversTypicalDays = remainingBalance >= typicalNeed;
+  const usesHistoryReference = safe.typicalDaily > 0;
+  const referenceDaily = usesHistoryReference ? safe.typicalDaily : safe.safeDaily;
+  const referenceNeed = referenceDaily * safe.daysLeft;
+  const coversTypicalDays = remainingBalance >= referenceNeed;
   const verdict: PurchaseVerdict =
     remainingActual < 0
       ? "unaffordable"
@@ -203,15 +207,15 @@ export function simulatePurchase({
       : verdict === "dips_reserve"
         ? -remainingBalance
         : verdict === "over_pace"
-          ? Math.max(0, typicalNeed - remainingBalance)
+          ? Math.max(0, referenceNeed - remainingBalance)
           : 0;
   const daysAtTypicalPace =
-    safe.typicalDaily > 0 ? Math.floor(remainingBalance / safe.typicalDaily) : safe.daysLeft;
+    referenceDaily > 0 ? Math.floor(remainingBalance / referenceDaily) : safe.daysLeft;
   const insight = classifyPurchaseInsight({
     daysAtTypicalPace,
     newSafeDaily,
+    referenceDaily,
     remainingBalance,
-    safe,
     verdict
   });
 
@@ -221,8 +225,10 @@ export function simulatePurchase({
     daysAtTypicalPace,
     insight,
     newSafeDaily,
+    referenceDaily,
     remainingBalance,
     shortfall,
+    usesHistoryReference,
     verdict
   };
 }
@@ -230,14 +236,14 @@ export function simulatePurchase({
 function classifyPurchaseInsight({
   daysAtTypicalPace,
   newSafeDaily,
+  referenceDaily,
   remainingBalance,
-  safe,
   verdict
 }: {
   daysAtTypicalPace: number;
   newSafeDaily: number;
+  referenceDaily: number;
   remainingBalance: number;
-  safe: SafeToSpendResult;
   verdict: PurchaseVerdict;
 }): PurchaseInsight {
   if (verdict === "unaffordable") {
@@ -247,13 +253,13 @@ function classifyPurchaseInsight({
     return "dips_reserve";
   }
   if (verdict === "affordable") {
-    if (safe.typicalDaily > 0 && newSafeDaily >= Math.round(safe.typicalDaily * 1.1)) {
+    if (referenceDaily > 0 && newSafeDaily >= Math.round(referenceDaily * 1.1)) {
       return "comfortable";
     }
     return "affordable";
   }
 
-  if (safe.typicalDaily > 0 && remainingBalance < safe.typicalDaily) {
+  if (referenceDaily > 0 && remainingBalance < referenceDaily) {
     return "below_daily_need";
   }
   if (daysAtTypicalPace <= 1) {

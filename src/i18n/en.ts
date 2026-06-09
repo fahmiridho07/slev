@@ -296,24 +296,32 @@ export const en: AppStrings = {
       cannotAfford: "This is more than your spendable balance — short by {amount}.",
       purchaseVerdict: {
         comfortableHeadline: "Yes — room to spare.",
-        comfortableDetail:
-          "Daily allowance stays {amount}, above your usual {typical}.",
+        comfortableDetail: "Daily allowance stays {amount}, above {paceLabel} ({reference}/day).",
         affordableHeadline: "Yes — still on track.",
         affordableDetail: "Daily allowance becomes {amount} until {horizon}.",
         tightMultiHeadline: "Possible, but tight.",
         tightMultiDetail:
-          "At your usual pace ({typical}/day), this only lasts ~{days} of the {total} days left.",
+          "At {paceLabel} ({reference}/day), this only lasts ~{days} of the {total} days left.",
         tightOneHeadline: "Very tight — tomorrow will hurt.",
         tightOneDetail:
-          "Only ~1 day of usual spending left ({typical}/day). Daily allowance drops to {amount}.",
+          "Only ~1 day left at {paceLabel} ({reference}/day). Daily allowance drops to {amount}.",
         belowDailyHeadline: "Not really — daily life doesn't fit.",
-        belowDailyDetail: "What's left won't cover even one day at your usual {typical}/day.",
+        belowDailyDetail: "What's left won't cover even one day at {paceLabel} ({reference}/day).",
         dipsReserveHeadline: "Risky — touches your reserves.",
         dipsReserveDetail: "You'd dip {amount} into bills or monthly set-aside.",
         unaffordableHeadline: "No — not enough spendable cash.",
         unaffordableDetail: "You're short by {amount}.",
         horizonPayday: "payday",
-        horizonMonthEnd: "month-end"
+        horizonMonthEnd: "month-end",
+        paceLabelTypical: "your usual pace",
+        paceLabelSafe: "your safe daily allowance",
+        historyFallback: "Based on safe daily — log more expenses for a personalised pace.",
+        historyUncertain: "Rough pace estimate — a few more entries will sharpen this.",
+        categoryContext: "That's ~{multiple}× your usual {category} ({amount}).",
+        categoryContextSingle: "About one usual {category} ({amount}).",
+        logExpense: "Log as expense",
+        logExpenseA11y: "Log this purchase as an expense",
+        loggingExpense: "Saving..."
       }
     }
   },
