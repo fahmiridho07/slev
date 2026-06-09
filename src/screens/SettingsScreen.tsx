@@ -5,19 +5,16 @@ import { Pressable, StyleProp, Text, TextInput, View, ViewStyle } from "react-na
 import {
   BottomSheet,
   DeleteConfirmDialog,
-  EmptyState,
-  ListActionsOnboardingTip,
   ScreenHero,
   ScreenTabBar,
   SegmentedControl,
   StickyTabScreen
 } from "../components";
-import { useListActionsHint } from "../hooks/useListActionsHint";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { SettingsTabKey } from "../features/app.types";
 import { ExpenseCategory } from "../features/spendingMemory.types";
 import { CategoryEditForm } from "../features/settings/CategoryEditForm";
-import { CategorySettingsList } from "../features/settings/CategorySettingsList";
+import { CategorySettingsPanel } from "../features/settings/CategorySettingsPanel";
 import { BalancePanel } from "../features/budget/BalancePanel";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
 import { formatString, getCategoryDeleteMessage, getImportErrorToast } from "../i18n";
@@ -25,7 +22,6 @@ import { formatAmountInput, parseAmountInput } from "../lib/formatMoney";
 import { hapticSelection, hapticWarning } from "../lib/haptics";
 import { FormValidationError } from "../lib/formValidation";
 import { ImportFieldError } from "../features/settings/dataValidation";
-import { CategoryFieldError } from "../features/settings/settingsValidation";
 import { listCorruptStorageIssues, StorageHealthIssue } from "../services/storageHealth";
 import { shallowEqual, useActions, useFinanceSelector } from "../state/useFinance";
 import { useTheme } from "../hooks/useTheme";
@@ -90,27 +86,18 @@ function SettingsScreenComponent({
     ]
   );
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
-  const [categoryDraft, setCategoryDraft] = useState("");
-  const [categoryFieldError, setCategoryFieldError] = useState<FormValidationError<CategoryFieldError> | null>(null);
   const [pendingDeleteCategory, setPendingDeleteCategory] = useState<ExpenseCategory | null>(null);
   const [importDraft, setImportDraft] = useState("");
   const [importFieldError, setImportFieldError] = useState<FormValidationError<ImportFieldError> | null>(null);
   const [importConfirmVisible, setImportConfirmVisible] = useState(false);
   const [importing, setImporting] = useState(false);
   const [pendingResetIssue, setPendingResetIssue] = useState<StorageHealthIssue | null>(null);
-  const { dismiss: dismissCategoriesHint, visible: showCategoriesHint } = useListActionsHint(
-    "settings_categories",
-    activeTab === "categories" && expenseCategories.length > 0
-  );
   function editCategory(category: ExpenseCategory) {
     hapticSelection();
     setEditingCategory(category);
   }
 
-  function resetAddCategoryDraft() {
-    setCategoryDraft("");
-    setCategoryFieldError(null);
-  }
+
 
   const pickImportFile = useCallback(async () => {
     const result = await DocumentPicker.getDocumentAsync({
@@ -241,69 +228,13 @@ function SettingsScreenComponent({
 
     if (activeTab === "categories") {
       return (
-        <View style={styles.cardStack}>
-          {showCategoriesHint && (
-            <ListActionsOnboardingTip
-              body={strings.listHints.settings_categories.body}
-              onDismiss={dismissCategoriesHint}
-              title={strings.listHints.settings_categories.title}
-            />
-          )}
-          <View style={styles.capturePanel}>
-            <Text style={componentStyles.microLabel}>{strings.settings.categories.add}</Text>
-            <TextInput
-              accessibilityLabel={
-                categoryFieldError?.field === "label"
-                  ? `${strings.settings.categories.nameA11y}. ${categoryFieldError.message}`
-                  : strings.settings.categories.nameA11y
-              }
-              onChangeText={(value) => {
-                setCategoryFieldError((current) => (current?.field === "label" ? null : current));
-                setCategoryDraft(value);
-              }}
-              placeholder={strings.settings.categories.placeholder}
-              placeholderTextColor={colors.muted}
-              style={styles.input}
-              value={categoryDraft}
-            />
-            {categoryFieldError?.field === "label" && (
-              <Text accessibilityLiveRegion="polite" style={componentStyles.fieldErrorText}>
-                {categoryFieldError.message}
-              </Text>
-            )}
-            <View style={componentStyles.editActions}>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => {
-                  void (async () => {
-                    const result = await actions.saveCategory({ label: categoryDraft });
-                    if (!result.ok) {
-                      hapticWarning();
-                      if (result.validation) {
-                        setCategoryFieldError(result.validation);
-                      }
-                      return;
-                    }
-                    resetAddCategoryDraft();
-                  })();
-                }}
-                style={styles.smallPrimaryButton}
-              >
-                <Text style={styles.primaryButtonText}>{strings.settings.categories.save}</Text>
-              </Pressable>
-            </View>
-          </View>
-          {expenseCategories.length === 0 ? (
-            <EmptyState text={strings.settings.categories.empty} />
-          ) : (
-            <CategorySettingsList
-              accounts={accounts}
-              categories={expenseCategories}
-              onDelete={setPendingDeleteCategory}
-              onEdit={editCategory}
-            />
-          )}
-        </View>
+        <CategorySettingsPanel
+          accounts={accounts}
+          categories={expenseCategories}
+          onDelete={setPendingDeleteCategory}
+          onEdit={editCategory}
+          onSaveCategory={actions.saveCategory}
+        />
       );
     }
 
@@ -397,15 +328,13 @@ function SettingsScreenComponent({
     moments,
     transfers,
     accounts,
-    categoryDraft,
-    categoryFieldError,
+    actions.saveCategory,
     colorScheme,
     colors.coral,
     colors.greenDark,
     colors.muted,
     componentStyles,
     corruptIssues,
-    dismissCategoriesHint,
     editingCategory,
     expenseCategories,
     importDraft,
@@ -421,7 +350,6 @@ function SettingsScreenComponent({
     setSpendBuffer,
     spendBuffer,
     setReduceMotionPreference,
-    showCategoriesHint,
     strings,
     styles
   ]);

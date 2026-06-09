@@ -413,7 +413,6 @@ export type AppStrings = {
       custom: string;
       default: string;
       defaultRenameHint: string;
-      defaultStoredAs: string;
       edit: string;
       editA11y: string;
       empty: string;

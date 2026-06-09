@@ -65,42 +65,41 @@ export function CategorySettingsList({
   );
 
   return (
-    <View style={styles.listPanel}>
-      <Text style={styles.captureReorderHint}>{categoryStrings.reorderHint}</Text>
-      {orderedExpenseCategories.map((category, index) => {
-        const displayLabel = displayContext(category.label);
-        const canMoveUp = index > 0;
-        const canMoveDown = index < orderedExpenseCategories.length - 1;
+    <View style={styles.categoryListSection}>
+      <Text style={styles.settingCopy}>{categoryStrings.reorderHint}</Text>
+      <View style={styles.listPanel}>
+        {orderedExpenseCategories.map((category, index) => {
+          const displayLabel = displayContext(category.label);
+          const canMoveUp = index > 0;
+          const canMoveDown = index < orderedExpenseCategories.length - 1;
 
-        return (
-          <View
-            key={category.id}
-            style={[
-              index > 0 && styles.listPanelContinued,
-              index < orderedExpenseCategories.length - 1 && styles.listPanelMiddle
-            ]}
-          >
-            <ListActionRow
-              accessibilityHint={strings.common.swipeToDelete}
-              accessibilityLabel={formatString(categoryStrings.editA11y, { label: displayLabel })}
-              onDelete={() => onDelete(category)}
-              onPress={() => onEdit(category)}
+          return (
+            <View
+              key={category.id}
+              style={[
+                index > 0 && styles.listPanelContinued,
+                index < orderedExpenseCategories.length - 1 && styles.listPanelMiddle
+              ]}
             >
-              <View style={styles.categorySettingsRow}>
-                <View style={styles.categorySettingsMain}>
-                  <View style={styles.analyticsRowHeader}>
-                    <Text style={componentStyles.analyticsTitle}>{displayLabel}</Text>
-                    <Text style={styles.analyticsAmount}>
-                      {category.isDefault ? categoryStrings.default : categoryStrings.custom}
-                    </Text>
-                  </View>
-                  {category.isDefault ? (
-                    <Text style={styles.settingCopy}>
-                      {formatString(categoryStrings.defaultStoredAs, { label: category.label })}
-                    </Text>
-                  ) : null}
+              <View style={styles.categoryListRow}>
+                <View style={styles.categoryListTapArea}>
+                  <ListActionRow
+                    accessibilityHint={strings.common.swipeToDelete}
+                    accessibilityLabel={formatString(categoryStrings.editA11y, { label: displayLabel })}
+                    onDelete={() => onDelete(category)}
+                    onPress={() => onEdit(category)}
+                  >
+                    <View style={styles.categoryListMain}>
+                      <Text numberOfLines={1} style={componentStyles.analyticsTitle}>
+                        {displayLabel}
+                      </Text>
+                      <Text style={styles.settingCopy}>
+                        {category.isDefault ? categoryStrings.default : categoryStrings.custom}
+                      </Text>
+                    </View>
+                  </ListActionRow>
                 </View>
-                <View style={styles.categoryReorderControls}>
+                <View style={styles.categoryReorderRail}>
                   <Pressable
                     accessibilityLabel={formatString(categoryStrings.moveUpA11y, { label: displayLabel })}
                     accessibilityRole="button"
@@ -109,8 +108,9 @@ export function CategorySettingsList({
                     onPress={() => moveCategory(category, "up")}
                     style={[styles.categoryReorderButton, !canMoveUp && styles.categoryReorderButtonDisabled]}
                   >
-                    <Ionicons color={canMoveUp ? colors.greenDark : colors.line} name="chevron-up" size={18} />
+                    <Ionicons color={canMoveUp ? colors.greenDark : colors.line} name="chevron-up" size={16} />
                   </Pressable>
+                  <View style={styles.categoryReorderDivider} />
                   <Pressable
                     accessibilityLabel={formatString(categoryStrings.moveDownA11y, { label: displayLabel })}
                     accessibilityRole="button"
@@ -119,14 +119,14 @@ export function CategorySettingsList({
                     onPress={() => moveCategory(category, "down")}
                     style={[styles.categoryReorderButton, !canMoveDown && styles.categoryReorderButtonDisabled]}
                   >
-                    <Ionicons color={canMoveDown ? colors.greenDark : colors.line} name="chevron-down" size={18} />
+                    <Ionicons color={canMoveDown ? colors.greenDark : colors.line} name="chevron-down" size={16} />
                   </Pressable>
                 </View>
               </View>
-            </ListActionRow>
-          </View>
-        );
-      })}
+            </View>
+          );
+        })}
+      </View>
     </View>
   );
 }

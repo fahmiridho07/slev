@@ -481,32 +481,48 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   captureReorderHint: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: "600",
-    marginBottom: 8
+    fontWeight: "600"
   },
-  categorySettingsRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 10
+  categoryListSection: {
+    gap: 8
   },
-  categorySettingsMain: {
+  categoryListRow: {
+    alignItems: "stretch",
+    flexDirection: "row"
+  },
+  categoryListTapArea: {
     flex: 1,
-    gap: 4,
-    minWidth: 0
+    minWidth: 0,
+    overflow: "hidden"
   },
-  categoryReorderControls: {
-    alignItems: "center",
-    gap: 2
+  categoryListMain: {
+    gap: 2,
+    paddingHorizontal: 14,
+    paddingVertical: 12
+  },
+  categoryReorderRail: {
+    alignSelf: "center",
+    backgroundColor: colors.faint,
+    borderColor: colors.line,
+    borderLeftWidth: 1,
+    borderRadius: 0,
+    flexDirection: "column",
+    marginRight: 10,
+    overflow: "hidden"
   },
   categoryReorderButton: {
     alignItems: "center",
-    borderRadius: 8,
     justifyContent: "center",
-    minHeight: 36,
-    minWidth: 36
+    minHeight: 32,
+    minWidth: 40
+  },
+  categoryReorderDivider: {
+    backgroundColor: colors.line,
+    height: 1,
+    width: "100%"
   },
   categoryReorderButtonDisabled: {
-    opacity: 0.45
+    opacity: 0.4
   },
   addNoteButton: {
     alignItems: "center",
