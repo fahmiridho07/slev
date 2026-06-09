@@ -190,9 +190,9 @@ export type AppStrings = {
       billsExceedBalance: string;
       billsReserve: string;
       spendBuffer: string;
-      billsReserveTile: string;
       checkPurchase: string;
       checkPurchaseA11y: string;
+      compactBillsReserve: string;
       compactTypicalDaily: string;
       daysLeftChip: string;
       heroLabel: string;
@@ -201,6 +201,9 @@ export type AppStrings = {
       paceOver: string;
       paceUnder: string;
       paceUnknown: string;
+      paydayHint: string;
+      paydayHintAction: string;
+      paydayHintA11y: string;
       safeDailyTile: string;
       spendableTile: string;
       dipsReserve: string;

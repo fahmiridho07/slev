@@ -32,7 +32,11 @@ function getPaceCopy(pace: SafeToSpendPace, copy: AppStrings["home"]["safeToSpen
   return copy.paceUnknown;
 }
 
-function SafeToSpendCardComponent() {
+type SafeToSpendCardProps = {
+  onOpenSettings: () => void;
+};
+
+function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
   const { colors, componentStyles, paydayDayOfMonth, reduceMotion, spendBuffer, strings, styles } = useTheme();
   const copy = strings.home.safeToSpend;
   const { accounts, moments, recurringBills, transfers } = useFinanceSelector(
@@ -176,7 +180,7 @@ function SafeToSpendCardComponent() {
         : styles.homeBalanceChipTextNeutral;
   const typicalDailyColor =
     safe.pace === "under" ? colors.greenDark : safe.pace === "over" ? colors.amber : colors.muted;
-  const showBillsReserveTile = safe.billsReserve > 0;
+  const showPaydayHint = paydayDayOfMonth == null;
 
   function closePurchaseSheet() {
     setSheetOpen(false);
@@ -206,6 +210,22 @@ function SafeToSpendCardComponent() {
           </View>
         </View>
 
+        {showPaydayHint ? (
+          <View style={styles.homeBalanceHint}>
+            <Text style={styles.homeBalanceHintText}>
+              {copy.paydayHint}{" "}
+              <Text
+                accessibilityLabel={copy.paydayHintA11y}
+                accessibilityRole="link"
+                onPress={onOpenSettings}
+                style={styles.homeBalanceHintAction}
+              >
+                {copy.paydayHintAction}
+              </Text>
+            </Text>
+          </View>
+        ) : null}
+
         {safe.spendableBalance < 0 ? (
           <Text style={styles.heroWarningText}>
             {formatString(copy.billsExceedBalance, {
@@ -227,26 +247,15 @@ function SafeToSpendCardComponent() {
             </Text>
           </View>
 
-          <View
-            style={[
-              styles.monthCashflowTile,
-              showBillsReserveTile ? styles.homeBalanceTileReserve : styles.homeBalanceTileSpendable
-            ]}
-          >
+          <View style={[styles.monthCashflowTile, styles.homeBalanceTileSpendable]}>
             <View style={styles.pulseTopRow}>
               <View style={[styles.pulseIconBadge, styles.pulseIconBalance]}>
-                <Ionicons
-                  color={colors.blue}
-                  name={showBillsReserveTile ? "calendar-outline" : "cash-outline"}
-                  size={15}
-                />
+                <Ionicons color={colors.blue} name="cash-outline" size={15} />
               </View>
-              <Text style={styles.monthCashflowTileLabel}>
-                {showBillsReserveTile ? copy.billsReserveTile : copy.spendableTile}
-              </Text>
+              <Text style={styles.monthCashflowTileLabel}>{copy.spendableTile}</Text>
             </View>
             <Text numberOfLines={1} style={styles.monthCashflowTileValue}>
-              {formatRupiah(showBillsReserveTile ? safe.billsReserve : safe.spendableBalance)}
+              {formatRupiah(safe.spendableBalance)}
             </Text>
           </View>
         </View>
@@ -256,6 +265,11 @@ function SafeToSpendCardComponent() {
             {formatString(copy.compactTypicalDaily, { amount: formatRupiah(safe.typicalDaily) })}
             {!safe.confident ? ` · ${copy.typicalDailyUncertain}` : ""}
           </Text>
+          {safe.billsReserve > 0 ? (
+            <Text style={styles.homeBalanceMetaSecondary}>
+              {formatString(copy.compactBillsReserve, { amount: formatRupiah(safe.billsReserve) })}
+            </Text>
+          ) : null}
           {safe.spendBuffer > 0 ? (
             <Text style={styles.homeBalanceMetaSecondary}>
               {formatString(copy.spendBuffer, { amount: formatRupiah(safe.spendBuffer) })}

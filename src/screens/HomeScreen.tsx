@@ -43,7 +43,7 @@ function HomeScreenComponent({
       refreshControl={refreshControl}
     >
       <View style={styles.cardStack}>
-        <SafeToSpendCard />
+        <SafeToSpendCard onOpenSettings={onOpenSettings} />
         <View
           onLayout={(event) => {
             captureOffsetRef.current = event.nativeEvent.layout.y;

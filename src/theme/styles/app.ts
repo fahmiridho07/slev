@@ -682,10 +682,6 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   homeBalanceChipTextNeutral: {
     color: colors.muted
   },
-  homeBalanceTileReserve: {
-    backgroundColor: colors.surfaceInfo,
-    borderColor: colors.borderInfo
-  },
   homeBalanceTileSpendable: {
     backgroundColor: colors.canvas,
     borderColor: colors.line
@@ -702,6 +698,25 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     color: colors.muted,
     fontSize: 13,
     fontWeight: "600",
+    lineHeight: 18
+  },
+  homeBalanceHint: {
+    backgroundColor: colors.surfaceInfo,
+    borderColor: colors.borderInfo,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10
+  },
+  homeBalanceHintText: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18
+  },
+  homeBalanceHintAction: {
+    color: colors.greenDark,
+    fontSize: 13,
+    fontWeight: "700",
     lineHeight: 18
   },
   homePurchaseCta: {
