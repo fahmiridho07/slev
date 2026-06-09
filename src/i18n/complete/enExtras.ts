@@ -166,7 +166,6 @@ export const enExtras: AppStringsExtras = {
       vsLastMonthFlat: "Same as last month",
       viewEntriesA11y: "View {count} entries for {category}",
       drilldownTitle: "{category} · {month}",
-      drilldownSummary: "{count} entries · {total}",
       drilldownEmpty: "No entries this month",
       categoryNewThisMonth: "New this month",
       categoryDeltaUp: "+{percent}%",
@@ -196,7 +195,6 @@ export const enExtras: AppStringsExtras = {
     chart: {
       title: "This month at a glance",
       titleMonth: "{month} at a glance",
-      totalAcross: "{total} across {count} categories",
       legendValue: "{amount} · {percent}%",
       a11ySummary: "Spending chart: {total} across {count} categories. {breakdown}"
     },

@@ -166,7 +166,6 @@ export const idExtras: AppStringsExtras = {
       vsLastMonthFlat: "Sama dengan bulan lalu",
       viewEntriesA11y: "Lihat {count} catatan untuk {category}",
       drilldownTitle: "{category} · {month}",
-      drilldownSummary: "{count} catatan · {total}",
       drilldownEmpty: "Tidak ada catatan di bulan ini",
       categoryNewThisMonth: "Baru bulan ini",
       categoryDeltaUp: "+{percent}%",
@@ -196,7 +195,6 @@ export const idExtras: AppStringsExtras = {
     chart: {
       title: "Bulan ini sekilas",
       titleMonth: "{month} sekilas",
-      totalAcross: "{total} di {count} kategori",
       legendValue: "{amount} · {percent}%",
       a11ySummary: "Grafik pengeluaran: {total} di {count} kategori. {breakdown}"
     },

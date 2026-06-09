@@ -37,13 +37,6 @@ export function CategoryVerticalBarChart({
 
   return (
     <View style={styles.chartColumnPanel}>
-      <Text style={styles.chartColumnCaption}>
-        {formatString(chartStrings.totalAcross, {
-          total: formatRupiah(total),
-          count: rows.length
-        })}
-      </Text>
-
       <View style={styles.chartColumnChart}>
         {visibleRows.map((row, index) => {
           const percent = Math.round(row.share * 100);

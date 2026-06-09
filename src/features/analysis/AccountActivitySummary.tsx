@@ -82,9 +82,6 @@ export function AccountActivitySummary({ moments, monthOffset }: AccountActivity
             />
           ) : (
             <>
-              {emptyReason ? (
-                <EmptyState text={getTrackerEmptyCopy(emptyReason, "expense", strings.patterns.tracker)} />
-              ) : null}
               <CategoryVerticalBarChart onPressRow={openRow} rows={rows} />
               {showAllCategories ? (
                 <CategoryBreakdownRows

@@ -341,7 +341,6 @@ export type AppStrings = {
       categoryDeltaUp: string;
       categoryNewThisMonth: string;
       drilldownEmpty: string;
-      drilldownSummary: string;
       drilldownTitle: string;
       vsLastMonthDown: string;
       vsLastMonthFlat: string;
@@ -363,7 +362,6 @@ export type AppStrings = {
       legendValue: string;
       title: string;
       titleMonth: string;
-      totalAcross: string;
     };
     generated: {
       contextMoreVisibleDetailNoPrevious: string;

@@ -1,11 +1,10 @@
 import React, { useMemo } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { BottomSheet, EmptyState } from "../../components";
 import { formatString } from "../../i18n";
 import { formatLocaleMonthYear } from "../../i18n/localeDate";
 import { BreakdownFilterType, filterBreakdownMoments } from "../../lib/breakdownDrilldown";
 import { FinanceBreakdownRow } from "../../lib/financeEngine";
-import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { SpendingMoment } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 import { BreakdownMomentItem } from "./BreakdownMomentItem";
@@ -51,13 +50,6 @@ export function CategoryBreakdownSheet({
       visible={visible}
     >
       <View style={componentStyles.sheetForm}>
-        <Text style={styles.settingCopy}>
-          {formatString(breakdownStrings.drilldownSummary, {
-            count: entries.length,
-            total: formatRupiah(row.amount)
-          })}
-        </Text>
-
         <ScrollView
           contentContainerStyle={styles.repeatBlock}
           showsVerticalScrollIndicator={false}
