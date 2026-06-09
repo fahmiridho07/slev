@@ -46,3 +46,36 @@ export async function setCapturePickerOrder(order: CapturePickerOrder): Promise<
     })
   );
 }
+
+export async function replaceCategoryKeyInCapturePickerOrder(
+  oldKey: string,
+  newKey: string
+): Promise<boolean> {
+  if (oldKey === newKey) {
+    return true;
+  }
+
+  const order = await getCapturePickerOrder();
+  if (!order.categoryKeys.includes(oldKey)) {
+    return true;
+  }
+
+  const seen = new Set<string>();
+  const categoryKeys = order.categoryKeys.map((key) => {
+    if (key !== oldKey) {
+      return key;
+    }
+    return newKey;
+  }).filter((key) => {
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+
+  return setCapturePickerOrder({
+    ...order,
+    categoryKeys
+  });
+}

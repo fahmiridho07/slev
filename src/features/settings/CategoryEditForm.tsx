@@ -60,6 +60,11 @@ function CategoryEditFormComponent({ category, onCancel, onSaved }: CategoryEdit
             {fieldError.message}
           </Text>
         )}
+        {category.isDefault ? (
+          <Text style={styles.settingCopy}>{strings.settings.categories.defaultRenameHint}</Text>
+        ) : (
+          <Text style={styles.settingCopy}>{strings.settings.categories.renameHint}</Text>
+        )}
       </ScrollView>
       <View style={componentStyles.sheetFooter}>
         <View style={componentStyles.editActions}>

@@ -56,6 +56,28 @@ export async function deleteManualTemplate(id: string): Promise<WriteResult<Manu
   return { data: updated, persisted };
 }
 
+export async function rewriteContextInManualTemplates(
+  oldContext: SpendingContext,
+  newContext: SpendingContext
+): Promise<boolean> {
+  if (oldContext === newContext) return true;
+
+  const current = await listManualTemplates();
+  let changed = false;
+  const updated = current.map((template) => {
+    if (template.type !== "expense" || template.context !== oldContext) return template;
+    changed = true;
+    return {
+      ...template,
+      context: newContext,
+      updatedAt: new Date().toISOString()
+    };
+  });
+  if (!changed) return true;
+
+  return writeJson(MANUAL_TEMPLATES_KEY, updated);
+}
+
 export async function rewriteAccountLabelInManualTemplates(
   oldLabel: string,
   newLabel: string

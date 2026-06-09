@@ -80,11 +80,14 @@ import {
   listExpenseCategories,
   saveExpenseCategory
 } from "../services/categoryRepository";
+import { replaceCategoryKeyInCapturePickerOrder } from "../services/capturePickerOrder";
 import { clearBalanceAnchor } from "../services/balanceAnchorRepository";
+import { normalizeSpendingContext } from "../data/spendingMemory";
 import {
   clearManualFinance,
   deleteManualTemplate,
   listManualTemplates,
+  rewriteContextInManualTemplates,
   saveManualTemplate
 } from "../services/manualFinanceRepository";
 import { exportAllDataWithReport, importAllData } from "../services/storageBackup";
@@ -100,6 +103,7 @@ import {
   restoreSpendingMoment,
   listPatternFeedback,
   listSpendingMoments,
+  rewriteContextInMoments,
   savePatternFeedback,
   saveSpendingMoment,
   updateSpendingMoment
@@ -475,7 +479,25 @@ export function createFinanceActions(
       return { ok: false, validation: validationError };
     }
 
-    const { data: updated, persisted, reason } = await saveExpenseCategory(input);
+    const trimmedLabel = normalizeSpendingContext(input.label);
+    const existing = input.id
+      ? getState().expenseCategories.find((category) => category.id === input.id)
+      : undefined;
+    const isRename = Boolean(existing && existing.label !== trimmedLabel);
+
+    let categoryResult: Awaited<ReturnType<typeof saveExpenseCategory>>;
+    if (isRename && existing?.isDefault) {
+      const archived = await deleteExpenseCategory(existing.id);
+      if (!archived.persisted) {
+        notifyWriteFailure(STORAGE_KEYS.expenseCategories);
+        return { ok: false };
+      }
+      categoryResult = await saveExpenseCategory({ label: trimmedLabel });
+    } else {
+      categoryResult = await saveExpenseCategory({ id: input.id, label: trimmedLabel });
+    }
+
+    const { data: updated, persisted, reason } = categoryResult;
     if (!persisted) {
       if (reason === "duplicate") {
         return { ok: false, validation: { field: "label", message: getCategoryDuplicateToast() } };
@@ -486,8 +508,26 @@ export function createFinanceActions(
       notifyWriteFailure(STORAGE_KEYS.expenseCategories);
       return { ok: false };
     }
+
+    if (isRename && existing) {
+      const [momentsUpdated, templatesUpdated, orderUpdated] = await Promise.all([
+        rewriteContextInMoments(existing.label, trimmedLabel),
+        rewriteContextInManualTemplates(existing.label, trimmedLabel),
+        replaceCategoryKeyInCapturePickerOrder(existing.label, trimmedLabel)
+      ]);
+      if (!momentsUpdated || !templatesUpdated || !orderUpdated) {
+        notifyWriteFailure(STORAGE_KEYS.moments);
+        await reload();
+        return { ok: false };
+      }
+
+      const [moments, manualTemplates] = await Promise.all([listSpendingMoments(), listManualTemplates()]);
+      dispatch({ type: "set_moments", moments });
+      dispatch({ type: "set_manual_templates", manualTemplates });
+    }
+
     dispatch({ type: "set_expense_categories", expenseCategories: updated });
-    setMessage(getCategorySavedToast(input.label.trim()));
+    setMessage(getCategorySavedToast(trimmedLabel));
     return { ok: true };
   }
 

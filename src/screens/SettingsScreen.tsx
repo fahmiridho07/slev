@@ -6,7 +6,6 @@ import {
   BottomSheet,
   DeleteConfirmDialog,
   EmptyState,
-  ListActionRow,
   ListActionsOnboardingTip,
   ScreenHero,
   ScreenTabBar,
@@ -18,6 +17,7 @@ import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { SettingsTabKey } from "../features/app.types";
 import { ExpenseCategory } from "../features/spendingMemory.types";
 import { CategoryEditForm } from "../features/settings/CategoryEditForm";
+import { CategorySettingsList } from "../features/settings/CategorySettingsList";
 import { BalancePanel } from "../features/budget/BalancePanel";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
 import { formatString, getCategoryDeleteMessage, getImportErrorToast } from "../i18n";
@@ -296,39 +296,12 @@ function SettingsScreenComponent({
           {expenseCategories.length === 0 ? (
             <EmptyState text={strings.settings.categories.empty} />
           ) : (
-            <View style={styles.listPanel}>
-              {expenseCategories.map((category, index) => (
-                <View
-                  key={category.id}
-                  style={[
-                    index > 0 && styles.listPanelContinued,
-                    index < expenseCategories.length - 1 && styles.listPanelMiddle
-                  ]}
-                >
-                  <ListActionRow
-                    accessibilityHint={strings.common.swipeToDelete}
-                    accessibilityLabel={
-                      category.isDefault
-                        ? category.label
-                        : formatString(strings.settings.categories.editA11y, { label: category.label })
-                    }
-                    onDelete={() => setPendingDeleteCategory(category)}
-                    onPress={category.isDefault ? undefined : () => editCategory(category)}
-                  >
-                    <View style={styles.analyticsRow}>
-                      <View style={styles.analyticsRowHeader}>
-                        <Text style={componentStyles.analyticsTitle}>{category.label}</Text>
-                        <Text style={styles.analyticsAmount}>
-                          {category.isDefault
-                            ? strings.settings.categories.default
-                            : strings.settings.categories.custom}
-                        </Text>
-                      </View>
-                    </View>
-                  </ListActionRow>
-                </View>
-              ))}
-            </View>
+            <CategorySettingsList
+              accounts={accounts}
+              categories={expenseCategories}
+              onDelete={setPendingDeleteCategory}
+              onEdit={editCategory}
+            />
           )}
         </View>
       );
@@ -423,6 +396,7 @@ function SettingsScreenComponent({
     activeTab,
     moments,
     transfers,
+    accounts,
     categoryDraft,
     categoryFieldError,
     colorScheme,

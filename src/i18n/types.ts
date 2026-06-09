@@ -412,11 +412,17 @@ export type AppStrings = {
       add: string;
       custom: string;
       default: string;
+      defaultRenameHint: string;
+      defaultStoredAs: string;
       edit: string;
       editA11y: string;
       empty: string;
+      moveDownA11y: string;
+      moveUpA11y: string;
       nameA11y: string;
       placeholder: string;
+      renameHint: string;
+      reorderHint: string;
       save: string;
     };
     data: {

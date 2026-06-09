@@ -481,7 +481,32 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   captureReorderHint: {
     color: colors.muted,
     fontSize: 12,
-    fontWeight: "600"
+    fontWeight: "600",
+    marginBottom: 8
+  },
+  categorySettingsRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10
+  },
+  categorySettingsMain: {
+    flex: 1,
+    gap: 4,
+    minWidth: 0
+  },
+  categoryReorderControls: {
+    alignItems: "center",
+    gap: 2
+  },
+  categoryReorderButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    justifyContent: "center",
+    minHeight: 36,
+    minWidth: 36
+  },
+  categoryReorderButtonDisabled: {
+    opacity: 0.45
   },
   addNoteButton: {
     alignItems: "center",

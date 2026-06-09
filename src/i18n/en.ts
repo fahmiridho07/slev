@@ -162,6 +162,12 @@ export const en: AppStrings = {
       save: "Save category",
       default: "Default",
       custom: "Custom",
+      defaultStoredAs: "Key: {label}",
+      reorderHint: "Use arrows to set the order shown in capture.",
+      moveUpA11y: "Move {label} up",
+      moveDownA11y: "Move {label} down",
+      renameHint: "Renaming updates past expenses that used this category.",
+      defaultRenameHint: "Renaming a default category hides the old one and updates past expenses.",
       empty: "No active categories. Add a category above to start assigning expenses again."
     },
     data: {
@@ -214,7 +220,7 @@ export const en: AppStrings = {
     },
     settings_categories: {
       title: "Category list actions",
-      body: "Swipe left to hide any category. Tap a custom category to rename it."
+      body: "Tap to edit any category. Use arrows to reorder capture. Swipe left to hide."
     }
   },
   home: {

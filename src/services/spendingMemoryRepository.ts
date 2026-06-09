@@ -84,6 +84,28 @@ export async function updateSpendingMoment(
   return { data: sortMoments(updated), persisted, found: true };
 }
 
+export async function rewriteContextInMoments(
+  oldContext: string,
+  newContext: string
+): Promise<boolean> {
+  if (oldContext === newContext) return true;
+
+  const moments = await listSpendingMoments();
+  let changed = false;
+  const updated = moments.map((moment) => {
+    if (moment.type !== "expense" || moment.context !== oldContext) return moment;
+    changed = true;
+    return {
+      ...moment,
+      context: newContext,
+      updatedAt: new Date().toISOString()
+    };
+  });
+  if (!changed) return true;
+
+  return persistSpendingMoments(updated);
+}
+
 export async function rewriteAccountLabelInMoments(
   oldLabel: string,
   newLabel: string
