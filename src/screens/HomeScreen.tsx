@@ -16,7 +16,7 @@ function HomeScreenComponent({
   onOpenSettings,
   scrollContentStyle
 }: HomeScreenProps) {
-  const { reduceMotion } = useTheme();
+  const { reduceMotion, styles } = useTheme();
   const { refreshControl } = usePullToRefresh();
   const scrollRef = useRef<ScrollView>(null);
   const captureOffsetRef = useRef(0);
@@ -42,17 +42,19 @@ function HomeScreenComponent({
       keyboardShouldPersistTaps="handled"
       refreshControl={refreshControl}
     >
-      <SafeToSpendCard />
-      <View
-        onLayout={(event) => {
-          captureOffsetRef.current = event.nativeEvent.layout.y;
-        }}
-      >
-        <CapturePanel
-          compactTypePicker
-          focusAmountToken={captureFocusRequest}
-          onOpenSettings={onOpenSettings}
-        />
+      <View style={styles.cardStack}>
+        <SafeToSpendCard />
+        <View
+          onLayout={(event) => {
+            captureOffsetRef.current = event.nativeEvent.layout.y;
+          }}
+        >
+          <CapturePanel
+            compactTypePicker
+            focusAmountToken={captureFocusRequest}
+            onOpenSettings={onOpenSettings}
+          />
+        </View>
       </View>
     </ScrollView>
   );

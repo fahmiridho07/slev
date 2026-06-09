@@ -617,6 +617,103 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     fontWeight: "800",
     letterSpacing: 0
   },
+  homeBalanceCard: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 14,
+    padding: 18,
+    ...shadows.soft
+  },
+  homeBalanceLabel: {
+    color: colors.muted,
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0,
+    textTransform: "uppercase"
+  },
+  homeBalanceValue: {
+    color: colors.ink,
+    fontSize: 34,
+    fontWeight: "900",
+    letterSpacing: 0,
+    lineHeight: 40
+  },
+  homeBalanceChipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  homeBalanceChip: {
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 5
+  },
+  homeBalanceChipPositive: {
+    backgroundColor: colors.surfacePositive,
+    borderColor: colors.borderMint
+  },
+  homeBalanceChipWarning: {
+    backgroundColor: colors.surfaceWarning,
+    borderColor: colors.borderWarning
+  },
+  homeBalanceChipNeutral: {
+    backgroundColor: colors.canvas,
+    borderColor: colors.line,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 5
+  },
+  homeBalanceChipText: {
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 16
+  },
+  homeBalanceChipTextPositive: {
+    color: colors.greenDark
+  },
+  homeBalanceChipTextWarning: {
+    color: colors.amber
+  },
+  homeBalanceChipTextNeutral: {
+    color: colors.muted
+  },
+  homeBalanceTileReserve: {
+    backgroundColor: colors.surfaceInfo,
+    borderColor: colors.borderInfo
+  },
+  homeBalanceTileSpendable: {
+    backgroundColor: colors.canvas,
+    borderColor: colors.line
+  },
+  homeBalanceMeta: {
+    gap: 4
+  },
+  homeBalanceMetaLine: {
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18
+  },
+  homeBalanceMetaSecondary: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18
+  },
+  homePurchaseCta: {
+    alignItems: "center",
+    backgroundColor: colors.greenDark,
+    borderRadius: 8,
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "center",
+    minHeight: 48,
+    paddingHorizontal: 18
+  },
   monthPeriodButton: {
     alignItems: "center",
     borderRadius: 8,
