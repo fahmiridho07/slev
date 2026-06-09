@@ -246,6 +246,11 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     paddingVertical: 10,
     width: "31.5%"
   },
+  contextChipCompact: {
+    minHeight: 36,
+    paddingHorizontal: 8,
+    paddingVertical: 8
+  },
   contextChipActive: {
     backgroundColor: colors.mint,
     borderColor: colors.green

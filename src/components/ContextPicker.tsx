@@ -39,7 +39,11 @@ function ContextPickerComponent({
                   onSelect(item);
                 }
               }}
-              style={[componentStyles.contextChip, active && componentStyles.contextChipActive]}
+              style={[
+                componentStyles.contextChip,
+                compact && componentStyles.contextChipCompact,
+                active && componentStyles.contextChipActive
+              ]}
             >
               <Text style={[componentStyles.contextChipText, active && componentStyles.contextChipTextActive]}>
                 {displayContext(item)}

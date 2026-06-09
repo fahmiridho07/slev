@@ -125,6 +125,31 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     gap: 14,
     ...shadows.soft
   },
+  captureFormRoot: {
+    gap: 0,
+    padding: 16
+  },
+  captureHeaderBlock: {
+    gap: 8,
+    paddingBottom: 10
+  },
+  captureAmountBlock: {
+    gap: 2,
+    paddingBottom: 12
+  },
+  captureFieldsBlock: {
+    gap: 10
+  },
+  captureFooterBlock: {
+    borderTopColor: colors.line,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: 8,
+    marginTop: 2,
+    paddingTop: 10
+  },
+  captureBillsBlock: {
+    gap: 6
+  },
   pulsePanel: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -262,8 +287,8 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     borderBottomWidth: 1,
     flexDirection: "row",
     gap: 8,
-    minHeight: 70,
-    paddingBottom: 4
+    minHeight: 56,
+    paddingBottom: 2
   },
   captureTypeBlock: {
     gap: 10
@@ -339,9 +364,9 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     flexDirection: "row",
     gap: 6,
     justifyContent: "center",
-    minHeight: 48,
-    paddingHorizontal: 10,
-    paddingVertical: 10
+    minHeight: 40,
+    paddingHorizontal: 8,
+    paddingVertical: 8
   },
   captureTypeCompactChipActive: {
     backgroundColor: colors.mint,
@@ -365,10 +390,10 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   amountInput: {
     color: colors.ink,
     flex: 1,
-    fontSize: 42,
+    fontSize: 40,
     fontWeight: "800",
     letterSpacing: 0,
-    paddingVertical: 8
+    paddingVertical: 4
   },
   input: {
     backgroundColor: colors.faint,
@@ -378,9 +403,9 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     color: colors.ink,
     fontSize: 15,
     letterSpacing: 0,
-    minHeight: 48,
+    minHeight: 44,
     paddingHorizontal: 14,
-    paddingVertical: 10
+    paddingVertical: 8
   },
   captureExpandRow: {
     alignItems: "center",
@@ -395,7 +420,7 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     fontWeight: "700"
   },
   transferPickerBlock: {
-    gap: 12
+    gap: 10
   },
   noteInput: {
     minHeight: 64,
@@ -493,26 +518,26 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     alignItems: "center",
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 16
+    gap: 8
   },
   captureDateBlock: {
-    gap: 8
+    gap: 6
   },
   captureDatePickButton: {
     alignItems: "center",
     alignSelf: "flex-start",
     flexDirection: "row",
     gap: 6,
-    minHeight: 44,
-    paddingHorizontal: 2
+    minHeight: 36,
+    paddingHorizontal: 0
   },
   addNoteButton: {
     alignItems: "center",
     alignSelf: "flex-start",
     flexDirection: "row",
     gap: 6,
-    minHeight: 44,
-    paddingHorizontal: 2
+    minHeight: 36,
+    paddingHorizontal: 0
   },
   addNoteText: {
     color: colors.muted,
@@ -526,7 +551,7 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     flexDirection: "row",
     gap: 8,
     justifyContent: "center",
-    minHeight: 52,
+    minHeight: 48,
     paddingHorizontal: 16
   },
   primaryButtonSaved: {
@@ -540,8 +565,8 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     borderWidth: 1,
     flexDirection: "row",
     gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 12
+    paddingHorizontal: 12,
+    paddingVertical: 10
   },
   captureSaveBannerText: {
     color: colors.greenDark,
