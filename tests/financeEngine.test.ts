@@ -83,6 +83,50 @@ test("breakdown groups current-month expenses and calculates shares", () => {
   assertEqual(rows[0]?.share, 0.6, "Meal share should be 60%");
 });
 
+test("breakdown groups current-month income by account and calculates shares", () => {
+  const rows = buildMonthlyBreakdown(
+    [
+      moment({
+        amount: 8_000_000,
+        accountLabel: "BRI",
+        occurredAt: "2026-06-01T01:00:00.000Z",
+        source: "Salary",
+        type: "income"
+      }),
+      moment({
+        amount: 2_000_000,
+        accountLabel: "Jago",
+        occurredAt: "2026-06-02T01:00:00.000Z",
+        source: "Freelance",
+        type: "income"
+      }),
+      moment({
+        amount: 1_000_000,
+        occurredAt: "2026-06-03T01:00:00.000Z",
+        source: "Salary",
+        type: "income"
+      }),
+      moment({
+        amount: 500_000,
+        accountLabel: "BRI",
+        occurredAt: "2026-05-01T01:00:00.000Z",
+        source: "Salary",
+        type: "income"
+      })
+    ],
+    "income",
+    juneMidpoint
+  );
+
+  assertEqual(rows.length, 3, "breakdown should include three June income accounts");
+  assertEqual(rows[0]?.label, "BRI", "largest account should be first");
+  assertEqual(rows[0]?.amount, 8_000_000, "BRI amount should be grouped");
+  assertEqual(rows[0]?.share, 8_000_000 / 11_000_000, "BRI share should reflect grouped total");
+  assertEqual(rows[1]?.label, "Jago", "second account should be Jago");
+  assertEqual(rows[2]?.label, "Unassigned", "missing account label should bucket as unassigned");
+  assertEqual(rows[2]?.amount, 1_000_000, "unassigned income amount");
+});
+
 test("getEffectiveBalance returns tracked opening balance only", () => {
   const balance = getEffectiveBalance({
     accounts: [hubAccount(1_500_000)],

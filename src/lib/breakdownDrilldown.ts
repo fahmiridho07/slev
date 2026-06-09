@@ -22,8 +22,8 @@ export function filterBreakdownMoments(
         return moment.context === rowKey;
       }
 
-      const source = moment.source || getRuntimeStrings().memory.momentTitle.income;
-      return source === rowKey;
+      const accountLabel = moment.accountLabel || getRuntimeStrings().analysis.accounts.unassigned;
+      return accountLabel === rowKey;
     })
     .sort((left, right) => Date.parse(right.occurredAt) - Date.parse(left.occurredAt));
 }

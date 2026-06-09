@@ -145,7 +145,7 @@ export const enExtras: AppStringsExtras = {
       expenseEmpty: "Expense breakdown appears after a saved expense.",
       incomeEmpty: "Income breakdown appears after an income entry.",
       spendingByCategory: "Spending by category",
-      incomeBySource: "Income by source",
+      incomeByAccount: "Income by account",
       expense: "Expense",
       income: "Income",
       amountShare: "{amount} - {percent}%",

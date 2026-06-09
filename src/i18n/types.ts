@@ -240,7 +240,7 @@ export type AppStrings = {
       expense: string;
       expenseEmpty: string;
       income: string;
-      incomeBySource: string;
+      incomeByAccount: string;
       incomeEmpty: string;
       nextMonthA11y: string;
       previousMonthA11y: string;

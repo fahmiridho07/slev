@@ -23,7 +23,7 @@ export function buildMonthlyBreakdown(
   const grouped = filtered.reduce<Record<string, number>>((acc, moment) => {
     const label =
       type === "income"
-        ? moment.source || getRuntimeStrings().memory.momentTitle.income
+        ? moment.accountLabel || getRuntimeStrings().analysis.accounts.unassigned
         : moment.context;
     acc[label] = (acc[label] ?? 0) + moment.amount;
     return acc;

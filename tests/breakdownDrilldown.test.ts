@@ -33,20 +33,30 @@ test("filterBreakdownMoments scopes expenses to month and category", () => {
   assertEqual(entries[0]?.context, "Food", "category");
 });
 
-test("filterBreakdownMoments groups income by source", () => {
+test("filterBreakdownMoments groups income by account", () => {
   const referenceDate = new Date(2026, 5, 15, 12, 0);
   const entries = filterBreakdownMoments(
     [
-      incomeMoment({ amount: 1_000_000, occurredAt: new Date(2026, 5, 2).toISOString(), source: "Salary" }),
-      incomeMoment({ amount: 250_000, occurredAt: new Date(2026, 5, 3).toISOString(), source: "Freelance" })
+      incomeMoment({
+        accountLabel: "BRI",
+        amount: 1_000_000,
+        occurredAt: new Date(2026, 5, 2).toISOString(),
+        source: "Salary"
+      }),
+      incomeMoment({
+        accountLabel: "Jago",
+        amount: 250_000,
+        occurredAt: new Date(2026, 5, 3).toISOString(),
+        source: "Freelance"
+      })
     ],
     "income",
-    "Salary",
+    "BRI",
     referenceDate
   );
 
   assertEqual(entries.length, 1, "entry count");
-  assertEqual(entries[0]?.source, "Salary", "source");
+  assertEqual(entries[0]?.accountLabel, "BRI", "account");
 });
 
 let passed = 0;
@@ -104,12 +114,14 @@ function moment(input: {
 }
 
 function incomeMoment(input: {
+  accountLabel?: string;
   amount: number;
   id?: string;
   occurredAt: string;
   source?: string;
 }): SpendingMoment {
   return {
+    accountLabel: input.accountLabel,
     amount: input.amount,
     context: "Other",
     createdAt: input.occurredAt,

@@ -66,7 +66,7 @@ export function IncomeSourcesAccordion({ moments, monthOffset }: IncomeSourcesAc
         onPress={() => setExpanded((prev) => !prev)}
         style={styles.accordionCard}
       >
-        <Text style={styles.settingTitle}>{breakdownStrings.incomeBySource}</Text>
+        <Text style={styles.settingTitle}>{breakdownStrings.incomeByAccount}</Text>
         <Ionicons color={colors.muted} name={expanded ? "chevron-up" : "chevron-down"} size={18} />
       </Pressable>
 

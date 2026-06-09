@@ -145,7 +145,7 @@ export const idExtras: AppStringsExtras = {
       expenseEmpty: "Rincian pengeluaran muncul setelah ada pengeluaran tersimpan.",
       incomeEmpty: "Rincian pemasukan muncul setelah ada entri pemasukan.",
       spendingByCategory: "Pengeluaran per kategori",
-      incomeBySource: "Pemasukan per sumber",
+      incomeByAccount: "Pemasukan per akun",
       expense: "Pengeluaran",
       income: "Pemasukan",
       amountShare: "{amount} - {percent}%",
