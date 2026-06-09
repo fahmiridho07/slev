@@ -67,9 +67,10 @@ export function CategoryBreakdownSheet({
             <EmptyState text={breakdownStrings.drilldownEmpty} />
           ) : (
             <View style={styles.listPanel}>
-              {entries.map((moment) => (
+              {entries.map((moment, index) => (
                 <BreakdownMomentItem
                   key={moment.id}
+                  isLast={index === entries.length - 1}
                   moment={moment}
                   onDelete={onDeleteMoment}
                   onStartEdit={onEditMoment}

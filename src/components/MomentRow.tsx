@@ -9,16 +9,17 @@ import { useTheme } from "../hooks/useTheme";
 import { contextIcon } from "./presentation";
 
 type MomentRowProps = {
+  isLast?: boolean;
   moment: SpendingMoment;
   repeatHint?: string;
 };
 
-function MomentRowComponent({ moment, repeatHint }: MomentRowProps) {
+function MomentRowComponent({ isLast = false, moment, repeatHint }: MomentRowProps) {
   const { colors, componentStyles, strings } = useTheme();
   const isIncome = moment.type === "income";
 
   return (
-    <View style={componentStyles.momentRow}>
+    <View style={[componentStyles.momentRow, isLast && componentStyles.momentRowLast]}>
       <View style={[componentStyles.momentIcon, isIncome && componentStyles.incomeMomentIcon]}>
         <Ionicons
           name={isIncome ? "cash-outline" : contextIcon(moment.context)}

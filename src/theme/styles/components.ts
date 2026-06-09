@@ -440,6 +440,9 @@ export function createComponentStyles(colors: ColorTokens, shadows: ShadowTokens
     minHeight: 68,
     padding: 14
   },
+  momentRowLast: {
+    borderBottomWidth: 0
+  },
   momentIcon: {
     alignItems: "center",
     backgroundColor: colors.mint,

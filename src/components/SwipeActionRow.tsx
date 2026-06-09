@@ -31,7 +31,7 @@ function SwipeActionRowComponent({
   rowKey
 }: SwipeActionRowProps) {
   const { colors, componentStyles, reduceMotion, strings } = useTheme();
-  const translateX = useRef(new Animated.Value(0)).current;
+  const translateX = useMemo(() => new Animated.Value(0), [rowKey]);
   const isOpenRef = useRef(false);
   const dragStartX = useRef(0);
 
@@ -54,13 +54,6 @@ function SwipeActionRowComponent({
       useNativeDriver: true
     }).start();
   }, [reduceMotion, translateX]);
-
-  useEffect(() => {
-    isOpenRef.current = false;
-    releaseSwipeOpen(closeRow);
-    translateX.stopAnimation();
-    translateX.setValue(0);
-  }, [closeRow, rowKey, translateX]);
 
   useEffect(() => {
     return () => {
@@ -93,9 +86,12 @@ function SwipeActionRowComponent({
 
   const handleDelete = useCallback(() => {
     hapticLight();
-    animateTo(false);
+    isOpenRef.current = false;
+    releaseSwipeOpen(closeRow);
+    translateX.stopAnimation();
+    translateX.setValue(0);
     onDelete();
-  }, [animateTo, onDelete]);
+  }, [closeRow, onDelete, translateX]);
 
   const handleForegroundPress = useCallback(() => {
     if (isOpenRef.current) {

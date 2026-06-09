@@ -8,14 +8,15 @@ import { MoneyTransfer } from "../features/spendingMemory.types";
 import { useTheme } from "../hooks/useTheme";
 
 type TransferRowProps = {
+  isLast?: boolean;
   transfer: MoneyTransfer;
 };
 
-function TransferRowComponent({ transfer }: TransferRowProps) {
+function TransferRowComponent({ isLast = false, transfer }: TransferRowProps) {
   const { colors, componentStyles, strings } = useTheme();
 
   return (
-    <View style={componentStyles.momentRow}>
+    <View style={[componentStyles.momentRow, isLast && componentStyles.momentRowLast]}>
       <View style={componentStyles.momentIcon}>
         <Ionicons color={colors.blue} name="swap-horizontal-outline" size={18} />
       </View>

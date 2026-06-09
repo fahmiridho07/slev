@@ -5,12 +5,13 @@ import { SpendingMoment } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 
 type BreakdownMomentItemProps = {
+  isLast?: boolean;
   moment: SpendingMoment;
   onDelete: (moment: SpendingMoment) => void;
   onStartEdit: (moment: SpendingMoment) => void;
 };
 
-function BreakdownMomentItemComponent({ moment, onDelete, onStartEdit }: BreakdownMomentItemProps) {
+function BreakdownMomentItemComponent({ isLast = false, moment, onDelete, onStartEdit }: BreakdownMomentItemProps) {
   const { strings } = useTheme();
 
   return (
@@ -21,7 +22,7 @@ function BreakdownMomentItemComponent({ moment, onDelete, onStartEdit }: Breakdo
       onPress={() => onStartEdit(moment)}
       rowKey={moment.id}
     >
-      <MomentRow moment={moment} />
+      <MomentRow isLast={isLast} moment={moment} />
     </ListActionRow>
   );
 }

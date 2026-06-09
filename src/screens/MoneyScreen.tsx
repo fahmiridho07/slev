@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
-import { ScrollView, SectionList, StyleProp, Text, TextInput, View, ViewStyle } from "react-native";
+import { ScrollView, StyleProp, Text, TextInput, View, ViewStyle } from "react-native";
 import {
   BottomSheet,
   DeleteConfirmDialog,
@@ -23,8 +23,6 @@ import { TransferEditForm } from "../features/memory/TransferEditForm";
 import { MoneyTransfer, SpendingMoment } from "../features/spendingMemory.types";
 import { buildRepeatHints, getMomentTitle } from "../lib/analysis";
 import {
-  ActivityFeedItem,
-  ActivityFeedSection,
   buildMonthActivityFeed,
   filterActivityFeed,
   getTransferActivityTitle,
@@ -45,13 +43,15 @@ import { useTheme } from "../hooks/useTheme";
 type MoneyTab = "overview" | "activity";
 
 type MoneyMomentItemProps = {
+  isLast: boolean;
   moment: SpendingMoment;
   onDelete: (moment: SpendingMoment) => void;
   onStartEdit: (moment: SpendingMoment) => void;
   repeatHint?: string;
 };
 
-const MoneyMomentItem = memo(function MoneyMomentItem({
+function MoneyMomentItem({
+  isLast,
   moment,
   onDelete,
   onStartEdit,
@@ -67,18 +67,20 @@ const MoneyMomentItem = memo(function MoneyMomentItem({
       onPress={() => onStartEdit(moment)}
       rowKey={moment.id}
     >
-      <MomentRow moment={moment} repeatHint={repeatHint} />
+      <MomentRow isLast={isLast} moment={moment} repeatHint={repeatHint} />
     </ListActionRow>
   );
-});
+}
 
 type MoneyTransferItemProps = {
+  isLast: boolean;
   onDelete: (transfer: MoneyTransfer) => void;
   onStartEdit: (transfer: MoneyTransfer) => void;
   transfer: MoneyTransfer;
 };
 
-const MoneyTransferItem = memo(function MoneyTransferItem({
+function MoneyTransferItem({
+  isLast,
   onDelete,
   onStartEdit,
   transfer
@@ -93,10 +95,10 @@ const MoneyTransferItem = memo(function MoneyTransferItem({
       onPress={() => onStartEdit(transfer)}
       rowKey={transfer.id}
     >
-      <TransferRow transfer={transfer} />
+      <TransferRow isLast={isLast} transfer={transfer} />
     </ListActionRow>
   );
-});
+}
 
 type MoneyScreenProps = {
   navigation: AppNavigation;
@@ -171,45 +173,44 @@ function MoneyScreenComponent({
   const handleMomentSaved = useCallback(() => setEditingMoment(null), []);
   const handleTransferSaved = useCallback(() => setEditingTransfer(null), []);
 
-  const renderItem = useCallback(
-    ({ item, index, section }: { item: ActivityFeedItem; index: number; section: ActivityFeedSection }) => (
-      <View
-        style={[
-          styles.listPanel,
-          index > 0 && styles.listPanelContinued,
-          index < section.data.length - 1 && styles.listPanelMiddle
-        ]}
-      >
-        {item.kind === "moment" ? (
-          <MoneyMomentItem
-            key={item.id}
-            moment={item.moment}
-            onDelete={setPendingDeleteMoment}
-            onStartEdit={startEditingMoment}
-            repeatHint={repeatHints.get(item.moment.id)}
-          />
-        ) : (
-          <MoneyTransferItem
-            key={item.id}
-            onDelete={setPendingDeleteTransfer}
-            onStartEdit={startEditingTransfer}
-            transfer={item.transfer}
-          />
-        )}
-      </View>
-    ),
-    [repeatHints, startEditingMoment, startEditingTransfer, styles]
-  );
+  const activitySections = useMemo(
+    () =>
+      sections.map((section) => (
+        <View key={section.key}>
+          <View style={[styles.memoryGroup, section.sectionIndex > 0 && styles.memorySectionLead]}>
+            <Text style={styles.groupTitle}>{section.title}</Text>
+          </View>
+          <View style={styles.listPanel}>
+            {section.data.map((item, index) => {
+              const isLast = index === section.data.length - 1;
 
-  const keyExtractor = useCallback((item: ActivityFeedItem) => item.id, []);
+              if (item.kind === "moment") {
+                return (
+                  <MoneyMomentItem
+                    key={item.id}
+                    isLast={isLast}
+                    moment={item.moment}
+                    onDelete={setPendingDeleteMoment}
+                    onStartEdit={startEditingMoment}
+                    repeatHint={repeatHints.get(item.moment.id)}
+                  />
+                );
+              }
 
-  const renderSectionHeader = useCallback(
-    ({ section }: { section: ActivityFeedSection & { sectionIndex: number } }) => (
-      <View style={[styles.memoryGroup, section.sectionIndex > 0 && styles.memorySectionLead]}>
-        <Text style={styles.groupTitle}>{section.title}</Text>
-      </View>
-    ),
-    [styles.groupTitle, styles.memoryGroup, styles.memorySectionLead]
+              return (
+                <MoneyTransferItem
+                  key={item.id}
+                  isLast={isLast}
+                  onDelete={setPendingDeleteTransfer}
+                  onStartEdit={startEditingTransfer}
+                  transfer={item.transfer}
+                />
+              );
+            })}
+          </View>
+        </View>
+      )),
+    [repeatHints, sections, startEditingMoment, startEditingTransfer, styles]
   );
 
   const tabSwitcher = useMemo(
@@ -343,20 +344,16 @@ function MoneyScreenComponent({
           {overviewContent}
         </ScrollView>
       ) : (
-        <SectionList
+        <ScrollView
           contentContainerStyle={scrollContentStyle}
-          extraData={`${moments.length}:${transfers.length}:${query}:${filteredActivityItems.length}`}
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
-          keyExtractor={keyExtractor}
           refreshControl={refreshControl}
-          ListEmptyComponent={activityEmpty}
-          ListHeaderComponent={activityHeader}
-          renderItem={renderItem}
-          renderSectionHeader={renderSectionHeader}
-          sections={sections}
-          stickySectionHeadersEnabled={false}
-        />
+        >
+          {activityHeader}
+          {activityEmpty}
+          {activityEmpty == null ? <View style={styles.cardStack}>{activitySections}</View> : null}
+        </ScrollView>
       )}
       <BottomSheet
         onClose={cancelMomentEdit}
