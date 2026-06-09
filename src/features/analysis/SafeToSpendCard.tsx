@@ -173,9 +173,12 @@ function SafeToSpendCardComponent() {
           <Text style={styles.pulseHeroLabel}>{copy.heroLabel}</Text>
         </View>
 
-        <Text style={styles.pulseHeroValue}>{formatRupiah(safe.safeDaily)}</Text>
+        <Text style={styles.pulseHeroValue}>{formatRupiah(safe.effectiveBalance)}</Text>
         <Text style={styles.pulseHeroHint}>
-          {formatString(copy.daysLeft, { count: safe.daysLeft })}
+          {formatString(copy.heroSafeDaily, {
+            amount: formatRupiah(safe.safeDaily),
+            count: safe.daysLeft
+          })}
         </Text>
 
         {safe.spendableBalance < 0 ? (
@@ -187,9 +190,6 @@ function SafeToSpendCardComponent() {
         ) : null}
 
         <View style={styles.heroBreakdown}>
-          <Text style={styles.settingCopy}>
-            {formatString(copy.balanceAnchor, { amount: formatRupiah(safe.effectiveBalance) })}
-          </Text>
           {safe.billsReserve > 0 ? (
             <Text style={styles.settingCopy}>
               {formatString(copy.billsReserve, { amount: formatRupiah(safe.billsReserve) })}

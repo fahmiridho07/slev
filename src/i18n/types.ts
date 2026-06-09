@@ -187,14 +187,13 @@ export type AppStrings = {
     safeToSpend: {
       affordableUntilMonthEnd: string;
       affordableUntilPayday: string;
-      balanceAnchor: string;
       billsExceedBalance: string;
       billsReserve: string;
       spendBuffer: string;
       checkPurchase: string;
       checkPurchaseA11y: string;
-      daysLeft: string;
       heroLabel: string;
+      heroSafeDaily: string;
       cannotAfford: string;
       dipsReserve: string;
       overPace: string;
