@@ -647,16 +647,21 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     borderWidth: 1,
     gap: 14,
     padding: 18,
+    position: "relative",
     ...shadows.soft
   },
-  homeBalanceHeaderRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between"
+  homeHintsAnchor: {
+    position: "absolute",
+    right: 10,
+    top: 10,
+    zIndex: 1
   },
   homeHintsTrigger: {
-    padding: 2,
-    position: "relative"
+    alignItems: "center",
+    height: 32,
+    justifyContent: "center",
+    position: "relative",
+    width: 32
   },
   homeHintsBadge: {
     backgroundColor: colors.amber,
@@ -665,8 +670,8 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     borderWidth: 1.5,
     height: 8,
     position: "absolute",
-    right: 0,
-    top: 0,
+    right: 4,
+    top: 4,
     width: 8
   },
   homeHintsSheetContent: {
@@ -691,7 +696,6 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   },
   homeBalanceLabel: {
     color: colors.muted,
-    flex: 1,
     fontSize: 12,
     fontWeight: "700",
     letterSpacing: 0,

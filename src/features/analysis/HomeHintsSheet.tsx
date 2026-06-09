@@ -66,7 +66,7 @@ function HomeHintsSheetComponent({
         onPress={() => setOpen(true)}
         style={styles.homeHintsTrigger}
       >
-        <Ionicons color={colors.muted} name="help-circle-outline" size={22} />
+        <Ionicons color={colors.muted} name="help-circle-outline" size={20} />
         {showBadge ? <View style={styles.homeHintsBadge} /> : null}
       </Pressable>
 

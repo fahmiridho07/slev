@@ -189,13 +189,7 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
   return (
     <>
       <View style={styles.homeBalanceCard}>
-        <View style={styles.homeBalanceHeaderRow}>
-          <View style={styles.pulseTopRow}>
-            <View style={[styles.pulseIconBadge, styles.pulseIconIncome]}>
-              <Ionicons name="wallet-outline" size={17} color={colors.greenDark} />
-            </View>
-            <Text style={styles.homeBalanceLabel}>{copy.heroLabel}</Text>
-          </View>
+        <View style={styles.homeHintsAnchor}>
           <HomeHintsSheet
             accounts={accounts}
             moments={moments}
@@ -205,6 +199,13 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
             safe={safe}
             transfers={transfers}
           />
+        </View>
+
+        <View style={styles.pulseTopRow}>
+          <View style={[styles.pulseIconBadge, styles.pulseIconIncome]}>
+            <Ionicons name="wallet-outline" size={17} color={colors.greenDark} />
+          </View>
+          <Text style={styles.homeBalanceLabel}>{copy.heroLabel}</Text>
         </View>
 
         <Text style={styles.homeBalanceValue}>{formatRupiah(safe.effectiveBalance)}</Text>
