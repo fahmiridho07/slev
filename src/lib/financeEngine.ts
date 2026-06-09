@@ -39,6 +39,32 @@ export function buildMonthlyBreakdown(
     .sort((a, b) => b.amount - a.amount);
 }
 
+export function buildMonthlyIncomeBySource(
+  moments: SpendingMoment[],
+  referenceDate = new Date()
+): FinanceBreakdownRow[] {
+  const currentMonth = getMonthRange(referenceDate, 0);
+  const filtered = moments.filter(
+    (moment) => moment.type === "income" && isWithinRange(moment.occurredAt, currentMonth.start, currentMonth.end)
+  );
+  const total = sumMoments(filtered);
+  const fallbackLabel = getRuntimeStrings().memory.momentTitle.income;
+  const grouped = filtered.reduce<Record<string, number>>((acc, moment) => {
+    const label = moment.source?.trim() || moment.label?.trim() || fallbackLabel;
+    acc[label] = (acc[label] ?? 0) + moment.amount;
+    return acc;
+  }, {});
+
+  return Object.entries(grouped)
+    .map(([label, amount]) => ({
+      amount,
+      key: label,
+      label,
+      share: total > 0 ? amount / total : 0
+    }))
+    .sort((a, b) => b.amount - a.amount);
+}
+
 export function getDaysRemainingInMonth(date: Date): number {
   const currentDay = date.getDate();
   const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();

@@ -124,6 +124,35 @@ export async function saveMoneyTransfer(input: TransferInput): Promise<WriteResu
   return { data: updated, persisted };
 }
 
+export async function updateMoneyTransfer(
+  id: string,
+  input: TransferInput
+): Promise<WriteResult<MoneyTransfer[]> & { found: boolean }> {
+  const current = await listMoneyTransfers();
+  const existing = current.find((transfer) => transfer.id === id);
+  if (!existing) {
+    return { data: current, persisted: true, found: false };
+  }
+
+  const now = new Date().toISOString();
+  const transfer = normalizeMoneyTransfer({
+    ...existing,
+    ...input,
+    id,
+    occurredAt: input.occurredAt ?? existing.occurredAt,
+    updatedAt: now
+  });
+  if (!transfer) {
+    return { data: current, persisted: false, found: true };
+  }
+
+  const updated = current
+    .map((item) => (item.id === id ? transfer : item))
+    .sort(sortTransfers);
+  const persisted = await writeJson(TRANSFERS_KEY, updated);
+  return { data: updated, persisted, found: true };
+}
+
 export async function deleteMoneyTransfer(id: string): Promise<WriteResult<MoneyTransfer[]>> {
   const current = await listMoneyTransfers();
   const updated = current.filter((transfer) => transfer.id !== id);

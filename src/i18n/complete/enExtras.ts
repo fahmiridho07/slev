@@ -35,7 +35,8 @@ export const enExtras: AppStringsExtras = {
       removed: "Shortcut removed."
     },
     transfer: {
-      removed: "Transfer removed."
+      removed: "Transfer removed.",
+      updated: "Transfer updated."
     },
     account: {
       needName: "Add an account or wallet name.",
@@ -147,6 +148,9 @@ export const enExtras: AppStringsExtras = {
       incomeEmpty: "Income breakdown appears after an income entry.",
       spendingByCategory: "Spending by category",
       incomeByAccount: "Income by account",
+      incomeBySource: "Income by source",
+      incomeViewAccount: "Account",
+      incomeViewSource: "Source",
       incomeLoggedHint: "Shows where income was logged. Transfers appear separately in Activity.",
       spendingByAccount: "Spending by account",
       expense: "Expense",

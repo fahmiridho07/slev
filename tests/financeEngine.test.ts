@@ -1,5 +1,6 @@
 import {
   buildMonthlyBreakdown,
+  buildMonthlyIncomeBySource,
   getDaysRemainingInMonth,
   getDaysUntilNextPayday,
   getNextOccurrenceOfDay,
@@ -81,6 +82,48 @@ test("breakdown groups current-month expenses and calculates shares", () => {
   assertEqual(rows[0]?.label, "Meal", "largest row should be first");
   assertEqual(rows[0]?.amount, 600_000, "Meal amount should be grouped");
   assertEqual(rows[0]?.share, 0.6, "Meal share should be 60%");
+});
+
+test("breakdown groups current-month income by source and calculates shares", () => {
+  const rows = buildMonthlyIncomeBySource(
+    [
+      moment({
+        amount: 8_000_000,
+        accountLabel: "BRI",
+        occurredAt: "2026-06-01T01:00:00.000Z",
+        source: "Salary",
+        type: "income"
+      }),
+      moment({
+        amount: 2_000_000,
+        accountLabel: "Jago",
+        occurredAt: "2026-06-02T01:00:00.000Z",
+        source: "Freelance",
+        type: "income"
+      }),
+      moment({
+        amount: 1_000_000,
+        accountLabel: "BRI",
+        occurredAt: "2026-06-03T01:00:00.000Z",
+        source: "Salary",
+        type: "income"
+      }),
+      moment({
+        amount: 500_000,
+        accountLabel: "BRI",
+        occurredAt: "2026-05-01T01:00:00.000Z",
+        source: "Salary",
+        type: "income"
+      })
+    ],
+    juneMidpoint
+  );
+
+  assertEqual(rows.length, 2, "breakdown should include two June income sources");
+  assertEqual(rows[0]?.label, "Salary", "largest source should be first");
+  assertEqual(rows[0]?.amount, 9_000_000, "Salary amount should be grouped");
+  assertEqual(rows[0]?.share, 9_000_000 / 11_000_000, "Salary share should reflect grouped total");
+  assertEqual(rows[1]?.label, "Freelance", "second source should be Freelance");
 });
 
 test("breakdown groups current-month income by account and calculates shares", () => {

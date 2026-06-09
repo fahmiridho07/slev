@@ -33,6 +33,32 @@ test("filterBreakdownMoments scopes expenses to month and category", () => {
   assertEqual(entries[0]?.context, "Food", "category");
 });
 
+test("filterBreakdownMoments groups income by source", () => {
+  const referenceDate = new Date(2026, 5, 15, 12, 0);
+  const entries = filterBreakdownMoments(
+    [
+      incomeMoment({
+        accountLabel: "BRI",
+        amount: 1_000_000,
+        occurredAt: new Date(2026, 5, 2).toISOString(),
+        source: "Salary"
+      }),
+      incomeMoment({
+        accountLabel: "Jago",
+        amount: 250_000,
+        occurredAt: new Date(2026, 5, 3).toISOString(),
+        source: "Freelance"
+      })
+    ],
+    "income_source",
+    "Salary",
+    referenceDate
+  );
+
+  assertEqual(entries.length, 1, "entry count");
+  assertEqual(entries[0]?.source, "Salary", "source");
+});
+
 test("filterBreakdownMoments groups income by account", () => {
   const referenceDate = new Date(2026, 5, 15, 12, 0);
   const entries = filterBreakdownMoments(

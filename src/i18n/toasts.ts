@@ -138,6 +138,10 @@ export function getTransferRemovedToast(): string {
   return getRuntimeStrings().toasts.transfer.removed;
 }
 
+export function getTransferUpdatedToast(): string {
+  return getRuntimeStrings().toasts.transfer.updated;
+}
+
 export function getAccountNeedNameToast(): string {
   return getRuntimeStrings().toasts.account.needName;
 }

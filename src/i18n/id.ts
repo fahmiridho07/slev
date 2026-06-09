@@ -54,6 +54,7 @@ export const id: AppStrings = {
     noCategories: "Belum ada kategori pengeluaran aktif. Tambahkan dulu sebelum menyimpan.",
     openSettings: "Buka Pengaturan",
     context: "Konteks",
+    billSuggestions: "Saran dari tagihan rutin",
     billsReservedHint: "Tagihan rutin sudah dicadangkan — nggak perlu dicatat di sini.",
     reorderHint: "Tahan untuk atur ulang",
     contextHints: {
@@ -226,7 +227,8 @@ export const id: AppStrings = {
       billsA11y: "Buka pengaturan untuk tambah tagihan rutin",
       overdueBillsHint: "{count} tagihan mungkin jatuh tempo tanpa pembayaran tercatat.",
       overdueBillsAction: "Cek tagihan",
-      overdueBillsA11y: "Buka pengaturan untuk cek tagihan rutin"
+      overdueBillsA11y: "Buka pengaturan untuk cek tagihan rutin",
+      progress: "Setup · {current} dari {total}"
     },
     safeToSpend: {
       billsReserve: "Disisihkan buat tagihan terdekat: {amount}",
@@ -262,6 +264,8 @@ export const id: AppStrings = {
     }
   },
   activity: {
+    tabOverview: "Ringkasan",
+    tabActivity: "Aktivitas",
     sectionTitle: "Aktivitas",
     edit: {
       amount: "Jumlah",
@@ -281,6 +285,8 @@ export const id: AppStrings = {
     searchNoResults: "Tidak ada aktivitas yang cocok dengan pencarian.",
     transferDeleteTitle: "Hapus transfer?",
     transferDeleteBody: "{title} akan dihapus. Saldo akun diperbarui otomatis.",
+    transferEditSheetTitle: "Edit transfer",
+    transferEditSheetTitleNamed: "Edit {title}",
     editSheetTitle: "Edit entri",
     editSheetTitleNamed: "Edit {title}"
   },

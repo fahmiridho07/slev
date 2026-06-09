@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { AccountPicker, ContextPicker, EmptyState, numberPadInputAccessoryProps } from "../../components";
 import { CaptureTypePicker } from "./CaptureTypePicker";
+import { formatAmountInput } from "../../lib/formatMoney";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { getTemplateLabel } from "../../lib/analysis";
 import { shallowEqual, useActions, useFinanceDerived, useFinanceSelector } from "../../state/useFinance";
@@ -36,12 +37,17 @@ function CapturePanelComponent({
   }
   const actions = useActions();
   const categoryLabels = useFinanceDerived((derived) => derived.categoryLabels);
-  const { accounts, manualTemplates } = useFinanceSelector(
+  const { accounts, manualTemplates, recurringBills } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
-      manualTemplates: state.manualTemplates
+      manualTemplates: state.manualTemplates,
+      recurringBills: state.recurringBills
     }),
     shallowEqual
+  );
+  const activeBillSuggestions = useMemo(
+    () => recurringBills.filter((bill) => bill.active).slice(0, 6),
+    [recurringBills]
   );
   const { orderedAccounts, orderedCategories } = useCapturePickerOrder(categoryLabels, accounts);
   const {
@@ -273,7 +279,36 @@ function CapturePanelComponent({
               onSelect={(value) => patch({ context: value })}
             />
             {form.context === "Bills" ? (
-              <Text style={styles.settingCopy}>{strings.capture.billsReservedHint}</Text>
+              <>
+                <Text style={styles.settingCopy}>{strings.capture.billsReservedHint}</Text>
+                {activeBillSuggestions.length > 0 ? (
+                  <View style={styles.repeatBlock}>
+                    <Text style={componentStyles.microLabel}>{strings.capture.billSuggestions}</Text>
+                    <View style={styles.templateGrid}>
+                      {activeBillSuggestions.map((bill) => (
+                        <View key={bill.id} style={styles.templateChip}>
+                          <Pressable
+                            accessibilityLabel={formatString(strings.capture.applyShortcutA11y, {
+                              label: bill.label
+                            })}
+                            accessibilityRole="button"
+                            onPress={() =>
+                              patch({
+                                amountText: formatAmountInput(String(bill.amount)),
+                                label: bill.label
+                              })
+                            }
+                            style={styles.templateMain}
+                          >
+                            <Text style={styles.repeatText}>{bill.label}</Text>
+                            <Text style={styles.repeatAmount}>{formatRupiah(bill.amount)}</Text>
+                          </Pressable>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                ) : null}
+              </>
             ) : null}
           </>
         )

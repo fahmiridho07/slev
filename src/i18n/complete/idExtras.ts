@@ -35,7 +35,8 @@ export const idExtras: AppStringsExtras = {
       removed: "Pintasan dihapus."
     },
     transfer: {
-      removed: "Transfer dihapus."
+      removed: "Transfer dihapus.",
+      updated: "Transfer diperbarui."
     },
     account: {
       needName: "Tambahkan nama akun atau dompet.",
@@ -147,6 +148,9 @@ export const idExtras: AppStringsExtras = {
       incomeEmpty: "Rincian pemasukan muncul setelah ada entri pemasukan.",
       spendingByCategory: "Pengeluaran per kategori",
       incomeByAccount: "Pemasukan per akun",
+      incomeBySource: "Pemasukan per sumber",
+      incomeViewAccount: "Akun",
+      incomeViewSource: "Sumber",
       incomeLoggedHint: "Menampilkan akun penerima income. Transfer ada terpisah di Aktivitas.",
       spendingByAccount: "Pengeluaran per akun",
       expense: "Pengeluaran",

@@ -54,6 +54,7 @@ export const en: AppStrings = {
     noCategories: "No expense categories are active. Add one before saving expenses.",
     openSettings: "Open Settings",
     context: "Context",
+    billSuggestions: "Suggested from recurring bills",
     billsReservedHint: "Recurring bills are already reserved — you don't need to log them here.",
     reorderHint: "Hold to rearrange",
     contextHints: {
@@ -226,7 +227,8 @@ export const en: AppStrings = {
       billsA11y: "Open settings to add recurring bills",
       overdueBillsHint: "{count} bill(s) may be due without a logged payment.",
       overdueBillsAction: "Review bills",
-      overdueBillsA11y: "Open settings to review recurring bills"
+      overdueBillsA11y: "Open settings to review recurring bills",
+      progress: "Setup · {current} of {total}"
     },
     safeToSpend: {
       billsReserve: "Set aside for upcoming bills: {amount}",
@@ -262,6 +264,8 @@ export const en: AppStrings = {
     }
   },
   activity: {
+    tabOverview: "Overview",
+    tabActivity: "Activity",
     sectionTitle: "Activity",
     edit: {
       amount: "Amount",
@@ -281,6 +285,8 @@ export const en: AppStrings = {
     searchNoResults: "No activity matches that search.",
     transferDeleteTitle: "Delete transfer?",
     transferDeleteBody: "{title} will be removed. Account balances will update automatically.",
+    transferEditSheetTitle: "Edit transfer",
+    transferEditSheetTitleNamed: "Edit {title}",
     editSheetTitle: "Edit entry",
     editSheetTitleNamed: "Edit {title}"
   },

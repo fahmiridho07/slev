@@ -47,8 +47,12 @@ export type AppStrings = {
     searchNoResults: string;
     searchPlaceholder: string;
     sectionTitle: string;
+    tabActivity: string;
+    tabOverview: string;
     transferDeleteBody: string;
     transferDeleteTitle: string;
+    transferEditSheetTitle: string;
+    transferEditSheetTitleNamed: string;
   };
   analysis: {
     accounts: {
@@ -87,6 +91,7 @@ export type AppStrings = {
   };
   capture: {
     addNote: string;
+    billSuggestions: string;
     billsReservedHint: string;
     amountA11y: string;
     amountPlaceholder: string;
@@ -199,6 +204,7 @@ export type AppStrings = {
       overdueBillsAction: string;
       overdueBillsA11y: string;
       overdueBillsHint: string;
+      progress: string;
     };
     safeToSpend: {
       affordableUntilMonthEnd: string;
@@ -258,7 +264,10 @@ export type AppStrings = {
       expenseEmpty: string;
       income: string;
       incomeByAccount: string;
+      incomeBySource: string;
       incomeEmpty: string;
+      incomeViewAccount: string;
+      incomeViewSource: string;
       incomeLoggedHint: string;
       spendingByAccount: string;
       nextMonthA11y: string;
@@ -536,6 +545,7 @@ export type AppStrings = {
     };
     transfer: {
       removed: string;
+      updated: string;
     };
     writeFailure: {
       corrupt: string;

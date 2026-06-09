@@ -45,6 +45,7 @@ export {
   getShortcutTransferUseChipsToast,
   getTransferMovedToast,
   getTransferRemovedToast,
+  getTransferUpdatedToast,
   getWriteFailureToast
 } from "./toasts";
 export { formatString } from "./format";

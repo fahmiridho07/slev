@@ -1,6 +1,6 @@
 process.env.TZ = "Asia/Jakarta";
 
-import { EntryType, SpendingContext, SpendingMoment } from "../src/features/spendingMemory.types";
+import { EntryType, MoneyTransfer, SpendingContext, SpendingMoment } from "../src/features/spendingMemory.types";
 import {
   buildMonthExpenseComparison,
   getEarliestSpendingMonthOffset,
@@ -36,9 +36,27 @@ test("getEarliestSpendingMonthOffset reaches first logged month", () => {
       moment({ amount: 10_000, occurredAt: new Date(2026, 2, 10).toISOString() }),
       moment({ amount: 20_000, occurredAt: new Date(2026, 5, 5).toISOString() })
     ],
+    [],
     referenceDate
   );
   assertEqual(offset, -3, "earliest offset");
+});
+
+test("getEarliestSpendingMonthOffset includes transfers in earliest month", () => {
+  const referenceDate = new Date(2026, 5, 15, 12, 0);
+  const offset = getEarliestSpendingMonthOffset(
+    [],
+    [
+      moneyTransfer({
+        amount: 100_000,
+        fromAccount: "BRI",
+        occurredAt: new Date(2026, 1, 8).toISOString(),
+        toAccount: "Jago"
+      })
+    ],
+    referenceDate
+  );
+  assertEqual(offset, -4, "transfer earliest offset");
 });
 
 test("buildMonthExpenseComparison compares adjacent months", () => {
@@ -97,6 +115,23 @@ function assertEqual(actual: unknown, expected: unknown, message: string): void 
 
 function printable(value: unknown): string {
   return typeof value === "string" ? `"${value}"` : JSON.stringify(value);
+}
+
+function moneyTransfer(input: {
+  amount: number;
+  fromAccount: string;
+  occurredAt: string;
+  toAccount: string;
+}): MoneyTransfer {
+  return {
+    amount: input.amount,
+    createdAt: input.occurredAt,
+    fromAccount: input.fromAccount,
+    id: `transfer-${input.occurredAt}-${input.amount}`,
+    occurredAt: input.occurredAt,
+    toAccount: input.toAccount,
+    updatedAt: input.occurredAt
+  };
 }
 
 function moment(input: {

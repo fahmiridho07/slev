@@ -240,23 +240,6 @@ function SafeToSpendCardComponent() {
           </View>
         </View>
 
-        <View style={styles.homeBalanceMeta}>
-          <Text style={[styles.homeBalanceMetaLine, { color: typicalDailyColor }]}>
-            {formatString(copy.compactTypicalDaily, { amount: formatRupiah(safe.typicalDaily) })}
-            {!safe.confident ? ` · ${copy.typicalDailyUncertain}` : ""}
-          </Text>
-          {safe.billsReserve > 0 ? (
-            <Text style={styles.homeBalanceMetaSecondary}>
-              {formatString(copy.compactBillsReserve, { amount: formatRupiah(safe.billsReserve) })}
-            </Text>
-          ) : null}
-          {safe.spendBuffer > 0 ? (
-            <Text style={styles.homeBalanceMetaSecondary}>
-              {formatString(copy.spendBuffer, { amount: formatRupiah(safe.spendBuffer) })}
-            </Text>
-          ) : null}
-        </View>
-
         <Pressable
           accessibilityLabel={copy.checkPurchaseA11y}
           accessibilityRole="button"
@@ -266,6 +249,23 @@ function SafeToSpendCardComponent() {
           <Ionicons color={colors.surface} name="help-circle-outline" size={18} />
           <Text style={styles.primaryButtonText}>{copy.checkPurchase}</Text>
         </Pressable>
+
+        <View style={styles.homeBalanceMeta}>
+          <Text style={[styles.homeBalanceMetaLine, { color: typicalDailyColor }]}>
+            {[
+              formatString(copy.compactTypicalDaily, { amount: formatRupiah(safe.typicalDaily) }),
+              !safe.confident ? copy.typicalDailyUncertain : null,
+              safe.billsReserve > 0
+                ? formatString(copy.compactBillsReserve, { amount: formatRupiah(safe.billsReserve) })
+                : null,
+              safe.spendBuffer > 0
+                ? formatString(copy.spendBuffer, { amount: formatRupiah(safe.spendBuffer) })
+                : null
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </Text>
+        </View>
       </View>
 
       <BottomSheet

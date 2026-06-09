@@ -54,8 +54,11 @@ import {
   getResetSuccessToast,
   getShortcutRemovedToast,
   getShortcutSavedToast,
+  getCaptureNeedAmountToast,
+  getCaptureNeedTransferAccountsToast,
   getTransferMovedToast,
   getTransferRemovedToast,
+  getTransferUpdatedToast,
   getWriteFailureToast,
   getBackupShareTitle,
   getImportErrorToast
@@ -68,7 +71,8 @@ import {
   listMoneyAccounts,
   listMoneyTransfers,
   saveMoneyAccount,
-  saveMoneyTransfer
+  saveMoneyTransfer,
+  updateMoneyTransfer
 } from "../services/accountRepository";
 import {
   clearExpenseCategories,
@@ -384,6 +388,51 @@ export function createFinanceActions(
     setMessage(getTransferRemovedToast());
   }
 
+  async function updateTransfer(
+    id: string,
+    input: { amountText: string; fromAccount: string; note?: string; toAccount: string }
+  ) {
+    const amount = parseAmountInput(input.amountText);
+    if (!amount) {
+      return {
+        ok: false as const,
+        validation: { field: "amount" as const, message: getCaptureNeedAmountToast() }
+      };
+    }
+
+    if (!input.fromAccount || !input.toAccount || input.fromAccount === input.toAccount) {
+      return {
+        ok: false as const,
+        validation: { field: "transferAccounts" as const, message: getCaptureNeedTransferAccountsToast() }
+      };
+    }
+
+    const { data: updated, persisted, found } = await updateMoneyTransfer(id, {
+      amount,
+      fromAccount: input.fromAccount,
+      note: input.note,
+      toAccount: input.toAccount
+    });
+    if (!found) {
+      return {
+        ok: false as const,
+        validation: { field: "amount" as const, message: getMemoryNotFoundToast() }
+      };
+    }
+    if (!persisted) {
+      return {
+        ok: false as const,
+        validation: { field: "amount" as const, message: getWriteFailureToast(STORAGE_KEYS.transfers) }
+      };
+    }
+    const transfer = updated.find((item) => item.id === id);
+    if (transfer) {
+      dispatch({ type: "set_transfers", transfers: updated });
+    }
+    notifySuccess(getTransferUpdatedToast());
+    return { ok: true as const };
+  }
+
   async function saveAccount(input: {
     id?: string;
     isIncomeHub: boolean;
@@ -615,6 +664,7 @@ export function createFinanceActions(
     undoRemoveMoment,
     removeRecurringBill,
     removeTransfer,
+    updateTransfer,
     saveAccount,
     saveAsTemplate,
     saveCategory,

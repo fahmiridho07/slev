@@ -713,6 +713,10 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     fontSize: 13,
     lineHeight: 18
   },
+  homeBalanceHintProgress: {
+    fontWeight: "700",
+    marginBottom: 2
+  },
   homeBalanceHintAction: {
     color: colors.greenDark,
     fontSize: 13,
