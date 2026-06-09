@@ -16,8 +16,10 @@ import { formatAmountInput, parseAmountInput } from "../../lib/formatMoney";
 import { buildSafeToSpend, simulatePurchase, type SafeToSpendPace } from "../../lib/safeToSpend";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import type { AppStrings } from "../../i18n/types";
+import { SettingsTabKey } from "../app.types";
 import { shallowEqual, useFinanceSelector } from "../../state/useFinance";
 import { useTheme } from "../../hooks/useTheme";
+import { HomeSetupHints } from "./HomeSetupHints";
 
 function getPaceCopy(pace: SafeToSpendPace, copy: AppStrings["home"]["safeToSpend"]) {
   if (pace === "under") {
@@ -33,7 +35,7 @@ function getPaceCopy(pace: SafeToSpendPace, copy: AppStrings["home"]["safeToSpen
 }
 
 type SafeToSpendCardProps = {
-  onOpenSettings: () => void;
+  onOpenSettings: (tab?: SettingsTabKey) => void;
 };
 
 function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
@@ -180,7 +182,6 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
         : styles.homeBalanceChipTextNeutral;
   const typicalDailyColor =
     safe.pace === "under" ? colors.greenDark : safe.pace === "over" ? colors.amber : colors.muted;
-  const showPaydayHint = paydayDayOfMonth == null;
 
   function closePurchaseSheet() {
     setSheetOpen(false);
@@ -210,21 +211,14 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
           </View>
         </View>
 
-        {showPaydayHint ? (
-          <View style={styles.homeBalanceHint}>
-            <Text style={styles.homeBalanceHintText}>
-              {copy.paydayHint}{" "}
-              <Text
-                accessibilityLabel={copy.paydayHintA11y}
-                accessibilityRole="link"
-                onPress={onOpenSettings}
-                style={styles.homeBalanceHintAction}
-              >
-                {copy.paydayHintAction}
-              </Text>
-            </Text>
-          </View>
-        ) : null}
+        <HomeSetupHints
+          accounts={accounts}
+          moments={moments}
+          onOpenSettings={onOpenSettings}
+          paydayDayOfMonth={paydayDayOfMonth}
+          recurringBills={recurringBills}
+          transfers={transfers}
+        />
 
         {safe.spendableBalance < 0 ? (
           <Text style={styles.heroWarningText}>
@@ -259,6 +253,8 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
             </Text>
           </View>
         </View>
+
+        <Text style={styles.homeBalanceMetaSecondary}>{copy.spendableHelper}</Text>
 
         <View style={styles.homeBalanceMeta}>
           <Text style={[styles.homeBalanceMetaLine, { color: typicalDailyColor }]}>

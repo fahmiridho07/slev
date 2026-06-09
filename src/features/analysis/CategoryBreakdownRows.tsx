@@ -2,17 +2,17 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { formatString } from "../../i18n";
-import { filterBreakdownMoments } from "../../lib/breakdownDrilldown";
+import { BreakdownFilterType, filterBreakdownMoments } from "../../lib/breakdownDrilldown";
 import { FinanceBreakdownRow } from "../../lib/financeEngine";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
-import { EntryType, SpendingMoment } from "../spendingMemory.types";
+import { SpendingMoment } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 import { getCategoryChartColors } from "./categoryChartColors";
 
 const TOP_CATEGORY_LIMIT = 5;
 
 type CategoryBreakdownRowsProps = {
-  breakdownType: EntryType;
+  breakdownType: BreakdownFilterType;
   moments: SpendingMoment[];
   onOpenRow: (row: FinanceBreakdownRow) => void;
   onToggleShowAll: () => void;

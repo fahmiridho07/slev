@@ -1,6 +1,7 @@
+import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View } from "react-native";
-import { EmptyState, SectionHeader } from "../../components";
+import { Pressable, Text, View } from "react-native";
+import { EmptyState } from "../../components";
 import { getTrackerEmptyReason } from "../../lib/analysis";
 import { getTrackerEmptyCopy } from "../../lib/trackerCopy";
 import { buildMonthlyBreakdown, FinanceBreakdownRow } from "../../lib/financeEngine";
@@ -18,8 +19,9 @@ type ExpenseCategorySummaryProps = {
 };
 
 export function ExpenseCategorySummary({ moments, monthOffset }: ExpenseCategorySummaryProps) {
-  const { strings, styles } = useTheme();
+  const { colors, strings, styles } = useTheme();
   const breakdownStrings = strings.patterns.breakdown;
+  const [expanded, setExpanded] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [selectedRow, setSelectedRow] = useState<FinanceBreakdownRow | null>(null);
   const [editingMoment, setEditingMoment] = useState<SpendingMoment | null>(null);
@@ -52,67 +54,79 @@ export function ExpenseCategorySummary({ moments, monthOffset }: ExpenseCategory
     setEditingMoment(moment);
   }, []);
 
-  if (rows.length === 0) {
-    return (
-      <View style={styles.capturePanel}>
-        <SectionHeader title={breakdownStrings.spendingByCategory} />
-        <EmptyState
-          text={
-            emptyReason
-              ? getTrackerEmptyCopy(emptyReason, "expense", strings.patterns.tracker)
-              : breakdownStrings.expenseEmpty
-          }
-        />
-      </View>
-    );
+  if (rows.length === 0 && !emptyReason) {
+    return null;
   }
 
   return (
-    <View style={styles.capturePanel}>
-      {emptyReason ? (
-        <EmptyState text={getTrackerEmptyCopy(emptyReason, "expense", strings.patterns.tracker)} />
+    <View style={styles.cardStack}>
+      <Pressable
+        accessibilityLabel={expanded ? breakdownStrings.viewLess : breakdownStrings.viewAll}
+        accessibilityRole="button"
+        onPress={() => setExpanded((prev) => !prev)}
+        style={styles.accordionCard}
+      >
+        <Text style={styles.settingTitle}>{breakdownStrings.spendingByCategory}</Text>
+        <Ionicons color={colors.muted} name={expanded ? "chevron-up" : "chevron-down"} size={18} />
+      </Pressable>
+
+      {expanded ? (
+        <View style={styles.capturePanel}>
+          {rows.length === 0 ? (
+            <EmptyState
+              text={
+                emptyReason
+                  ? getTrackerEmptyCopy(emptyReason, "expense", strings.patterns.tracker)
+                  : breakdownStrings.expenseEmpty
+              }
+            />
+          ) : (
+            <>
+              {emptyReason ? (
+                <EmptyState text={getTrackerEmptyCopy(emptyReason, "expense", strings.patterns.tracker)} />
+              ) : null}
+              <CategoryVerticalBarChart onPressRow={openRow} rows={rows} />
+              {showAllCategories ? (
+                <CategoryBreakdownRows
+                  breakdownType="expense"
+                  moments={moments}
+                  onOpenRow={openRow}
+                  onToggleShowAll={() => setShowAllCategories((prev) => !prev)}
+                  referenceDate={referenceDate}
+                  rows={rows}
+                  showAllCategories={showAllCategories}
+                  skipTopRows={5}
+                />
+              ) : (
+                <CategoryBreakdownRows
+                  breakdownType="expense"
+                  moments={moments}
+                  onOpenRow={openRow}
+                  onToggleShowAll={() => setShowAllCategories(true)}
+                  referenceDate={referenceDate}
+                  rows={rows}
+                  showAllCategories={false}
+                  skipTopRows={5}
+                />
+              )}
+            </>
+          )}
+
+          <BreakdownDrilldownOverlays
+            breakdownType="expense"
+            editingMoment={editingMoment}
+            moments={moments}
+            onCloseEdit={() => setEditingMoment(null)}
+            onCloseRow={() => setSelectedRow(null)}
+            onEditMoment={startEditing}
+            onSaved={() => setEditingMoment(null)}
+            pendingDeleteMoment={pendingDeleteMoment}
+            referenceDate={referenceDate}
+            selectedRow={selectedRow}
+            setPendingDeleteMoment={setPendingDeleteMoment}
+          />
+        </View>
       ) : null}
-
-      <SectionHeader title={breakdownStrings.spendingByCategory} />
-      <CategoryVerticalBarChart onPressRow={openRow} rows={rows} />
-
-      {showAllCategories ? (
-        <CategoryBreakdownRows
-          breakdownType="expense"
-          moments={moments}
-          onOpenRow={openRow}
-          onToggleShowAll={() => setShowAllCategories((prev) => !prev)}
-          referenceDate={referenceDate}
-          rows={rows}
-          showAllCategories={showAllCategories}
-          skipTopRows={5}
-        />
-      ) : (
-        <CategoryBreakdownRows
-          breakdownType="expense"
-          moments={moments}
-          onOpenRow={openRow}
-          onToggleShowAll={() => setShowAllCategories(true)}
-          referenceDate={referenceDate}
-          rows={rows}
-          showAllCategories={false}
-          skipTopRows={5}
-        />
-      )}
-
-      <BreakdownDrilldownOverlays
-        breakdownType="expense"
-        editingMoment={editingMoment}
-        moments={moments}
-        onCloseEdit={() => setEditingMoment(null)}
-        onCloseRow={() => setSelectedRow(null)}
-        onEditMoment={startEditing}
-        onSaved={() => setEditingMoment(null)}
-        pendingDeleteMoment={pendingDeleteMoment}
-        referenceDate={referenceDate}
-        selectedRow={selectedRow}
-        setPendingDeleteMoment={setPendingDeleteMoment}
-      />
     </View>
   );
 }

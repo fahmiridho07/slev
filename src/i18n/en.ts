@@ -217,6 +217,17 @@ export const en: AppStrings = {
     }
   },
   home: {
+    setup: {
+      openingBalanceHint: "Set your opening balance so safe-to-spend starts accurately.",
+      openingBalanceAction: "Set balance",
+      openingBalanceA11y: "Open settings to set opening balance",
+      billsHint: "Add recurring bills to reserve money for upcoming payments.",
+      billsAction: "Add bills",
+      billsA11y: "Open settings to add recurring bills",
+      overdueBillsHint: "{count} bill(s) may be due without a logged payment.",
+      overdueBillsAction: "Review bills",
+      overdueBillsA11y: "Open settings to review recurring bills"
+    },
     safeToSpend: {
       billsReserve: "Set aside for upcoming bills: {amount}",
       spendBuffer: "You set aside: {amount}",
@@ -224,6 +235,7 @@ export const en: AppStrings = {
       heroLabel: "Total balance",
       safeDailyTile: "Safe daily",
       spendableTile: "Spendable",
+      spendableHelper: "Safe daily divides spendable cash across days left, after bills and buffer.",
       paceUnder: "Under budget",
       paceOver: "Over budget",
       paceEven: "On budget",
@@ -263,8 +275,12 @@ export const en: AppStrings = {
     searchA11y: "Search activity",
     searchPlaceholder: "Search label, context, or amount",
     emptyText: "No saved spending yet.",
+    monthEmpty: "No entries this month.",
+    monthTitle: "Activity · {month}",
     emptyAction: "Log first expense",
     searchNoResults: "No activity matches that search.",
+    transferDeleteTitle: "Delete transfer?",
+    transferDeleteBody: "{title} will be removed. Account balances will update automatically.",
     editSheetTitle: "Edit entry",
     editSheetTitleNamed: "Edit {title}"
   },

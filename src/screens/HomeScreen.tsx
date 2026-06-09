@@ -2,12 +2,13 @@ import React, { memo, useEffect, useRef } from "react";
 import { ScrollView, StyleProp, View, ViewStyle } from "react-native";
 import { SafeToSpendCard } from "../features/analysis/SafeToSpendCard";
 import { CapturePanel } from "../features/capture/CapturePanel";
+import { SettingsTabKey } from "../features/app.types";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { useTheme } from "../hooks/useTheme";
 
 type HomeScreenProps = {
   captureFocusRequest: number;
-  onOpenSettings: () => void;
+  onOpenSettings: (tab?: SettingsTabKey) => void;
   scrollContentStyle: StyleProp<ViewStyle>;
 };
 

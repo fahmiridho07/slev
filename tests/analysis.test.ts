@@ -1,5 +1,7 @@
 import {
   buildAccountActivity,
+  buildMonthlyAccountExpenseBreakdown,
+  getIncomeMomentTitle,
   buildRepeatHints,
   getDataMaturity,
   dateKey,
@@ -201,6 +203,36 @@ test("groupMomentsByRecallRange buckets today, yesterday, and earlier", () => {
   assertEqual(groups[0]?.key, "today", "today bucket");
   assertEqual(groups[1]?.key, "yesterday", "yesterday bucket");
   assertEqual(groups[2]?.key, "earlier", "older than a week");
+});
+
+test("getIncomeMomentTitle combines source and account", () => {
+  const title = getIncomeMomentTitle({
+    amount: 1_000_000,
+    context: "Other",
+    createdAt: "2026-06-01T00:00:00.000Z",
+    id: "income-1",
+    occurredAt: "2026-06-01T00:00:00.000Z",
+    source: "Salary",
+    accountLabel: "BRI",
+    type: "income",
+    updatedAt: "2026-06-01T00:00:00.000Z"
+  });
+
+  assertEqual(title, "Salary → BRI", "income title");
+});
+
+test("buildMonthlyAccountExpenseBreakdown groups expense by account for a month", () => {
+  const referenceDate = new Date(2026, 5, 15, 12, 0);
+  const rows = buildMonthlyAccountExpenseBreakdown(
+    [
+      moment({ amount: 50_000, accountLabel: "Jago", occurredAt: new Date(2026, 5, 10).toISOString() }),
+      moment({ amount: 20_000, accountLabel: "BRI", occurredAt: new Date(2026, 5, 11).toISOString() })
+    ],
+    referenceDate
+  );
+
+  assertEqual(rows[0]?.label, "Jago", "largest account first");
+  assertEqual(rows[0]?.amount, 50_000, "grouped expense");
 });
 
 test("buildAccountActivity groups current-month spending by account", () => {

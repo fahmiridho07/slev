@@ -36,9 +36,20 @@ export type RepeatSuggestion = {
   label: string;
 };
 
+export function getIncomeMomentTitle(moment: SpendingMoment): string {
+  const source = moment.source || moment.label || getRuntimeStrings().memory.momentTitle.income;
+  if (!moment.accountLabel) {
+    return source;
+  }
+  return formatString(getRuntimeStrings().analysis.incomeTitlePattern, {
+    account: moment.accountLabel,
+    source
+  });
+}
+
 export function getMomentTitle(moment: SpendingMoment): string {
   if (moment.type === "income") {
-    return moment.source || moment.label || getRuntimeStrings().memory.momentTitle.income;
+    return getIncomeMomentTitle(moment);
   }
   return moment.label || moment.context;
 }
@@ -50,8 +61,8 @@ export function getTemplateLabel(template: ManualTemplate): string {
   return template.label || template.context;
 }
 
-export function buildAccountActivity(moments: SpendingMoment[]): AccountActivityRow[] {
-  const range = getMonthRange(new Date(), 0);
+export function buildAccountActivity(moments: SpendingMoment[], referenceDate = new Date()): AccountActivityRow[] {
+  const range = getMonthRange(referenceDate, 0);
   const grouped = moments
     .filter((moment) => isWithinRange(moment.occurredAt, range.start, range.end))
     .reduce<Record<string, AccountActivityRow>>((acc, moment) => {
@@ -79,6 +90,20 @@ export function buildAccountActivity(moments: SpendingMoment[]): AccountActivity
     ...row,
     share: row.expense / maxExpense
   }));
+}
+
+export function buildMonthlyAccountExpenseBreakdown(moments: SpendingMoment[], referenceDate: Date) {
+  const rows = buildAccountActivity(moments, referenceDate).filter((row) => row.expense > 0);
+  const total = rows.reduce((sum, row) => sum + row.expense, 0);
+
+  return rows
+    .map((row) => ({
+      amount: row.expense,
+      key: row.label,
+      label: row.label,
+      share: total > 0 ? row.expense / total : 0
+    }))
+    .sort((left, right) => right.amount - left.amount);
 }
 
 export function getDataMaturity(moments: SpendingMoment[], referenceDate = new Date()): DataMaturity {

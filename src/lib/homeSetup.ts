@@ -1,0 +1,46 @@
+import { MoneyAccount, MoneyTransfer, RecurringBill, SpendingMoment } from "../features/spendingMemory.types";
+import { getTrackedTotalBalance } from "./accountLedger";
+import { getUnloggedPastDueBills } from "./recurringBills";
+
+export type HomeSetupHintType = "payday" | "opening_balance" | "bills" | "overdue_bills";
+
+export type HomeSetupHint = {
+  count?: number;
+  type: HomeSetupHintType;
+};
+
+export function getHomeSetupHints({
+  accounts,
+  moments,
+  paydayDayOfMonth,
+  recurringBills,
+  transfers
+}: {
+  accounts: MoneyAccount[];
+  moments: SpendingMoment[];
+  paydayDayOfMonth: number | null;
+  recurringBills: RecurringBill[];
+  transfers: MoneyTransfer[];
+}): HomeSetupHint[] {
+  const hints: HomeSetupHint[] = [];
+
+  if (paydayDayOfMonth == null) {
+    hints.push({ type: "payday" });
+  }
+
+  const trackedTotal = getTrackedTotalBalance(accounts, moments, transfers);
+  if (trackedTotal === 0 && moments.length === 0 && transfers.length === 0) {
+    hints.push({ type: "opening_balance" });
+  }
+
+  if (!recurringBills.some((bill) => bill.active)) {
+    hints.push({ type: "bills" });
+  }
+
+  const overdue = getUnloggedPastDueBills(recurringBills, moments);
+  if (overdue.length > 0) {
+    hints.push({ type: "overdue_bills", count: overdue.length });
+  }
+
+  return hints;
+}

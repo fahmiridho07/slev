@@ -2,9 +2,9 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { EmptyState } from "../../components";
-import { getTrackerEmptyReason } from "../../lib/analysis";
+import { buildMonthlyAccountExpenseBreakdown, getTrackerEmptyReason } from "../../lib/analysis";
 import { getTrackerEmptyCopy } from "../../lib/trackerCopy";
-import { buildMonthlyBreakdown, FinanceBreakdownRow } from "../../lib/financeEngine";
+import { FinanceBreakdownRow } from "../../lib/financeEngine";
 import { getMonthReferenceDate } from "../../lib/spendingPeriod";
 import { SpendingMoment } from "../spendingMemory.types";
 import { hapticSelection } from "../../lib/haptics";
@@ -13,12 +13,12 @@ import { BreakdownDrilldownOverlays } from "./BreakdownDrilldownOverlays";
 import { CategoryBreakdownRows } from "./CategoryBreakdownRows";
 import { CategoryVerticalBarChart } from "./CategoryVerticalBarChart";
 
-type IncomeSourcesAccordionProps = {
+type AccountActivitySummaryProps = {
   moments: SpendingMoment[];
   monthOffset: number;
 };
 
-export function IncomeSourcesAccordion({ moments, monthOffset }: IncomeSourcesAccordionProps) {
+export function AccountActivitySummary({ moments, monthOffset }: AccountActivitySummaryProps) {
   const { colors, strings, styles } = useTheme();
   const breakdownStrings = strings.patterns.breakdown;
   const [expanded, setExpanded] = useState(false);
@@ -28,11 +28,11 @@ export function IncomeSourcesAccordion({ moments, monthOffset }: IncomeSourcesAc
   const [pendingDeleteMoment, setPendingDeleteMoment] = useState<SpendingMoment | null>(null);
   const referenceDate = useMemo(() => getMonthReferenceDate(monthOffset), [monthOffset]);
   const emptyReason = useMemo(
-    () => getTrackerEmptyReason(moments, referenceDate, "income"),
+    () => getTrackerEmptyReason(moments, referenceDate, "expense"),
     [moments, referenceDate]
   );
   const rows = useMemo(
-    () => buildMonthlyBreakdown(moments, "income", referenceDate),
+    () => buildMonthlyAccountExpenseBreakdown(moments, referenceDate),
     [moments, referenceDate]
   );
 
@@ -66,7 +66,7 @@ export function IncomeSourcesAccordion({ moments, monthOffset }: IncomeSourcesAc
         onPress={() => setExpanded((prev) => !prev)}
         style={styles.accordionCard}
       >
-        <Text style={styles.settingTitle}>{breakdownStrings.incomeByAccount}</Text>
+        <Text style={styles.settingTitle}>{breakdownStrings.spendingByAccount}</Text>
         <Ionicons color={colors.muted} name={expanded ? "chevron-up" : "chevron-down"} size={18} />
       </Pressable>
 
@@ -76,19 +76,19 @@ export function IncomeSourcesAccordion({ moments, monthOffset }: IncomeSourcesAc
             <EmptyState
               text={
                 emptyReason
-                  ? getTrackerEmptyCopy(emptyReason, "income", strings.patterns.tracker)
-                  : breakdownStrings.incomeEmpty
+                  ? getTrackerEmptyCopy(emptyReason, "expense", strings.patterns.tracker)
+                  : breakdownStrings.expenseEmpty
               }
             />
           ) : (
             <>
               {emptyReason ? (
-                <EmptyState text={getTrackerEmptyCopy(emptyReason, "income", strings.patterns.tracker)} />
+                <EmptyState text={getTrackerEmptyCopy(emptyReason, "expense", strings.patterns.tracker)} />
               ) : null}
               <CategoryVerticalBarChart onPressRow={openRow} rows={rows} />
               {showAllCategories ? (
                 <CategoryBreakdownRows
-                  breakdownType="income"
+                  breakdownType="account"
                   moments={moments}
                   onOpenRow={openRow}
                   onToggleShowAll={() => setShowAllCategories((prev) => !prev)}
@@ -99,7 +99,7 @@ export function IncomeSourcesAccordion({ moments, monthOffset }: IncomeSourcesAc
                 />
               ) : (
                 <CategoryBreakdownRows
-                  breakdownType="income"
+                  breakdownType="account"
                   moments={moments}
                   onOpenRow={openRow}
                   onToggleShowAll={() => setShowAllCategories(true)}
@@ -113,7 +113,7 @@ export function IncomeSourcesAccordion({ moments, monthOffset }: IncomeSourcesAc
           )}
 
           <BreakdownDrilldownOverlays
-            breakdownType="income"
+            breakdownType="account"
             editingMoment={editingMoment}
             moments={moments}
             onCloseEdit={() => setEditingMoment(null)}

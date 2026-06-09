@@ -2,15 +2,16 @@ import React from "react";
 import { BottomSheet, DeleteConfirmDialog } from "../../components";
 import { formatString } from "../../i18n";
 import { getMomentTitle } from "../../lib/analysis";
+import { BreakdownFilterType } from "../../lib/breakdownDrilldown";
 import { FinanceBreakdownRow } from "../../lib/financeEngine";
-import { EntryType, SpendingMoment } from "../spendingMemory.types";
+import { SpendingMoment } from "../spendingMemory.types";
 import { MomentEditForm } from "../memory/MomentEditForm";
 import { useActions } from "../../state/useFinance";
 import { useTheme } from "../../hooks/useTheme";
 import { CategoryBreakdownSheet } from "./CategoryBreakdownSheet";
 
 type BreakdownDrilldownOverlaysProps = {
-  breakdownType: EntryType;
+  breakdownType: BreakdownFilterType;
   editingMoment: SpendingMoment | null;
   moments: SpendingMoment[];
   onCloseEdit: () => void;

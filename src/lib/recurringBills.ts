@@ -1,5 +1,7 @@
-import { RecurringBill } from "../features/spendingMemory.types";
+import { RecurringBill, SpendingMoment } from "../features/spendingMemory.types";
+import { getMonthRange, isWithinRange } from "./analysis";
 import { getNextOccurrenceOfDay, getNextPaydayDate } from "./financeEngine";
+import { RESERVED_BILL_CONTEXT } from "./safeToSpend";
 
 export function getMonthlyBillsTotal(bills: RecurringBill[]): number {
   return bills
@@ -40,4 +42,38 @@ export function getBillsReserve(
       const nextDue = getNextOccurrenceOfDay(referenceDate, bill.dueDay);
       return nextDue.getTime() <= horizonEndTime ? sum + bill.amount : sum;
     }, 0);
+}
+
+export function getUnloggedPastDueBills(
+  bills: RecurringBill[],
+  moments: SpendingMoment[],
+  referenceDate = new Date()
+): RecurringBill[] {
+  const dayOfMonth = referenceDate.getDate();
+  const monthRange = getMonthRange(referenceDate, 0);
+
+  return bills.filter((bill) => {
+    if (!bill.active || bill.dueDay == null || bill.dueDay >= dayOfMonth) {
+      return false;
+    }
+
+    const paidThisMonth = moments.some(
+      (moment) =>
+        moment.type === "expense" &&
+        moment.context === RESERVED_BILL_CONTEXT &&
+        isWithinRange(moment.occurredAt, monthRange.start, monthRange.end) &&
+        isBillPaymentMatch(moment, bill)
+    );
+
+    return !paidThisMonth;
+  });
+}
+
+function isBillPaymentMatch(moment: SpendingMoment, bill: RecurringBill): boolean {
+  const momentLabel = moment.label?.trim().toLowerCase();
+  const billLabel = bill.label.trim().toLowerCase();
+  if (momentLabel && momentLabel === billLabel) {
+    return true;
+  }
+  return moment.amount === bill.amount && Boolean(momentLabel?.includes(billLabel));
 }

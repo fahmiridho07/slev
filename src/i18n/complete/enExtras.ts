@@ -89,6 +89,7 @@ export const enExtras: AppStringsExtras = {
     accounts: {
       unassigned: "Unassigned"
     },
+    incomeTitlePattern: "{source} → {account}",
     trends: {
       midpointPace: "{month} is running above last month's pace at this point."
     }
@@ -146,6 +147,8 @@ export const enExtras: AppStringsExtras = {
       incomeEmpty: "Income breakdown appears after an income entry.",
       spendingByCategory: "Spending by category",
       incomeByAccount: "Income by account",
+      incomeLoggedHint: "Shows where income was logged. Transfers appear separately in Activity.",
+      spendingByAccount: "Spending by account",
       expense: "Expense",
       income: "Income",
       amountShare: "{amount} - {percent}%",

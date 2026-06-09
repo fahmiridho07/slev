@@ -1,5 +1,5 @@
 import { RecurringBill } from "../src/features/spendingMemory.types";
-import { getBillsReserve, getMonthlyBillsTotal } from "../src/lib/recurringBills";
+import { getBillsReserve, getMonthlyBillsTotal, getUnloggedPastDueBills } from "../src/lib/recurringBills";
 
 declare const process: {
   exitCode?: number;
@@ -59,6 +59,17 @@ test("getBillsReserve uses payday horizon when configured", () => {
   );
 
   assertEqual(reserve, 150_000, "only bills due on or before payday should reserve");
+});
+
+test("getUnloggedPastDueBills flags bills past due day without a logged payment", () => {
+  const overdue = getUnloggedPastDueBills(
+    [buildBill({ label: "Internet", amount: 200_000, active: true, dueDay: 5 })],
+    [],
+    new Date(2026, 5, 9, 12, 0)
+  );
+
+  assertEqual(overdue.length, 1, "overdue count");
+  assertEqual(overdue[0]?.label, "Internet", "overdue label");
 });
 
 test("getMonthlyBillsTotal returns zero when all bills are inactive", () => {

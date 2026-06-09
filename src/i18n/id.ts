@@ -217,6 +217,17 @@ export const id: AppStrings = {
     }
   },
   home: {
+    setup: {
+      openingBalanceHint: "Atur saldo awal supaya aman harian lebih akurat.",
+      openingBalanceAction: "Atur saldo",
+      openingBalanceA11y: "Buka pengaturan untuk atur saldo awal",
+      billsHint: "Tambah tagihan rutin untuk sisihkan uang tagihan.",
+      billsAction: "Tambah tagihan",
+      billsA11y: "Buka pengaturan untuk tambah tagihan rutin",
+      overdueBillsHint: "{count} tagihan mungkin jatuh tempo tanpa pembayaran tercatat.",
+      overdueBillsAction: "Cek tagihan",
+      overdueBillsA11y: "Buka pengaturan untuk cek tagihan rutin"
+    },
     safeToSpend: {
       billsReserve: "Disisihkan buat tagihan terdekat: {amount}",
       spendBuffer: "Kamu sisihkan: {amount}",
@@ -224,6 +235,7 @@ export const id: AppStrings = {
       heroLabel: "Saldo total",
       safeDailyTile: "Aman harian",
       spendableTile: "Bisa dibelanjakan",
+      spendableHelper: "Aman harian = uang bisa dibelanjakan dibagi sisa hari, setelah tagihan & buffer.",
       paceUnder: "Di bawah jatah",
       paceOver: "Di atas jatah",
       paceEven: "Pas jatah",
@@ -263,8 +275,12 @@ export const id: AppStrings = {
     searchA11y: "Cari aktivitas",
     searchPlaceholder: "Cari label, konteks, atau jumlah",
     emptyText: "Belum ada pengeluaran tersimpan.",
+    monthEmpty: "Belum ada entri bulan ini.",
+    monthTitle: "Aktivitas · {month}",
     emptyAction: "Catat pengeluaran pertama",
     searchNoResults: "Tidak ada aktivitas yang cocok dengan pencarian.",
+    transferDeleteTitle: "Hapus transfer?",
+    transferDeleteBody: "{title} akan dihapus. Saldo akun diperbarui otomatis.",
     editSheetTitle: "Edit entri",
     editSheetTitleNamed: "Edit {title}"
   },

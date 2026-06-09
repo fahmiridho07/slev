@@ -29,9 +29,11 @@ function MomentRowComponent({ moment, repeatHint }: MomentRowProps) {
       <View style={componentStyles.momentText}>
         <Text style={componentStyles.momentTitle}>{getMomentTitle(moment)}</Text>
         <Text style={componentStyles.momentMeta}>
-          {isIncome ? strings.common.income : displayContext(moment.context)} · {formatTime(moment.occurredAt)}
-          {moment.accountLabel ? ` - ${moment.accountLabel}` : ""}
-          {moment.note ? ` - ${moment.note}` : ""}
+          {isIncome
+            ? `${strings.common.income} · ${formatTime(moment.occurredAt)}`
+            : `${displayContext(moment.context)} · ${formatTime(moment.occurredAt)}`}
+          {!isIncome && moment.accountLabel ? ` · ${moment.accountLabel}` : ""}
+          {moment.note ? ` · ${moment.note}` : ""}
         </Text>
         {repeatHint && !isIncome && <Text style={componentStyles.repeatHint}>{repeatHint}</Text>}
       </View>

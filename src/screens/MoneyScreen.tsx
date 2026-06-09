@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { SectionList, StyleProp, Text, TextInput, View, ViewStyle } from "react-native";
 import {
   BottomSheet,
@@ -7,16 +7,27 @@ import {
   ListActionRow,
   ListActionsOnboardingTip,
   MomentRow,
-  SectionHeader
+  SectionHeader,
+  TransferRow
 } from "../components";
+import { AccountActivitySummary } from "../features/analysis/AccountActivitySummary";
 import { ExpenseCategorySummary } from "../features/analysis/ExpenseCategorySummary";
-import { IncomeSourcesAccordion } from "../features/analysis/IncomeSourcesAccordion";
+import { IncomeAccountsAccordion } from "../features/analysis/IncomeAccountsAccordion";
 import { MonthSummaryCard } from "../features/analysis/MonthSummaryCard";
 import { useListActionsHint } from "../hooks/useListActionsHint";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { MomentEditForm } from "../features/memory/MomentEditForm";
-import { SpendingMoment } from "../features/spendingMemory.types";
-import { buildRepeatHints, filterMoments, getMomentTitle, groupMomentsByRecallRange } from "../lib/analysis";
+import { MoneyTransfer, SpendingMoment } from "../features/spendingMemory.types";
+import { buildRepeatHints, getMomentTitle } from "../lib/analysis";
+import {
+  ActivityFeedItem,
+  ActivityFeedSection,
+  buildMonthActivityFeed,
+  filterActivityFeed,
+  getTransferActivityTitle,
+  groupActivityFeedByDate
+} from "../lib/activityFeed";
+import { formatLocaleMonthYear } from "../i18n/localeDate";
 import { hapticSelection } from "../lib/haptics";
 import {
   getEarliestSpendingMonthOffset,
@@ -55,12 +66,24 @@ const MoneyMomentItem = memo(function MoneyMomentItem({
   );
 });
 
-type ActivitySection = {
-  data: SpendingMoment[];
-  key: string;
-  sectionIndex: number;
-  title: string;
+type MoneyTransferItemProps = {
+  onDelete: (transfer: MoneyTransfer) => void;
+  transfer: MoneyTransfer;
 };
+
+const MoneyTransferItem = memo(function MoneyTransferItem({ onDelete, transfer }: MoneyTransferItemProps) {
+  const { strings } = useTheme();
+
+  return (
+    <ListActionRow
+      accessibilityHint={strings.common.swipeToDelete}
+      accessibilityLabel={getTransferActivityTitle(transfer)}
+      onDelete={() => onDelete(transfer)}
+    >
+      <TransferRow transfer={transfer} />
+    </ListActionRow>
+  );
+});
 
 type MoneyScreenProps = {
   navigation: AppNavigation;
@@ -78,8 +101,10 @@ function MoneyScreenComponent({
   const [editingMoment, setEditingMoment] = useState<SpendingMoment | null>(null);
   const [query, setQuery] = useState("");
   const [pendingDeleteMoment, setPendingDeleteMoment] = useState<SpendingMoment | null>(null);
+  const [pendingDeleteTransfer, setPendingDeleteTransfer] = useState<MoneyTransfer | null>(null);
 
   const moments = useFinanceSelector((state) => state.moments);
+  const transfers = useFinanceSelector((state) => state.transfers);
   const { dismiss: dismissListHint, visible: showListHint } = useListActionsHint("memory", moments.length > 0);
   const breakdownReferenceDate = useMemo(
     () => getMonthReferenceDate(breakdownMonthOffset),
@@ -87,17 +112,31 @@ function MoneyScreenComponent({
   );
   const earliestMonthOffset = useMemo(() => getEarliestSpendingMonthOffset(moments), [moments]);
   const repeatHints = useMemo(() => buildRepeatHints(moments), [moments]);
-  const filteredMoments = useMemo(() => filterMoments(moments, query), [moments, query]);
-  const sections = useMemo<ActivitySection[]>(
-    () =>
-      groupMomentsByRecallRange(filteredMoments).map((group, sectionIndex) => ({
-        key: group.key,
-        sectionIndex,
-        title: group.label,
-        data: group.items
-      })),
-    [filteredMoments]
+  const monthActivityItems = useMemo(
+    () => buildMonthActivityFeed(moments, transfers, breakdownReferenceDate),
+    [breakdownReferenceDate, moments, transfers]
   );
+  const filteredActivityItems = useMemo(
+    () => filterActivityFeed(monthActivityItems, query),
+    [monthActivityItems, query]
+  );
+  const sections = useMemo(
+    () =>
+      groupActivityFeedByDate(filteredActivityItems).map((section, sectionIndex) => ({
+        ...section,
+        sectionIndex
+      })),
+    [filteredActivityItems]
+  );
+  const activityMonthLabel = useMemo(
+    () => formatLocaleMonthYear(breakdownReferenceDate),
+    [breakdownReferenceDate]
+  );
+  const hasAnyActivity = moments.length > 0 || transfers.length > 0;
+
+  useEffect(() => {
+    setQuery("");
+  }, [breakdownMonthOffset]);
 
   const startEditing = useCallback((moment: SpendingMoment) => {
     hapticSelection();
@@ -108,7 +147,7 @@ function MoneyScreenComponent({
   const handleSaved = useCallback(() => setEditingMoment(null), []);
 
   const renderItem = useCallback(
-    ({ item, index, section }: { item: SpendingMoment; index: number; section: ActivitySection }) => (
+    ({ item, index, section }: { item: ActivityFeedItem; index: number; section: ActivityFeedSection }) => (
       <View
         style={[
           styles.listPanel,
@@ -116,21 +155,25 @@ function MoneyScreenComponent({
           index < section.data.length - 1 && styles.listPanelMiddle
         ]}
       >
-        <MoneyMomentItem
-          moment={item}
-          onDelete={setPendingDeleteMoment}
-          onStartEdit={startEditing}
-          repeatHint={repeatHints.get(item.id)}
-        />
+        {item.kind === "moment" ? (
+          <MoneyMomentItem
+            moment={item.moment}
+            onDelete={setPendingDeleteMoment}
+            onStartEdit={startEditing}
+            repeatHint={repeatHints.get(item.moment.id)}
+          />
+        ) : (
+          <MoneyTransferItem onDelete={setPendingDeleteTransfer} transfer={item.transfer} />
+        )}
       </View>
     ),
     [repeatHints, startEditing, styles]
   );
 
-  const keyExtractor = useCallback((item: SpendingMoment) => item.id, []);
+  const keyExtractor = useCallback((item: ActivityFeedItem) => item.id, []);
 
   const renderSectionHeader = useCallback(
-    ({ section }: { section: ActivitySection }) => (
+    ({ section }: { section: ActivityFeedSection & { sectionIndex: number } }) => (
       <View style={[styles.memoryGroup, section.sectionIndex > 0 && styles.memorySectionLead]}>
         <Text style={styles.groupTitle}>{section.title}</Text>
       </View>
@@ -151,7 +194,8 @@ function MoneyScreenComponent({
           onPrevious={() => setBreakdownMonthOffset(breakdownMonthOffset - 1)}
         />
         <ExpenseCategorySummary moments={moments} monthOffset={breakdownMonthOffset} />
-        <IncomeSourcesAccordion moments={moments} monthOffset={breakdownMonthOffset} />
+        <AccountActivitySummary moments={moments} monthOffset={breakdownMonthOffset} />
+        <IncomeAccountsAccordion moments={moments} monthOffset={breakdownMonthOffset} />
       </View>
     ),
     [breakdownMonthOffset, breakdownReferenceDate, earliestMonthOffset, moments, styles.cardStack]
@@ -161,7 +205,7 @@ function MoneyScreenComponent({
     () => (
       <View style={styles.cardStack}>
         {summarySection}
-        <SectionHeader title={strings.activity.sectionTitle} />
+        <SectionHeader title={formatString(strings.activity.monthTitle, { month: activityMonthLabel })} />
         {showListHint && (
           <ListActionsOnboardingTip
             body={strings.listHints.memory.body}
@@ -169,7 +213,7 @@ function MoneyScreenComponent({
             title={strings.listHints.memory.title}
           />
         )}
-        {moments.length > 0 && (
+        {hasAnyActivity ? (
           <TextInput
             accessibilityLabel={strings.activity.searchA11y}
             onChangeText={setQuery}
@@ -178,13 +222,14 @@ function MoneyScreenComponent({
             style={styles.input}
             value={query}
           />
-        )}
+        ) : null}
       </View>
     ),
     [
+      activityMonthLabel,
       colors.muted,
       dismissListHint,
-      moments.length,
+      hasAnyActivity,
       query,
       showListHint,
       strings.activity,
@@ -196,7 +241,7 @@ function MoneyScreenComponent({
   );
 
   const listEmpty = useMemo(() => {
-    if (moments.length === 0) {
+    if (!hasAnyActivity) {
       return (
         <EmptyState
           actionLabel={strings.activity.emptyAction}
@@ -205,11 +250,20 @@ function MoneyScreenComponent({
         />
       );
     }
-    if (filteredMoments.length === 0) {
+    if (monthActivityItems.length === 0) {
+      return <EmptyState text={strings.activity.monthEmpty} />;
+    }
+    if (filteredActivityItems.length === 0) {
       return <EmptyState text={strings.activity.searchNoResults} />;
     }
     return null;
-  }, [filteredMoments.length, moments.length, navigation.openCapture, strings.activity]);
+  }, [
+    filteredActivityItems.length,
+    hasAnyActivity,
+    monthActivityItems.length,
+    navigation.openCapture,
+    strings.activity
+  ]);
 
   return (
     <>
@@ -259,6 +313,24 @@ function MoneyScreenComponent({
         }}
         title={strings.dialogs.activityDeleteTitle}
         visible={Boolean(pendingDeleteMoment)}
+      />
+      <DeleteConfirmDialog
+        body={
+          pendingDeleteTransfer
+            ? formatString(strings.activity.transferDeleteBody, {
+                title: getTransferActivityTitle(pendingDeleteTransfer)
+              })
+            : ""
+        }
+        onCancel={() => setPendingDeleteTransfer(null)}
+        onConfirm={() => {
+          if (pendingDeleteTransfer) {
+            void actions.removeTransfer(pendingDeleteTransfer.id);
+            setPendingDeleteTransfer(null);
+          }
+        }}
+        title={strings.activity.transferDeleteTitle}
+        visible={Boolean(pendingDeleteTransfer)}
       />
     </>
   );

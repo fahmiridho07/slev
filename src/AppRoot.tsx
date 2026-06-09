@@ -75,7 +75,10 @@ export function AppRoot() {
     [strings.tabs.home, strings.tabs.money]
   );
 
-  const openSettings = useCallback(() => {
+  const openSettings = useCallback((tab?: SettingsTabKey) => {
+    if (tab) {
+      setSettingsTab(tab);
+    }
     setActiveTab((current) => {
       if (current !== "settings") {
         setReturnTab(current);
@@ -229,7 +232,7 @@ export function AppRoot() {
               <Pressable
                 accessibilityLabel={inSettings ? strings.common.back : strings.common.openSettings}
                 accessibilityRole="button"
-                onPress={inSettings ? closeSettings : openSettings}
+                onPress={inSettings ? closeSettings : () => openSettings()}
                 style={[styles.iconButton, inSettings && styles.iconButtonActive]}
               >
                 <Ionicons

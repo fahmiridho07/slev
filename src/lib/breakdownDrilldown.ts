@@ -2,9 +2,11 @@ import { EntryType, SpendingMoment } from "../features/spendingMemory.types";
 import { getRuntimeStrings } from "../i18n/runtime";
 import { getMonthRange, isWithinRange } from "./analysis";
 
+export type BreakdownFilterType = EntryType | "account";
+
 export function filterBreakdownMoments(
   moments: SpendingMoment[],
-  type: EntryType,
+  type: BreakdownFilterType,
   rowKey: string,
   referenceDate: Date
 ): SpendingMoment[] {
@@ -12,10 +14,17 @@ export function filterBreakdownMoments(
 
   return moments
     .filter((moment) => {
-      if (moment.type !== type) {
+      if (!isWithinRange(moment.occurredAt, range.start, range.end)) {
         return false;
       }
-      if (!isWithinRange(moment.occurredAt, range.start, range.end)) {
+      if (type === "account") {
+        if (moment.type !== "expense") {
+          return false;
+        }
+        const accountLabel = moment.accountLabel || getRuntimeStrings().analysis.accounts.unassigned;
+        return accountLabel === rowKey;
+      }
+      if (moment.type !== type) {
         return false;
       }
       if (type === "expense") {

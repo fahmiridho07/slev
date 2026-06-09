@@ -700,6 +700,9 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     fontWeight: "600",
     lineHeight: 18
   },
+  homeSetupHints: {
+    gap: 8
+  },
   homeBalanceHint: {
     backgroundColor: colors.surfaceInfo,
     borderColor: colors.borderInfo,

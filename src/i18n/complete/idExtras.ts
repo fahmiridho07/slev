@@ -89,6 +89,7 @@ export const idExtras: AppStringsExtras = {
     accounts: {
       unassigned: "Belum ditetapkan"
     },
+    incomeTitlePattern: "{source} → {account}",
     trends: {
       midpointPace: "{month} berjalan di atas ritme bulan lalu pada titik ini."
     }
@@ -146,6 +147,8 @@ export const idExtras: AppStringsExtras = {
       incomeEmpty: "Rincian pemasukan muncul setelah ada entri pemasukan.",
       spendingByCategory: "Pengeluaran per kategori",
       incomeByAccount: "Pemasukan per akun",
+      incomeLoggedHint: "Menampilkan akun penerima income. Transfer ada terpisah di Aktivitas.",
+      spendingByAccount: "Pengeluaran per akun",
       expense: "Pengeluaran",
       income: "Pemasukan",
       amountShare: "{amount} - {percent}%",

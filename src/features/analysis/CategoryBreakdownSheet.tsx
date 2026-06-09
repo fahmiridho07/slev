@@ -3,15 +3,15 @@ import { ScrollView, Text, View } from "react-native";
 import { BottomSheet, EmptyState } from "../../components";
 import { formatString } from "../../i18n";
 import { formatLocaleMonthYear } from "../../i18n/localeDate";
-import { filterBreakdownMoments } from "../../lib/breakdownDrilldown";
+import { BreakdownFilterType, filterBreakdownMoments } from "../../lib/breakdownDrilldown";
 import { FinanceBreakdownRow } from "../../lib/financeEngine";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
-import { EntryType, SpendingMoment } from "../spendingMemory.types";
+import { SpendingMoment } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 import { BreakdownMomentItem } from "./BreakdownMomentItem";
 
 type CategoryBreakdownSheetProps = {
-  breakdownType: EntryType;
+  breakdownType: BreakdownFilterType;
   moments: SpendingMoment[];
   onClose: () => void;
   onDeleteMoment: (moment: SpendingMoment) => void;

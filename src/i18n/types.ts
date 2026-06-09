@@ -41,15 +41,20 @@ export type AppStrings = {
     editSheetTitleNamed: string;
     emptyAction: string;
     emptyText: string;
+    monthEmpty: string;
+    monthTitle: string;
     searchA11y: string;
     searchNoResults: string;
     searchPlaceholder: string;
     sectionTitle: string;
+    transferDeleteBody: string;
+    transferDeleteTitle: string;
   };
   analysis: {
     accounts: {
       unassigned: string;
     };
+    incomeTitlePattern: string;
     trends: {
       midpointPace: string;
     };
@@ -184,6 +189,17 @@ export type AppStrings = {
     activityDeleteTitle: string;
   };
   home: {
+    setup: {
+      billsAction: string;
+      billsA11y: string;
+      billsHint: string;
+      openingBalanceAction: string;
+      openingBalanceA11y: string;
+      openingBalanceHint: string;
+      overdueBillsAction: string;
+      overdueBillsA11y: string;
+      overdueBillsHint: string;
+    };
     safeToSpend: {
       affordableUntilMonthEnd: string;
       affordableUntilPayday: string;
@@ -205,6 +221,7 @@ export type AppStrings = {
       paydayHintAction: string;
       paydayHintA11y: string;
       safeDailyTile: string;
+      spendableHelper: string;
       spendableTile: string;
       dipsReserve: string;
       overPace: string;
@@ -242,6 +259,8 @@ export type AppStrings = {
       income: string;
       incomeByAccount: string;
       incomeEmpty: string;
+      incomeLoggedHint: string;
+      spendingByAccount: string;
       nextMonthA11y: string;
       previousMonthA11y: string;
       spendingByCategory: string;
