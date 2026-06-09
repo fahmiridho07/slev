@@ -162,9 +162,10 @@ export const id: AppStrings = {
       save: "Simpan kategori",
       default: "Bawaan",
       custom: "Kustom",
-      reorderHint: "Urutan di bawah dipakai di layar catat.",
-      moveUpA11y: "Pindahkan {label} ke atas",
-      moveDownA11y: "Pindahkan {label} ke bawah",
+      orderLabel: "Urutan di layar catat",
+      moveEarlier: "Ke atas",
+      moveLater: "Ke bawah",
+      orderHint: "Mengubah urutan chip saat mencatat pengeluaran.",
       renameHint: "Ganti nama juga memperbarui pengeluaran lama di kategori ini.",
       defaultRenameHint: "Ganti nama kategori bawaan menyembunyikan yang lama dan memperbarui riwayat.",
       empty: "Belum ada kategori aktif. Tambahkan kategori di atas untuk mulai menetapkan pengeluaran."
@@ -219,7 +220,7 @@ export const id: AppStrings = {
     },
     settings_categories: {
       title: "Aksi daftar kategori",
-      body: "Ketuk untuk edit kategori apa pun. Pakai panah untuk atur urutan. Geser kiri untuk sembunyikan."
+      body: "Ketuk kategori untuk ganti nama atau urutan. Geser kiri untuk sembunyikan."
     }
   },
   home: {

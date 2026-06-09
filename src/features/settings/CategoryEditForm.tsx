@@ -8,13 +8,26 @@ import { ExpenseCategory } from "../spendingMemory.types";
 import { CategoryFieldError } from "./settingsValidation";
 
 type CategoryEditFormProps = {
+  canMoveEarlier: boolean;
+  canMoveLater: boolean;
   category: ExpenseCategory;
   onCancel: () => void;
+  onMoveEarlier: () => void;
+  onMoveLater: () => void;
   onSaved: () => void;
 };
 
-function CategoryEditFormComponent({ category, onCancel, onSaved }: CategoryEditFormProps) {
+function CategoryEditFormComponent({
+  canMoveEarlier,
+  canMoveLater,
+  category,
+  onCancel,
+  onMoveEarlier,
+  onMoveLater,
+  onSaved
+}: CategoryEditFormProps) {
   const { colors, componentStyles, strings, styles } = useTheme();
+  const categoryStrings = strings.settings.categories;
   const actions = useActions();
   const [categoryDraft, setCategoryDraft] = useState(category.label);
   const [fieldError, setFieldError] = useState<FormValidationError<CategoryFieldError> | null>(null);
@@ -43,14 +56,14 @@ function CategoryEditFormComponent({ category, onCancel, onSaved }: CategoryEdit
         <TextInput
           accessibilityLabel={
             fieldError?.field === "label"
-              ? `${strings.settings.categories.nameA11y}. ${fieldError.message}`
-              : strings.settings.categories.nameA11y
+              ? `${categoryStrings.nameA11y}. ${fieldError.message}`
+              : categoryStrings.nameA11y
           }
           onChangeText={(value) => {
             setFieldError((current) => (current?.field === "label" ? null : current));
             setCategoryDraft(value);
           }}
-          placeholder={strings.settings.categories.placeholder}
+          placeholder={categoryStrings.placeholder}
           placeholderTextColor={colors.muted}
           style={styles.input}
           value={categoryDraft}
@@ -60,19 +73,42 @@ function CategoryEditFormComponent({ category, onCancel, onSaved }: CategoryEdit
             {fieldError.message}
           </Text>
         )}
-        {category.isDefault ? (
-          <Text style={styles.settingCopy}>{strings.settings.categories.defaultRenameHint}</Text>
-        ) : (
-          <Text style={styles.settingCopy}>{strings.settings.categories.renameHint}</Text>
-        )}
+        <Text style={styles.settingCopy}>
+          {category.isDefault ? categoryStrings.defaultRenameHint : categoryStrings.renameHint}
+        </Text>
+
+        <Text style={componentStyles.microLabel}>{categoryStrings.orderLabel}</Text>
+        <View style={componentStyles.editActions}>
+          <Pressable
+            accessibilityLabel={categoryStrings.moveEarlier}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !canMoveEarlier }}
+            disabled={!canMoveEarlier}
+            onPress={onMoveEarlier}
+            style={[styles.secondaryButton, styles.categoryOrderButton, !canMoveEarlier && styles.categoryOrderButtonDisabled]}
+          >
+            <Text style={componentStyles.secondaryButtonText}>{categoryStrings.moveEarlier}</Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel={categoryStrings.moveLater}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !canMoveLater }}
+            disabled={!canMoveLater}
+            onPress={onMoveLater}
+            style={[styles.secondaryButton, styles.categoryOrderButton, !canMoveLater && styles.categoryOrderButtonDisabled]}
+          >
+            <Text style={componentStyles.secondaryButtonText}>{categoryStrings.moveLater}</Text>
+          </Pressable>
+        </View>
+        <Text style={styles.settingCopy}>{categoryStrings.orderHint}</Text>
       </ScrollView>
       <View style={componentStyles.sheetFooter}>
         <View style={componentStyles.editActions}>
           <Pressable accessibilityLabel={strings.common.cancel} accessibilityRole="button" onPress={onCancel} style={styles.secondaryButton}>
             <Text style={componentStyles.secondaryButtonText}>{strings.common.cancel}</Text>
           </Pressable>
-          <Pressable accessibilityLabel={strings.settings.categories.save} accessibilityRole="button" onPress={() => void save()} style={styles.smallPrimaryButton}>
-            <Text style={styles.primaryButtonText}>{strings.settings.categories.save}</Text>
+          <Pressable accessibilityLabel={categoryStrings.save} accessibilityRole="button" onPress={() => void save()} style={styles.smallPrimaryButton}>
+            <Text style={styles.primaryButtonText}>{categoryStrings.save}</Text>
           </Pressable>
         </View>
       </View>

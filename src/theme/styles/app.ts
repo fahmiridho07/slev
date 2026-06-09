@@ -483,46 +483,11 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     fontSize: 12,
     fontWeight: "600"
   },
-  categoryListSection: {
-    gap: 8
+  categoryOrderButton: {
+    flex: 1
   },
-  categoryListRow: {
-    alignItems: "stretch",
-    flexDirection: "row"
-  },
-  categoryListTapArea: {
-    flex: 1,
-    minWidth: 0,
-    overflow: "hidden"
-  },
-  categoryListMain: {
-    gap: 2,
-    paddingHorizontal: 14,
-    paddingVertical: 12
-  },
-  categoryReorderRail: {
-    alignSelf: "center",
-    backgroundColor: colors.faint,
-    borderColor: colors.line,
-    borderLeftWidth: 1,
-    borderRadius: 0,
-    flexDirection: "column",
-    marginRight: 10,
-    overflow: "hidden"
-  },
-  categoryReorderButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 32,
-    minWidth: 40
-  },
-  categoryReorderDivider: {
-    backgroundColor: colors.line,
-    height: 1,
-    width: "100%"
-  },
-  categoryReorderButtonDisabled: {
-    opacity: 0.4
+  categoryOrderButtonDisabled: {
+    opacity: 0.45
   },
   addNoteButton: {
     alignItems: "center",

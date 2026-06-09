@@ -416,12 +416,13 @@ export type AppStrings = {
       edit: string;
       editA11y: string;
       empty: string;
-      moveDownA11y: string;
-      moveUpA11y: string;
+      moveEarlier: string;
+      moveLater: string;
       nameA11y: string;
+      orderHint: string;
+      orderLabel: string;
       placeholder: string;
       renameHint: string;
-      reorderHint: string;
       save: string;
     };
     data: {

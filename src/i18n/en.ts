@@ -162,9 +162,10 @@ export const en: AppStrings = {
       save: "Save category",
       default: "Default",
       custom: "Custom",
-      reorderHint: "Order below is used in capture.",
-      moveUpA11y: "Move {label} up",
-      moveDownA11y: "Move {label} down",
+      orderLabel: "Order in capture",
+      moveEarlier: "Move up",
+      moveLater: "Move down",
+      orderHint: "Changes the chip order when logging expenses.",
       renameHint: "Renaming updates past expenses that used this category.",
       defaultRenameHint: "Renaming a default category hides the old one and updates past expenses.",
       empty: "No active categories. Add a category above to start assigning expenses again."
@@ -219,7 +220,7 @@ export const en: AppStrings = {
     },
     settings_categories: {
       title: "Category list actions",
-      body: "Tap to edit any category. Use arrows to reorder capture. Swipe left to hide."
+      body: "Tap a category to rename or change its order. Swipe left to hide."
     }
   },
   home: {

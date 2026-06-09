@@ -3,7 +3,6 @@ import * as DocumentPicker from "expo-document-picker";
 import React, { memo, useCallback, useMemo, useState } from "react";
 import { Pressable, StyleProp, Text, TextInput, View, ViewStyle } from "react-native";
 import {
-  BottomSheet,
   DeleteConfirmDialog,
   ScreenHero,
   ScreenTabBar,
@@ -12,14 +11,12 @@ import {
 } from "../components";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { SettingsTabKey } from "../features/app.types";
-import { ExpenseCategory } from "../features/spendingMemory.types";
-import { CategoryEditForm } from "../features/settings/CategoryEditForm";
 import { CategorySettingsPanel } from "../features/settings/CategorySettingsPanel";
 import { BalancePanel } from "../features/budget/BalancePanel";
 import { RecurringBillsPanel } from "../features/settings/RecurringBillsPanel";
-import { formatString, getCategoryDeleteMessage, getImportErrorToast } from "../i18n";
+import { formatString, getImportErrorToast } from "../i18n";
 import { formatAmountInput, parseAmountInput } from "../lib/formatMoney";
-import { hapticSelection, hapticWarning } from "../lib/haptics";
+import { hapticWarning } from "../lib/haptics";
 import { FormValidationError } from "../lib/formValidation";
 import { ImportFieldError } from "../features/settings/dataValidation";
 import { listCorruptStorageIssues, StorageHealthIssue } from "../services/storageHealth";
@@ -85,17 +82,13 @@ function SettingsScreenComponent({
       strings.settings.dataTab
     ]
   );
-  const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
-  const [pendingDeleteCategory, setPendingDeleteCategory] = useState<ExpenseCategory | null>(null);
+
   const [importDraft, setImportDraft] = useState("");
   const [importFieldError, setImportFieldError] = useState<FormValidationError<ImportFieldError> | null>(null);
   const [importConfirmVisible, setImportConfirmVisible] = useState(false);
   const [importing, setImporting] = useState(false);
   const [pendingResetIssue, setPendingResetIssue] = useState<StorageHealthIssue | null>(null);
-  function editCategory(category: ExpenseCategory) {
-    hapticSelection();
-    setEditingCategory(category);
-  }
+
 
 
 
@@ -231,8 +224,7 @@ function SettingsScreenComponent({
         <CategorySettingsPanel
           accounts={accounts}
           categories={expenseCategories}
-          onDelete={setPendingDeleteCategory}
-          onEdit={editCategory}
+          onRemoveCategory={(category) => void actions.removeCategory(category)}
           onSaveCategory={actions.saveCategory}
         />
       );
@@ -335,7 +327,6 @@ function SettingsScreenComponent({
     colors.muted,
     componentStyles,
     corruptIssues,
-    editingCategory,
     expenseCategories,
     importDraft,
     importFieldError,
@@ -381,43 +372,6 @@ function SettingsScreenComponent({
       >
         {tabContent}
       </StickyTabScreen>
-      <BottomSheet
-        onClose={() => setEditingCategory(null)}
-        title={
-          editingCategory
-            ? formatString(strings.settings.categories.editA11y, { label: editingCategory.label })
-            : strings.settings.categories.edit
-        }
-        visible={Boolean(editingCategory)}
-      >
-        {editingCategory ? (
-          <CategoryEditForm
-            key={editingCategory.id}
-            category={editingCategory}
-            onCancel={() => setEditingCategory(null)}
-            onSaved={() => setEditingCategory(null)}
-          />
-        ) : null}
-      </BottomSheet>
-      <DeleteConfirmDialog
-        body={pendingDeleteCategory ? getCategoryDeleteMessage(pendingDeleteCategory) : ""}
-        onCancel={() => setPendingDeleteCategory(null)}
-        onConfirm={() => {
-          if (pendingDeleteCategory) {
-            void actions.removeCategory(pendingDeleteCategory);
-            if (editingCategory?.id === pendingDeleteCategory.id) {
-              setEditingCategory(null);
-            }
-            setPendingDeleteCategory(null);
-          }
-        }}
-        title={
-          pendingDeleteCategory?.isDefault
-            ? strings.dialogs.categoryDeleteDefaultTitle
-            : strings.dialogs.categoryDeleteTitle
-        }
-        visible={Boolean(pendingDeleteCategory)}
-      />
       <DeleteConfirmDialog
         body={strings.settings.importBody}
         confirmLabel={strings.settings.importConfirm}
