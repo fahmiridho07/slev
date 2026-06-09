@@ -51,7 +51,6 @@ function CapturePanelComponent({
   const { orderedAccounts, orderedCategories } = useCapturePickerOrder(categoryLabels, accounts);
   const { fieldError, form, patch, changeAmountText, changeEntryType, save } = useCaptureForm();
 
-  const [noteOpen, setNoteOpen] = useState(Boolean(form.note));
   const [dateOpen, setDateOpen] = useState(Boolean(form.occurredAtKey));
   const [saveAck, setSaveAck] = useState<CaptureSaveAck | null>(null);
   const saveAckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,12 +75,6 @@ function CapturePanelComponent({
   }, []);
 
   useEffect(() => {
-    if (form.note) {
-      setNoteOpen(true);
-    }
-  }, [form.note]);
-
-  useEffect(() => {
     if (form.occurredAtKey) {
       setDateOpen(true);
     }
@@ -102,7 +95,6 @@ function CapturePanelComponent({
     if (saved) {
       showSaveAck(saved);
       hapticSuccess();
-      setNoteOpen(false);
       setDateOpen(false);
       onSaved?.();
     }
@@ -251,17 +243,6 @@ function CapturePanelComponent({
         )
       )}
 
-      {noteOpen ? (
-        <TextInput
-          multiline
-          onChangeText={(value) => patch({ note: value })}
-          placeholder={strings.capture.notePlaceholder}
-          placeholderTextColor={colors.muted}
-          style={[styles.input, styles.noteInput]}
-          value={form.note}
-        />
-      ) : null}
-
       {dateOpen ? (
         <CaptureDatePicker
           occurredAtKey={form.occurredAtKey}
@@ -275,22 +256,14 @@ function CapturePanelComponent({
         </Text>
       )}
 
-      {!noteOpen || !dateOpen ? (
+      {!dateOpen ? (
         <View style={styles.captureOptionalRow}>
-          {!noteOpen ? (
-            <Pressable accessibilityRole="button" onPress={() => setNoteOpen(true)} style={styles.addNoteButton}>
-              <Ionicons name="create-outline" size={16} color={colors.muted} />
-              <Text style={styles.addNoteText}>{strings.capture.addNote}</Text>
-            </Pressable>
-          ) : null}
-          {!dateOpen ? (
-            <Pressable accessibilityRole="button" onPress={() => setDateOpen(true)} style={styles.addNoteButton}>
-              <Ionicons name="calendar-outline" size={16} color={colors.muted} />
-              <Text style={styles.addNoteText}>
-                {formatCaptureDateLabel(form.occurredAtKey) ?? strings.capture.changeDate}
-              </Text>
-            </Pressable>
-          ) : null}
+          <Pressable accessibilityRole="button" onPress={() => setDateOpen(true)} style={styles.addNoteButton}>
+            <Ionicons name="calendar-outline" size={16} color={colors.muted} />
+            <Text style={styles.addNoteText}>
+              {formatCaptureDateLabel(form.occurredAtKey) ?? strings.capture.changeDate}
+            </Text>
+          </Pressable>
         </View>
       ) : null}
 

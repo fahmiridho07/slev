@@ -78,8 +78,7 @@ export const en: AppStrings = {
       Home: "Home",
       Other: "Other"
     },
-    notePlaceholder: "Tiny note, optional",
-    addNote: "Add a note",
+
     changeDate: "Change date",
     dateLabel: "Date",
     pickAnotherDate: "Pick another date",

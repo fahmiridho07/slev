@@ -90,7 +90,7 @@ export type AppStrings = {
     };
   };
   capture: {
-    addNote: string;
+
     changeDate: string;
     dateLabel: string;
     dateQuick: {
@@ -132,7 +132,7 @@ export type AppStrings = {
     kicker: string;
     labelPlaceholder: string;
     noCategories: string;
-    notePlaceholder: string;
+
     openSettings: string;
     paidFrom: string;
     quickAdd: string;

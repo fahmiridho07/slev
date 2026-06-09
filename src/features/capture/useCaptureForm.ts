@@ -64,7 +64,6 @@ export function useCaptureForm() {
       const hasDraft = Boolean(
         current.amountText.trim()
         || current.label.trim()
-        || current.note.trim()
         || current.source.trim()
       );
       bootstrappedRef.current = true;
@@ -204,10 +203,6 @@ export function useCaptureForm() {
     [accounts, form.context, form.fromAccount, form.toAccount]
   );
 
-  const resetNoteOnly = useCallback(() => {
-    setForm((current) => ({ ...current, note: "" }));
-  }, []);
-
   const save = useCallback(async (): Promise<CaptureSaveAck | null> => {
     const amount = parseAmountInput(form.amountText);
     const ack: CaptureSaveAck = {
@@ -265,7 +260,6 @@ export function useCaptureForm() {
     patch,
     changeAmountText,
     changeEntryType,
-    save,
-    resetNoteOnly
+    save
   };
 }

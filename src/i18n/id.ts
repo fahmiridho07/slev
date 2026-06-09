@@ -78,8 +78,7 @@ export const id: AppStrings = {
       Home: "Rumah",
       Other: "Lainnya"
     },
-    notePlaceholder: "Catatan singkat, opsional",
-    addNote: "Tambah catatan",
+
     changeDate: "Ubah tanggal",
     dateLabel: "Tanggal",
     pickAnotherDate: "Pilih tanggal lain",
