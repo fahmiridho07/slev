@@ -238,6 +238,16 @@ export const id: AppStrings = {
       triggerA11y: "Buka bantuan saldo dan petunjuk persiapan",
       balanceSection: "Saldo",
       detailsSection: "Detail",
+      paceSection: "Ritme harian",
+      paceIntro:
+        "Chip di kartu saldo membandingkan rata-rata pengeluaranmu (±30 hari terakhir) dengan jatah aman harian.",
+      paceCurrent: "Chip kamu sekarang: {label}",
+      paceUnderExplain:
+        "Di bawah ritme — rata-rata pengeluaranmu lebih rendah dari jatah aman harian.",
+      paceOverExplain:
+        "Di atas ritme — rata-rata pengeluaranmu lebih tinggi dari jatah aman harian. Bisa mepet sebelum akhir bulan atau gajian.",
+      paceEvenExplain: "Pas ritme — rata-rata pengeluaranmu selaras dengan jatah aman harian.",
+      paceUnknownExplain: "Estimasi — belum cukup riwayat pengeluaran untuk membandingkan ritme.",
       setupSection: "Persiapan"
     },
     setup: {

@@ -206,6 +206,13 @@ export type AppStrings = {
     hints: {
       balanceSection: string;
       detailsSection: string;
+      paceCurrent: string;
+      paceEvenExplain: string;
+      paceIntro: string;
+      paceOverExplain: string;
+      paceSection: string;
+      paceUnderExplain: string;
+      paceUnknownExplain: string;
       setupSection: string;
       sheetTitle: string;
       triggerA11y: string;

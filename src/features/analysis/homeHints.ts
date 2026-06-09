@@ -4,7 +4,7 @@ import { formatString } from "../../i18n";
 import type { AppStrings } from "../../i18n/types";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { getHomeSetupHints, HomeSetupHint } from "../../lib/homeSetup";
-import type { SafeToSpendResult } from "../../lib/safeToSpend";
+import type { SafeToSpendPace, SafeToSpendResult } from "../../lib/safeToSpend";
 
 export type HomeHintItem = {
   actionA11y?: string;
@@ -19,6 +19,19 @@ export type HomeHintSection = {
   key: string;
   title?: string;
 };
+
+function getPaceLabel(pace: SafeToSpendPace, copy: AppStrings["home"]["safeToSpend"]): string {
+  if (pace === "under") {
+    return copy.paceUnder;
+  }
+  if (pace === "over") {
+    return copy.paceOver;
+  }
+  if (pace === "even") {
+    return copy.paceEven;
+  }
+  return copy.paceUnknown;
+}
 
 function setupHintItem(
   hint: HomeSetupHint,
@@ -91,6 +104,22 @@ export function buildHomeHintSections({
     key: "balance",
     title: hints.balanceSection,
     items: [{ id: "spendable-helper", message: copy.spendableHelper }]
+  });
+
+  sections.push({
+    key: "pace",
+    title: hints.paceSection,
+    items: [
+      { id: "pace-intro", message: hints.paceIntro },
+      {
+        id: "pace-current",
+        message: formatString(hints.paceCurrent, { label: getPaceLabel(safe.pace, copy) })
+      },
+      { id: "pace-under", message: hints.paceUnderExplain },
+      { id: "pace-over", message: hints.paceOverExplain },
+      { id: "pace-even", message: hints.paceEvenExplain },
+      { id: "pace-unknown", message: hints.paceUnknownExplain }
+    ]
   });
 
   const detailItems: HomeHintItem[] = [

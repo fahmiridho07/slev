@@ -238,6 +238,16 @@ export const en: AppStrings = {
       triggerA11y: "Open balance help and setup hints",
       balanceSection: "Balance",
       detailsSection: "Details",
+      paceSection: "Daily pace",
+      paceIntro:
+        "The chip on your balance card compares your recent average spending (last ~30 days) to your safe daily allowance.",
+      paceCurrent: "Your chip right now: {label}",
+      paceUnderExplain:
+        "Below daily pace — you've been spending less than your safe daily amount on average.",
+      paceOverExplain:
+        "Above daily pace — your recent average is higher than your safe daily allowance. You may run tight before month-end or payday.",
+      paceEvenExplain: "On daily pace — your recent average matches your safe daily allowance.",
+      paceUnknownExplain: "Estimating — not enough expense history yet to compare your pace.",
       setupSection: "Setup"
     },
     setup: {
