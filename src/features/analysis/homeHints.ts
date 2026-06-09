@@ -6,12 +6,16 @@ import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { getHomeSetupHints, HomeSetupHint } from "../../lib/homeSetup";
 import type { SafeToSpendPace, SafeToSpendResult } from "../../lib/safeToSpend";
 
+export type HomeHintItemKind = "text" | "callout" | "definition" | "fact" | "action";
+
 export type HomeHintItem = {
   actionA11y?: string;
   actionLabel?: string;
   actionTab?: SettingsTabKey;
   id: string;
+  kind?: HomeHintItemKind;
   message: string;
+  title?: string;
 };
 
 export type HomeHintSection = {
@@ -19,6 +23,19 @@ export type HomeHintSection = {
   key: string;
   title?: string;
 };
+
+function splitDefinitionCopy(message: string): { body: string; title: string } {
+  const separator = " — ";
+  const index = message.indexOf(separator);
+  if (index === -1) {
+    return { title: "", body: message };
+  }
+
+  return {
+    title: message.slice(0, index),
+    body: message.slice(index + separator.length)
+  };
+}
 
 function getPaceLabel(pace: SafeToSpendPace, copy: AppStrings["home"]["safeToSpend"]): string {
   if (pace === "under") {
@@ -43,6 +60,7 @@ function setupHintItem(
   if (hint.type === "payday") {
     return {
       id: "setup-payday",
+      kind: "action",
       message: safe.paydayHint,
       actionLabel: safe.paydayHintAction,
       actionA11y: safe.paydayHintA11y,
@@ -53,6 +71,7 @@ function setupHintItem(
   if (hint.type === "opening_balance") {
     return {
       id: "setup-opening-balance",
+      kind: "action",
       message: setup.openingBalanceHint,
       actionLabel: setup.openingBalanceAction,
       actionA11y: setup.openingBalanceA11y,
@@ -63,6 +82,7 @@ function setupHintItem(
   if (hint.type === "bills") {
     return {
       id: "setup-bills",
+      kind: "action",
       message: setup.billsHint,
       actionLabel: setup.billsAction,
       actionA11y: setup.billsA11y,
@@ -72,6 +92,7 @@ function setupHintItem(
 
   return {
     id: "setup-overdue-bills",
+    kind: "action",
     message: formatString(setup.overdueBillsHint, { count: hint.count ?? 0 }),
     actionLabel: setup.overdueBillsAction,
     actionA11y: setup.overdueBillsA11y,
@@ -103,28 +124,43 @@ export function buildHomeHintSections({
   sections.push({
     key: "balance",
     title: hints.balanceSection,
-    items: [{ id: "spendable-helper", message: copy.spendableHelper }]
+    items: [{ id: "spendable-helper", kind: "text", message: copy.spendableHelper }]
+  });
+
+  const paceDefinitions = [
+    hints.paceUnderExplain,
+    hints.paceOverExplain,
+    hints.paceEvenExplain,
+    hints.paceUnknownExplain
+  ].map((message, index) => {
+    const { title, body } = splitDefinitionCopy(message);
+    return {
+      id: `pace-type-${index}`,
+      kind: "definition" as const,
+      title,
+      message: body
+    };
   });
 
   sections.push({
     key: "pace",
     title: hints.paceSection,
     items: [
-      { id: "pace-intro", message: hints.paceIntro },
+      { id: "pace-intro", kind: "text", message: hints.paceIntro },
       {
         id: "pace-current",
-        message: formatString(hints.paceCurrent, { label: getPaceLabel(safe.pace, copy) })
+        kind: "callout",
+        message: getPaceLabel(safe.pace, copy),
+        title: hints.paceNowLabel
       },
-      { id: "pace-under", message: hints.paceUnderExplain },
-      { id: "pace-over", message: hints.paceOverExplain },
-      { id: "pace-even", message: hints.paceEvenExplain },
-      { id: "pace-unknown", message: hints.paceUnknownExplain }
+      ...paceDefinitions
     ]
   });
 
   const detailItems: HomeHintItem[] = [
     {
       id: "typical-daily",
+      kind: "fact",
       message: [
         formatString(copy.typicalDaily, { amount: formatRupiah(safe.typicalDaily) }),
         !safe.confident ? copy.typicalDailyUncertain : null
@@ -137,6 +173,7 @@ export function buildHomeHintSections({
   if (safe.billsReserve > 0) {
     detailItems.push({
       id: "bills-reserve",
+      kind: "fact",
       message: formatString(copy.billsReserve, { amount: formatRupiah(safe.billsReserve) })
     });
   }
@@ -144,6 +181,7 @@ export function buildHomeHintSections({
   if (safe.spendBuffer > 0) {
     detailItems.push({
       id: "spend-buffer",
+      kind: "fact",
       message: formatString(copy.spendBuffer, { amount: formatRupiah(safe.spendBuffer) })
     });
   }

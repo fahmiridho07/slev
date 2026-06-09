@@ -241,7 +241,7 @@ export const en: AppStrings = {
       paceSection: "Daily pace",
       paceIntro:
         "The chip on your balance card compares your recent average spending (last ~30 days) to your safe daily allowance.",
-      paceCurrent: "Your chip right now: {label}",
+      paceNowLabel: "Right now",
       paceUnderExplain:
         "Below daily pace — you've been spending less than your safe daily amount on average.",
       paceOverExplain:

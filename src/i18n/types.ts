@@ -206,9 +206,9 @@ export type AppStrings = {
     hints: {
       balanceSection: string;
       detailsSection: string;
-      paceCurrent: string;
       paceEvenExplain: string;
       paceIntro: string;
+      paceNowLabel: string;
       paceOverExplain: string;
       paceSection: string;
       paceUnderExplain: string;

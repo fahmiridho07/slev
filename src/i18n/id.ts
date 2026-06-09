@@ -241,7 +241,7 @@ export const id: AppStrings = {
       paceSection: "Ritme harian",
       paceIntro:
         "Chip di kartu saldo membandingkan rata-rata pengeluaranmu (±30 hari terakhir) dengan jatah aman harian.",
-      paceCurrent: "Chip kamu sekarang: {label}",
+      paceNowLabel: "Sekarang",
       paceUnderExplain:
         "Di bawah ritme — rata-rata pengeluaranmu lebih rendah dari jatah aman harian.",
       paceOverExplain:

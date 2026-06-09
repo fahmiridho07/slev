@@ -675,21 +675,123 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     width: 8
   },
   homeHintsSheetContent: {
-    gap: 18,
+    gap: 12,
     paddingBottom: 8
   },
-  homeHintsSection: {
-    gap: 8
-  },
-  homeHintsItem: {
+  homeHintsSectionCard: {
     backgroundColor: colors.canvas,
     borderColor: colors.line,
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 10,
+    padding: 14
+  },
+  homeHintsSectionTitle: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.2,
+    textTransform: "uppercase"
+  },
+  homeHintsText: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20
+  },
+  homeHintsCallout: {
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 10
+  },
+  homeHintsCalloutPositive: {
+    backgroundColor: colors.surfacePositive,
+    borderColor: colors.borderMint
+  },
+  homeHintsCalloutWarning: {
+    backgroundColor: colors.surfaceWarning,
+    borderColor: colors.borderWarning
+  },
+  homeHintsCalloutNeutral: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line
+  },
+  homeHintsCalloutInfo: {
+    backgroundColor: colors.surfaceInfo,
+    borderColor: colors.borderInfo
+  },
+  homeHintsCalloutLabel: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+    textTransform: "uppercase"
+  },
+  homeHintsCalloutValue: {
+    fontSize: 15,
+    fontWeight: "800",
+    lineHeight: 20
+  },
+  homeHintsCalloutTextPositive: {
+    color: colors.greenDark
+  },
+  homeHintsCalloutTextWarning: {
+    color: colors.amber
+  },
+  homeHintsCalloutTextNeutral: {
+    color: colors.ink
+  },
+  homeHintsCalloutTextInfo: {
+    color: colors.blue
+  },
+  homeHintsDefinition: {
+    gap: 3
+  },
+  homeHintsDefinitionDivider: {
+    borderTopColor: colors.line,
+    borderTopWidth: 1,
+    marginTop: 2,
+    paddingTop: 10
+  },
+  homeHintsDefinitionTitle: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 18
+  },
+  homeHintsDefinitionBody: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18
+  },
+  homeHintsFact: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: 8
+  },
+  homeHintsFactDot: {
+    backgroundColor: colors.greenDark,
+    borderRadius: 3,
+    height: 6,
+    marginTop: 7,
+    width: 6
+  },
+  homeHintsFactText: {
+    color: colors.muted,
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18
+  },
+  homeHintsAction: {
+    backgroundColor: colors.surfaceInfo,
+    borderColor: colors.borderInfo,
     borderRadius: 8,
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 10
   },
-  homeHintsItemText: {
+  homeHintsActionText: {
     color: colors.muted,
     fontSize: 13,
     lineHeight: 18
