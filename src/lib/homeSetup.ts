@@ -9,6 +9,25 @@ export type HomeSetupHint = {
   type: HomeSetupHintType;
 };
 
+const HINT_PRIORITY: HomeSetupHintType[] = ["overdue_bills", "opening_balance", "payday", "bills"];
+
+export function getPrimaryHomeSetupHint(input: {
+  accounts: MoneyAccount[];
+  moments: SpendingMoment[];
+  paydayDayOfMonth: number | null;
+  recurringBills: RecurringBill[];
+  transfers: MoneyTransfer[];
+}): HomeSetupHint | null {
+  const hints = getHomeSetupHints(input);
+  for (const type of HINT_PRIORITY) {
+    const match = hints.find((hint) => hint.type === type);
+    if (match) {
+      return match;
+    }
+  }
+  return null;
+}
+
 export function getHomeSetupHints({
   accounts,
   moments,

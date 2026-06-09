@@ -16,10 +16,9 @@ import { formatAmountInput, parseAmountInput } from "../../lib/formatMoney";
 import { buildSafeToSpend, simulatePurchase, type SafeToSpendPace } from "../../lib/safeToSpend";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import type { AppStrings } from "../../i18n/types";
-import { SettingsTabKey } from "../app.types";
 import { shallowEqual, useFinanceSelector } from "../../state/useFinance";
 import { useTheme } from "../../hooks/useTheme";
-import { HomeSetupHints } from "./HomeSetupHints";
+
 
 function getPaceCopy(pace: SafeToSpendPace, copy: AppStrings["home"]["safeToSpend"]) {
   if (pace === "under") {
@@ -34,11 +33,7 @@ function getPaceCopy(pace: SafeToSpendPace, copy: AppStrings["home"]["safeToSpen
   return copy.paceUnknown;
 }
 
-type SafeToSpendCardProps = {
-  onOpenSettings: (tab?: SettingsTabKey) => void;
-};
-
-function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
+function SafeToSpendCardComponent() {
   const { colors, componentStyles, paydayDayOfMonth, reduceMotion, spendBuffer, strings, styles } = useTheme();
   const copy = strings.home.safeToSpend;
   const { accounts, moments, recurringBills, transfers } = useFinanceSelector(
@@ -211,15 +206,6 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
           </View>
         </View>
 
-        <HomeSetupHints
-          accounts={accounts}
-          moments={moments}
-          onOpenSettings={onOpenSettings}
-          paydayDayOfMonth={paydayDayOfMonth}
-          recurringBills={recurringBills}
-          transfers={transfers}
-        />
-
         {safe.spendableBalance < 0 ? (
           <Text style={styles.heroWarningText}>
             {formatString(copy.billsExceedBalance, {
@@ -253,8 +239,6 @@ function SafeToSpendCardComponent({ onOpenSettings }: SafeToSpendCardProps) {
             </Text>
           </View>
         </View>
-
-        <Text style={styles.homeBalanceMetaSecondary}>{copy.spendableHelper}</Text>
 
         <View style={styles.homeBalanceMeta}>
           <Text style={[styles.homeBalanceMetaLine, { color: typicalDailyColor }]}>

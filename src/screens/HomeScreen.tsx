@@ -1,10 +1,12 @@
 import React, { memo, useEffect, useRef } from "react";
 import { ScrollView, StyleProp, View, ViewStyle } from "react-native";
+import { HomeSetupHints } from "../features/analysis/HomeSetupHints";
 import { SafeToSpendCard } from "../features/analysis/SafeToSpendCard";
 import { CapturePanel } from "../features/capture/CapturePanel";
 import { SettingsTabKey } from "../features/app.types";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { useTheme } from "../hooks/useTheme";
+import { shallowEqual, useFinanceSelector } from "../state/useFinance";
 
 type HomeScreenProps = {
   captureFocusRequest: number;
@@ -17,7 +19,16 @@ function HomeScreenComponent({
   onOpenSettings,
   scrollContentStyle
 }: HomeScreenProps) {
-  const { reduceMotion, styles } = useTheme();
+  const { paydayDayOfMonth, reduceMotion, styles } = useTheme();
+  const { accounts, moments, recurringBills, transfers } = useFinanceSelector(
+    (state) => ({
+      accounts: state.accounts,
+      moments: state.moments,
+      recurringBills: state.recurringBills,
+      transfers: state.transfers
+    }),
+    shallowEqual
+  );
   const { refreshControl } = usePullToRefresh();
   const scrollRef = useRef<ScrollView>(null);
   const captureOffsetRef = useRef(0);
@@ -44,7 +55,15 @@ function HomeScreenComponent({
       refreshControl={refreshControl}
     >
       <View style={styles.cardStack}>
-        <SafeToSpendCard onOpenSettings={onOpenSettings} />
+        <SafeToSpendCard />
+        <HomeSetupHints
+          accounts={accounts}
+          moments={moments}
+          onOpenSettings={onOpenSettings}
+          paydayDayOfMonth={paydayDayOfMonth}
+          recurringBills={recurringBills}
+          transfers={transfers}
+        />
         <View
           onLayout={(event) => {
             captureOffsetRef.current = event.nativeEvent.layout.y;

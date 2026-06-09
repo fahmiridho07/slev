@@ -1,4 +1,4 @@
-import { getHomeSetupHints } from "../src/lib/homeSetup";
+import { getHomeSetupHints, getPrimaryHomeSetupHint } from "../src/lib/homeSetup";
 import { MoneyAccount } from "../src/features/spendingMemory.types";
 
 declare const process: {
@@ -26,6 +26,18 @@ test("getHomeSetupHints surfaces payday, opening balance, and bills setup", () =
     "payday,opening_balance,bills",
     "setup hints"
   );
+});
+
+test("getPrimaryHomeSetupHint returns only the highest-priority hint", () => {
+  const hint = getPrimaryHomeSetupHint({
+    accounts: [account("BRI")],
+    moments: [],
+    paydayDayOfMonth: null,
+    recurringBills: [],
+    transfers: []
+  });
+
+  assertEqual(hint?.type, "opening_balance", "primary hint");
 });
 
 test("getHomeSetupHints includes overdue bills when due day passed without payment", () => {
