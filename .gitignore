@@ -24,3 +24,6 @@ terminals/
 # Build artifacts
 *.apk
 *.aab
+
+# Claude Code local state (machine-specific, never shared)
+.claude/
