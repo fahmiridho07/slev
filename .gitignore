@@ -27,3 +27,4 @@ terminals/
 
 # Claude Code local state (machine-specific, never shared)
 .claude/
+CLAUDE.md
