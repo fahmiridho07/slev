@@ -16,6 +16,7 @@ export function getPrimaryHomeSetupHint(input: {
   moments: SpendingMoment[];
   paydayDayOfMonth: number | null;
   recurringBills: RecurringBill[];
+  referenceDate?: Date;
   transfers: MoneyTransfer[];
 }): HomeSetupHint | null {
   const hints = getHomeSetupHints(input);
@@ -33,12 +34,14 @@ export function getHomeSetupHints({
   moments,
   paydayDayOfMonth,
   recurringBills,
+  referenceDate = new Date(),
   transfers
 }: {
   accounts: MoneyAccount[];
   moments: SpendingMoment[];
   paydayDayOfMonth: number | null;
   recurringBills: RecurringBill[];
+  referenceDate?: Date;
   transfers: MoneyTransfer[];
 }): HomeSetupHint[] {
   const hints: HomeSetupHint[] = [];
@@ -56,7 +59,7 @@ export function getHomeSetupHints({
     hints.push({ type: "bills" });
   }
 
-  const overdue = getUnloggedPastDueBills(recurringBills, moments);
+  const overdue = getUnloggedPastDueBills(recurringBills, moments, referenceDate);
   if (overdue.length > 0) {
     hints.push({ type: "overdue_bills", count: overdue.length });
   }

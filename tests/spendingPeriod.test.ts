@@ -80,8 +80,8 @@ test("month offset helpers identify current month", () => {
   const referenceDate = new Date(2026, 5, 1);
   assertEqual(isCurrentMonthOffset(0), true, "offset zero");
   assertEqual(isCurrentMonthOffset(-1), false, "offset negative");
-  assertEqual(isCurrentMonthDate(referenceDate), true, "current month date");
-  assertEqual(isCurrentMonthDate(new Date(2026, 4, 1)), false, "prior month date");
+  assertEqual(isCurrentMonthDate(referenceDate, referenceDate), true, "current month date");
+  assertEqual(isCurrentMonthDate(new Date(2026, 4, 1), referenceDate), false, "prior month date");
 });
 
 let passed = 0;

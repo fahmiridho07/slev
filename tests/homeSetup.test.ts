@@ -56,6 +56,7 @@ test("getHomeSetupHints includes overdue bills when due day passed without payme
         updatedAt: "2026-01-01T00:00:00.000Z"
       }
     ],
+    referenceDate: new Date(2026, 5, 20, 12, 0),
     transfers: []
   });
 

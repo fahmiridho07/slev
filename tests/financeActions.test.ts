@@ -194,8 +194,14 @@ test("saveMoment persists backdated occurredAt", async () => {
 
   assertEqual(result.ok, true, "backdated capture saved");
   const occurredAt = getState().moments[0]?.occurredAt ?? "";
-  if (!occurredAt.startsWith("2026-06-07")) {
-    throw new Error(`expected backdated occurredAt, got ${occurredAt}`);
+  const occurredDate = new Date(occurredAt);
+  const localKey = [
+    occurredDate.getFullYear(),
+    `${occurredDate.getMonth() + 1}`.padStart(2, "0"),
+    `${occurredDate.getDate()}`.padStart(2, "0")
+  ].join("-");
+  if (localKey !== "2026-06-07") {
+    throw new Error(`expected backdated occurredAt on 2026-06-07 local time, got ${occurredAt}`);
   }
 });
 
