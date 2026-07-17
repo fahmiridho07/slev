@@ -5,6 +5,7 @@ import { MonthPeriodPicker } from "../../components";
 import { formatString } from "../../i18n";
 import { getMonthMoments, sumExpenseMoments, sumMoments } from "../../lib/analysis";
 import { formatSignedCompactRupiah } from "../../lib/formatMoney";
+import { getSavingsRate } from "../../lib/monthInsights";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { buildMonthExpenseComparison, getMonthReferenceDate } from "../../lib/spendingPeriod";
 import { SpendingMoment } from "../spendingMemory.types";
@@ -42,6 +43,7 @@ export function MonthSummaryCard({
   );
   const expense = useMemo(() => sumExpenseMoments(monthMoments), [monthMoments]);
   const net = income - expense;
+  const savingsRate = getSavingsRate(income, expense);
   const expenseComparison = useMemo(
     () => buildMonthExpenseComparison(moments, monthOffset),
     [moments, monthOffset]
@@ -131,6 +133,21 @@ export function MonthSummaryCard({
           </Text>
         </View>
       </View>
+
+      {savingsRate !== null ? (
+        <Text
+          style={[
+            styles.monthCashflowDelta,
+            savingsRate >= 0 ? styles.monthDeltaTextDown : styles.monthDeltaTextUp
+          ]}
+        >
+          {savingsRate >= 0
+            ? formatString(cashflowStrings.savingsRate, { percent: Math.round(savingsRate * 100) })
+            : formatString(cashflowStrings.savingsRateNegative, {
+                percent: Math.round(-savingsRate * 100)
+              })}
+        </Text>
+      ) : null}
     </View>
   );
 }

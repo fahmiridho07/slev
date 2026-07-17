@@ -10,6 +10,7 @@ const MEMORY_LIST_HINT_KEY = "slev_ui_memory_list_hint_seen";
 const REDUCE_MOTION_KEY = "slev_ui_reduce_motion";
 const PAYDAY_DAY_KEY = "slev_finance_payday_day";
 const SPEND_BUFFER_KEY = "slev_finance_spend_buffer";
+const MONTH_RECAP_DISMISSED_KEY = "slev_ui_month_recap_dismissed";
 
 export type ReduceMotionPreference = "off" | "on" | "system";
 
@@ -145,6 +146,16 @@ export async function getSpendBufferPreference(): Promise<number> {
 export async function setSpendBufferPreference(amount: number): Promise<boolean> {
   const normalized = Number.isFinite(amount) ? Math.max(0, Math.round(amount)) : 0;
   return writeRaw(SPEND_BUFFER_KEY, normalized > 0 ? String(normalized) : "");
+}
+
+/** Month key ("YYYY-MM") of the last month recap the user dismissed, if any. */
+export async function getDismissedMonthRecapKey(): Promise<string | null> {
+  const stored = await readRaw(MONTH_RECAP_DISMISSED_KEY);
+  return stored && /^\d{4}-\d{2}$/.test(stored) ? stored : null;
+}
+
+export async function setDismissedMonthRecapKey(monthKey: string): Promise<boolean> {
+  return writeRaw(MONTH_RECAP_DISMISSED_KEY, monthKey);
 }
 
 export const UI_PREFERENCE_KEYS = {

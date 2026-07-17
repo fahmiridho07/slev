@@ -56,6 +56,11 @@ export const id: AppStrings = {
     context: "Kategori",
     billSuggestions: "Saran dari tagihan rutin",
     billsReservedHint: "Tagihan rutin sudah dicadangkan — nggak perlu dicatat di sini.",
+    categoryFeedback: {
+      spentSoFar: "{category} bulan ini: {amount}",
+      guideLeft: "Sisa {remaining} dari patokan bulanan {limit}",
+      guideOver: "{over} melewati patokan bulanan {limit}"
+    },
     reorderHint: "Tahan untuk atur ulang",
     contextHints: {
       Meal: "Makanan, camilan, makan siang",
@@ -133,6 +138,10 @@ export const id: AppStrings = {
     english: "English",
     indonesian: "Bahasa Indonesia"
   },
+  quickActions: {
+    captureTitle: "Catat pengeluaran",
+    captureSubtitle: "Cukup isi nominalnya"
+  },
   settings: {
     bills: {
       title: "Tagihan rutin",
@@ -170,6 +179,10 @@ export const id: AppStrings = {
       hintLabel: "Contoh (opsional)",
       hintA11y: "Contoh pengeluaran kategori",
       hintPlaceholder: "mis. Makanan, camilan, makan siang",
+      guideLabel: "Patokan bulanan (opsional)",
+      guideA11y: "Patokan bulanan kategori",
+      guideHelper: "Angka lembut per bulan untuk kategori ini. Saat mencatat, kamu lihat sisanya — tanpa peringatan atau larangan.",
+      guideMeta: "Patokan {amount}/bulan",
       placeholder: "mis. Kesehatan, Langganan, Hobi",
       save: "Simpan kategori",
       default: "Bawaan",
@@ -413,6 +426,15 @@ export const id: AppStrings = {
       feedbackSaved: "Terima kasih — tercatat."
     },
     recapEmptyAction: "Catat pengeluaran",
+    monthRecap: {
+      title: "Ringkasan {month}",
+      subtitle: "Sekilas ke belakang sebelum bulan ini terbentuk.",
+      keptRate: "Kamu menyimpan {percent}% dari pemasukan",
+      keptRateNegative: "Pengeluaran {percent}% di atas pemasukan",
+      topTitle: "Ke mana perginya",
+      dismiss: "Mengerti",
+      dismissA11y: "Tutup ringkasan bulan"
+    },
     ...idExtras.patterns
   },
   dialogs: {

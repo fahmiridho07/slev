@@ -175,6 +175,7 @@ export const idExtras: AppStringsExtras = {
     },
     trends: {
       empty: "Tren muncul setelah pengeluaran terbentuk lintas bulan.",
+      cashflowTrendTitle: "Bulan-bulan terakhir",
       advancedTrends: "Tren lanjutan",
       expandAdvancedTrends: "Tampilkan tren lanjutan",
       collapseAdvancedTrends: "Sembunyikan tren lanjutan",
@@ -190,7 +191,9 @@ export const idExtras: AppStringsExtras = {
       netLabel: "Bersih",
       netThisMonth: "Bersih bulan ini",
       income: "Pemasukan",
-      expense: "Pengeluaran"
+      expense: "Pengeluaran",
+      savingsRate: "Kamu menyimpan {percent}% dari pemasukan bulan ini",
+      savingsRateNegative: "Pengeluaran {percent}% di atas pemasukan bulan ini"
     },
     chart: {
       title: "Bulan ini sekilas",

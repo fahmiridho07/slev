@@ -102,6 +102,11 @@ export type AppStrings = {
     pickAnotherDate: string;
     billSuggestions: string;
     billsReservedHint: string;
+    categoryFeedback: {
+      guideLeft: string;
+      guideOver: string;
+      spentSoFar: string;
+    };
     amountA11y: string;
     amountPlaceholder: string;
     currencyPrefix: string;
@@ -307,6 +312,10 @@ export type AppStrings = {
     indonesian: string;
     label: string;
   };
+  quickActions: {
+    captureSubtitle: string;
+    captureTitle: string;
+  };
   memory: {
     groups: {
       earlier: string;
@@ -356,6 +365,8 @@ export type AppStrings = {
       net: string;
       netLabel: string;
       netThisMonth: string;
+      savingsRate: string;
+      savingsRateNegative: string;
     };
     chart: {
       a11ySummary: string;
@@ -414,6 +425,15 @@ export type AppStrings = {
       feedbackSaved: string;
       feedbackNotSure: string;
     };
+    monthRecap: {
+      dismiss: string;
+      dismissA11y: string;
+      keptRate: string;
+      keptRateNegative: string;
+      subtitle: string;
+      title: string;
+      topTitle: string;
+    };
     recapEmpty: string;
     recapEmptyAction: string;
     tabs: {
@@ -435,6 +455,7 @@ export type AppStrings = {
     };
     trends: {
       advancedTrends: string;
+      cashflowTrendTitle: string;
       collapseAdvancedTrends: string;
       currentPaceTitle: string;
       empty: string;
@@ -476,6 +497,10 @@ export type AppStrings = {
       edit: string;
       editA11y: string;
       empty: string;
+      guideA11y: string;
+      guideHelper: string;
+      guideLabel: string;
+      guideMeta: string;
       hintA11y: string;
       hintLabel: string;
       hintPlaceholder: string;

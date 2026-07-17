@@ -45,6 +45,7 @@ export type ExpenseCategory = {
   id: string;
   label: string;
   hint?: string;
+  monthlyGuide?: number;
   isDefault: boolean;
   createdAt: string;
   updatedAt: string;

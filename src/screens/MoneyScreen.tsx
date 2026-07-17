@@ -16,6 +16,8 @@ import { AccountActivitySummary } from "../features/analysis/AccountActivitySumm
 import { ExpenseCategorySummary } from "../features/analysis/ExpenseCategorySummary";
 import { IncomeAccountsAccordion } from "../features/analysis/IncomeAccountsAccordion";
 import { MonthSummaryCard } from "../features/analysis/MonthSummaryCard";
+import { MonthlyRecapCard } from "../features/analysis/MonthlyRecapCard";
+import { SpendingTrendCard } from "../features/analysis/SpendingTrendCard";
 import { useListActionsHint } from "../hooks/useListActionsHint";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { MomentEditForm } from "../features/memory/MomentEditForm";
@@ -232,6 +234,7 @@ function MoneyScreenComponent({
     () => (
       <View style={styles.cardStack}>
         {tabSwitcher}
+        {isCurrentMonthOffset(breakdownMonthOffset) ? <MonthlyRecapCard moments={moments} /> : null}
         <MonthSummaryCard
           canGoBack={breakdownMonthOffset > earliestMonthOffset}
           canGoForward={!isCurrentMonthOffset(breakdownMonthOffset)}
@@ -242,6 +245,7 @@ function MoneyScreenComponent({
           onPrevious={() => setBreakdownMonthOffset(breakdownMonthOffset - 1)}
         />
         <ExpenseCategorySummary moments={moments} monthOffset={breakdownMonthOffset} />
+        <SpendingTrendCard moments={moments} monthOffset={breakdownMonthOffset} />
         <AccountActivitySummary moments={moments} monthOffset={breakdownMonthOffset} />
         <IncomeAccountsAccordion moments={moments} monthOffset={breakdownMonthOffset} />
       </View>

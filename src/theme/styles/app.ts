@@ -150,6 +150,15 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
   captureBillsBlock: {
     gap: 6
   },
+  captureGuideHint: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18
+  },
+  captureGuideHintOver: {
+    color: colors.coral,
+    fontWeight: "600"
+  },
   pulsePanel: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -944,6 +953,72 @@ export function createScreenStyles(colors: ColorTokens, shadows: ShadowTokens) {
     textAlign: "center"
   },
   monthDeltaText: {
+    fontSize: 12,
+    fontWeight: "700"
+  },
+  trendMonthRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10
+  },
+  trendMonthLabel: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "700",
+    width: 34
+  },
+  trendBars: {
+    flex: 1,
+    gap: 3
+  },
+  trendBarTrack: {
+    backgroundColor: colors.faint,
+    borderRadius: 3,
+    height: 6,
+    overflow: "hidden"
+  },
+  trendBarIncome: {
+    backgroundColor: colors.green,
+    borderRadius: 3,
+    height: 6
+  },
+  trendBarExpense: {
+    backgroundColor: colors.coral,
+    borderRadius: 3,
+    height: 6
+  },
+  trendNetValue: {
+    fontSize: 12,
+    fontWeight: "700",
+    minWidth: 92,
+    textAlign: "right"
+  },
+  trendNetPositive: {
+    color: colors.greenDark
+  },
+  trendNetNegative: {
+    color: colors.coral
+  },
+  trendNetNeutral: {
+    color: colors.muted
+  },
+  trendMoversBlock: {
+    gap: 8
+  },
+  trendMoversRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "space-between"
+  },
+  trendMoversLabel: {
+    color: colors.ink,
+    flexShrink: 1,
+    fontSize: 13,
+    fontWeight: "600"
+  },
+  trendMoversValue: {
+    color: colors.coral,
     fontSize: 12,
     fontWeight: "700"
   },

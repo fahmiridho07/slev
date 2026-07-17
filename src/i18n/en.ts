@@ -56,6 +56,11 @@ export const en: AppStrings = {
     context: "Category",
     billSuggestions: "Suggested from recurring bills",
     billsReservedHint: "Recurring bills are already reserved — you don't need to log them here.",
+    categoryFeedback: {
+      spentSoFar: "{category} this month: {amount}",
+      guideLeft: "{remaining} left of the {limit} monthly guide",
+      guideOver: "{over} past the {limit} monthly guide"
+    },
     reorderHint: "Hold to rearrange",
     contextHints: {
       Meal: "Food, snacks, lunch",
@@ -133,6 +138,10 @@ export const en: AppStrings = {
     english: "English",
     indonesian: "Bahasa Indonesia"
   },
+  quickActions: {
+    captureTitle: "Log expense",
+    captureSubtitle: "An amount is enough"
+  },
   settings: {
     bills: {
       title: "Recurring bills",
@@ -170,6 +179,10 @@ export const en: AppStrings = {
       hintLabel: "Examples (optional)",
       hintA11y: "Category examples",
       hintPlaceholder: "e.g. Food, snacks, lunch",
+      guideLabel: "Monthly guide (optional)",
+      guideA11y: "Monthly guide amount",
+      guideHelper: "A soft monthly amount for this category. Capture shows what's left of it — nothing blocks or alerts.",
+      guideMeta: "Guide {amount}/month",
       placeholder: "e.g. Health, Subscriptions, Hobby",
       save: "Save category",
       default: "Default",
@@ -413,6 +426,15 @@ export const en: AppStrings = {
       feedbackSaved: "Thanks — noted."
     },
     recapEmptyAction: "Log spending",
+    monthRecap: {
+      title: "{month} recap",
+      subtitle: "A quick look back before this month takes shape.",
+      keptRate: "You kept {percent}% of what came in",
+      keptRateNegative: "Spending ran {percent}% above income",
+      topTitle: "Where it went",
+      dismiss: "Got it",
+      dismissA11y: "Dismiss the month recap"
+    },
     ...enExtras.patterns
   },
   dialogs: {

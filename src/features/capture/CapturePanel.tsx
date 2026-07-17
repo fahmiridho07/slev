@@ -5,8 +5,11 @@ import { AccountPicker, ContextPicker, EmptyState, numberPadInputAccessoryProps 
 import { CaptureDatePicker } from "./CaptureDatePicker";
 import { CaptureTypePicker } from "./CaptureTypePicker";
 import { formatCaptureDateLabel } from "./captureDate";
-import { formatAmountInput } from "../../lib/formatMoney";
+import { buildCategorySpendFeedback } from "../../lib/categorySpendFeedback";
+import { formatAmountInput, parseAmountInput } from "../../lib/formatMoney";
+import { RESERVED_BILL_CONTEXT } from "../../lib/safeToSpend";
 import { formatRupiah } from "../../lib/spendingMemoryPatterns";
+import { displayContext } from "../../i18n/display";
 import { shallowEqual, useFinanceDerived, useFinanceSelector } from "../../state/useFinance";
 import { formatString } from "../../i18n";
 import { useCapturePickerOrder } from "../../hooks/useCapturePickerOrder";
@@ -37,10 +40,11 @@ function CapturePanelComponent({
     return strings.capture.saveExpense;
   }
   const categoryLabels = useFinanceDerived((derived) => derived.categoryLabels);
-  const { accounts, expenseCategories, recurringBills } = useFinanceSelector(
+  const { accounts, expenseCategories, moments, recurringBills } = useFinanceSelector(
     (state) => ({
       accounts: state.accounts,
       expenseCategories: state.expenseCategories,
+      moments: state.moments,
       recurringBills: state.recurringBills
     }),
     shallowEqual
@@ -51,6 +55,50 @@ function CapturePanelComponent({
   );
   const { orderedAccounts, orderedCategories } = useCapturePickerOrder(categoryLabels, accounts);
   const { fieldError, form, patch, changeAmountText, changeEntryType, save } = useCaptureForm();
+
+  const categoryFeedbackLine = useMemo(() => {
+    if (form.entryType !== "expense" || !form.context || form.context === RESERVED_BILL_CONTEXT) {
+      return null;
+    }
+
+    const feedback = buildCategorySpendFeedback({
+      categories: expenseCategories,
+      context: form.context,
+      draftAmount: parseAmountInput(form.amountText) ?? 0,
+      moments
+    });
+
+    if (feedback.monthlyGuide === null) {
+      if (feedback.spentThisMonth <= 0) {
+        return null;
+      }
+      return {
+        over: false,
+        text: formatString(strings.capture.categoryFeedback.spentSoFar, {
+          amount: formatRupiah(feedback.spentThisMonth),
+          category: displayContext(form.context)
+        })
+      };
+    }
+
+    if (feedback.overBy !== null) {
+      return {
+        over: true,
+        text: formatString(strings.capture.categoryFeedback.guideOver, {
+          limit: formatRupiah(feedback.monthlyGuide),
+          over: formatRupiah(feedback.overBy)
+        })
+      };
+    }
+
+    return {
+      over: false,
+      text: formatString(strings.capture.categoryFeedback.guideLeft, {
+        limit: formatRupiah(feedback.monthlyGuide),
+        remaining: formatRupiah(feedback.remainingAfterDraft ?? 0)
+      })
+    };
+  }, [expenseCategories, form.amountText, form.context, form.entryType, moments, strings.capture.categoryFeedback]);
 
   const [dateOpen, setDateOpen] = useState(false);
   const [saveAck, setSaveAck] = useState<CaptureSaveAck | null>(null);
@@ -217,6 +265,17 @@ function CapturePanelComponent({
                 selected={form.context}
                 onSelect={(value) => patch({ context: value })}
               />
+              {categoryFeedbackLine ? (
+                <Text
+                  accessibilityLiveRegion="polite"
+                  style={[
+                    styles.captureGuideHint,
+                    categoryFeedbackLine.over && styles.captureGuideHintOver
+                  ]}
+                >
+                  {categoryFeedbackLine.text}
+                </Text>
+              ) : null}
               {form.context === "Bills" ? (
                 <View style={styles.captureBillsBlock}>
                   <Text style={styles.settingCopy}>{strings.capture.billsReservedHint}</Text>

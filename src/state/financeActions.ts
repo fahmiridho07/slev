@@ -437,6 +437,7 @@ export function createFinanceActions(
     hint?: string;
     id?: string;
     label: string;
+    monthlyGuide?: number;
   }): Promise<FormActionResult<"label">> {
     const validationError = getCategoryValidationError(input.label);
     if (validationError) {
@@ -456,9 +457,18 @@ export function createFinanceActions(
         notifyWriteFailure(STORAGE_KEYS.expenseCategories);
         return { ok: false };
       }
-      categoryResult = await saveExpenseCategory({ hint: input.hint, label: trimmedLabel });
+      categoryResult = await saveExpenseCategory({
+        hint: input.hint,
+        label: trimmedLabel,
+        monthlyGuide: input.monthlyGuide
+      });
     } else {
-      categoryResult = await saveExpenseCategory({ hint: input.hint, id: input.id, label: trimmedLabel });
+      categoryResult = await saveExpenseCategory({
+        hint: input.hint,
+        id: input.id,
+        label: trimmedLabel,
+        monthlyGuide: input.monthlyGuide
+      });
     }
 
     const { data: updated, persisted, reason } = categoryResult;

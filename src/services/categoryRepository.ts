@@ -2,7 +2,7 @@ import { DEFAULT_SPENDING_CONTEXTS, normalizeSpendingContext } from "../data/spe
 import { ExpenseCategory, SpendingContext } from "../features/spendingMemory.types";
 import { isKeyCorrupt, readJson, removeKeys, WriteResult, writeJson } from "./storage";
 import { STORAGE_KEYS } from "./storageKeys";
-import { createId, readString, toRecord } from "./storageRecordUtils";
+import { createId, readNumber, readString, toRecord } from "./storageRecordUtils";
 
 const EXPENSE_CATEGORIES_KEY = STORAGE_KEYS.expenseCategories;
 
@@ -10,6 +10,7 @@ type CategoryInput = {
   hint?: string;
   id?: string;
   label: string;
+  monthlyGuide?: number;
 };
 
 type StoredExpenseCategory = ExpenseCategory & {
@@ -29,6 +30,8 @@ export async function saveExpenseCategory(input: CategoryInput): Promise<WriteRe
     id: input.id ?? createId(),
     label: input.label,
     hint: "hint" in input ? normalizeCategoryHint(input.hint) : existing?.hint,
+    monthlyGuide:
+      "monthlyGuide" in input ? normalizeMonthlyGuide(input.monthlyGuide) : existing?.monthlyGuide,
     isDefault: existing?.isDefault ?? false,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now
@@ -144,6 +147,7 @@ function normalizeStoredCategory(value: unknown): StoredExpenseCategory | null {
     id: readString(record, "id") ?? createId(),
     label,
     hint: normalizeCategoryHint(readString(record, "hint")),
+    monthlyGuide: normalizeMonthlyGuide(readNumber(record, "monthlyGuide")),
     isDefault: readBoolean(record, "isDefault") ?? DEFAULT_SPENDING_CONTEXTS.includes(label),
     isArchived: readBoolean(record, "isArchived") ?? false,
     createdAt: readString(record, "createdAt") ?? now,
@@ -156,6 +160,7 @@ function stripArchiveFlag(category: StoredExpenseCategory): ExpenseCategory {
     id: category.id,
     label: category.label,
     hint: category.hint,
+    monthlyGuide: category.monthlyGuide,
     isDefault: category.isDefault,
     createdAt: category.createdAt,
     updatedAt: category.updatedAt
@@ -165,6 +170,12 @@ function stripArchiveFlag(category: StoredExpenseCategory): ExpenseCategory {
 function normalizeCategoryHint(value?: string): string | undefined {
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
+}
+
+function normalizeMonthlyGuide(value?: number): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) && value > 0
+    ? Math.round(value)
+    : undefined;
 }
 
 function sortCategories(a: ExpenseCategory, b: ExpenseCategory): number {

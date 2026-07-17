@@ -175,6 +175,7 @@ export const enExtras: AppStringsExtras = {
     },
     trends: {
       empty: "Trends appear after spending builds across months.",
+      cashflowTrendTitle: "Months in review",
       advancedTrends: "More trends",
       expandAdvancedTrends: "Show more trends",
       collapseAdvancedTrends: "Hide more trends",
@@ -190,7 +191,9 @@ export const enExtras: AppStringsExtras = {
       netLabel: "Net",
       netThisMonth: "Net this month",
       income: "Income",
-      expense: "Expense"
+      expense: "Expense",
+      savingsRate: "You kept {percent}% of income this month",
+      savingsRateNegative: "Spending ran {percent}% above income this month"
     },
     chart: {
       title: "This month at a glance",

@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import { ListActionRow } from "../../components";
 import { displayContext, getCategoryHint } from "../../i18n/display";
 import { formatString } from "../../i18n";
+import { formatRupiah } from "../../lib/spendingMemoryPatterns";
 import { ExpenseCategory } from "../spendingMemory.types";
 import { useTheme } from "../../hooks/useTheme";
 
@@ -47,7 +48,11 @@ export function CategorySettingsList({ categories, onDelete, onEdit }: CategoryS
                   </Text>
                 </View>
                 <Text numberOfLines={2} style={styles.settingCopy}>
-                  {hint}
+                  {category.monthlyGuide
+                    ? `${hint} · ${formatString(categoryStrings.guideMeta, {
+                        amount: formatRupiah(category.monthlyGuide)
+                      })}`
+                    : hint}
                 </Text>
               </View>
             </ListActionRow>

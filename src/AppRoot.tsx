@@ -23,6 +23,7 @@ import { hapticSelection } from "./lib/haptics";
 import { normalizeStoredTabKey, parseDeepLink } from "./navigation/deepLink";
 import { AppNavigation, AppTabKey } from "./navigation/appNavigation";
 import { getNavStatePreference, parseSettingsTab, setNavStatePreference } from "./services/uiPreferences";
+import { subscribeQuickActions, syncQuickActions } from "./services/quickActions";
 import { HomeScreen, MoneyScreen, SettingsScreen } from "./screens";
 import { initialFinanceState } from "./state/financeReducer";
 import { useActions, useFinanceSelector, shallowEqual } from "./state/useFinance";
@@ -155,6 +156,17 @@ export function AppRoot() {
     const subscription = Linking.addEventListener("url", ({ url }) => applyDeepLink(url));
     return () => subscription.remove();
   }, [applyDeepLink]);
+
+  useEffect(() => {
+    void syncQuickActions(strings);
+  }, [strings]);
+
+  useEffect(() => {
+    if (!navHydrated || !isReady) {
+      return;
+    }
+    return subscribeQuickActions(applyDeepLink);
+  }, [applyDeepLink, isReady, navHydrated]);
 
   useEffect(() => {
     if (!navHydrated || !isReady) {

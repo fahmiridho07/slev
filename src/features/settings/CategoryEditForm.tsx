@@ -2,6 +2,7 @@ import React, { memo, useCallback, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { hapticWarning } from "../../lib/haptics";
 import { FormValidationError } from "../../lib/formValidation";
+import { formatAmountInput, parseAmountInput } from "../../lib/formatMoney";
 import { useActions } from "../../state/useFinance";
 import { useTheme } from "../../hooks/useTheme";
 import { ExpenseCategory } from "../spendingMemory.types";
@@ -44,10 +45,18 @@ function CategoryEditFormComponent({
   const actions = useActions();
   const [categoryDraft, setCategoryDraft] = useState(category.label);
   const [hintDraft, setHintDraft] = useState(() => getInitialCategoryHint(category, strings));
+  const [guideDraft, setGuideDraft] = useState(() =>
+    category.monthlyGuide ? formatAmountInput(String(category.monthlyGuide)) : ""
+  );
   const [fieldError, setFieldError] = useState<FormValidationError<CategoryFieldError> | null>(null);
 
   const save = useCallback(async () => {
-    const result = await actions.saveCategory({ hint: hintDraft, id: category.id, label: categoryDraft });
+    const result = await actions.saveCategory({
+      hint: hintDraft,
+      id: category.id,
+      label: categoryDraft,
+      monthlyGuide: parseAmountInput(guideDraft) ?? undefined
+    });
     if (!result.ok) {
       hapticWarning();
       if (result.validation) {
@@ -57,7 +66,7 @@ function CategoryEditFormComponent({
     }
     setFieldError(null);
     onSaved();
-  }, [actions, category.id, categoryDraft, hintDraft, onSaved]);
+  }, [actions, category.id, categoryDraft, guideDraft, hintDraft, onSaved]);
 
   return (
     <View style={componentStyles.sheetForm}>
@@ -99,6 +108,18 @@ function CategoryEditFormComponent({
         <Text style={styles.settingCopy}>
           {category.isDefault ? categoryStrings.defaultRenameHint : categoryStrings.renameHint}
         </Text>
+
+        <Text style={componentStyles.microLabel}>{categoryStrings.guideLabel}</Text>
+        <TextInput
+          accessibilityLabel={categoryStrings.guideA11y}
+          keyboardType="number-pad"
+          onChangeText={(value) => setGuideDraft(formatAmountInput(value))}
+          placeholder={strings.capture.amountPlaceholder}
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+          value={guideDraft}
+        />
+        <Text style={styles.settingCopy}>{categoryStrings.guideHelper}</Text>
 
         <Text style={componentStyles.microLabel}>{categoryStrings.orderLabel}</Text>
         <View style={componentStyles.editActions}>
