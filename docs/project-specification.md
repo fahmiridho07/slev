@@ -2,7 +2,7 @@
 
 Slev is a lightweight manual finance companion for noticing where money quietly goes.
 
-It helps a person save money moments quickly, plan the month lightly, and later see what has been repeating, standing out, or quietly adding up. The product is intentionally not an accounting system, bank-sync product, passive notification pipeline, dense fintech dashboard, or journaling app.
+It helps a person save money moments quickly, know what is safe to spend today, and later see what has been repeating, standing out, or quietly adding up. The product is intentionally not an accounting system, bank-sync product, passive notification pipeline, dense fintech dashboard, or journaling app.
 
 ## 1. Product Positioning
 
@@ -30,60 +30,62 @@ The product should avoid:
 - Mandatory categorization.
 - Passive capture or notification access.
 
-## 2. Current MVP
+## 2. Current App
+
+The app has three tabs: Home, Money, and Settings.
 
 ### Home
 
 - Capture-first screen.
-- Amount is the only required field.
-- Expense, income, and transfer entries are supported.
-- Label and note are optional.
-- Context is practical, not emotional, and defaults to the last used context.
-- Transfers record money movement between local accounts or wallets and do not count as income or spending.
-- Recent repeat chips and manual shortcuts reduce repeat typing and speed up common entries.
-- Notes are visually secondary and should appear only when useful for recall.
-- The last saved memory can be edited or undone from Home.
-- Recent spending memories are visible without becoming a dashboard.
-- One calm observation appears when enough data exists.
+- Safe-to-spend card at the top:
+  - A calm daily amount derived from tracked account balances, minus a reserve for upcoming recurring bills and an optional spend buffer, spread over the days until month end or the next payday.
+  - Pace signal (under, even, over) compared against typical daily spending.
+  - Purchase verdict: type an amount and Slev simulates it against safe-to-spend, answering with observational verdicts (comfortable, affordable, already stretched, dips into the bills reserve, unaffordable) plus how the daily room changes.
+  - A verdict may include a category note when the amount resembles a repeated purchase (median comparison over the last 30 days).
+  - Setup hints appear only while something useful is missing: payday day, opening balances, recurring bills, or a bill that looks due but unlogged.
+- Capture form:
+  - Amount is the only required field.
+  - Expense, income, and transfer entries are supported.
+  - Label, note, account, and category are optional.
+  - Category defaults to the last used context; a small monthly-guide readout appears under the category when a guide is set (spent so far, room left, or quietly over).
+  - Date is collapsible and defaults to now.
+  - Recent repeat chips and manual templates reduce repeat typing.
+  - Transfers record money movement between local accounts and do not count as income or spending.
+- The last saved memory can be edited or undone right after saving.
 
-### Memory
+### Money
 
-- Compact timeline grouped by recall range: Today, Yesterday, This week, Earlier.
-- Search by label, context, note, or amount.
-- Entries show amount, label/context, time, and optional note.
-- Repeat hints appear only when useful, such as `3 this week`.
-- Edit and delete are available.
-- The screen is a memory list, not a journal.
+Two inner tabs: Overview and Activity.
 
-### Analysis
-
-- Rule-based, plain-language observations that favor change and contrast over static summaries.
-- Pattern groups:
-  - Repeated lately.
-  - Stands out this week.
-  - Small spends adding up.
-  - Weekend shape.
-- Optional recap responses appear only after enough recent data:
-  - Keep.
-  - Less often.
-  - Not sure.
-- Category breakdown, account distribution, balance reconciliation, weekly cashflow, and trend views use plain React Native views.
-- Account reconciliation compares the two latest balance snapshots for an account against logged income, expenses, and transfers between those snapshots.
-
-### Money Plan
-
-- Soft category limits per week or month.
-- Monthly allocation view for expected income, fixed costs, flexible spending, savings target, daily flexible room, and pocket top-up needs.
-- Fixed/flexible category modes for separating recurring costs from controllable spending.
-- Monthly spending plan with expected income, fixed costs, flexible spending, and savings target.
-- Savings goals with target and saved-so-far amounts.
-- Manual account/wallet balance snapshots.
-- Local account list for income hub and daily spending pockets.
+- Overview:
+  - Month picker for browsing past months.
+  - Monthly recap card: through the first days of a new month, a dismissible recap of last month (income, spending, savings rate, top categories).
+  - Month summary card with income, spending, and net for the selected month.
+  - Expense category breakdown with vertical bars and drill-down to the underlying moments.
+  - Income by account accordion.
+  - Spending trend card: income/expense cashflow over the trailing six months, plus the categories that grew most versus the previous month.
+  - Account activity summary.
+- Activity:
+  - Compact feed of moments and transfers grouped by date.
+  - Search by label, context, note, or amount.
+  - Repeat hints appear only when useful, such as `3 this week`.
+  - Edit and delete via tap or swipe.
+  - The screen is a memory list, not a journal.
 
 ### Settings
 
-- Custom expense category add, edit, and delete.
-- Clear local finance memory action.
+Five inner tabs: Accounts, Categories, Bills, Appearance, Data.
+
+- Accounts: local account list (bank, wallet, cash, other) with opening balance and opening date; balances are derived from the ledger, never edited directly. Accounts can be marked as income hub or excluded from totals (ephemeral tier).
+- Categories: custom expense category add, edit, delete, and reorder, with an optional examples hint and an optional monthly guide amount per category.
+- Bills: payday day of month, optional spend buffer, and recurring bills with amount, active flag, and optional due day.
+- Appearance: light/dark/system theme, English/Indonesian language, reduce-motion preference.
+- Data: JSON backup export, backup import via file picker with validation, corrupt-storage recovery, and a clear-all action.
+
+### Quick actions
+
+- A launcher long-press shortcut ("capture") opens the app directly on the Home capture form via the `slev://home/capture` deep link.
+- The native module is optional at runtime, so the app still works in Expo Go and on web.
 
 ## 3. Technology Stack
 
@@ -94,6 +96,11 @@ The product should avoid:
 - AsyncStorage for local persistence.
 - `react-native-safe-area-context` for safe area layout.
 - `@expo/vector-icons` for icons.
+- `@react-native-community/datetimepicker` for the capture date picker.
+- `expo-document-picker` for backup import.
+- `expo-haptics` for gentle feedback.
+- `expo-quick-actions` for launcher shortcuts.
+- Local i18n with full English and Indonesian string tables.
 
 ## 4. Core Data Model
 
@@ -113,7 +120,7 @@ type SpendingMoment = {
 };
 ```
 
-Transfer and account records:
+Account ledger records:
 
 ```ts
 type MoneyAccount = {
@@ -121,6 +128,9 @@ type MoneyAccount = {
   label: string;
   kind: "bank" | "wallet" | "cash" | "other";
   isIncomeHub: boolean;
+  tier?: "tracked" | "ephemeral"; // ephemeral accounts are excluded from totals
+  openingBalance: number;
+  openingSetAt: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -137,12 +147,30 @@ type MoneyTransfer = {
 };
 ```
 
+Account balances are always computed: opening balance plus income, minus expenses, plus/minus transfers after the opening date. There are no stored balance snapshots.
+
+Recurring bills:
+
+```ts
+type RecurringBill = {
+  id: string;
+  label: string;
+  amount: number;
+  active: boolean;
+  dueDay?: number; // day of month (1–31); undefined = unspecified
+  createdAt: string;
+  updatedAt: string;
+};
+```
+
 Custom categories:
 
 ```ts
 type ExpenseCategory = {
   id: string;
   label: string;
+  hint?: string; // optional examples shown in pickers
+  monthlyGuide?: number; // optional soft monthly amount, surfaced as calm feedback
   isDefault: boolean;
   createdAt: string;
   updatedAt: string;
@@ -159,6 +187,8 @@ type PatternFeedback = {
 };
 ```
 
+Manual templates reuse the `SpendingMoment` shape (most recent 12 kept).
+
 Default contexts:
 
 - Meal
@@ -170,71 +200,129 @@ Default contexts:
 - Home
 - Other
 
+The `Bills` context is special: expenses logged there are treated as payments already covered by the bills reserve, so safe-to-spend does not count them twice.
+
 ## 5. Repository Map
 
 ```txt
-App.tsx
-  Main spending memory app shell and screen composition.
+App.tsx / src/AppRoot.tsx
+  App shell, tab navigation, deep link and quick-action wiring.
 
-src/features/spendingMemory.types.ts
-  SpendingMoment, PatternFeedback, and pattern contracts.
+src/screens/
+  HomeScreen, MoneyScreen, SettingsScreen composition.
 
-src/data/spendingMemory.ts
-  Default context tags and context normalization.
+src/features/
+  capture/    Capture form, date picker, validation, save acknowledgement.
+  analysis/   SafeToSpendCard, PurchaseVerdictPanel, HomeHintsSheet,
+              MonthSummaryCard, MonthlyRecapCard, SpendingTrendCard,
+              category breakdown and drill-down views.
+  memory/     Moment and transfer edit forms.
+  budget/     Account edit form and BalancePanel (account ledger UI).
+  settings/   Category, bill, and data (backup) panels with validation.
+  spendingMemory.types.ts
+              Shared domain types.
 
-src/data/accountBrands.ts
-  Brand-style badge metadata for account and wallet labels without bundling trademarked logo files.
+src/components/
+  Shared UI: bottom sheet, pickers, rows, swipe actions, tab bars.
 
-src/services/spendingMemoryRepository.ts
-  AsyncStorage persistence, legacy migration, update, delete, clear, and pattern feedback helpers.
+src/services/
+  storage.ts / storageSchema.ts / storageKeys.ts / storageHealth.ts
+              AsyncStorage access, schema versioning, corruption handling.
+  storageBackup.ts
+              JSON export/import of all exportable keys.
+  spendingMemoryRepository.ts
+              Moments, pattern feedback, legacy migration.
+  accountRepository.ts / accountLedgerMigration.ts
+              Accounts and transfers.
+  recurringBillsRepository.ts
+              Recurring bills.
+  manualFinanceRepository.ts
+              Manual capture templates.
+  balanceAnchorRepository.ts
+              Optional total-balance anchor.
+  categoryRepository.ts
+              Default and custom expense categories.
+  uiPreferences.ts
+              Theme, locale, nav state, payday day, spend buffer, hint flags.
+  quickActions.ts
+              Launcher shortcut registration and press handling.
 
-src/services/manualFinanceRepository.ts
-  Monthly plans, manual templates, category modes, savings goals, and balance snapshots.
+src/lib/
+  safeToSpend.ts / purchaseVerdict.ts / purchaseContext.ts
+              Safe-to-spend math, purchase simulation, verdict copy.
+  recurringBills.ts
+              Bills reserve within the payday/month-end horizon, overdue checks.
+  accountLedger.ts
+              Derived account balances and tracked totals.
+  financeEngine.ts
+              Monthly breakdowns, payday/month-end date helpers.
+  monthInsights.ts / categorySpendFeedback.ts
+              Cashflow trend, category month deltas, monthly-guide feedback.
+  activityFeed.ts / analysis.ts / spendingMemoryPatterns.ts
+              Activity feed building, repeat hints, rule-based patterns,
+              Rupiah formatting.
+  homeSetup.ts
+              Prioritized setup hints for Home.
 
-src/services/budgetRepository.ts
-  Soft budget limits per category.
+src/state/
+  Finance store, actions, and reducer.
 
-src/services/accountRepository.ts
-  Local account list and manual transfer ledger.
+src/i18n/
+  English and Indonesian strings, locale-aware formatting.
 
-src/services/categoryRepository.ts
-  Default and custom expense categories.
+src/navigation/
+  Deep link parsing and tab navigation contracts.
 
-src/lib/spendingMemoryPatterns.ts
-  Rule-based spending memory pattern generation and Rupiah formatting.
+src/theme/
+  Color tokens, styles, light/dark themes.
 
-src/lib/financeEngine.ts
-  Pure monthly allocation and balance reconciliation calculations.
+src/data/
+  Default contexts, brand metadata, account badge styling.
 
-src/theme/colors.ts
-  Color and shadow tokens.
+tests/
+  Node-based unit tests compiled via tsconfig.test.json.
 ```
 
-Legacy notification, parser, transaction sync, and Google Sheets artifacts have been removed from the build path and repository.
+Legacy notification, parser, transaction sync, and Google Sheets artifacts have been removed from the build path and repository. The earlier Money Plan surface (soft budget limits, monthly plans, savings goals, balance snapshots) has been removed in favor of safe-to-spend and the account ledger.
 
 ## 6. Local Storage
 
-Current keys:
+Current data keys (see `src/services/storageKeys.ts`):
 
 ```txt
+slev_schema_version
+slev_migrated_v2
 slev_entries
 slev_pattern_feedback
-slev_migrated_v2
-slev_budget_limits
-slev_monthly_plans
-slev_manual_templates
-slev_category_modes
-slev_savings_goals
-slev_balance_snapshots
 slev_accounts
 slev_transfers
+slev_manual_templates
+slev_recurring_bills
+slev_balance_anchor
 slev_expense_categories
 ```
+
+UI preference keys (see `src/services/uiPreferences.ts`):
+
+```txt
+slev_ui_color_scheme
+slev_ui_locale
+slev_ui_nav_state
+slev_ui_reduce_motion
+slev_ui_month_recap_dismissed
+slev_finance_payday_day
+slev_finance_spend_buffer
+slev_ui_*_hint_seen (one-time list-action hints)
+```
+
+Backup export covers the `EXPORTABLE_STORAGE_KEYS` subset: moments, pattern feedback, accounts, transfers, manual templates, recurring bills, balance anchor, and expense categories. Import validates the payload, runs schema migrations, and refuses corrupt collections rather than guessing.
 
 Legacy migration reads confirmed records from:
 
 ```txt
 flowtrack.transactions.v1
+slev.spendingMoments.v1
+slev.patternFeedback.v1
 ```
 
 Migration rules:
@@ -244,9 +332,31 @@ Migration rules:
 - Legacy categories are normalized into current practical contexts.
 - Raw notification text is not used or persisted.
 
-## 7. Pattern Rules
+## 7. Guidance and Pattern Rules
 
-Patterns are deliberately small and explainable. Prefer observations that changed since the previous week:
+All guidance is rule-based, local, and explainable. Nothing is scored or streaked.
+
+Safe-to-spend and purchase verdict copy must stay observational and roomy:
+
+Good:
+
+```txt
+This fits comfortably.
+This would dip into the bills reserve.
+Daily room becomes Rp25.000 until payday.
+```
+
+Avoid:
+
+```txt
+You can't afford this.
+Stop spending.
+Budget exceeded.
+```
+
+Monthly guides per category are soft references, not limits. Feedback states how much has been spent and what room remains; going over is stated quietly, never as a failure.
+
+Spending patterns prefer observations that changed since the previous week:
 
 - Context is more visible this week than last week.
 - A label is forming a new repeat.
@@ -281,7 +391,7 @@ Must:
 - Avoid bank credentials.
 - Avoid raw notification persistence.
 - Avoid notification listener access entirely.
-- Avoid cloud sync in the MVP.
+- Avoid cloud sync in the MVP; backup is a manual, local JSON file the user moves themselves.
 - Make data clearing obvious.
 
 Must not:
@@ -297,21 +407,24 @@ Run:
 
 ```bash
 npm run typecheck
+npm run lint
 npm run test:finance
 ```
 
-Finance engine tests cover monthly summary, allocation, balance reconciliation, latest snapshots, and category modes. Replace future parser-era checks with spending-memory and manual-finance repository tests.
+Or all three via `npm run check`.
+
+`test:finance` compiles `tests/` with `tsconfig.test.json` and runs plain Node assertions covering the finance engine, safe-to-spend inputs (account ledger, recurring bills, spending periods), month insights, category spend feedback, activity feed, deep links, capture and settings validation, patterns, and the state reducer/actions.
 
 ## 10. Next Decisions
 
 Before adding more capability, evaluate whether it improves the core loop:
 
 1. Save a spending moment quickly.
-2. Recall where money went.
-3. Notice repeats and adjust the next month without maintaining a heavy finance system.
+2. Know what is safe to spend today.
+3. Recall where money went and notice repeats without maintaining a heavy finance system.
 
 Candidate next work:
 
-- Home screen widget or Android shortcut.
-- CSV export as a local, optional action.
-- Tests for migration, manual finance repositories, finance engine, and pattern generation.
+- Home screen widget (quick actions shortcut already exists).
+- CSV export as a local, optional action alongside the JSON backup.
+- Reminders for bills with a due day, kept local and permission-light.
