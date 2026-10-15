@@ -233,7 +233,7 @@ export function AppRoot() {
           <View style={styles.header}>
             <View style={styles.headerTopRow}>
               <View style={styles.brandRow}>
-                <Image source={SLEV_MARK} style={styles.brandMark} />
+                <Image accessible={false} source={SLEV_MARK} style={styles.brandMark} />
                 <View>
                   <Text style={styles.brandName}>{BRAND.name}</Text>
                   <Text style={styles.brandLine}>

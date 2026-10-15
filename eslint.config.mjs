@@ -6,6 +6,9 @@ export default tseslint.config(
   {
     ignores: [
       ".tmp-tests/**",
+      ".expo/**",
+      "dist/**",
+      "web-build/**",
       ".claude/**",
       "node_modules/**",
       "android/**",
