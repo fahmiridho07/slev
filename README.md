@@ -63,8 +63,8 @@ Not an accounting app, bank connector, or auto-import tool. You type what matter
 **Requirements:** Node.js 18+, npm, and [Expo tooling](https://docs.expo.dev/get-started/installation/) for device builds.
 
 ```bash
-git clone https://github.com/fahmiridho07/financial_tracker.git
-cd financial_tracker
+git clone https://github.com/fahmiridho07/slev.git
+cd slev
 npm install
 npm run start
 ```
@@ -72,8 +72,13 @@ npm run start
 | Command | What it does |
 |---------|----------------|
 | `npm run start` | Expo dev server |
+| `npm run start:clear` | Expo dev server with cache cleared |
 | `npm run android` | Run on Android |
 | `npm run ios` | Run on iOS |
+| `npm run web` | Run on web |
+| `npm run typecheck` | TypeScript typecheck |
+| `npm run lint` | ESLint |
+| `npm run test:finance` | Finance engine unit tests |
 | `npm run check` | Typecheck + lint + finance tests |
 
 ---
