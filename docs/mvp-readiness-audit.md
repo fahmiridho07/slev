@@ -32,13 +32,12 @@ This audit reflects the pivot from passive finance tracker to lightweight spendi
 ## Known Boundaries
 
 - Legacy parser, transaction sync, Google Sheets sync, and native notification listener files have been removed.
-- Pattern tests are not yet automated.
-- Migration tests are not yet automated.
-- Export is intentionally not connected.
+- Pattern tests are automated (`tests/spendingMemoryPatterns.test.ts`).
+- Migration tests are automated (`tests/accountLedgerMigration.test.ts`).
+- JSON backup export/import is connected in Settings (`exportLocalBackup` / `importLocalBackup`).
 - There is no widget or Android shortcut yet.
 
 ## Next Readiness Work
 
-- Add focused tests for spending-memory migration and pattern generation.
 - Validate capture speed on device.
-- Add focused tests for manual-finance storage and spending-memory migration.
+- Add focused tests for manual-finance storage.
